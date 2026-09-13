@@ -8,7 +8,7 @@
 
 ## 現在の状態
 
-将棋の基礎学習と第1回実装の設計を終え、Pythonで盤・駒・手番・初期配置のCLI表示を実装しました。起動すると平手の初期配置と「手番：先手」を表示して終了します。駒の移動や対局はまだできません。
+初期配置のCLI表示と、歩の移動先候補を求める関数を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、実際の駒の移動や対局はまだできません。
 
 実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
 
@@ -34,6 +34,19 @@ python3 -m unittest discover -s tests -v
 
 ## コードを読むとき
 
+歩の候補をPythonから調べる例です。リポジトリ直下でPythonを起動して実行できます。
+
+```python
+from kaname_shogi.model import Square, create_initial_position
+from kaname_shogi.movegen import pawn_move_candidates
+
+position = create_initial_position()
+print(pawn_move_candidates(position.board, Square(7, 7)))
+# [Square(file=7, rank=6)]
+```
+
+先後は出発マスの歩が持つ所有者から読み取ります。候補なしは `[]`、出発マスが空または歩以外なら `ValueError` です。成りや王手などを検証していないため、戻り値は合法手の確定ではありません。
+
 公開する型・関数・メソッドのdocstringには、引数・戻り値・変更する状態・前提条件と、その設計を選んだ背景を記録します。将来の保守では、仕様を変える際にdocstringも更新してください。判断の詳しい経緯は設計書と学習記録を参照できます。
 
 ## 文書
@@ -46,6 +59,8 @@ python3 -m unittest discover -s tests -v
 - [第5回：初期配置CLIの実装と検証](docs/learning/05-initial-position-implementation.md)
 - [第6回：歩の移動候補](docs/learning/06-pawn-move-candidates.md)
 - [歩の移動先候補：実装用メモ](docs/knowledge/06-pawn-move-candidates.md)
+- [第2回実装の設計：歩の移動先候補](docs/design/02-pawn-move-candidates.md)
+- [第7回：歩の候補生成の設計と実装](docs/learning/07-pawn-candidates-implementation.md)
 
 ## 名前について
 
