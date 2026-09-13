@@ -32,14 +32,14 @@ class PieceType(Enum):
     auto()の数値を外部形式や永続化の識別子として使用しない。
     """
 
-    KING = auto()
-    ROOK = auto()
-    BISHOP = auto()
-    GOLD = auto()
-    SILVER = auto()
-    KNIGHT = auto()
-    LANCE = auto()
-    PAWN = auto()
+    KING = auto()    # 玉将・王将（玉・王）
+    ROOK = auto()    # 飛車（飛）
+    BISHOP = auto()  # 角行（角）
+    GOLD = auto()    # 金将（金）
+    SILVER = auto()  # 銀将（銀）
+    KNIGHT = auto()  # 桂馬（桂）
+    LANCE = auto()   # 香車（香）
+    PAWN = auto()    # 歩兵（歩）
 
 
 @dataclass(frozen=True)
