@@ -4,6 +4,7 @@ from dataclasses import FrozenInstanceError
 import unittest
 
 from kaname_shogi.model import Board, Piece, PieceType, Side, Square
+from kaname_shogi.model import create_initial_position
 
 
 class SquareTests(unittest.TestCase):
@@ -74,3 +75,48 @@ class BoardTests(unittest.TestCase):
                     setattr(piece, name, value)
         self.assertEqual(board.piece_at(Square(7, 6)),
                          Piece(PieceType.PAWN, Side.SENTE))
+
+
+class InitialPositionTests(unittest.TestCase):
+    def test_all_81_squares_match_initial_setup(self):
+        # 生成処理と独立した期待表。一〜九段、各行は９筋〜１筋。
+        # テスト内だけの略号であり、SFENの読み込み処理ではない。
+        rows = (
+            "lnsgkgsnl", ".r.....b.", "ppppppppp",
+            ".........", ".........", ".........",
+            "PPPPPPPPP", ".B.....R.", "LNSGKGSNL",
+        )
+        kinds = dict(k=PieceType.KING, r=PieceType.ROOK, b=PieceType.BISHOP,
+                     g=PieceType.GOLD, s=PieceType.SILVER, n=PieceType.KNIGHT,
+                     l=PieceType.LANCE, p=PieceType.PAWN)
+        position = create_initial_position()
+        for rank, row in enumerate(rows, start=1):
+            for file, symbol in zip(range(9, 0, -1), row):
+                expected = None
+                if symbol != ".":
+                    side = Side.SENTE if symbol.isupper() else Side.GOTE
+                    expected = Piece(kinds[symbol.lower()], side)
+                with self.subTest(file=file, rank=rank):
+                    self.assertEqual(position.board.piece_at(Square(file, rank)),
+                                     expected)
+
+    def test_piece_counts_and_first_turn(self):
+        position = create_initial_position()
+        pieces = [position.board.piece_at(Square(file, rank))
+                  for file in range(1, 10) for rank in range(1, 10)]
+        self.assertEqual(sum(piece is not None for piece in pieces), 40)
+        for side in Side:
+            owned = [piece for piece in pieces
+                     if piece is not None and piece.side == side]
+            self.assertEqual(len(owned), 20)
+            self.assertEqual(sum(p.piece_type == PieceType.PAWN for p in owned), 9)
+            self.assertEqual(sum(p.piece_type == PieceType.KING for p in owned), 1)
+        self.assertEqual(position.side_to_move, Side.SENTE)
+
+    def test_initial_positions_are_independent(self):
+        first, second = create_initial_position(), create_initial_position()
+        first.board.set_piece(Square(7, 7), None)
+        first.side_to_move = Side.GOTE
+        self.assertEqual(second.board.piece_at(Square(7, 7)),
+                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(second.side_to_move, Side.SENTE)
