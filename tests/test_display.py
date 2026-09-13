@@ -26,15 +26,27 @@ EXPECTED = """手番：先手
 
 class DisplayTests(unittest.TestCase):
     def test_initial_position_matches_full_display(self):
+        """初期配置を先手視点で筋段・所有者付きで表示する。
+
+        固定した全文を使い、保存順の流用や飛角・王玉の表示違いを検出する。
+        """
         self.assertEqual(render_position(create_initial_position()), EXPECTED)
 
     def test_turn_label_follows_position(self):
+        """後手番の局面には「手番：後手」と表示する。
+
+        先手の表示への固定化を検出し、手番以外の表示が変わらないことも確認する。
+        """
         position = create_initial_position()
         position.side_to_move = Side.GOTE
         self.assertEqual(render_position(position),
                          EXPECTED.replace("手番：先手", "手番：後手", 1))
 
     def test_cli_prints_initial_position_and_exits(self):
+        """CLIは初期配置を出力し、エラーなく終了する。
+
+        実プロセスで起動し、入口の接続・末尾改行・不要なエラー出力を確認する。
+        """
         result = subprocess.run(
             [sys.executable, "-m", "kaname_shogi"],
             cwd=Path(__file__).resolve().parents[1],

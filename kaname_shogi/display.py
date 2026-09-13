@@ -1,9 +1,23 @@
-"""局面を先手視点の文字列へ変換する。端末への出力は行わない。"""
+"""局面を、人が読むための先手視点の文字列へ変換する。
+
+モデルの保存順や列挙値を表示形式に結び付けない。文字列の生成と出力を
+分けることで、端末を介さず全文を検証できる。将来のUSI通信は別の責務。
+"""
 
 from .model import PieceType, Position, Side, Square
 
 
 def render_position(position: Position) -> str:
+    """局面を変更せず、手番・凡例・筋段付きの全盤面を文字列で返す。
+
+    引数はPosition。現在定義された基本8種類のPieceTypeとSideを想定する。
+    段は一→九、各段の筋は9→1。+が先手、-が後手、・が空マス。
+    玉と王は同一の駒種だが、この表示では先手を王、後手を玉とする。
+
+    日本語が2桁幅の等幅端末を想定し、各セルを4桁相当に揃える。
+    各行末の空白と文字列末尾の改行は付けず、CLIのprintが最後に改行する。
+    標準出力、色付け、入力操作は行わない。
+    """
     side_name = "先手" if position.side_to_move == Side.SENTE else "後手"
     names = {
         PieceType.ROOK: "飛", PieceType.BISHOP: "角", PieceType.GOLD: "金",
