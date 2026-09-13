@@ -8,12 +8,17 @@
 
 ## 現在の状態
 
-まだ実装は始めていません。まずは、このプロジェクトを始める理由と、当面の方向を記録しています。
+将棋の基礎学習を第3回まで終え、第1回実装の設計を承認しました。Pythonで盤・駒・手番・初期配置のCLI表示を作る予定です。実装はまだ始めていません。
+
+第1回実装では、実行・テストともにPython標準ライブラリのみを使用する方針です。外部パッケージのインストールは不要とし、`requirements.txt` は作成しません。
 
 ## 文書
 
 - [プロジェクトの背景](docs/01-project-background.md)
 - [プロジェクトの方向性](docs/02-project-direction.md)
+- [第1回実装の設計](docs/design/01-board-and-initial-position.md)
+- [第4回：実装設計と判断の背景](docs/learning/04-first-implementation-design.md)
+- [第1回実装の設計：参照メモ](docs/knowledge/04-first-implementation-design.md)
 
 ## 名前について
 
