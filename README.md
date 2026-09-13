@@ -8,9 +8,27 @@
 
 ## 現在の状態
 
-将棋の基礎学習を第3回まで終え、第1回実装の設計を承認しました。Pythonで盤・駒・手番・初期配置のCLI表示を作る予定です。実装はまだ始めていません。
+将棋の基礎学習と第1回実装の設計を終え、Pythonで盤・駒・手番・初期配置のCLI表示を実装しました。起動すると平手の初期配置と「手番：先手」を表示して終了します。駒の移動や対局はまだできません。
 
-第1回実装では、実行・テストともにPython標準ライブラリのみを使用する方針です。外部パッケージのインストールは不要とし、`requirements.txt` は作成しません。
+実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
+
+## 実行方法
+
+動作確認環境：macOS、Python 3.9.6。リポジトリ直下で実行します。
+
+```sh
+python3 -m kaname_shogi
+```
+
+盤は先手視点で、左から9〜1筋、上から一〜九段です。`+` は先手、`-` は後手、`・` は空マスを表します。日本語を表示できる等幅フォントの端末を想定しています。
+
+## テスト
+
+```sh
+python3 -m unittest discover -s tests -v
+```
+
+座標の検証、駒の不変性、盤面の独立性、初期配置の全81マス・枚数・手番、CLI表示を確認します。
 
 ## 文書
 
@@ -19,6 +37,7 @@
 - [第1回実装の設計](docs/design/01-board-and-initial-position.md)
 - [第4回：実装設計と判断の背景](docs/learning/04-first-implementation-design.md)
 - [第1回実装の設計：参照メモ](docs/knowledge/04-first-implementation-design.md)
+- [第5回：初期配置CLIの実装と検証](docs/learning/05-initial-position-implementation.md)
 
 ## 名前について
 

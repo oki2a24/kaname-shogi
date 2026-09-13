@@ -21,6 +21,6 @@
 - `src/` は配置用の外側のディレクトリ、`kaname_shogi` はパッケージ名である。[Python Packaging公式](https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/)
 - 内部クラス名・座標系の一致はUSI互換の条件ではない。外部形式への変換を分離し、将来SFENに必要な持ち駒・手数などを追加する。[将棋所のUSI解説](https://shogidokoro2.stars.ne.jp/usi.html)
 
-## 実装開始時に確認すること
+## 実装時の確認結果
 
-使用可能なPythonバージョンを確認し、動作確認したバージョンをREADMEに記録する。このメモの作成時点では、コードは未実装である。
+Python 3.9.6で実装・動作確認した。`Optional[Piece]` で空マスを含む型を表す。15件のテストで座標、不変性、盤面の独立性、全81マスの初期配置、手番と表示を確認した。詳細は[第5回の学習記録](../learning/05-initial-position-implementation.md)を参照する。

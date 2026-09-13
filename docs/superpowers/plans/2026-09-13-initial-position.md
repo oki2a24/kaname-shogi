@@ -37,7 +37,7 @@ Board.piece_at(square: Square) -> Optional[Piece]
 Board.set_piece(square: Square, piece: Optional[Piece]) -> None
 ```
 
-- [ ] `unittest.TestCase` で四隅と７六の変換、不正な座標、不変性、空盤、配置と取得、盤面の独立性を先に検証する。
+- [x] `unittest.TestCase` で四隅と７六の変換、不正な座標、不変性、空盤、配置と取得、盤面の独立性を先に検証する。
 
 ```python
 self.assertEqual(Square(7, 6).to_index(), 59)
@@ -51,8 +51,8 @@ self.assertEqual(board.piece_at(Square(7, 6)), piece)
 self.assertIsNone(Board().piece_at(Square(7, 6)))
 ```
 
-- [ ] `python3 -m unittest discover -s tests -v` を実行し、対象の型が未実装であるため失敗することを確認する。
-- [ ] 以下の方針で最小実装を行う。`Side`・`PieceType` は列挙値、`Square`・`Piece` は凍結dataclass。`Board` は内部に81個の `None` を保持する。
+- [x] `python3 -m unittest discover -s tests -v` を実行し、対象の型が未実装であるため失敗することを確認する。
+- [x] 以下の方針で最小実装を行う。`Side`・`PieceType` は列挙値、`Square`・`Piece` は凍結dataclass。`Board` は内部に81個の `None` を保持する。
 
 ```python
 if any(type(value) is not int or not 1 <= value <= 9
@@ -67,7 +67,7 @@ return self._cells[square.to_index()]
 self._cells[square.to_index()] = piece
 ```
 
-- [ ] 同コマンドで成功を確認し、差分を確認してコミットする。`.gitignore` は `__pycache__/` と `*.py[cod]` を除外する。
+- [x] 同コマンドで成功を確認し、差分を確認してコミットする。`.gitignore` は `__pycache__/` と `*.py[cod]` を除外する。
 
 ## 手順2：初期局面
 
@@ -75,7 +75,7 @@ self._cells[square.to_index()] = piece
 
 公開する操作：`Position(board: Board, side_to_move: Side)` と `create_initial_position() -> Position`。手順1の `Board.set_piece()` を使う。
 
-- [ ] 表示の並びで独立した期待配置を作り、全81マスを比較する。各側20枚、歩9枚、玉1枚と先手の手番を検証する。生成した二つの盤面の一方を書き換え、他方が変わらないことも確認する。
+- [x] 表示の並びで独立した期待配置を作り、全81マスを比較する。各側20枚、歩9枚、玉1枚と先手の手番を検証する。生成した二つの盤面の一方を書き換え、他方が変わらないことも確認する。
 
 ```python
 # 行は一〜九、各行は９筋〜１筋。大文字が先手、小文字が後手。
@@ -87,8 +87,8 @@ rows = (
 self.assertEqual(create_initial_position().side_to_move, Side.SENTE)
 ```
 
-- [ ] 全テストを実行し、初期局面の生成が未実装で失敗することを確認する。
-- [ ] 可変dataclassの `Position` を追加する。歩は先手七段・後手三段に置く。最奥段は筋1〜9に香・桂・銀・金・玉・金・銀・桂・香を配置する。飛角は明示する。
+- [x] 全テストを実行し、初期局面の生成が未実装で失敗することを確認する。
+- [x] 可変dataclassの `Position` を追加する。歩は先手七段・後手三段に置く。最奥段は筋1〜9に香・桂・銀・金・玉・金・銀・桂・香を配置する。飛角は明示する。
 
 ```python
 board.set_piece(Square(8, 8), Piece(PieceType.BISHOP, Side.SENTE))
@@ -98,7 +98,7 @@ board.set_piece(Square(2, 2), Piece(PieceType.BISHOP, Side.GOTE))
 return Position(board, Side.SENTE)
 ```
 
-- [ ] 全テストの成功と差分を確認してコミットする。
+- [x] 全テストの成功と差分を確認してコミットする。
 
 ## 手順3：CLI表示と利用文書
 
@@ -107,7 +107,7 @@ return Position(board, Side.SENTE)
 
 公開する操作：`render_position(position: Position) -> str`。盤面の参照は `position.board.piece_at(Square(file, rank))` のみを使う。
 
-- [ ] 初期配置の全文を固定した期待文字列と照合するテストを書く。後手の手番表示も確認する。`subprocess.run` でCLIの終了コード・標準出力・標準エラーを確認する。
+- [x] 初期配置の全文を固定した期待文字列と照合するテストを書く。後手の手番表示も確認する。`subprocess.run` でCLIの終了コード・標準出力・標準エラーを確認する。
 
 ```python
 self.assertEqual(render_position(create_initial_position()), EXPECTED)
@@ -120,8 +120,8 @@ self.assertEqual(result.stdout, EXPECTED + "\n")
 self.assertEqual(result.stderr, "")
 ```
 
-- [ ] テストを実行し、表示処理とCLIが未実装で失敗することを確認する。
-- [ ] 表示を実装する。１セルは通常の日本語等幅端末で4桁相当とし、駒は `+歩 `、空は ` ・ `、列見出しは ` 9  ` の形に揃える。段を一→九、筋を9→1で走査する。
+- [x] テストを実行し、表示処理とCLIが未実装で失敗することを確認する。
+- [x] 表示を実装する。１セルは通常の日本語等幅端末で4桁相当とし、駒は `+歩 `、空は ` ・ `、列見出しは ` 9  ` の形に揃える。段を一→九、筋を9→1で走査する。
 
 ```python
 lines = [f"手番：{side_name}", "+：先手、-：後手", ""]
@@ -142,9 +142,9 @@ if __name__ == "__main__":
     print(render_position(create_initial_position()))
 ```
 
-- [ ] 全テストと `python3 -m kaname_shogi` を実行し、正常終了と表示を確認する。
-- [ ] READMEにPython 3.9.6での動作確認、起動・テストコマンド、実装済みの範囲を記録する。学習記録は実装で確認した事実を記録し、利用者の未回答の問題に回答を創作しない。
-- [ ] 設計との照合・リンク確認・`git diff --check` を行い、コミットする。マージ・公開は行わず、結果を報告する。
+- [x] 全テストと `python3 -m kaname_shogi` を実行し、正常終了と表示を確認する。
+- [x] READMEにPython 3.9.6での動作確認、起動・テストコマンド、実装済みの範囲を記録する。学習記録は実装で確認した事実を記録し、利用者の未回答の問題に回答を創作しない。
+- [x] 設計との照合・リンク確認・`git diff --check` を行い、コミットする。マージ・公開は行わず、結果を報告する。
 
 ## 計画の自己確認
 
