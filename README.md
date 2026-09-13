@@ -44,6 +44,8 @@ python3 -m unittest discover -s tests -v
 - [第4回：実装設計と判断の背景](docs/learning/04-first-implementation-design.md)
 - [第1回実装の設計：参照メモ](docs/knowledge/04-first-implementation-design.md)
 - [第5回：初期配置CLIの実装と検証](docs/learning/05-initial-position-implementation.md)
+- [第6回：歩の移動候補](docs/learning/06-pawn-move-candidates.md)
+- [歩の移動先候補：実装用メモ](docs/knowledge/06-pawn-move-candidates.md)
 
 ## 名前について
 
