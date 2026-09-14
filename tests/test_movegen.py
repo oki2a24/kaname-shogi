@@ -1,9 +1,164 @@
-"""歩の向き・占有・盤外と、候補計算が盤を変更しない契約を検証する。"""
+"""歩・金の向き・占有・盤外と、候補計算が盤を変更しない契約を検証する。"""
 
 import unittest
 
 from kaname_shogi.model import Board, Piece, PieceType, Position, Side, Square
-from kaname_shogi.movegen import pawn_move_candidates
+from kaname_shogi.movegen import gold_move_candidates, pawn_move_candidates
+
+
+class GoldMoveCandidatesTests(unittest.TestCase):
+    def test_destination_occupancy_and_board_preservation(self):
+        """各方向の自駒・相手駒を区別し、全81マスを変更しない。
+
+        横や後ろだけの判定漏れ、相手駒の過剰除外、駒取りの混入を検出する。
+        """
+        squares = [Square(f, r) for f in range(1, 10) for r in range(1, 10)]
+        for side, opponent, coordinates in [
+            (Side.SENTE, Side.GOTE, [(5, 4), (6, 4), (4, 4), (6, 5), (4, 5), (5, 6)]),
+            (Side.GOTE, Side.SENTE, [(5, 6), (6, 6), (4, 6), (6, 5), (4, 5), (5, 4)]),
+        ]:
+            destinations = [Square(f, r) for f, r in coordinates]
+            for target in destinations:
+                for owner in [None, side, opponent]:
+                    with self.subTest(side=side, target=target, owner=owner):
+                        board = Board()
+                        board.set_piece(Square(5, 5), Piece(PieceType.GOLD, side))
+                        if owner is not None:
+                            board.set_piece(target, Piece(PieceType.PAWN, owner))
+                        before = [board.piece_at(square) for square in squares]
+                        expected = [sq for sq in destinations if owner != side or sq != target]
+                        self.assertEqual(gold_move_candidates(board, Square(5, 5)), expected)
+                        self.assertEqual([board.piece_at(square) for square in squares], before)
+
+    def test_all_destinations_blocked_returns_fresh_empty_list(self):
+        """全方向が自駒なら毎回独立した空リストを返す。
+
+        候補なしの誤表現と、戻り値の共有による次回計算への汚染を検出する。
+        """
+        for side in Side:
+            with self.subTest(side=side):
+                board = Board()
+                for f, r in [(5, 5), (5, 4), (6, 4), (4, 4), (6, 5),
+                             (4, 5), (5, 6), (6, 6), (4, 6)]:
+                    board.set_piece(Square(f, r), Piece(PieceType.GOLD, side))
+                result = gold_move_candidates(board, Square(5, 5))
+                self.assertEqual(result, [])
+                result.append(Square(1, 1))
+                self.assertEqual(gold_move_candidates(board, Square(5, 5)), [])
+
+    def test_inside_edges_remain_destinations(self):
+        """最端の一段・九段・1筋・9筋を移動先から除きすぎない。
+
+        盤外判定を狭く設定する境界の誤りを固定した期待値で検出する。
+        """
+        for side, source, coordinates in [
+            (Side.SENTE, Square(2, 2), [(2, 1), (3, 1), (1, 1), (3, 2), (1, 2), (2, 3)]),
+            (Side.GOTE, Square(8, 8), [(8, 9), (9, 9), (7, 9), (9, 8), (7, 8), (8, 7)]),
+        ]:
+            with self.subTest(side=side):
+                board = Board()
+                board.set_piece(source, Piece(PieceType.GOLD, side))
+                self.assertEqual(gold_move_candidates(board, source),
+                                 [Square(f, r) for f, r in coordinates])
+
+    def test_turn_does_not_restrict_candidates_or_change(self):
+        """同じ盤の手番を変えても両側の金の候補は同じで手番も変えない。
+
+        所有者と手番の混同を、先後を含む同じ盤面で検出する。
+        """
+        board = Board()
+        board.set_piece(Square(1, 1), Piece(PieceType.GOLD, Side.SENTE))
+        board.set_piece(Square(9, 9), Piece(PieceType.GOLD, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        squares = [Square(f, r) for f in range(1, 10) for r in range(1, 10)]
+        before = [board.piece_at(square) for square in squares]
+        for turn in Side:
+            position.side_to_move = turn
+            self.assertEqual(gold_move_candidates(position.board, Square(1, 1)),
+                             [Square(2, 1), Square(1, 2)])
+            self.assertEqual(gold_move_candidates(position.board, Square(9, 9)),
+                             [Square(8, 9), Square(9, 8)])
+            self.assertEqual(position.side_to_move, turn)
+            self.assertEqual([board.piece_at(square) for square in squares], before)
+
+    def test_own_piece_is_excluded_without_losing_other_candidates(self):
+        """自駒のいる候補だけを除き、残る候補の順序を保つ。
+
+        除外漏れと、一つの自駒で探索を打ち切る誤りを先後両側で検出する。
+        """
+        for side, blocked, coordinates in [
+            (Side.SENTE, Square(5, 4), [(6, 4), (4, 4), (6, 5), (4, 5), (5, 6)]),
+            (Side.GOTE, Square(5, 6), [(6, 6), (4, 6), (6, 5), (4, 5), (5, 4)]),
+        ]:
+            with self.subTest(side=side):
+                board = Board()
+                board.set_piece(Square(5, 5), Piece(PieceType.GOLD, side))
+                board.set_piece(blocked, Piece(PieceType.PAWN, side))
+                self.assertEqual(gold_move_candidates(board, Square(5, 5)),
+                                 [Square(f, r) for f, r in coordinates])
+
+    def test_corners_exclude_only_outside_destinations(self):
+        """四隅で盤外だけを除外し、残る候補を順序どおり返す。
+
+        筋・段どちらの境界確認の欠落も検出し、例外を通常結果にしない。
+        """
+        for side, source, coordinates in [
+            (Side.SENTE, Square(1, 1), [(2, 1), (1, 2)]),
+            (Side.SENTE, Square(9, 1), [(8, 1), (9, 2)]),
+            (Side.SENTE, Square(1, 9), [(1, 8), (2, 8), (2, 9)]),
+            (Side.SENTE, Square(9, 9), [(9, 8), (8, 8), (8, 9)]),
+            (Side.GOTE, Square(1, 1), [(1, 2), (2, 2), (2, 1)]),
+            (Side.GOTE, Square(9, 1), [(9, 2), (8, 2), (8, 1)]),
+            (Side.GOTE, Square(1, 9), [(2, 9), (1, 8)]),
+            (Side.GOTE, Square(9, 9), [(8, 9), (9, 8)]),
+        ]:
+            with self.subTest(side=side, source=source):
+                board = Board()
+                board.set_piece(source, Piece(PieceType.GOLD, side))
+                try:
+                    candidates = gold_move_candidates(board, source)
+                except ValueError as error:
+                    self.fail(f"盤の端の金は通常の候補を返す必要がある: {error}")
+                self.assertEqual(candidates, [Square(f, r) for f, r in coordinates])
+
+    def test_six_destinations_follow_owner_in_order(self):
+        """先後の金の6候補を決めた順序で返し、斜め後ろを含めない。
+
+        向きの逆転、方向の欠落・重複、余計な方向を固定した期待値で検出する。
+        """
+        for side, coordinates in [
+            (Side.SENTE, [(5, 4), (6, 4), (4, 4), (6, 5), (4, 5), (5, 6)]),
+            (Side.GOTE, [(5, 6), (6, 6), (4, 6), (6, 5), (4, 5), (5, 4)]),
+        ]:
+            with self.subTest(side=side):
+                board = Board()
+                source = Square(5, 5)
+                board.set_piece(source, Piece(PieceType.GOLD, side))
+                self.assertEqual(gold_move_candidates(board, source),
+                                 [Square(f, r) for f, r in coordinates])
+
+    def test_non_gold_source_is_rejected(self):
+        """金以外の全駒種を先後どちらでも拒否する。
+
+        歩などを金として動かせてしまう駒種確認の欠落を検出する。
+        """
+        for side in Side:
+            for kind in PieceType:
+                if kind == PieceType.GOLD:
+                    continue
+                with self.subTest(side=side, kind=kind):
+                    board = Board()
+                    board.set_piece(Square(5, 5), Piece(kind, side))
+                    with self.assertRaises(ValueError):
+                        gold_move_candidates(board, Square(5, 5))
+
+    def test_empty_source_is_rejected(self):
+        """空の出発マスを呼び出しの誤りとして拒否する。
+
+        存在しない金を候補なしとして黙って扱う誤りを検出する。
+        """
+        with self.assertRaises(ValueError):
+            gold_move_candidates(Board(), Square(5, 5))
 
 
 class PawnMoveCandidatesTests(unittest.TestCase):

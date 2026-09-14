@@ -8,7 +8,7 @@
 
 ## 現在の状態
 
-初期配置のCLI表示と、歩の移動先候補を求める関数を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、実際の駒の移動や対局はまだできません。
+初期配置のCLI表示と、歩・金の移動先候補を求める関数を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、実際の駒の移動や対局はまだできません。
 
 実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
 
@@ -28,7 +28,7 @@ python3 -m kaname_shogi
 python3 -m unittest discover -s tests -v
 ```
 
-座標の検証、駒の不変性、盤面の独立性、初期配置の全81マス・枚数・手番、CLI表示を確認します。
+座標の検証、駒の不変性、盤面の独立性、初期配置の全81マス・枚数・手番、CLI表示、歩・金の候補の向き・盤外・占有・盤面不変性を確認します。
 
 `-v` を付けると、英語のテストメソッド名に続けて、日本語のdocstringの先頭行が表示されます。テスト名は検索・個別実行に使える英語のまま、確認する振る舞いと検出したい誤りは日本語のdocstringで説明しています。
 
@@ -47,6 +47,15 @@ print(pawn_move_candidates(position.board, Square(7, 7)))
 
 先後は出発マスの歩が持つ所有者から読み取ります。候補なしは `[]`、出発マスが空または歩以外なら `ValueError` です。成りや王手などを検証していないため、戻り値は合法手の確定ではありません。
 
+金は `gold_move_candidates(board, source)` で調べます。先後は盤上の金から読み、盤外・自駒を除いた0〜6候補を固定順で返します。出発点が空または金以外なら `ValueError` です。
+
+```python
+from kaname_shogi.movegen import gold_move_candidates
+
+print(gold_move_candidates(position.board, Square(6, 9)))
+# [Square(file=6, rank=8), Square(file=7, rank=8), Square(file=5, rank=8)]
+```
+
 公開する型・関数・メソッドのdocstringには、引数・戻り値・変更する状態・前提条件と、その設計を選んだ背景を記録します。将来の保守では、仕様を変える際にdocstringも更新してください。判断の詳しい経緯は設計書と学習記録を参照できます。
 
 ## 文書
@@ -62,6 +71,11 @@ print(pawn_move_candidates(position.board, Square(7, 7)))
 - [歩の移動先候補：実装用メモ](docs/knowledge/06-pawn-move-candidates.md)
 - [第2回実装の設計：歩の移動先候補](docs/design/02-pawn-move-candidates.md)
 - [第7回：歩の候補生成の設計と実装](docs/learning/07-pawn-candidates-implementation.md)
+- [第8回：金の移動先候補](docs/learning/08-gold-move-candidates.md)
+- [金の移動先候補：参照メモ](docs/knowledge/08-gold-move-candidates.md)
+
+- [第3回実装の設計：金の移動先候補](docs/design/03-gold-move-candidates.md)
+- [第9回：金の候補生成の設計と実装](docs/learning/09-gold-candidates-implementation.md)
 
 ## 名前について
 
