@@ -51,6 +51,7 @@ print(pawn_move_candidates(position.board, Square(7, 7)))
 
 ## 文書
 
+- [学習・開発の再開案内](docs/resume.md)
 - [プロジェクトの背景](docs/01-project-background.md)
 - [プロジェクトの方向性](docs/02-project-direction.md)
 - [第1回実装の設計](docs/design/01-board-and-initial-position.md)
