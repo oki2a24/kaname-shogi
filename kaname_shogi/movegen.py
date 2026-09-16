@@ -1,14 +1,58 @@
 """盤面を変更せず、駒の移動先候補を求める。
 
-movegenはmove generation（指し手生成）の略。現段階では歩と金の移動先を
+movegenはmove generation（指し手生成）の略。現段階では歩・金・銀の移動先を
 扱い、指し手の適用や合法手の確定は行わない。全駒の専用関数を作る方針は
 まだ決めず、次の駒を学ぶ際に共有できる処理を検討する。
 
 契約と判断の背景：docs/design/02-pawn-move-candidates.md、
-docs/learning/06-pawn-move-candidates.md、docs/design/03-gold-move-candidates.md。
+docs/learning/06-pawn-move-candidates.md、docs/design/03-gold-move-candidates.md、
+docs/design/04-silver-move-candidates.md。
 """
 
 from .model import Board, PieceType, Side, Square
+
+
+def silver_move_candidates(board: Board, source: Square) -> list[Square]:
+    """出発マスの銀について、移動先候補を0〜5個のリストで返す。
+
+    引数:
+        board: 調べる盤面。駒は正しいPieceTypeとSideを持つこと。
+        source: 銀（SILVER）がある出発マス。検証済みのSquareを渡す。
+
+    戻り値:
+        盤外と自駒のマスを除いた、移動先Squareの新しいリスト。
+        候補なしは空リスト。前、前方の筋＋1、前方の筋−1、後方の筋＋1、
+        後方の筋−1の順で返す。再現性のための順序で、強さの優先順位ではない。
+
+    例外:
+        ValueError: 出発マスが空、または銀以外の場合。
+        呼び出しの誤りを通常の候補なしと区別する。
+
+    先後は盤上のPiece.sideから読み、先手の前は段−1、後手は段＋1。
+    筋・段が盤内かを確認してからSquareを作り、通常の盤外を例外にしない。
+    金との方向の違いを読み比べられるよう、専用の短い関数と5方向の表を使う。
+
+    盤面を変更せず、相手駒も取り除かない。手番を持つPositionを受け取らず、
+    どちらの銀も調べられる。成銀・成り・王手は扱わず、合法手の確定ではない。
+    相手の玉のマスも含み得るが、玉取りを合法とする意味ではない。
+    """
+    piece = board.piece_at(source)
+    if piece is None or piece.piece_type != PieceType.SILVER:
+        raise ValueError("出発マスには銀を指定してください")
+    forward = -1 if piece.side == Side.SENTE else 1
+    offsets = ((0, forward), (1, forward), (-1, forward),
+               (1, -forward), (-1, -forward))
+    candidates = []
+    for df, dr in offsets:
+        next_file, next_rank = source.file + df, source.rank + dr
+        if not (1 <= next_file <= 9 and 1 <= next_rank <= 9):
+            continue
+        target = Square(next_file, next_rank)
+        occupant = board.piece_at(target)
+        if occupant is not None and occupant.side == piece.side:
+            continue
+        candidates.append(target)
+    return candidates
 
 
 def gold_move_candidates(board: Board, source: Square) -> list[Square]:
