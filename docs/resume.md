@@ -32,7 +32,7 @@ kaname-shogiの続きをお願いします。
 AGENTS.md、README.md、docs/resume.mdから最新の学習・設計・実装記録を読み、現在のGit状態を確認してください。
 香の移動先候補は実装後の理解確認まで一区切りです。第13回の記録とGitの現在の状態を確認してください。
 次の学習テーマを相談したいです。小さく進められる候補と違いを説明してください。
-superpowersを適用し、学習と具体的な設計の合意後にRed → Green → Refactorで実装してください。
+`superpowerssuperpowers` プラグインを適用し、学習と具体的な設計の合意後にRed → Green → Refactorで実装してください。
 ```
 
 ## 実行場所とコマンド

@@ -1,6 +1,6 @@
 # 初期配置CLIの実装計画
 
-> 実行担当者向け：`superpowers:executing-plans` を使い、このタスク内で順番に実行する。チェックボックスで進捗を記録する。
+> 実行担当者向け：`superpowerssuperpowers:executing-plans` を使い、このタスク内で順番に実行する。チェックボックスで進捗を記録する。
 
 **目的：** 筋・段で扱う初期配置と先手の手番をCLIに表示する。
 
