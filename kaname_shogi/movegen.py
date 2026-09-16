@@ -1,15 +1,59 @@
 """盤面を変更せず、駒の移動先候補を求める。
 
-movegenはmove generation（指し手生成）の略。現段階では歩・金・銀の移動先を
+movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・香の移動先を
 扱い、指し手の適用や合法手の確定は行わない。全駒の専用関数を作る方針は
 まだ決めず、次の駒を学ぶ際に共有できる処理を検討する。
 
 契約と判断の背景：docs/design/02-pawn-move-candidates.md、
 docs/learning/06-pawn-move-candidates.md、docs/design/03-gold-move-candidates.md、
-docs/design/04-silver-move-candidates.md。
+docs/design/04-silver-move-candidates.md、docs/design/05-lance-move-candidates.md。
 """
 
 from .model import Board, PieceType, Side, Square
+
+
+def lance_move_candidates(board: Board, source: Square) -> list[Square]:
+    """出発マスの香について、前方の移動先候補を0〜8個のリストで返す。
+
+    引数:
+        board: 調べる盤面。駒は正しいPieceTypeとSideを持つこと。
+        source: 香（LANCE）がある出発マス。検証済みのSquareを渡す。
+
+    戻り値:
+        同じ筋の前方にあるSquareを、出発点に近い順に並べた新しいリスト。
+        自駒の手前または最初の相手駒のマスまでを含む。候補なしは空リスト。
+        順序は再現性と読みやすさのためで、強さの優先順位ではない。
+
+    例外:
+        ValueError: 出発マスが空、または香以外の場合。
+        呼び出しの誤りを通常の候補なしと区別する。
+
+    所有者は盤上のPiece.sideから読み、先手は段−1、後手は段＋1で調べる。
+    筋は変えず、段が盤内であることを確かめてからSquareを作る。
+    自駒も相手駒も飛び越せないため、駒に当たった時点で繰り返しを止める。
+    香の一方向の停止条件を直接読めるよう、飛・角との共有は先取りしない。
+
+    盤面を変更せず、相手駒も取り除かない。手番を持つPositionを受け取らず、
+    どちらの香も調べられる。成香・成り・王手は扱わず、合法手の確定ではない。
+    最奥段も候補に含み得るが不成を合法と認める意味ではなく、相手の玉の
+    マスも含み得るが玉取りを合法と認める意味ではない。
+    """
+    piece = board.piece_at(source)
+    if piece is None or piece.piece_type != PieceType.LANCE:
+        raise ValueError("出発マスには香を指定してください")
+    forward = -1 if piece.side == Side.SENTE else 1
+    candidates = []
+    next_rank = source.rank + forward
+    while 1 <= next_rank <= 9:
+        target = Square(source.file, next_rank)
+        occupant = board.piece_at(target)
+        if occupant is not None and occupant.side == piece.side:
+            break
+        candidates.append(target)
+        if occupant is not None:
+            break
+        next_rank += forward
+    return candidates
 
 
 def silver_move_candidates(board: Board, source: Square) -> list[Square]:

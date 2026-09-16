@@ -8,7 +8,7 @@
 
 ## 現在の状態
 
-初期配置のCLI表示と、歩・金・銀の移動先候補を求める関数を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、実際の駒の移動や対局はまだできません。
+初期配置のCLI表示と、歩・金・銀・香の移動先候補を求める関数を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、実際の駒の移動や対局はまだできません。
 
 実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
 
@@ -28,7 +28,7 @@ python3 -m kaname_shogi
 python3 -m unittest discover -s tests -v
 ```
 
-座標の検証、駒の不変性、盤面の独立性、初期配置の全81マス・枚数・手番、CLI表示、歩・金・銀の候補の向き・盤外・占有・盤面不変性を確認します。
+座標の検証、駒の不変性、盤面の独立性、初期配置の全81マス・枚数・手番、CLI表示、歩・金・銀・香の候補の向き・盤外・占有・盤面不変性を確認します。
 
 `-v` を付けると、英語のテストメソッド名に続けて、日本語のdocstringの先頭行が表示されます。テスト名は検索・個別実行に使える英語のまま、確認する振る舞いと検出したい誤りは日本語のdocstringで説明しています。
 
@@ -67,6 +67,21 @@ print(silver_move_candidates(position.board, Square(7, 9)))
 # [Square(file=7, rank=8), Square(file=6, rank=8)]
 ```
 
+香は `lance_move_candidates(board, source)` で調べます。lanceは香、move_candidatesは移動先候補を求める操作です。Boardは盤面のデータ、Squareは筋・段を持つマスの値です。盤上の香の所有者から前方を決め、同じ筋の候補を近い順に0〜8個返します。自駒の手前、または最初の相手駒のマスで止まり、駒を飛び越しません。候補なしは `[]`、出発点が空または香以外なら `ValueError` です。盤面は変更せず、成りや合法手の確定は扱いません。
+
+```python
+from kaname_shogi.model import Board, Piece, PieceType, Side, Square
+from kaname_shogi.movegen import lance_move_candidates
+
+board = Board()
+board.set_piece(Square(5, 5), Piece(PieceType.LANCE, Side.SENTE))
+board.set_piece(Square(5, 3), Piece(PieceType.PAWN, Side.GOTE))
+print(lance_move_candidates(board, Square(5, 5)))
+# [Square(file=5, rank=4), Square(file=5, rank=3)]
+```
+
+５三は相手の歩を取る移動の候補ですが、この計算では香は５五、歩は５三に残ります。
+
 ## 文書
 
 - [学習・開発の再開案内](docs/resume.md)
@@ -89,6 +104,11 @@ print(silver_move_candidates(position.board, Square(7, 9)))
 - [銀の移動先候補：参照メモ](docs/knowledge/10-silver-move-candidates.md)
 - [第4回実装の設計：銀の移動先候補](docs/design/04-silver-move-candidates.md)
 - [第11回：銀の候補生成の設計と実装](docs/learning/11-silver-candidates-implementation.md)
+
+- [第12回：香の移動先候補](docs/learning/12-lance-move-candidates.md)
+- [香の移動先候補：参照メモ](docs/knowledge/12-lance-move-candidates.md)
+- [第5回実装の設計：香の移動先候補](docs/design/05-lance-move-candidates.md)
+- [第13回：香の候補生成の設計と実装](docs/learning/13-lance-candidates-implementation.md)
 
 ## 名前について
 
