@@ -8,7 +8,7 @@
 
 ## 現在の状態
 
-初期配置のCLI表示と、歩・金・銀・香の移動先候補を求める関数を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、実際の駒の移動や対局はまだできません。
+初期配置のCLI表示と、歩・金・銀・香・飛車の移動先候補を求める関数を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、実際の駒の移動や対局はまだできません。
 
 実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
 
@@ -28,7 +28,7 @@ python3 -m kaname_shogi
 python3 -m unittest discover -s tests -v
 ```
 
-座標の検証、駒の不変性、盤面の独立性、初期配置の全81マス・枚数・手番、CLI表示、歩・金・銀・香の候補の向き・盤外・占有・盤面不変性を確認します。
+座標の検証、駒の不変性、盤面の独立性、初期配置の全81マス・枚数・手番、CLI表示、歩・金・銀・香・飛車の候補の向き・盤外・占有・盤面不変性を確認します。
 
 `-v` を付けると、英語のテストメソッド名に続けて、日本語のdocstringの先頭行が表示されます。テスト名は検索・個別実行に使える英語のまま、確認する振る舞いと検出したい誤りは日本語のdocstringで説明しています。
 
@@ -82,6 +82,18 @@ print(lance_move_candidates(board, Square(5, 5)))
 
 ５三は相手の歩を取る移動の候補ですが、この計算では香は５五、歩は５三に残ります。
 
+飛車は `rook_move_candidates(board, source)` で調べます。rookは飛車、move_candidatesは移動先候補を求める操作です。右・左・前・後ろの順に各方向を近い順で走査し、空マスと最初の相手駒のマスを候補に含めます。自駒のマスとその先は含めません。先後は出発マスの飛車から読み、手番には制限されません。出発点が空または飛車以外なら `ValueError` です。
+
+```python
+from kaname_shogi.movegen import rook_move_candidates
+
+print(rook_move_candidates(board, Square(5, 5)))
+# [Square(file=4, rank=5), Square(file=3, rank=5), ...,
+#  Square(file=5, rank=6), Square(file=5, rank=7), ...]
+```
+
+候補計算では飛車や他の駒を動かしたり取ったりしません。成り、王手、合法手の確定は扱いません。
+
 ## 文書
 
 - [学習・開発の再開案内](docs/resume.md)
@@ -109,6 +121,10 @@ print(lance_move_candidates(board, Square(5, 5)))
 - [香の移動先候補：参照メモ](docs/knowledge/12-lance-move-candidates.md)
 - [第5回実装の設計：香の移動先候補](docs/design/05-lance-move-candidates.md)
 - [第13回：香の候補生成の設計と実装](docs/learning/13-lance-candidates-implementation.md)
+- [第14回：飛車の移動先候補](docs/learning/14-rook-move-candidates.md)
+- [飛車の移動先候補：参照メモ](docs/knowledge/13-rook-move-candidates.md)
+- [第6回実装の設計：飛車の移動先候補](docs/design/06-rook-move-candidates.md)
+- [第15回：飛車の候補生成の実装](docs/learning/15-rook-candidates-implementation.md)
 
 ## 名前について
 
