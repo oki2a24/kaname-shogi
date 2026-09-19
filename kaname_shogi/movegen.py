@@ -1,16 +1,64 @@
 """盤面を変更せず、駒の移動先候補を求める。
 
-movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・香・飛車の移動先を
+movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・香・飛車・角の移動先を
 扱い、指し手の適用や合法手の確定は行わない。全駒の専用関数を作る方針は
 まだ決めず、次の駒を学ぶ際に共有できる処理を検討する。
 
 契約と判断の背景：docs/design/02-pawn-move-candidates.md、
 docs/learning/06-pawn-move-candidates.md、docs/design/03-gold-move-candidates.md、
 docs/design/04-silver-move-candidates.md、docs/design/05-lance-move-candidates.md、
-docs/design/06-rook-move-candidates.md。
+docs/design/06-rook-move-candidates.md、docs/design/07-bishop-move-candidates.md。
 """
 
 from .model import Board, PieceType, Side, Square
+
+
+def bishop_move_candidates(board: Board, source: Square) -> list[Square]:
+    """出発マスの角について、斜め4方向の移動先候補を返す。
+
+    引数:
+        board: 調べる盤面。駒は正しいPieceTypeとSideを持つこと。
+        source: 角（BISHOP）がある出発マス。検証済みのSquareを渡す。
+
+    戻り値:
+        右前・左前・右後ろ・左後ろの順に、各方向の近いマスから並べた
+        新しいリスト。空マスと最初の相手駒のマスを含み、自駒のマスと
+        その先は含めない。候補なしは空リスト。
+
+    例外:
+        ValueError: 出発マスが空、または角以外の場合。
+        呼び出しの誤りを通常の候補なしと区別する。
+
+    先後は出発マスのPiece.sideから読み、右は筋−1、左は筋＋1とする。
+    前は先手なら段−1、後手なら段＋1であり、後ろはその反対である。
+    方向ごとに同じ走査を行い、盤外または駒に当たった方向だけを終了する。
+    順序は再現性と読みやすさのためで、指し手の優先順位ではない。
+
+    盤面を変更せず、相手駒も取り除かない。手番を持つPositionを受け取らず、
+    どちらの角も調べられる。成り・馬・王手は扱わず、合法手の確定ではない。
+    飛車との処理共有は、斜め方向の走査を学ぶ今回の範囲では先取りしない。
+    """
+    piece = board.piece_at(source)
+    if piece is None or piece.piece_type != PieceType.BISHOP:
+        raise ValueError("出発マスには角を指定してください")
+
+    forward = -1 if piece.side == Side.SENTE else 1
+    directions = ((-1, forward), (1, forward), (-1, -forward), (1, -forward))
+    candidates = []
+    for file_step, rank_step in directions:
+        next_file = source.file + file_step
+        next_rank = source.rank + rank_step
+        while 1 <= next_file <= 9 and 1 <= next_rank <= 9:
+            target = Square(next_file, next_rank)
+            occupant = board.piece_at(target)
+            if occupant is not None and occupant.side == piece.side:
+                break
+            candidates.append(target)
+            if occupant is not None:
+                break
+            next_file += file_step
+            next_rank += rank_step
+    return candidates
 
 
 def rook_move_candidates(board: Board, source: Square) -> list[Square]:

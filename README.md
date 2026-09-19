@@ -94,6 +94,18 @@ print(rook_move_candidates(board, Square(5, 5)))
 
 候補計算では飛車や他の駒を動かしたり取ったりしません。成り、王手、合法手の確定は扱いません。
 
+角は `bishop_move_candidates(board, source)` で調べます。bishopは角、move_candidatesは移動先候補を求める操作です。右前・左前・右後ろ・左後ろの順に各方向を近い順で走査し、空マスと最初の相手駒のマスを候補に含めます。自駒のマスとその先は含めません。先後は出発マスの角から読み、手番には制限されません。出発点が空または角以外なら `ValueError` です。
+
+```python
+from kaname_shogi.movegen import bishop_move_candidates
+
+print(bishop_move_candidates(board, Square(5, 5)))
+# [Square(file=4, rank=4), Square(file=3, rank=3), ...,
+#  Square(file=6, rank=6), Square(file=7, rank=7), ...]
+```
+
+候補計算では角や他の駒を動かしたり取ったりしません。成り、馬の縦横1マス、王手、合法手の確定は扱いません。
+
 ## 文書
 
 - [学習・開発の再開案内](docs/resume.md)
@@ -125,6 +137,10 @@ print(rook_move_candidates(board, Square(5, 5)))
 - [飛車の移動先候補：参照メモ](docs/knowledge/13-rook-move-candidates.md)
 - [第6回実装の設計：飛車の移動先候補](docs/design/06-rook-move-candidates.md)
 - [第15回：飛車の候補生成の実装](docs/learning/15-rook-candidates-implementation.md)
+- [第16回：角の移動先候補](docs/learning/16-bishop-move-candidates.md)
+- [角の移動先候補：参照メモ](docs/knowledge/14-bishop-move-candidates.md)
+- [第7回実装の設計：角の移動先候補](docs/design/07-bishop-move-candidates.md)
+- [角の移動先候補 実装計画](docs/plans/2026-09-19-bishop-move-candidates.md)
 
 ## 名前について
 

@@ -4,9 +4,179 @@ import unittest
 
 from kaname_shogi.model import Board, Piece, PieceType, Position, Side, Square
 from kaname_shogi.movegen import (
-    gold_move_candidates, lance_move_candidates, pawn_move_candidates,
-    rook_move_candidates, silver_move_candidates,
+    bishop_move_candidates, gold_move_candidates, lance_move_candidates,
+    pawn_move_candidates, rook_move_candidates, silver_move_candidates,
 )
+
+
+class BishopMoveCandidatesTests(unittest.TestCase):
+    def test_empty_source_is_rejected(self):
+        """空の出発マスを角候補の計算対象として受け付けない。
+
+        候補なしと呼び出しの誤りを区別するValueErrorの契約を確認する。
+        """
+        with self.assertRaises(ValueError):
+            bishop_move_candidates(Board(), Square(5, 5))
+
+    def test_non_bishop_source_is_rejected(self):
+        """角以外の駒種を角候補の出発点として受け付けない。
+
+        駒種の検証漏れにより、他の駒を角の動きとして扱う誤りを検出する。
+        """
+        for side in Side:
+            for kind in PieceType:
+                if kind == PieceType.BISHOP:
+                    continue
+                with self.subTest(side=side, kind=kind):
+                    board = Board()
+                    board.set_piece(Square(5, 5), Piece(kind, side))
+                    with self.assertRaises(ValueError):
+                        bishop_move_candidates(board, Square(5, 5))
+
+    def test_open_board_returns_four_diagonal_directions_in_order(self):
+        """５五の角は右前・左前・右後ろ・左後ろの順に候補を返す。
+
+        筋と段の同時増減、先後の前後、方向順、走査距離の誤りを検出する。
+        """
+        for side, expected in [
+            (Side.SENTE, (
+                [Square(file, rank) for file, rank in [(4, 4), (3, 3), (2, 2), (1, 1)]]
+                + [Square(file, rank) for file, rank in [(6, 4), (7, 3), (8, 2), (9, 1)]]
+                + [Square(file, rank) for file, rank in [(4, 6), (3, 7), (2, 8), (1, 9)]]
+                + [Square(file, rank) for file, rank in [(6, 6), (7, 7), (8, 8), (9, 9)]]
+            )),
+            (Side.GOTE, (
+                [Square(file, rank) for file, rank in [(4, 6), (3, 7), (2, 8), (1, 9)]]
+                + [Square(file, rank) for file, rank in [(6, 6), (7, 7), (8, 8), (9, 9)]]
+                + [Square(file, rank) for file, rank in [(4, 4), (3, 3), (2, 2), (1, 1)]]
+                + [Square(file, rank) for file, rank in [(6, 4), (7, 3), (8, 2), (9, 1)]]
+            )),
+        ]:
+            with self.subTest(side=side):
+                board = Board()
+                board.set_piece(Square(5, 5), Piece(PieceType.BISHOP, side))
+                self.assertEqual(bishop_move_candidates(board, Square(5, 5)), expected)
+
+    def test_own_piece_stops_each_direction_before_its_square(self):
+        """4方向それぞれで自駒の手前までを候補にし、自駒の先へ進まない。
+
+        自駒を候補に含めたり、別方向まで走査を止めたりする誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.BISHOP, Side.SENTE))
+        blockers = [Square(4, 4), Square(7, 3), Square(3, 7), Square(7, 7)]
+        for blocker in blockers:
+            board.set_piece(blocker, Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(bishop_move_candidates(board, source),
+                         [Square(6, 4), Square(4, 6), Square(6, 6)])
+
+    def test_opponent_piece_is_last_destination_in_each_direction(self):
+        """4方向それぞれで最初の相手駒を最後の候補に含め、その先へ進まない。
+
+        相手駒を除外したり、相手駒を飛び越して奥まで返したりする誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.BISHOP, Side.SENTE))
+        blockers = [Square(3, 3), Square(7, 3), Square(3, 7), Square(7, 7)]
+        for blocker in blockers:
+            board.set_piece(blocker, Piece(PieceType.PAWN, Side.GOTE))
+        self.assertEqual(bishop_move_candidates(board, source),
+                         [Square(4, 4), Square(3, 3),
+                          Square(6, 4), Square(7, 3),
+                          Square(4, 6), Square(3, 7),
+                          Square(6, 6), Square(7, 7)])
+
+    def test_blocked_direction_does_not_stop_other_directions(self):
+        """1方向が自駒で塞がっても、残り3方向を候補計算する。
+
+        全体を途中で終了する誤りと、斜め方向の増減を取り違える誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.BISHOP, Side.SENTE))
+        board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(bishop_move_candidates(board, source),
+                         [Square(6, 4), Square(7, 3), Square(8, 2), Square(9, 1),
+                          Square(4, 6), Square(3, 7), Square(2, 8), Square(1, 9),
+                          Square(6, 6), Square(7, 7), Square(8, 8), Square(9, 9)])
+
+    def test_edges_stop_at_board_boundary_for_both_sides(self):
+        """四隅の角は盤外を除き、固定した斜め方向順で候補を返す。
+
+        筋・段の境界判定の欠落、座標の誤り、方向順の入れ替えを検出する。
+        """
+        cases = [
+            (Square(1, 1), [Square(2, 2), Square(3, 3), Square(4, 4),
+                           Square(5, 5), Square(6, 6), Square(7, 7),
+                           Square(8, 8), Square(9, 9)]),
+            (Square(9, 1), [Square(8, 2), Square(7, 3), Square(6, 4),
+                           Square(5, 5), Square(4, 6), Square(3, 7),
+                           Square(2, 8), Square(1, 9)]),
+            (Square(1, 9), [Square(2, 8), Square(3, 7), Square(4, 6),
+                           Square(5, 5), Square(6, 4), Square(7, 3),
+                           Square(8, 2), Square(9, 1)]),
+            (Square(9, 9), [Square(8, 8), Square(7, 7), Square(6, 6),
+                           Square(5, 5), Square(4, 4), Square(3, 3),
+                           Square(2, 2), Square(1, 1)]),
+        ]
+        for side in Side:
+            for source, expected in cases:
+                with self.subTest(side=side, source=source):
+                    board = Board()
+                    board.set_piece(source, Piece(PieceType.BISHOP, side))
+                    self.assertEqual(bishop_move_candidates(board, source), expected)
+
+    def test_candidate_generation_preserves_all_squares(self):
+        """候補計算の前後で盤上の全81マスを変更しない。
+
+        角を動かす、相手駒を取る、通過した駒を消す処理の混入を検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.BISHOP, Side.SENTE))
+        board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(7, 3), Piece(PieceType.PAWN, Side.GOTE))
+        squares = [Square(file, rank) for file in range(1, 10)
+                   for rank in range(1, 10)]
+        before = [board.piece_at(square) for square in squares]
+        bishop_move_candidates(board, source)
+        self.assertEqual([board.piece_at(square) for square in squares], before)
+
+    def test_results_are_independent_lists(self):
+        """呼び出しごとに候補リストを独立して返す。
+
+        呼び出し側による戻り値の変更が、別の呼び出し結果へ波及する誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.BISHOP, Side.SENTE))
+        expected = bishop_move_candidates(board, source)
+        result = bishop_move_candidates(board, source)
+        result.append(Square(1, 1))
+        self.assertEqual(bishop_move_candidates(board, source), expected)
+
+    def test_turn_does_not_restrict_candidates_or_change(self):
+        """手番によらず出発駒の所有者で候補を計算し、手番を変更しない。
+
+        Positionの手番を候補生成の制限に誤用する実装を、先後の角で検出する。
+        """
+        board = Board()
+        sente_source, gote_source = Square(5, 5), Square(1, 1)
+        board.set_piece(sente_source, Piece(PieceType.BISHOP, Side.SENTE))
+        board.set_piece(gote_source, Piece(PieceType.BISHOP, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        sente_expected = bishop_move_candidates(board, sente_source)
+        gote_expected = bishop_move_candidates(board, gote_source)
+        for turn in Side:
+            with self.subTest(turn=turn):
+                position.side_to_move = turn
+                self.assertEqual(bishop_move_candidates(position.board, sente_source),
+                                 sente_expected)
+                self.assertEqual(bishop_move_candidates(position.board, gote_source),
+                                 gote_expected)
+                self.assertEqual(position.side_to_move, turn)
 
 
 class RookMoveCandidatesTests(unittest.TestCase):
