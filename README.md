@@ -8,7 +8,7 @@
 
 ## 現在の状態
 
-初期配置のCLI表示と、歩・金・銀・香・飛車・角の移動先候補を求める関数を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、実際の駒の移動や対局はまだできません。
+初期配置のCLI表示と、歩・金・銀・桂・香・飛車・角の移動先候補を求める関数を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、実際の駒の移動や対局はまだできません。
 
 実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
 
@@ -28,7 +28,7 @@ python3 -m kaname_shogi
 python3 -m unittest discover -s tests -v
 ```
 
-座標の検証、駒の不変性、盤面の独立性、初期配置の全81マス・枚数・手番、CLI表示、歩・金・銀・香・飛車の候補の向き・盤外・占有・盤面不変性を確認します。
+座標の検証、駒の不変性、盤面の独立性、初期配置の全81マス・枚数・手番、CLI表示、歩・金・銀・桂・香・飛車・角の候補の向き・盤外・占有・盤面不変性を確認します。
 
 `-v` を付けると、英語のテストメソッド名に続けて、日本語のdocstringの先頭行が表示されます。テスト名は検索・個別実行に使える英語のまま、確認する振る舞いと検出したい誤りは日本語のdocstringで説明しています。
 
@@ -66,6 +66,25 @@ from kaname_shogi.movegen import silver_move_candidates
 print(silver_move_candidates(position.board, Square(7, 9)))
 # [Square(file=7, rank=8), Square(file=6, rank=8)]
 ```
+
+桂馬は `knight_move_candidates(board, source)` で調べます。knightは桂馬、
+move_candidatesは移動先候補を求める操作です。盤上の桂馬の所有者から前方を決め、
+右前（筋−1）・左前（筋＋1）の順に、段を2つ進んだ盤内のマスを最大2個返します。
+桂馬は途中の駒を飛び越えられます。自駒のある到着先は除外し、相手駒のある到着先は
+含めます。候補なしは `[]`、出発点が空または桂馬以外なら `ValueError` です。
+
+```python
+from kaname_shogi.model import Board, Piece, PieceType, Side, Square
+from kaname_shogi.movegen import knight_move_candidates
+
+board = Board()
+board.set_piece(Square(5, 5), Piece(PieceType.KNIGHT, Side.SENTE))
+print(knight_move_candidates(board, Square(5, 5)))
+# [Square(file=4, rank=3), Square(file=6, rank=3)]
+```
+
+候補計算では盤面を変更せず、`Position.side_to_move`にも制限されません。成桂・成り、
+行き所のない桂の合法性、駒取り、実際の移動、王手、合法手の確定、持ち駒は対象外です。
 
 香は `lance_move_candidates(board, source)` で調べます。lanceは香、move_candidatesは移動先候補を求める操作です。Boardは盤面のデータ、Squareは筋・段を持つマスの値です。盤上の香の所有者から前方を決め、同じ筋の候補を近い順に0〜8個返します。自駒の手前、または最初の相手駒のマスで止まり、駒を飛び越しません。候補なしは `[]`、出発点が空または香以外なら `ValueError` です。盤面は変更せず、成りや合法手の確定は扱いません。
 
@@ -128,6 +147,10 @@ print(bishop_move_candidates(board, Square(5, 5)))
 - [銀の移動先候補：参照メモ](docs/knowledge/10-silver-move-candidates.md)
 - [第4回実装の設計：銀の移動先候補](docs/design/04-silver-move-candidates.md)
 - [第11回：銀の候補生成の設計と実装](docs/learning/11-silver-candidates-implementation.md)
+- [第18回：桂馬の移動先候補](docs/learning/18-knight-move-candidates.md)
+- [桂馬の移動先候補：参照メモ](docs/knowledge/15-knight-move-candidates.md)
+- [第8回実装の設計：桂馬の移動先候補](docs/design/08-knight-move-candidates.md)
+- [第19回：桂馬の候補生成の実装](docs/learning/19-knight-candidates-implementation.md)
 
 - [第12回：香の移動先候補](docs/learning/12-lance-move-candidates.md)
 - [香の移動先候補：参照メモ](docs/knowledge/12-lance-move-candidates.md)
@@ -141,6 +164,7 @@ print(bishop_move_candidates(board, Square(5, 5)))
 - [角の移動先候補：参照メモ](docs/knowledge/14-bishop-move-candidates.md)
 - [第7回実装の設計：角の移動先候補](docs/design/07-bishop-move-candidates.md)
 - [角の移動先候補 実装計画](docs/plans/2026-09-19-bishop-move-candidates.md)
+- [桂馬の移動先候補 実装計画](docs/plans/2026-09-20-knight-move-candidates.md)
 
 ## 名前について
 

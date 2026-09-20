@@ -1,16 +1,63 @@
 """盤面を変更せず、駒の移動先候補を求める。
 
-movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・香・飛車・角の移動先を
+movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・桂・香・飛車・角の移動先を
 扱い、指し手の適用や合法手の確定は行わない。全駒の専用関数を作る方針は
 まだ決めず、次の駒を学ぶ際に共有できる処理を検討する。
 
 契約と判断の背景：docs/design/02-pawn-move-candidates.md、
 docs/learning/06-pawn-move-candidates.md、docs/design/03-gold-move-candidates.md、
 docs/design/04-silver-move-candidates.md、docs/design/05-lance-move-candidates.md、
-docs/design/06-rook-move-candidates.md、docs/design/07-bishop-move-candidates.md。
+docs/design/06-rook-move-candidates.md、docs/design/07-bishop-move-candidates.md、
+docs/learning/18-knight-move-candidates.md、docs/knowledge/15-knight-move-candidates.md、
+docs/design/08-knight-move-candidates.md。
 """
 
 from .model import Board, PieceType, Side, Square
+
+
+def knight_move_candidates(board: Board, source: Square) -> list[Square]:
+    """出発マスの桂馬について、移動先候補を返す。
+
+    `PieceType.KNIGHT`は桂馬を表す駒種のデータであり、
+    `knight_move_candidates`はその駒の移動先候補を求める操作である。
+
+    引数:
+        board: 調べる盤面。盤面の駒は正しいPieceTypeとSideを持つこと。
+        source: 桂馬（KNIGHT）がある出発マス。検証済みのSquareを渡す。
+
+    戻り値:
+        右前（筋−1）・左前（筋＋1）の順に、盤内で到達できるマスを並べた
+        新しいリスト。先手は段−2、後手は段＋2へ進む。盤外のマスと自駒の
+        あるマスは含めず、相手駒のあるマスは含める。途中のマスは調べず、
+        桂馬の飛び越しを妨げない。候補がなければ空リストを返す。
+
+    例外:
+        ValueError: 出発マスが空、または桂馬以外の場合。
+        呼び出しの誤りを通常の候補なしと区別する。
+
+    出発駒のPiece.sideから先後を読み、Position.side_to_moveは参照しないため、
+    手番に関係なく先後どちらの桂馬も調べられる。候補計算は盤面を変更せず、
+    相手駒も取り除かない。戻り値は呼び出しごとに独立したリストである。
+    成桂・成り・行き所のない桂の合法性、駒取り、実際の移動、王手、合法手の
+    確定、持ち駒は扱わない。候補順は再現性と読みやすさのためで、指し手の
+    優先順位ではない。
+    """
+    piece = board.piece_at(source)
+    if piece is None or piece.piece_type != PieceType.KNIGHT:
+        raise ValueError("出発マスには桂馬を指定してください")
+    forward = -2 if piece.side == Side.SENTE else 2
+    candidates = []
+    for file_delta in (-1, 1):
+        target_file = source.file + file_delta
+        target_rank = source.rank + forward
+        if not (1 <= target_file <= 9 and 1 <= target_rank <= 9):
+            continue
+        target = Square(target_file, target_rank)
+        occupant = board.piece_at(target)
+        if occupant is not None and occupant.side == piece.side:
+            continue
+        candidates.append(target)
+    return candidates
 
 
 def bishop_move_candidates(board: Board, source: Square) -> list[Square]:

@@ -1,12 +1,161 @@
-"""歩・金・銀・香・飛車の向き・占有・盤外と、盤面不変の契約を検証する。"""
+"""歩・金・銀・桂馬・香・飛車・角の向き・占有・盤外と、盤面不変の契約を検証する。"""
 
 import unittest
 
 from kaname_shogi.model import Board, Piece, PieceType, Position, Side, Square
 from kaname_shogi.movegen import (
     bishop_move_candidates, gold_move_candidates, lance_move_candidates,
-    pawn_move_candidates, rook_move_candidates, silver_move_candidates,
+    knight_move_candidates, pawn_move_candidates, rook_move_candidates,
+    silver_move_candidates,
 )
+
+
+class KnightMoveCandidatesTests(unittest.TestCase):
+    def test_empty_source_is_rejected(self):
+        """空の出発マスを桂馬候補の計算対象として受け付けない。
+
+        候補なしと呼び出しの誤りを区別するValueErrorの契約を確認する。
+        """
+        with self.assertRaises(ValueError):
+            knight_move_candidates(Board(), Square(5, 5))
+
+    def test_non_knight_source_is_rejected(self):
+        """桂馬以外の駒種を桂馬候補の出発点として受け付けない。
+
+        駒種の検証漏れにより、他の駒を桂馬の動きとして扱う誤りを検出する。
+        """
+        for side in Side:
+            for kind in PieceType:
+                if kind == PieceType.KNIGHT:
+                    continue
+                with self.subTest(side=side, kind=kind):
+                    board = Board()
+                    board.set_piece(Square(5, 5), Piece(kind, side))
+                    with self.assertRaises(ValueError):
+                        knight_move_candidates(board, Square(5, 5))
+
+    def test_open_board_returns_right_front_then_left_front(self):
+        """５五の桂馬は右前、左前の順に候補を返す。
+
+        先後の段方向、筋の増減、固定順の誤りを検出する。
+        """
+        for side, expected in [
+            (Side.SENTE, [Square(4, 3), Square(6, 3)]),
+            (Side.GOTE, [Square(4, 7), Square(6, 7)]),
+        ]:
+            with self.subTest(side=side):
+                board = Board()
+                source = Square(5, 5)
+                board.set_piece(source, Piece(PieceType.KNIGHT, side))
+                self.assertEqual(knight_move_candidates(board, source), expected)
+
+    def test_intermediate_pieces_do_not_block_candidates(self):
+        """途中のマスに駒があっても桂馬は到着先を候補にする。
+
+        途中のマスを走査して候補を誤って止める実装を検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
+        board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 4), Piece(PieceType.PAWN, Side.GOTE))
+        self.assertEqual(knight_move_candidates(board, source),
+                         [Square(4, 3), Square(6, 3)])
+
+    def test_own_destination_is_excluded(self):
+        """桂馬の到着先にある自駒のマスを候補から除外する。
+
+        到着先の所有者を確認せず、自駒のマスを候補に含める誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
+        board.set_piece(Square(4, 3), Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(knight_move_candidates(board, source), [Square(6, 3)])
+
+    def test_opponent_destination_is_included(self):
+        """桂馬の到着先にある相手駒のマスを候補に含める。
+
+        相手駒のマスまで除外する誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
+        board.set_piece(Square(6, 3), Piece(PieceType.PAWN, Side.GOTE))
+        self.assertEqual(knight_move_candidates(board, source),
+                         [Square(4, 3), Square(6, 3)])
+
+    def test_edges_exclude_off_board_candidates_for_both_sides(self):
+        """先後の桂馬は盤外の到着先を候補から除外する。
+
+        筋と段の境界を確認せずSquareを作る誤りを、盤端の先後両方で検出する。
+        """
+        cases = [
+            (Side.SENTE, Square(1, 2), []),
+            (Side.SENTE, Square(9, 2), []),
+            (Side.SENTE, Square(1, 3), [Square(2, 1)]),
+            (Side.SENTE, Square(9, 3), [Square(8, 1)]),
+            (Side.GOTE, Square(1, 8), []),
+            (Side.GOTE, Square(9, 8), []),
+            (Side.GOTE, Square(1, 7), [Square(2, 9)]),
+            (Side.GOTE, Square(9, 7), [Square(8, 9)]),
+        ]
+        for side, source, expected in cases:
+            with self.subTest(side=side, source=source):
+                board = Board()
+                board.set_piece(source, Piece(PieceType.KNIGHT, side))
+                self.assertEqual(knight_move_candidates(board, source), expected)
+
+    def test_candidate_generation_preserves_all_squares(self):
+        """候補計算の前後で盤上の全81マスを変更しない。
+
+        桂馬を動かしたり、相手駒を取ったりする処理の混入を検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
+        board.set_piece(Square(4, 3), Piece(PieceType.PAWN, Side.GOTE))
+        squares = [Square(file, rank) for file in range(1, 10)
+                   for rank in range(1, 10)]
+        before = [board.piece_at(square) for square in squares]
+        knight_move_candidates(board, source)
+        self.assertEqual([board.piece_at(square) for square in squares], before)
+
+    def test_turn_does_not_restrict_candidates_or_change(self):
+        """局面の手番によらず桂馬の所有者で候補を計算し、手番も変更しない。
+
+        Position.side_to_moveを候補生成の制限や更新に誤用する実装を検出する。
+        """
+        board = Board()
+        sente_source, gote_source = Square(5, 5), Square(1, 7)
+        board.set_piece(sente_source, Piece(PieceType.KNIGHT, Side.SENTE))
+        board.set_piece(gote_source, Piece(PieceType.KNIGHT, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        expected = {
+            Side.SENTE: [Square(4, 3), Square(6, 3)],
+            Side.GOTE: [Square(2, 9)],
+        }
+        for turn in Side:
+            with self.subTest(turn=turn):
+                position.side_to_move = turn
+                self.assertEqual(knight_move_candidates(position.board, sente_source),
+                                 expected[Side.SENTE])
+                self.assertEqual(knight_move_candidates(position.board, gote_source),
+                                 expected[Side.GOTE])
+                self.assertEqual(position.side_to_move, turn)
+
+    def test_results_are_independent_lists(self):
+        """呼び出しごとに桂馬の候補リストを独立して返す。
+
+        呼び出し側による戻り値の変更が、別の呼び出し結果へ波及する誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
+        expected = knight_move_candidates(board, source)
+        result = knight_move_candidates(board, source)
+        result.clear()
+        self.assertEqual(knight_move_candidates(board, source), expected)
 
 
 class BishopMoveCandidatesTests(unittest.TestCase):

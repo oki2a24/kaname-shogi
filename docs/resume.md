@@ -1,12 +1,12 @@
 # 学習・開発の再開案内
 
-最終整理：2026-09-19。恒常的な運用方針はルートのAGENTS.mdを参照する。
+最終整理：2026-09-20。恒常的な運用方針はルートのAGENTS.mdを参照する。
 
 ## 現在の到達点
 
-初期配置CLIと歩・金・銀・香・飛車・角の移動先候補を実装。飛車は第14回、角は第16回で学習・設計合意を行い、元の `/Users/oki2a24/kaname-shogi` のmainで実装した。角の実装後、全74テスト、CLI、`git diff --check`、文書参照の確認が成功し、実装コミットは `c7d36c7`、理解確認と再開案内の更新は `c9c647e`。現在のGit状態はクリーンである。
+初期配置CLIと歩・金・銀・桂・香・飛車・角の移動先候補を実装。飛車は第14回、角は第16回、桂馬は第19回で学習・設計合意後の実装を行った。桂馬の実装・検証・レビュー対応と記録更新は完了しており、全84テスト、CLI、`git diff --check`を確認した。桂馬の実装後理解確認は未実施である。
 
-候補計算は盤面と出発マスを受け、盤上の駒から所有者を読む。盤外・自駒を除外し、香は前方、飛車は右・左・前・後ろの各方向を走査して、自駒の手前または最初の相手駒のマスで停止する。空または対象外の駒種の出発点はValueError。盤面を変更せず、手番で制限しない。成り、合法手確定、実際の移動、持ち駒は未実装。
+候補計算は盤面と出発マスを受け、盤上の駒から所有者を読む。盤外・自駒を除外し、桂馬は右前・左前へ段を2つ進み、途中の駒を飛び越す。香は前方、飛車は右・左・前・後ろ、角は斜め4方向を走査して、自駒の手前または最初の相手駒のマスで停止する。空または対象外の駒種の出発点はValueError。盤面を変更せず、手番で制限しない。成り、合法手確定、実際の移動、持ち駒は未実装。
 
 ## 読む順序
 
@@ -14,7 +14,8 @@
 2. [第12回：香の学習](learning/12-lance-move-candidates.md)と[参照メモ](knowledge/12-lance-move-candidates.md)。
 3. [香の設計](design/05-lance-move-candidates.md)と[第13回：実装・検証記録](learning/13-lance-candidates-implementation.md)。
 4. [飛車の学習](learning/14-rook-move-candidates.md)、[参照メモ](knowledge/13-rook-move-candidates.md)、[設計](design/06-rook-move-candidates.md)、[実装計画](plans/2026-09-17-rook-move-candidates.md)、[第15回：実装・検証記録](learning/15-rook-candidates-implementation.md)。
-5. [候補生成のコード](../kaname_shogi/movegen.py)と[テスト](../tests/test_movegen.py)。
+5. [第18回：桂馬の学習](learning/18-knight-move-candidates.md)、[桂馬の参照メモ](knowledge/15-knight-move-candidates.md)、[桂馬の設計](design/08-knight-move-candidates.md)、[桂馬の実装計画](plans/2026-09-20-knight-move-candidates.md)、[第19回：桂馬の実装・検証記録](learning/19-knight-candidates-implementation.md)。
+6. [候補生成のコード](../kaname_shogi/movegen.py)と[テスト](../tests/test_movegen.py)。
 
 ## 直近までの記録
 
@@ -28,10 +29,12 @@
 
 [銀への旧引き継ぎ](handover-silver.md)は学習開始前の経緯として保存している。再開位置は本書、第14回、第15回を優先する。
 
+桂馬は学習・知識整理・設計・計画・実装・検証・レビュー対応まで完了した。`knight_move_candidates(board, source)`は右前・左前の順に候補を返し、途中の駒を飛び越し、自駒の到着先を除外して相手駒の到着先を含める。全84テスト、CLI、`git diff --check`を確認した。実装後の理解確認は未実施である。詳細は[第18回](learning/18-knight-move-candidates.md)、[知識15](knowledge/15-knight-move-candidates.md)、[設計08](design/08-knight-move-candidates.md)、[実装計画](plans/2026-09-20-knight-move-candidates.md)、[第19回](learning/19-knight-candidates-implementation.md)を参照する。
+
 ## 次に行うこと
 
 1. 現在のGit状態とREADME、最新の学習・設計・実装記録を確認する。
-2. 次の学習テーマを相談する。
+2. 桂馬の実装後理解確認を一問ずつ行い、その後に次の学習テーマを相談する。
 3. 確認問題を一問ずつ出し、本人の回答と補足を分けて記録する。
 4. 学習後に対象範囲・候補順・方向表現・処理共有・確認方法を相談する。
 5. 設計承認後、TDDのRed → Green → Refactorで実装する。
@@ -41,7 +44,7 @@
 ```text
 kaname-shogiの続きをお願いします。
 AGENTS.md、README.md、docs/resume.mdから最新の学習・設計・実装記録を読み、現在のGit状態を確認してください。
-飛車の移動先候補は実装とレビュー対応まで完了しています。第14回・第15回の記録とGitの現在の状態を確認してください。
+飛車の移動先候補は実装とレビュー対応まで完了しています。桂馬はタスク3まで実装・検証・記録済みですが、実装後の理解確認は未実施です。第19回の記録とGitの現在の状態を確認してください。
 角の移動先候補は学習・設計・実装・検証・レビュー・理解確認まで完了しています。次の学習テーマを相談してください。確認問題は一問ずつ出し、回答を待ってください。設計承認前に実装へ進まないでください。
 `superpowerssuperpowers` プラグインを適用し、学習と具体的な設計の合意後にRed → Green → Refactorで実装してください。
 ```
