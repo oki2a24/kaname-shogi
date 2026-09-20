@@ -164,6 +164,7 @@ print(bishop_move_candidates(board, Square(5, 5)))
 - [角の移動先候補：参照メモ](docs/knowledge/14-bishop-move-candidates.md)
 - [第7回実装の設計：角の移動先候補](docs/design/07-bishop-move-candidates.md)
 - [角の移動先候補 実装計画](docs/plans/2026-09-19-bishop-move-candidates.md)
+- [桂馬の移動先候補 実装計画](docs/plans/2026-09-20-knight-move-candidates.md)
 
 ## 名前について
 

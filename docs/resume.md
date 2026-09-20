@@ -4,7 +4,7 @@
 
 ## 現在の到達点
 
-初期配置CLIと歩・金・銀・桂・香・飛車・角の移動先候補を実装。飛車は第14回、角は第16回、桂馬は第19回で学習・設計合意後の実装を行った。桂馬タスク3では全84テスト、CLI、`git diff --check`を確認した。桂馬の実装後理解確認は未実施である。タスク3の記録・テスト・docstring・README・再開案内はコミット `381fab2` に含まれ、現在のGit状態はクリーンである。
+初期配置CLIと歩・金・銀・桂・香・飛車・角の移動先候補を実装。飛車は第14回、角は第16回、桂馬は第19回で学習・設計合意後の実装を行った。桂馬の実装・検証・レビュー対応と記録更新は完了しており、全84テスト、CLI、`git diff --check`を確認した。桂馬の実装後理解確認は未実施である。
 
 候補計算は盤面と出発マスを受け、盤上の駒から所有者を読む。盤外・自駒を除外し、桂馬は右前・左前へ段を2つ進み、途中の駒を飛び越す。香は前方、飛車は右・左・前・後ろ、角は斜め4方向を走査して、自駒の手前または最初の相手駒のマスで停止する。空または対象外の駒種の出発点はValueError。盤面を変更せず、手番で制限しない。成り、合法手確定、実際の移動、持ち駒は未実装。
 
@@ -14,7 +14,8 @@
 2. [第12回：香の学習](learning/12-lance-move-candidates.md)と[参照メモ](knowledge/12-lance-move-candidates.md)。
 3. [香の設計](design/05-lance-move-candidates.md)と[第13回：実装・検証記録](learning/13-lance-candidates-implementation.md)。
 4. [飛車の学習](learning/14-rook-move-candidates.md)、[参照メモ](knowledge/13-rook-move-candidates.md)、[設計](design/06-rook-move-candidates.md)、[実装計画](plans/2026-09-17-rook-move-candidates.md)、[第15回：実装・検証記録](learning/15-rook-candidates-implementation.md)。
-5. [候補生成のコード](../kaname_shogi/movegen.py)と[テスト](../tests/test_movegen.py)。
+5. [第18回：桂馬の学習](learning/18-knight-move-candidates.md)、[桂馬の参照メモ](knowledge/15-knight-move-candidates.md)、[桂馬の設計](design/08-knight-move-candidates.md)、[桂馬の実装計画](plans/2026-09-20-knight-move-candidates.md)、[第19回：桂馬の実装・検証記録](learning/19-knight-candidates-implementation.md)。
+6. [候補生成のコード](../kaname_shogi/movegen.py)と[テスト](../tests/test_movegen.py)。
 
 ## 直近までの記録
 
@@ -28,7 +29,7 @@
 
 [銀への旧引き継ぎ](handover-silver.md)は学習開始前の経緯として保存している。再開位置は本書、第14回、第15回を優先する。
 
-桂馬はタスク2の実装に対して、タスク3で盤面不変性、`Position.side_to_move`非依存、戻り値リスト独立性のテストを追加し、公開docstring、README、実装記録を更新した。`knight_move_candidates(board, source)`は右前・左前の順に候補を返し、途中の駒を飛び越し、自駒の到着先を除外して相手駒の到着先を含める。全84テスト、CLI、`git diff --check`を確認した。実装後の理解確認は未実施である。詳細は[第19回](learning/19-knight-candidates-implementation.md)を参照する。
+桂馬は学習・知識整理・設計・計画・実装・検証・レビュー対応まで完了した。`knight_move_candidates(board, source)`は右前・左前の順に候補を返し、途中の駒を飛び越し、自駒の到着先を除外して相手駒の到着先を含める。全84テスト、CLI、`git diff --check`を確認した。実装後の理解確認は未実施である。詳細は[第18回](learning/18-knight-move-candidates.md)、[知識15](knowledge/15-knight-move-candidates.md)、[設計08](design/08-knight-move-candidates.md)、[実装計画](plans/2026-09-20-knight-move-candidates.md)、[第19回](learning/19-knight-candidates-implementation.md)を参照する。
 
 ## 次に行うこと
 

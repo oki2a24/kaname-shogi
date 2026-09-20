@@ -29,7 +29,7 @@
 - 消費: `Board`、`Piece`、`PieceType.KNIGHT`、`Side`、`Square`。
 - 生産: `knight_move_candidates(board, source)`に対する失敗する振る舞いテスト。
 
-- [ ] **ステップ1: テストを追加**
+- [x] **ステップ1: テストを追加**
 
 `KnightMoveCandidatesTests`を追加し、空の出発マスと桂馬以外の全駒種で`ValueError`を期待する。さらに、５五の先手・後手の開いた盤面について、先手は`[Square(4, 3), Square(6, 3)]`、後手は`[Square(4, 7), Square(6, 7)]`を期待する。テストメソッド名は英語、日本語docstringで確認内容と検出対象を説明する。
 
@@ -54,13 +54,13 @@ class KnightMoveCandidatesTests(unittest.TestCase):
                          [Square(4, 3), Square(6, 3)])
 ```
 
-- [ ] **ステップ2: Redを確認**
+- [x] **ステップ2: Redを確認**
 
 実行: `python3 -m unittest tests.test_movegen.KnightMoveCandidatesTests -v`
 
 期待値: `movegen`に関数がまだないため、importまたは属性解決で失敗する。これは準備段階の失敗として扱い、関数未定義だけで振る舞いのRed完了とはみなさない。
 
-- [ ] **ステップ3: 関数を最小実装**
+- [x] **ステップ3: 関数を最小実装**
 
 `kaname_shogi/movegen.py`に関数名だけを公開し、出発マスの駒を調べる。空または`PieceType.KNIGHT`以外なら、既存関数と同じく`ValueError`を送出する。開いた盤面の期待値を満たすため、先後で`forward = -2`または`2`を選び、方向データ`((-1, forward), (1, forward))`を使って盤内候補を作る。自駒判定は次タスクで追加する。
 
@@ -79,13 +79,13 @@ def knight_move_candidates(board: Board, source: Square) -> list[Square]:
     return candidates
 ```
 
-- [ ] **ステップ4: 入力契約と開いた盤面を確認**
+- [x] **ステップ4: 入力契約と開いた盤面を確認**
 
 実行: `python3 -m unittest tests.test_movegen.KnightMoveCandidatesTests -v`
 
 期待値: 追加した入力契約と先後・候補順のテストが成功する。
 
-- [ ] **ステップ5: コミット**
+- [x] **ステップ5: コミット**
 
 ```bash
 git add tests/test_movegen.py kaname_shogi/movegen.py
@@ -102,7 +102,7 @@ git commit -m "test: 桂馬候補の入力契約と方向を追加"
 - 消費: タスク1の`knight_move_candidates(board, source)`。
 - 生産: 途中の駒を無視し、到着先の自駒だけを除外する候補生成。
 
-- [ ] **ステップ1: 振る舞いテストを追加**
+- [x] **ステップ1: 振る舞いテストを追加**
 
 先手５五の到着先４三・６三の途中に駒を置いても両方が候補になるテスト、自駒を一方の到着先に置くと他方だけになるテスト、相手駒を一方の到着先に置くとそのマスを含むテスト、１二・９二などから盤外候補を除外するテストを追加する。盤外テストでは先手と後手の両方を含める。
 
@@ -133,13 +133,13 @@ git commit -m "test: 桂馬候補の入力契約と方向を追加"
         self.assertEqual(knight_move_candidates(board, source), [Square(6, 3)])
 ```
 
-- [ ] **ステップ2: 振る舞いのRedを確認**
+- [x] **ステップ2: 振る舞いのRedを確認**
 
 実行: `python3 -m unittest tests.test_movegen.KnightMoveCandidatesTests -v`
 
 期待値: 自駒を除外できない、または相手駒・途中の駒を誤って扱うため、追加テストの少なくとも一つが失敗する。
 
-- [ ] **ステップ3: 最小実装を修正**
+- [x] **ステップ3: 最小実装を修正**
 
 各到着先を作った後、盤内であることを確認する。盤内なら`board.piece_at(target)`を調べ、駒があり、所有者が出発駒と同じ場合だけ候補追加をスキップする。途中のマスは参照しない。相手駒は候補へ追加し、盤面から除去しない。
 
@@ -152,13 +152,13 @@ git commit -m "test: 桂馬候補の入力契約と方向を追加"
         candidates.append(target)
 ```
 
-- [ ] **ステップ4: 対象テストを確認**
+- [x] **ステップ4: 対象テストを確認**
 
 実行: `python3 -m unittest tests.test_movegen.KnightMoveCandidatesTests -v`
 
 期待値: 桂馬クラスの全テストが成功する。
 
-- [ ] **ステップ5: コミット**
+- [x] **ステップ5: コミット**
 
 ```bash
 git add tests/test_movegen.py kaname_shogi/movegen.py
@@ -179,29 +179,29 @@ git commit -m "feat: 桂馬の移動先候補を追加"
 - 消費: Greenになった`knight_move_candidates(board, source)`。
 - 生産: 保守に必要な公開docstring、READMEの使用例、再開案内、実装記録。
 
-- [ ] **ステップ1: 不変性とリスト独立性のテストを追加**
+- [x] **ステップ1: 不変性とリスト独立性のテストを追加**
 
 候補計算の前後で81マスが同一であること、`Position.side_to_move`を変えても候補と手番が変わらないこと、返却リストを変更しても次回結果へ波及しないことを既存の角テストと同じ形式で追加する。
 
-- [ ] **ステップ2: 不変性テストを確認**
+- [x] **ステップ2: 不変性テストを確認**
 
 実行: `python3 -m unittest tests.test_movegen.KnightMoveCandidatesTests -v`
 
 期待値: 不変性・手番独立性・リスト独立性を含む桂馬テストが成功する。
 
-- [ ] **ステップ3: 公開docstringを完成**
+- [x] **ステップ3: 公開docstringを完成**
 
 `movegen.py`の関数docstringに引数、戻り値、`ValueError`、先後の段方向、右前・左前の順、盤外・自駒・相手駒、盤面不変、手番非依存、対象外を記載する。`KNIGHT`が桂馬を表す駒種のデータであり、`move_candidates`が候補を求める操作であることも明記する。
 
-- [ ] **ステップ4: READMEを更新**
+- [x] **ステップ4: READMEを更新**
 
 現在の駒一覧とテスト説明に桂馬を追加し、`knight_move_candidates`の短い使用例、候補順、飛び越し、占有条件、盤面不変、対象外を日本語で追記する。
 
-- [ ] **ステップ5: 実装記録と再開案内を更新**
+- [x] **ステップ5: 実装記録と再開案内を更新**
 
 `docs/learning/19-knight-candidates-implementation.md`を新規作成し、TDDのRed→Green→Refactor、変更内容、検証結果、レビュー、実装後の理解確認、未解決事項を実際の結果に基づいて記録する。理解確認は本人の回答前に正解を記録しない。`docs/resume.md`には桂馬の完了状態と次のテーマを、実際のコミットと検証結果を確認してから追記する。
 
-- [ ] **ステップ6: 全体検証**
+- [x] **ステップ6: 全体検証**
 
 実行:
 
@@ -213,7 +213,7 @@ git diff --check
 
 期待値: 全テスト成功、CLIが初期配置と手番を表示して正常終了、差分検査成功。過去のテスト件数を再利用せず、今回の実行結果を記録する。
 
-- [ ] **ステップ7: レビュー前の確認とコミット**
+- [x] **ステップ7: レビュー前の確認とコミット**
 
 変更差分を読み、桂馬の候補順、筋・段、先後、飛び越し、占有、不変性、docstring、README、学習記録、再開案内が設計書と一致することを確認する。
 
