@@ -5,9 +5,109 @@ import unittest
 from kaname_shogi.model import Board, Piece, PieceType, Position, Side, Square
 from kaname_shogi.movegen import (
     bishop_move_candidates, gold_move_candidates, lance_move_candidates,
-    knight_move_candidates, pawn_move_candidates, rook_move_candidates,
+    king_move_candidates, knight_move_candidates, pawn_move_candidates,
+    rook_move_candidates,
     silver_move_candidates,
 )
+
+
+class KingMoveCandidatesTests(unittest.TestCase):
+    def test_empty_source_is_rejected(self):
+        """空の出発マスを玉候補の計算対象として受け付けない。
+
+        候補なしと呼び出しの誤りを区別するValueErrorの契約を確認する。
+        """
+        with self.assertRaises(ValueError):
+            king_move_candidates(Board(), Square(5, 5))
+
+    def test_non_king_source_is_rejected(self):
+        """玉以外の駒種を玉候補の出発点として受け付けない。
+
+        駒種の検証漏れにより他の駒を玉として扱う誤りを検出する。
+        """
+        for side in Side:
+            for kind in PieceType:
+                if kind == PieceType.KING:
+                    continue
+                board = Board()
+                source = Square(5, 5)
+                board.set_piece(source, Piece(kind, side))
+                with self.subTest(side=side, kind=kind):
+                    with self.assertRaises(ValueError):
+                        king_move_candidates(board, source)
+
+    def test_open_board_returns_eight_directions_in_order(self):
+        """５五の玉は先後によらず周囲8方向を固定順に返す。
+
+        玉に前方の反転を適用する誤りと方向順の誤りを検出する。
+        """
+        expected = [Square(5, 4), Square(4, 4), Square(4, 5), Square(4, 6),
+                    Square(5, 6), Square(6, 6), Square(6, 5), Square(6, 4)]
+        for side in Side:
+            board = Board()
+            source = Square(5, 5)
+            board.set_piece(source, Piece(PieceType.KING, side))
+            with self.subTest(side=side):
+                self.assertEqual(king_move_candidates(board, source), expected)
+
+    def test_corner_excludes_off_board_destinations(self):
+        """１一の玉は盤内の３マスだけを候補にする。
+
+        盤端で盤外のSquareを候補に含める誤りを検出する。
+        """
+        board = Board()
+        source = Square(1, 1)
+        board.set_piece(source, Piece(PieceType.KING, Side.SENTE))
+        self.assertEqual(king_move_candidates(board, source),
+                         [Square(1, 2), Square(2, 2), Square(2, 1)])
+
+    def test_own_destination_is_excluded_and_opponent_is_included(self):
+        """自駒の到着先を除外し、相手駒の到着先を候補に含める。
+
+        到着先の所有者判定を逆にする誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 4), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.GOTE))
+        self.assertEqual(king_move_candidates(board, source),
+                         [Square(4, 4), Square(4, 5), Square(4, 6),
+                          Square(5, 6), Square(6, 6), Square(6, 5),
+                          Square(6, 4)])
+
+    def test_candidate_generation_preserves_board_and_turn(self):
+        """候補計算は盤面と局面の手番を変更しない。
+
+        実際の移動や駒取りを候補生成へ混入する誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        before = [board.piece_at(Square(file, rank))
+                  for file in range(1, 10) for rank in range(1, 10)]
+        for turn in Side:
+            position.side_to_move = turn
+            king_move_candidates(position.board, source)
+            self.assertEqual(position.side_to_move, turn)
+        after = [board.piece_at(Square(file, rank))
+                 for file in range(1, 10) for rank in range(1, 10)]
+        self.assertEqual(after, before)
+
+    def test_results_are_independent_lists(self):
+        """呼び出しごとに玉の候補リストを独立して返す。
+
+        呼び出し側による戻り値の変更が別の結果へ波及する誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.KING, Side.SENTE))
+        expected = king_move_candidates(board, source)
+        result = king_move_candidates(board, source)
+        result.clear()
+        self.assertEqual(king_move_candidates(board, source), expected)
 
 
 class KnightMoveCandidatesTests(unittest.TestCase):
