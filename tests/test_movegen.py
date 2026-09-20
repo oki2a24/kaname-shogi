@@ -5,8 +5,49 @@ import unittest
 from kaname_shogi.model import Board, Piece, PieceType, Position, Side, Square
 from kaname_shogi.movegen import (
     bishop_move_candidates, gold_move_candidates, lance_move_candidates,
-    pawn_move_candidates, rook_move_candidates, silver_move_candidates,
+    knight_move_candidates, pawn_move_candidates, rook_move_candidates,
+    silver_move_candidates,
 )
+
+
+class KnightMoveCandidatesTests(unittest.TestCase):
+    def test_empty_source_is_rejected(self):
+        """空の出発マスを桂馬候補の計算対象として受け付けない。
+
+        候補なしと呼び出しの誤りを区別するValueErrorの契約を確認する。
+        """
+        with self.assertRaises(ValueError):
+            knight_move_candidates(Board(), Square(5, 5))
+
+    def test_non_knight_source_is_rejected(self):
+        """桂馬以外の駒種を桂馬候補の出発点として受け付けない。
+
+        駒種の検証漏れにより、他の駒を桂馬の動きとして扱う誤りを検出する。
+        """
+        for side in Side:
+            for kind in PieceType:
+                if kind == PieceType.KNIGHT:
+                    continue
+                with self.subTest(side=side, kind=kind):
+                    board = Board()
+                    board.set_piece(Square(5, 5), Piece(kind, side))
+                    with self.assertRaises(ValueError):
+                        knight_move_candidates(board, Square(5, 5))
+
+    def test_open_board_returns_right_front_then_left_front(self):
+        """５五の桂馬は右前、左前の順に候補を返す。
+
+        先後の段方向、筋の増減、固定順の誤りを検出する。
+        """
+        for side, expected in [
+            (Side.SENTE, [Square(4, 3), Square(6, 3)]),
+            (Side.GOTE, [Square(4, 7), Square(6, 7)]),
+        ]:
+            with self.subTest(side=side):
+                board = Board()
+                source = Square(5, 5)
+                board.set_piece(source, Piece(PieceType.KNIGHT, side))
+                self.assertEqual(knight_move_candidates(board, source), expected)
 
 
 class BishopMoveCandidatesTests(unittest.TestCase):

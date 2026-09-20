@@ -13,6 +13,20 @@ docs/design/06-rook-move-candidates.md、docs/design/07-bishop-move-candidates.m
 from .model import Board, PieceType, Side, Square
 
 
+def knight_move_candidates(board: Board, source: Square) -> list[Square]:
+    """出発マスの桂馬について、移動先候補を返す。"""
+    piece = board.piece_at(source)
+    if piece is None or piece.piece_type != PieceType.KNIGHT:
+        raise ValueError("出発マスには桂馬を指定してください")
+    forward = -2 if piece.side == Side.SENTE else 2
+    candidates = []
+    for file_delta in (-1, 1):
+        target = Square(source.file + file_delta, source.rank + forward)
+        if 1 <= target.file <= 9 and 1 <= target.rank <= 9:
+            candidates.append(target)
+    return candidates
+
+
 def bishop_move_candidates(board: Board, source: Square) -> list[Square]:
     """出発マスの角について、斜め4方向の移動先候補を返す。
 
