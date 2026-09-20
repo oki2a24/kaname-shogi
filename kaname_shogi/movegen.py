@@ -14,7 +14,32 @@ from .model import Board, PieceType, Side, Square
 
 
 def knight_move_candidates(board: Board, source: Square) -> list[Square]:
-    """出発マスの桂馬について、移動先候補を返す。"""
+    """出発マスの桂馬について、移動先候補を返す。
+
+    `PieceType.KNIGHT`は桂馬を表す駒種のデータであり、
+    `knight_move_candidates`はその駒の移動先候補を求める操作である。
+
+    引数:
+        board: 調べる盤面。盤面の駒は正しいPieceTypeとSideを持つこと。
+        source: 桂馬（KNIGHT）がある出発マス。検証済みのSquareを渡す。
+
+    戻り値:
+        右前（筋−1）・左前（筋＋1）の順に、盤内で到達できるマスを並べた
+        新しいリスト。先手は段−2、後手は段＋2へ進む。盤外のマスと自駒の
+        あるマスは含めず、相手駒のあるマスは含める。途中のマスは調べず、
+        桂馬の飛び越しを妨げない。候補がなければ空リストを返す。
+
+    例外:
+        ValueError: 出発マスが空、または桂馬以外の場合。
+        呼び出しの誤りを通常の候補なしと区別する。
+
+    出発駒のPiece.sideから先後を読み、Position.side_to_moveは参照しないため、
+    手番に関係なく先後どちらの桂馬も調べられる。候補計算は盤面を変更せず、
+    相手駒も取り除かない。戻り値は呼び出しごとに独立したリストである。
+    成桂・成り・行き所のない桂の合法性、駒取り、実際の移動、王手、合法手の
+    確定、持ち駒は扱わない。候補順は再現性と読みやすさのためで、指し手の
+    優先順位ではない。
+    """
     piece = board.piece_at(source)
     if piece is None or piece.piece_type != PieceType.KNIGHT:
         raise ValueError("出発マスには桂馬を指定してください")

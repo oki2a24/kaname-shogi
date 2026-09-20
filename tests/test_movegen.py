@@ -106,6 +106,57 @@ class KnightMoveCandidatesTests(unittest.TestCase):
                 board.set_piece(source, Piece(PieceType.KNIGHT, side))
                 self.assertEqual(knight_move_candidates(board, source), expected)
 
+    def test_candidate_generation_preserves_all_squares(self):
+        """候補計算の前後で盤上の全81マスを変更しない。
+
+        桂馬を動かしたり、相手駒を取ったりする処理の混入を検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
+        board.set_piece(Square(4, 3), Piece(PieceType.PAWN, Side.GOTE))
+        squares = [Square(file, rank) for file in range(1, 10)
+                   for rank in range(1, 10)]
+        before = [board.piece_at(square) for square in squares]
+        knight_move_candidates(board, source)
+        self.assertEqual([board.piece_at(square) for square in squares], before)
+
+    def test_turn_does_not_restrict_candidates_or_change(self):
+        """局面の手番によらず桂馬の所有者で候補を計算し、手番も変更しない。
+
+        Position.side_to_moveを候補生成の制限や更新に誤用する実装を検出する。
+        """
+        board = Board()
+        sente_source, gote_source = Square(5, 5), Square(1, 7)
+        board.set_piece(sente_source, Piece(PieceType.KNIGHT, Side.SENTE))
+        board.set_piece(gote_source, Piece(PieceType.KNIGHT, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        expected = {
+            Side.SENTE: [Square(4, 3), Square(6, 3)],
+            Side.GOTE: [Square(2, 9)],
+        }
+        for turn in Side:
+            with self.subTest(turn=turn):
+                position.side_to_move = turn
+                self.assertEqual(knight_move_candidates(position.board, sente_source),
+                                 expected[Side.SENTE])
+                self.assertEqual(knight_move_candidates(position.board, gote_source),
+                                 expected[Side.GOTE])
+                self.assertEqual(position.side_to_move, turn)
+
+    def test_results_are_independent_lists(self):
+        """呼び出しごとに桂馬の候補リストを独立して返す。
+
+        呼び出し側による戻り値の変更が、別の呼び出し結果へ波及する誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
+        expected = knight_move_candidates(board, source)
+        result = knight_move_candidates(board, source)
+        result.clear()
+        self.assertEqual(knight_move_candidates(board, source), expected)
+
 
 class BishopMoveCandidatesTests(unittest.TestCase):
     def test_empty_source_is_rejected(self):
