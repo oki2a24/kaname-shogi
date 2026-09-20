@@ -15,6 +15,43 @@ docs/design/08-knight-move-candidates.md。
 from .model import Board, PieceType, Side, Square
 
 
+def king_move_candidates(board: Board, source: Square) -> list[Square]:
+    """出発マスの玉について、周囲8方向の移動先候補を返す。
+
+    `PieceType.KING`は玉（王）を表す駒種のデータであり、
+    `king_move_candidates`は候補を求める操作である。玉は先後によらず
+    同じ8方向へ1マス進む。盤外と自駒のマスを除き、空マスと相手駒の
+    マスを固定順で返す。盤面を変更せず、王手や合法手判定は扱わない。
+
+    引数:
+        board: 調べる盤面。
+        source: 玉（KING）がある出発マス。
+
+    戻り値:
+        上、右上、右、右下、下、左下、左、左上の順の新しいリスト。
+
+    例外:
+        ValueError: 出発マスが空、または玉以外の場合。
+    """
+    piece = board.piece_at(source)
+    if piece is None or piece.piece_type != PieceType.KING:
+        raise ValueError("出発マスには玉を指定してください")
+    offsets = ((0, -1), (-1, -1), (-1, 0), (-1, 1),
+               (0, 1), (1, 1), (1, 0), (1, -1))
+    candidates = []
+    for file_delta, rank_delta in offsets:
+        target_file = source.file + file_delta
+        target_rank = source.rank + rank_delta
+        if not (1 <= target_file <= 9 and 1 <= target_rank <= 9):
+            continue
+        target = Square(target_file, target_rank)
+        occupant = board.piece_at(target)
+        if occupant is not None and occupant.side == piece.side:
+            continue
+        candidates.append(target)
+    return candidates
+
+
 def knight_move_candidates(board: Board, source: Square) -> list[Square]:
     """出発マスの桂馬について、移動先候補を返す。
 
