@@ -21,9 +21,15 @@ def knight_move_candidates(board: Board, source: Square) -> list[Square]:
     forward = -2 if piece.side == Side.SENTE else 2
     candidates = []
     for file_delta in (-1, 1):
-        target = Square(source.file + file_delta, source.rank + forward)
-        if 1 <= target.file <= 9 and 1 <= target.rank <= 9:
-            candidates.append(target)
+        target_file = source.file + file_delta
+        target_rank = source.rank + forward
+        if not (1 <= target_file <= 9 and 1 <= target_rank <= 9):
+            continue
+        target = Square(target_file, target_rank)
+        occupant = board.piece_at(target)
+        if occupant is not None and occupant.side == piece.side:
+            continue
+        candidates.append(target)
     return candidates
 
 

@@ -49,6 +49,63 @@ class KnightMoveCandidatesTests(unittest.TestCase):
                 board.set_piece(source, Piece(PieceType.KNIGHT, side))
                 self.assertEqual(knight_move_candidates(board, source), expected)
 
+    def test_intermediate_pieces_do_not_block_candidates(self):
+        """途中のマスに駒があっても桂馬は到着先を候補にする。
+
+        途中のマスを走査して候補を誤って止める実装を検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
+        board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 4), Piece(PieceType.PAWN, Side.GOTE))
+        self.assertEqual(knight_move_candidates(board, source),
+                         [Square(4, 3), Square(6, 3)])
+
+    def test_own_destination_is_excluded(self):
+        """桂馬の到着先にある自駒のマスを候補から除外する。
+
+        到着先の所有者を確認せず、自駒のマスを候補に含める誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
+        board.set_piece(Square(4, 3), Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(knight_move_candidates(board, source), [Square(6, 3)])
+
+    def test_opponent_destination_is_included(self):
+        """桂馬の到着先にある相手駒のマスを候補に含める。
+
+        相手駒のマスまで除外する誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
+        board.set_piece(Square(6, 3), Piece(PieceType.PAWN, Side.GOTE))
+        self.assertEqual(knight_move_candidates(board, source),
+                         [Square(4, 3), Square(6, 3)])
+
+    def test_edges_exclude_off_board_candidates_for_both_sides(self):
+        """先後の桂馬は盤外の到着先を候補から除外する。
+
+        筋と段の境界を確認せずSquareを作る誤りを、盤端の先後両方で検出する。
+        """
+        cases = [
+            (Side.SENTE, Square(1, 2), []),
+            (Side.SENTE, Square(9, 2), []),
+            (Side.SENTE, Square(1, 3), [Square(2, 1)]),
+            (Side.SENTE, Square(9, 3), [Square(8, 1)]),
+            (Side.GOTE, Square(1, 8), []),
+            (Side.GOTE, Square(9, 8), []),
+            (Side.GOTE, Square(1, 7), [Square(2, 9)]),
+            (Side.GOTE, Square(9, 7), [Square(8, 9)]),
+        ]
+        for side, source, expected in cases:
+            with self.subTest(side=side, source=source):
+                board = Board()
+                board.set_piece(source, Piece(PieceType.KNIGHT, side))
+                self.assertEqual(knight_move_candidates(board, source), expected)
+
 
 class BishopMoveCandidatesTests(unittest.TestCase):
     def test_empty_source_is_rejected(self):
