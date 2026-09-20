@@ -1,13 +1,15 @@
 """盤面を変更せず、駒の移動先候補を求める。
 
-movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・香・飛車・角の移動先を
+movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・桂・香・飛車・角の移動先を
 扱い、指し手の適用や合法手の確定は行わない。全駒の専用関数を作る方針は
 まだ決めず、次の駒を学ぶ際に共有できる処理を検討する。
 
 契約と判断の背景：docs/design/02-pawn-move-candidates.md、
 docs/learning/06-pawn-move-candidates.md、docs/design/03-gold-move-candidates.md、
 docs/design/04-silver-move-candidates.md、docs/design/05-lance-move-candidates.md、
-docs/design/06-rook-move-candidates.md、docs/design/07-bishop-move-candidates.md。
+docs/design/06-rook-move-candidates.md、docs/design/07-bishop-move-candidates.md、
+docs/learning/18-knight-move-candidates.md、docs/knowledge/15-knight-move-candidates.md、
+docs/design/08-knight-move-candidates.md。
 """
 
 from .model import Board, PieceType, Side, Square
