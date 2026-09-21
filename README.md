@@ -8,7 +8,7 @@
 
 ## 現在の状態
 
-初期配置のCLI表示と、玉・歩・金・銀・桂・香・飛車・角の移動先候補を求める関数を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、実際の駒の移動や対局はまだできません。
+初期配置のCLI表示と、玉・歩・金・銀・桂・香・飛車・角の移動先候補を求める関数、空マスへの移動適用を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、`move_piece(board, source, destination)` は検証成功時に盤面を変更します。駒取りや対局全体の進行はまだできません。
 
 実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
 
@@ -112,6 +112,15 @@ print(rook_move_candidates(board, Square(5, 5)))
 ```
 
 候補計算では飛車や他の駒を動かしたり取ったりしません。成り、王手、合法手の確定は扱いません。
+
+空いている到着マスへの駒の移動は `move_piece(board, source, destination)` で適用します。出発マスの駒を空にし、到着マスへ同じ駒を置きます。出発マスが空、到着マスが占有、出発と到着が同じ場合は `ValueError` となり、盤面は変更されません。移動方向の検証、駒取り、手番更新、成り、王手、合法手判定は対象外です。
+
+```python
+from kaname_shogi.model import Square
+from kaname_shogi.movegen import move_piece
+
+move_piece(position.board, Square(7, 7), Square(7, 6))
+```
 
 角は `bishop_move_candidates(board, source)` で調べます。bishopは角、move_candidatesは移動先候補を求める操作です。右前・左前・右後ろ・左後ろの順に各方向を近い順で走査し、空マスと最初の相手駒のマスを候補に含めます。自駒のマスとその先は含めません。先後は出発マスの角から読み、手番には制限されません。出発点が空または角以外なら `ValueError` です。
 

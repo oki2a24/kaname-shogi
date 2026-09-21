@@ -2,6 +2,7 @@
 
 import unittest
 
+from kaname_shogi import movegen
 from kaname_shogi.model import Board, Piece, PieceType, Position, Side, Square
 from kaname_shogi.movegen import (
     bishop_move_candidates, gold_move_candidates, lance_move_candidates,
@@ -9,6 +10,87 @@ from kaname_shogi.movegen import (
     rook_move_candidates,
     silver_move_candidates,
 )
+
+
+class MovePieceTests(unittest.TestCase):
+    def _move_piece(self, board, source, destination):
+        """移動適用関数を取得し、未実装をテスト失敗として扱う。"""
+        self.assertTrue(hasattr(movegen, "move_piece"),
+                        "move_piece がまだ実装されていません")
+        return movegen.move_piece(board, source, destination)
+
+    def test_moves_piece_to_empty_destination(self):
+        """空いている到着マスへ駒を移し、出発マスを空にする。
+
+        出発マスと到着マスの更新漏れや、移動するPieceの取り違えを検出する。
+        """
+        board = Board()
+        source, destination = Square(5, 5), Square(5, 4)
+        piece = Piece(PieceType.PAWN, Side.SENTE)
+        board.set_piece(source, piece)
+
+        result = self._move_piece(board, source, destination)
+
+        self.assertIsNone(result)
+        self.assertIsNone(board.piece_at(source))
+        self.assertEqual(board.piece_at(destination), piece)
+
+    def test_rejects_empty_source_without_changing_board(self):
+        """空の出発マスを拒否し、盤面を変更しない。
+
+        空の出発点を移動成功として扱う誤りと、失敗後の部分変更を検出する。
+        """
+        board = Board()
+        destination = Square(5, 4)
+        before = [board.piece_at(Square(file, rank))
+                  for file in range(1, 10) for rank in range(1, 10)]
+
+        with self.assertRaises(ValueError):
+            self._move_piece(board, Square(5, 5), destination)
+
+        after = [board.piece_at(Square(file, rank))
+                 for file in range(1, 10) for rank in range(1, 10)]
+        self.assertEqual(after, before)
+
+    def test_rejects_occupied_destination_without_changing_board(self):
+        """駒のある到着マスを拒否し、盤面を変更しない。
+
+        今回は駒取りを扱わないため、到着駒を上書きする誤りを検出する。
+        """
+        board = Board()
+        source, destination = Square(5, 5), Square(5, 4)
+        moving_piece = Piece(PieceType.PAWN, Side.SENTE)
+        destination_piece = Piece(PieceType.GOLD, Side.GOTE)
+        board.set_piece(source, moving_piece)
+        board.set_piece(destination, destination_piece)
+        before = [board.piece_at(Square(file, rank))
+                  for file in range(1, 10) for rank in range(1, 10)]
+
+        with self.assertRaises(ValueError):
+            self._move_piece(board, source, destination)
+
+        after = [board.piece_at(Square(file, rank))
+                 for file in range(1, 10) for rank in range(1, 10)]
+        self.assertEqual(after, before)
+
+    def test_rejects_same_source_and_destination_without_changing_board(self):
+        """出発マスと到着マスが同じ場合を拒否し、盤面を変更しない。
+
+        同じマスを空にしてから駒を戻す実装や、無意味な成功扱いを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        piece = Piece(PieceType.KING, Side.SENTE)
+        board.set_piece(source, piece)
+        before = [board.piece_at(Square(file, rank))
+                  for file in range(1, 10) for rank in range(1, 10)]
+
+        with self.assertRaises(ValueError):
+            self._move_piece(board, source, source)
+
+        after = [board.piece_at(Square(file, rank))
+                 for file in range(1, 10) for rank in range(1, 10)]
+        self.assertEqual(after, before)
 
 
 class KingMoveCandidatesTests(unittest.TestCase):

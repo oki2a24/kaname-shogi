@@ -1,7 +1,7 @@
-"""盤面を変更せず、駒の移動先候補を求める。
+"""駒の移動先候補を求め、空マスへの移動を盤面へ適用する。
 
-movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・桂・香・飛車・角の移動先を
-扱い、指し手の適用や合法手の確定は行わない。全駒の専用関数を作る方針は
+movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・桂・香・飛車・角の移動先と、
+空いている到着マスへの駒の移動適用を扱う。合法手の確定は行わない。全駒の専用関数を作る方針は
 まだ決めず、次の駒を学ぶ際に共有できる処理を検討する。
 
 契約と判断の背景：docs/design/02-pawn-move-candidates.md、
@@ -13,6 +13,39 @@ docs/design/08-knight-move-candidates.md。
 """
 
 from .model import Board, PieceType, Side, Square
+
+
+def move_piece(board: Board, source: Square, destination: Square) -> None:
+    """空いている到着マスへ駒を移し、渡された盤面を変更する。
+
+    引数:
+        board: 変更対象の盤面。
+        source: 移動元の筋・段を表すSquare。
+        destination: 移動先の筋・段を表すSquare。
+
+    戻り値:
+        なし（None）。成功時はboardの配置を変更する。
+
+    例外:
+        ValueError: 出発マスが空、到着マスに駒がある、または同じマスを
+            出発・到着に指定した場合。不正時は盤面を変更しない。
+
+    移動方向や候補生成結果は検証しない。候補生成と盤面変更を別の責務に
+    するため、今回はBoard単位の可変操作として設計している。検証をすべて
+    先に行い、成功後に出発マスを空にして到着マスへ同じPieceを置く。
+    駒取り、手番更新、成り、王手、合法手判定は扱わない。
+    """
+    if source == destination:
+        raise ValueError("出発マスと到着マスは別にしてください")
+
+    piece = board.piece_at(source)
+    if piece is None:
+        raise ValueError("出発マスに駒がありません")
+    if board.piece_at(destination) is not None:
+        raise ValueError("到着マスは空にしてください")
+
+    board.set_piece(source, None)
+    board.set_piece(destination, piece)
 
 
 def king_move_candidates(board: Board, source: Square) -> list[Square]:
