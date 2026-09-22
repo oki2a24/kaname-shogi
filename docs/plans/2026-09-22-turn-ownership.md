@@ -30,7 +30,7 @@
 - 変更: `docs/resume.md` — 現在の到達点と次のテーマ候補を更新する。
 - 作成: `docs/handover-<next-topic>.md` — 完了時点で次テーマが決まった場合だけ、再開時に必要な状態と未実装範囲を引き継ぐ。次テーマが未決定なら作成しない。
 
-### タスク1: 所有者照合付きの局面移動
+### タスク1: 所有者照合付きの局面移動（完了）
 
 **ファイル:**
 - 変更: `tests/test_movegen.py: ApplyMoveTests`
@@ -43,7 +43,7 @@
 - 消費 (Consumes): `Position(board: Board, side_to_move: Side)`、`Piece(piece_type: PieceType, side: Side)`、`move_piece(board: Board, source: Square, destination: Square) -> None`。
 - 生産 (Produces): `apply_move(position: Position, source: Square, destination: Square) -> None`。手番と出発駒の所有者が一致し、到着マスが空なら盤面を変更して手番を交代する。不一致なら `ValueError` を送出し、盤面と手番を変更しない。
 
-- [ ] **ステップ1: 所有者不一致を拒否する失敗テストへ置き換える**
+- [x] **ステップ1: 所有者不一致を拒否する失敗テストへ置き換える**
 
 `ApplyMoveTests.test_does_not_require_moving_piece_to_match_turn` を、先手番で後手の駒、後手番で先手の駒を指定する二つのケースへ置き換える。各ケースで全81マスと手番を保存し、`ValueError` 後に同一であることを確認する。
 
@@ -80,13 +80,13 @@ for initial_turn, expected_turn in [(Side.SENTE, Side.GOTE), (Side.GOTE, Side.SE
     piece = Piece(PieceType.PAWN, initial_turn)
 ```
 
-- [ ] **ステップ2: 失敗することを確認する**
+- [x] **ステップ2: 失敗することを確認する**
 
 実行: `python3 -m unittest tests.test_movegen.ApplyMoveTests.test_rejects_piece_owned_by_the_other_side_without_changing_position -v`
 
 期待値: 二つの所有者不一致ケースで `AssertionError: ValueError not raised` となりFAILする。`apply_move` 自体は存在するため、読み込みエラーや未実装関数による失敗ではない。
 
-- [ ] **ステップ3: `apply_move` に最小の所有者照合を加える**
+- [x] **ステップ3: `apply_move` に最小の所有者照合を加える**
 
 `move_piece` を変更せず、`apply_move` の先頭で出発駒を読む。駒が存在し、所有者と手番が異なる場合だけ盤面変更前に `ValueError` を送出する。空の出発マスは既存の `move_piece` に委譲し、同一マス・占有到着マスを含む既存の拒否処理も維持する。
 
@@ -100,13 +100,13 @@ move_piece(position.board, source, destination)
 
 `apply_move` のdocstringを更新し、所有者不一致の `ValueError`、不一致時の局面不変性、所有者照合を `apply_move` に置く責務分離、今回扱わない移動方向などを記載する。
 
-- [ ] **ステップ4: 対象テストが成功することを確認する**
+- [x] **ステップ4: 対象テストが成功することを確認する**
 
 実行: `python3 -m unittest tests.test_movegen.ApplyMoveTests -v`
 
 期待値: `ApplyMoveTests` の全テストがPASSし、先後両方の一致時は成功、不一致時と従来の不正移動時は盤面・手番が不変である。
 
-- [ ] **ステップ5: 全テスト、CLI、差分形式を検証する**
+- [x] **ステップ5: 全テスト、CLI、差分形式を検証する**
 
 実行: `python3 -m unittest discover -s tests -v`
 
@@ -120,13 +120,13 @@ move_piece(position.board, source, destination)
 
 期待値: 出力なしで成功する。
 
-- [ ] **ステップ6: Refactor要否を確認し、利用者向け記録を更新する**
+- [x] **ステップ6: Refactor要否を確認し、利用者向け記録を更新する**
 
 `apply_move` の追加処理が、所有者照合と既存の盤面移動委譲・手番交代だけになっていることを確認する。今回の範囲に寄与しない共通化、候補生成との統合、`Position` や `Piece` の型変更は行わない。
 
 READMEの `apply_move` 節を、手番と出発駒の所有者が一致する場合にだけ成功する契約へ更新する。第23回の学習記録には、実際のRed失敗理由、Green、Refactorの結論、実行した検証コマンドと結果だけを追記する。`docs/resume.md` は現在の到達点、参照資料、次の再開手順を実際の完了状態に合わせる。次テーマが決まった場合だけ、その合意内容を引き継ぎ文書に記録する。
 
-- [ ] **ステップ7: 実装と記録をコミットする**
+- [x] **ステップ7: 実装と記録をコミットする**
 
 ```bash
 git add kaname_shogi/movegen.py tests/test_movegen.py README.md \

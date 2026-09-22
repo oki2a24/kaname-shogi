@@ -111,7 +111,7 @@ class ApplyMoveTests(unittest.TestCase):
         ]:
             board = Board()
             source, destination = Square(5, 5), Square(5, 4)
-            piece = Piece(PieceType.PAWN, Side.SENTE)
+            piece = Piece(PieceType.PAWN, initial_turn)
             board.set_piece(source, piece)
             position = Position(board, initial_turn)
             with self.subTest(initial_turn=initial_turn):
@@ -148,21 +148,28 @@ class ApplyMoveTests(unittest.TestCase):
                 self.assertEqual(after_board, before_board)
                 self.assertEqual(position.side_to_move, Side.SENTE)
 
-    def test_does_not_require_moving_piece_to_match_turn(self):
-        """今回は手番と出発駒の所有者が異なっても移動を適用する。
+    def test_rejects_piece_owned_by_the_other_side_without_changing_position(self):
+        """手番と所有者が異なる駒を拒否し、局面を変更しない。
 
-        手番更新の学習範囲へ所有者検証を先取りして混ぜる誤りを検出する。
+        後手の駒を先手番で、先手の駒を後手番で動かしてしまう二手指しと、
+        例外時の盤面または手番の部分変更を検出する。
         """
-        board = Board()
         source, destination = Square(5, 5), Square(5, 4)
-        piece = Piece(PieceType.PAWN, Side.GOTE)
-        board.set_piece(source, piece)
-        position = Position(board, Side.SENTE)
-
-        self._apply_move(position, source, destination)
-
-        self.assertEqual(position.board.piece_at(destination), piece)
-        self.assertEqual(position.side_to_move, Side.GOTE)
+        for turn, piece_side in [(Side.SENTE, Side.GOTE),
+                                 (Side.GOTE, Side.SENTE)]:
+            board = Board()
+            piece = Piece(PieceType.PAWN, piece_side)
+            board.set_piece(source, piece)
+            position = Position(board, turn)
+            before_board = [board.piece_at(Square(file, rank))
+                            for file in range(1, 10) for rank in range(1, 10)]
+            with self.subTest(turn=turn, piece_side=piece_side):
+                with self.assertRaises(ValueError):
+                    self._apply_move(position, source, destination)
+                after_board = [board.piece_at(Square(file, rank))
+                               for file in range(1, 10) for rank in range(1, 10)]
+                self.assertEqual(after_board, before_board)
+                self.assertEqual(position.side_to_move, turn)
 
 
 class KingMoveCandidatesTests(unittest.TestCase):

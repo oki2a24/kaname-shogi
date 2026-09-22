@@ -60,13 +60,19 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
         なし（None）。成功時だけposition.boardとposition.side_to_moveを変更する。
 
     例外:
-        ValueError: move_pieceが拒否する空の出発マス、占有された到着マス、
-            または同一マスの場合。失敗時は盤面と手番を変更しない。
+        ValueError: 出発駒の所有者と手番が一致しない場合、またはmove_pieceが
+            拒否する空の出発マス、占有された到着マス、同一マスの場合。失敗時は
+            盤面と手番を変更しない。
 
-    盤面移動はmove_pieceへ委譲し、成功後だけ手番を交代することで、
-    Boardの配置責務とPositionの局面責務を分ける。今回は移動方向、
-    出発駒の所有者と手番の一致、駒取り、成り、王手、合法手を検証しない。
+    出発駒の所有者と局面の手番を照合し、一致するときだけ盤面移動をmove_pieceへ
+    委譲する。これにより、手番を知らないBoardの配置責務と、対局を一手進める
+    Positionの局面責務を分ける。成功後だけ手番を交代する。今回は移動方向、
+    駒取り、成り、王手、合法手を検証しない。
     """
+    piece = position.board.piece_at(source)
+    if piece is not None and piece.side != position.side_to_move:
+        raise ValueError("手番と出発駒の所有者が一致しません")
+
     move_piece(position.board, source, destination)
     if position.side_to_move == Side.SENTE:
         position.side_to_move = Side.GOTE

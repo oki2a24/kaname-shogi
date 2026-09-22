@@ -8,7 +8,7 @@
 
 ## 現在の状態
 
-初期配置のCLI表示と、玉・歩・金・銀・桂・香・飛車・角の移動先候補を求める関数、空マスへの移動適用、成功時の手番更新を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、`move_piece(board, source, destination)` は検証成功時に盤面を変更します。`apply_move(position, source, destination)` は盤面移動の成功後だけ手番も交代します。駒取りや対局全体の進行はまだできません。
+初期配置のCLI表示と、玉・歩・金・銀・桂・香・飛車・角の移動先候補を求める関数、空マスへの移動適用、手番に合う駒だけの局面移動を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、`move_piece(board, source, destination)` は検証成功時に盤面を変更します。`apply_move(position, source, destination)` は出発駒の所有者が手番と一致するときだけ盤面を移動し、成功後に手番を交代します。駒取りや対局全体の進行はまだできません。
 
 実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
 
@@ -28,7 +28,7 @@ python3 -m kaname_shogi
 python3 -m unittest discover -s tests -v
 ```
 
-座標の検証、駒の不変性、盤面の独立性、初期配置の全81マス・枚数・手番、CLI表示、歩・金・銀・桂・香・飛車・角の候補の向き・盤外・占有・盤面不変性を確認します。
+座標の検証、駒の不変性、盤面の独立性、初期配置の全81マス・枚数・手番、CLI表示、歩・金・銀・桂・香・飛車・角の候補の向き・盤外・占有・盤面不変性、局面移動時の所有者照合と不変性を確認します。
 
 `-v` を付けると、英語のテストメソッド名に続けて、日本語のdocstringの先頭行が表示されます。テスト名は検索・個別実行に使える英語のまま、確認する振る舞いと検出したい誤りは日本語のdocstringで説明しています。
 
@@ -122,7 +122,7 @@ from kaname_shogi.movegen import move_piece
 move_piece(position.board, Square(7, 7), Square(7, 6))
 ```
 
-手番も含めて局面を進めるときは、`apply_move(position, source, destination)` を使います。成功時には出発マスを空にして到着マスへ同じ駒を置き、先手・後手の手番を交代します。空の出発マス、占有された到着マス、同一マスは `ValueError` となり、盤面と手番は変更されません。今回は、手番と出発駒の所有者の一致、移動方向、駒取り、成り、王手、合法手判定を検証しません。
+手番も含めて局面を進めるときは、`apply_move(position, source, destination)` を使います。出発駒の所有者と `position.side_to_move` が一致し、到着マスが空なら、出発マスを空にして到着マスへ同じ駒を置き、先手・後手の手番を交代します。所有者と手番が違う場合、空の出発マス、占有された到着マス、同一マスは `ValueError` となり、盤面と手番は変更されません。今回は、移動方向、駒取り、成り、王手、合法手判定を検証しません。
 
 ```python
 from kaname_shogi.model import Square, create_initial_position
@@ -146,6 +146,11 @@ print(bishop_move_candidates(board, Square(5, 5)))
 候補計算では角や他の駒を動かしたり取ったりしません。成り、馬の縦横1マス、王手、合法手の確定は扱いません。
 
 ## 文書
+
+- [第23回：手番に合う駒だけを移動できること](docs/learning/23-turn-ownership.md)
+- [手番と駒の所有者：参照メモ](docs/knowledge/16-turn-ownership.md)
+- [手番と駒の所有者の設計](docs/design/11-turn-ownership.md)
+- [手番と駒の所有者の実装計画](docs/plans/2026-09-22-turn-ownership.md)
 
 - [第20回：玉の移動先候補](docs/learning/20-king-move-candidates.md)
 - [玉の移動先候補の設計](docs/design/09-king-move-candidates.md)
