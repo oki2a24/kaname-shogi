@@ -67,7 +67,7 @@ def _move_candidates_for_piece(board: Board, source: Square) -> list[Square]:
 
 
 def apply_move(position: Position, source: Square, destination: Square) -> None:
-    """候補に含まれる空の到着マスへの移動と手番交代を、局面へ適用する。
+    """候補に含まれる到着マスへの移動・駒取り・手番交代を局面へ適用する。
 
     引数:
         position: 変更対象の盤面と手番を持つ可変の局面。
@@ -79,14 +79,16 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
 
     例外:
         ValueError: 出発駒の所有者と手番が一致しない場合、到着マスが出発駒の
-            移動先候補に含まれない場合、またはmove_pieceが拒否する空の出発マス、
-            占有された到着マス、同一マスの場合。失敗時は盤面と手番を変更しない。
+            移動先候補に含まれない場合、相手の玉を取ろうとした場合、または
+            move_pieceが拒否する空の出発マス、同一マスの場合。失敗時は盤面、
+            手番、先手・後手の持ち駒を変更しない。
 
     出発駒の所有者と局面の手番を照合し、既存の移動先候補に到着マスが含まれる
-    ときだけ盤面移動をmove_pieceへ委譲する。これにより、手番を知らないBoardの
-    配置責務と、対局を一手進めるPositionの局面責務を分ける。成功後だけ手番を
-    交代する。候補に相手駒のマスが含まれても、今回は駒取りを扱わないため、
-    move_pieceが占有された到着マスとして拒否する。成り、王手、合法手は検証しない。
+    ときだけ局面を変更する。到着マスが空なら盤面移動をmove_pieceへ委譲する。
+    相手駒なら、出発駒を到着マスへ移し、取られた駒種を指した側の持ち駒へ1枚
+    加える。これにより、手番を知らないBoardの配置責務と、対局を一手進める
+    Positionの局面責務を分ける。玉は持ち駒にならないため取れない。成功後だけ
+    手番を交代する。持ち駒を盤へ打つ操作、成り、王手、合法手は検証しない。
     """
     piece = position.board.piece_at(source)
     if piece is not None and piece.side != position.side_to_move:
@@ -95,7 +97,20 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
             and destination not in _move_candidates_for_piece(position.board, source)):
         raise ValueError("到着マスは出発駒の移動先候補に含まれません")
 
-    move_piece(position.board, source, destination)
+    if piece is None:
+        move_piece(position.board, source, destination)
+    else:
+        target_piece = position.board.piece_at(destination)
+        if target_piece is None:
+            move_piece(position.board, source, destination)
+        else:
+            if target_piece.piece_type == PieceType.KING:
+                raise ValueError("玉は取れません")
+            hand = (position.sente_hand if position.side_to_move == Side.SENTE
+                    else position.gote_hand)
+            hand.add(target_piece.piece_type)
+            position.board.set_piece(source, None)
+            position.board.set_piece(destination, piece)
     if position.side_to_move == Side.SENTE:
         position.side_to_move = Side.GOTE
     else:
