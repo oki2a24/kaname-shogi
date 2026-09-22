@@ -36,7 +36,7 @@
 - 消費 (Consumes): `Hand.add(piece_type: PieceType) -> None`、`Hand.count(piece_type: PieceType) -> int`。
 - 生産 (Produces): `Hand.remove(piece_type: PieceType) -> None`。玉または0枚を `ValueError` で拒否し、失敗時は枚数を変えない。
 
-- [ ] **ステップ1: 失敗するテストを作成**
+- [x] **ステップ1: 失敗するテストを作成**
 
 `HandTests` に、歩を2枚加えて1枚取り除く成功、0枚の飛車の拒否、玉の拒否を追加する。各失敗後に歩・飛車の枚数が変わらないことも確認する。
 
@@ -62,13 +62,13 @@ def test_remove_rejects_unowned_piece_and_king_without_changing_hand(self):
     self.assertEqual(hand.count(PieceType.ROOK), 0)
 ```
 
-- [ ] **ステップ2: テストが失敗することを確認するために実行**
+- [x] **ステップ2: テストが失敗することを確認するために実行**
 
 実行: `python3 -m unittest discover -s tests -p 'test_model.py' -v`
 
 期待値: `AttributeError: 'Hand' object has no attribute 'remove'` によるFAIL。テストモジュールの読み込みエラーではなく、未実装の振る舞いで失敗することを確認する。
 
-- [ ] **ステップ3: 最小限の実装を作成**
+- [x] **ステップ3: 最小限の実装を作成**
 
 `Hand.add` の直後に、既存の `_validate_piece_type` と `count` を利用する `remove` を追加する。枚数の確認を変更前に行う。
 
@@ -82,13 +82,13 @@ def remove(self, piece_type: PieceType) -> None:
 
 docstringには、引数、`None` の戻り値、0枚・玉の例外、成功時と失敗時の副作用、盤面・先後を扱わない理由を記す。
 
-- [ ] **ステップ4: テストがパスすることを確認するために実行**
+- [x] **ステップ4: テストがパスすることを確認するために実行**
 
 実行: `python3 -m unittest discover -s tests -p 'test_model.py' -v`
 
 期待値: `HandTests` の全テストがPASS。
 
-- [ ] **ステップ5: リファクタ要否を確認してコミット**
+- [x] **ステップ5: リファクタ要否を確認してコミット**
 
 `add` と `remove` に必要な範囲を超える共通化がないか確認する。重複を減らすための補助関数が、枚数操作の理解をかえって難しくするなら追加しない。
 

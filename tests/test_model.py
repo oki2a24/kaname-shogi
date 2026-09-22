@@ -150,6 +150,38 @@ class HandTests(unittest.TestCase):
             hand.count(PieceType.KING)
         self.assertEqual(hand.count(PieceType.PAWN), 0)
 
+    def test_remove_decreases_only_one_owned_piece_type(self):
+        """持ち駒を1枚減らし、他の駒種の枚数を変えない。
+
+        指定していない駒種まで減らす誤り、または指定駒種を一度に全て失う誤りを
+        検出する。
+        """
+        hand = model.Hand()
+        hand.add(PieceType.PAWN)
+        hand.add(PieceType.PAWN)
+
+        hand.remove(PieceType.PAWN)
+
+        self.assertEqual(hand.count(PieceType.PAWN), 1)
+        self.assertEqual(hand.count(PieceType.ROOK), 0)
+
+    def test_remove_rejects_unowned_piece_and_king_without_changing_hand(self):
+        """0枚の駒と玉を拒否し、持ち駒を変更しない。
+
+        0枚を負の枚数にする誤り、玉を持ち駒として扱う誤り、失敗前に他の駒種を
+        変更する誤りを検出する。
+        """
+        hand = model.Hand()
+        hand.add(PieceType.PAWN)
+
+        with self.assertRaises(ValueError):
+            hand.remove(PieceType.ROOK)
+        with self.assertRaises(ValueError):
+            hand.remove(PieceType.KING)
+
+        self.assertEqual(hand.count(PieceType.PAWN), 1)
+        self.assertEqual(hand.count(PieceType.ROOK), 0)
+
 
 class PositionHandTests(unittest.TestCase):
     def test_positions_and_sides_have_independent_hands(self):

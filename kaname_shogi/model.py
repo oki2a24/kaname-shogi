@@ -145,6 +145,27 @@ class Hand:
         self._validate_piece_type(piece_type)
         self._counts[piece_type] = self.count(piece_type) + 1
 
+    def remove(self, piece_type: PieceType) -> None:
+        """piece_typeを1枚減らし、持ち駒を変更する。
+
+        引数:
+            piece_type: 減らす玉以外の基本駒種。
+
+        戻り値:
+            なし（None）。成功時は指定した駒種の枚数だけを1減らす。
+
+        例外:
+            ValueError: 玉を指定した場合、または指定駒種が0枚の場合。失敗時は
+                全ての枚数を変更しない。
+
+        removeは枚数を減らす操作であり、盤面・先後・手番は判断しない。局面操作が
+        持ち駒を盤へ打つときに、どちらのHandを減らすかを選ぶ。
+        """
+        self._validate_piece_type(piece_type)
+        if self.count(piece_type) == 0:
+            raise ValueError("指定した駒は持ち駒にありません")
+        self._counts[piece_type] = self.count(piece_type) - 1
+
 
 class Board:
     """81マスの配置だけを保持する可変の盤。手番はPositionの責務。
