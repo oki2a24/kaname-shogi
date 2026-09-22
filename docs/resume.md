@@ -23,13 +23,13 @@
 
 ## 直近までの記録
 
-第28回では、設計合意後にRed → Green → Refactorで行き所のない駒の駒打ち制限を追加した。先後それぞれの歩・香・桂について禁止段8ケースを拒否し、境界成功6ケースを確認した。Redは8ケースすべて `ValueError not raised` で失敗し、Green後は移動テスト95件、全116テストが成功した。Refactorは不要と判断し、独立レビューはCritical・Important・Minorなしでマージ可能との評価だった。CLIと `git diff --check` も成功した。現在の実装は作業用ブランチ `codex/no-legal-destination-drops` にあり、mainへの取り込みは未実施である。
+第28回では、設計合意後にRed → Green → Refactorで行き所のない駒の駒打ち制限を追加した。先後それぞれの歩・香・桂について禁止段8ケースを拒否し、境界成功6ケースを確認した。Redは8ケースすべて `ValueError not raised` で失敗し、Green後は移動テスト95件、全116テストが成功した。Refactorは不要と判断し、独立レビューはCritical・Important・Minorなしでマージ可能との評価だった。CLIと `git diff --check` も成功し、`main`へfast-forwardで取り込んだ。
 
 ## 次に行うこと
 
-1. 第28回の学習・知識・実装記録を確認し、mainへ取り込むか判断する。
-2. 取り込み後に全テスト、CLI、`git diff --check` を再実行する。
-3. 取り込み完了後、次テーマ候補を見直す。
+1. 第28回の学習・知識・実装記録を確認する。
+2. 次テーマ候補から本人が一つ選ぶ。
+3. 選ばれたテーマの一次資料確認から始める。
 
 ## 再開用プロンプト
 
