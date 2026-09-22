@@ -120,6 +120,28 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
         position.side_to_move = Side.SENTE
 
 
+def _has_unpromoted_pawn_on_file(board: Board, side: Side, file: int) -> bool:
+    """sideの未成の歩がfile筋にあればTrueを返し、盤面を変更しない。
+
+    引数:
+        board: 調べる盤面。内容は変更しない。
+        side: 歩の所有者として調べる先手・後手。
+        file: 調べる筋。公開操作ではないため、apply_dropからSquare.fileを渡す。
+
+    戻り値:
+        指定筋の1段から9段に、指定側の未成の歩が1枚でもあればTrue。なければ
+        False。
+
+    現在は成り状態を表現しないため、PieceType.PAWNを未成の歩として扱う。成りを
+    実装してと金を表せる段階で、二歩の対象からと金を除外するよう見直す。
+    """
+    for rank in range(1, 10):
+        piece = board.piece_at(Square(file, rank))
+        if piece == Piece(PieceType.PAWN, side):
+            return True
+    return False
+
+
 def apply_drop(position: Position, piece_type: PieceType,
                destination: Square) -> None:
     """手番側の持ち駒を空マスへ打ち、局面を一手進める。
@@ -134,18 +156,24 @@ def apply_drop(position: Position, piece_type: PieceType,
         destinationへ置き、手番を交代する。
 
     例外:
-        ValueError: 玉を指定した場合、手番側が指定駒種を持たない場合、または
-            destinationが占有されている場合。失敗時は盤面、手番、先手・後手の
-            持ち駒を変更しない。
+        ValueError: 玉を指定した場合、手番側が指定駒種を持たない場合、
+            destinationが占有されている場合、または持ち歩を打つ同じ筋に手番側の
+            未成の歩がある場合。失敗時は盤面、手番、先手・後手の持ち駒を変更
+            しない。
 
     駒打ちは盤上の出発マスと移動先候補を持たないため、盤上移動のapply_moveと
-    分ける。二歩、行き所のない歩・香・桂、打ち歩詰め、成り、王手、合法手は
-    この段階では検証しない。
+    分ける。歩を打つときは二歩を検証する。行き所のない歩・香・桂、打ち歩詰め、
+    成り、王手、合法手はこの段階では検証しない。
     """
     if piece_type == PieceType.KING:
         raise ValueError("玉は打てません")
     if position.board.piece_at(destination) is not None:
         raise ValueError("到着マスは空にしてください")
+    if (piece_type == PieceType.PAWN
+            and _has_unpromoted_pawn_on_file(position.board,
+                                             position.side_to_move,
+                                             destination.file)):
+        raise ValueError("同じ筋に歩があるため二歩です")
 
     hand = (position.sente_hand if position.side_to_move == Side.SENTE
             else position.gote_hand)

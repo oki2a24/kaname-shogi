@@ -381,6 +381,44 @@ class ApplyDropTests(unittest.TestCase):
                 self._assert_position_unchanged(position, before_board,
                                                 before_hands, Side.SENTE)
 
+    def test_rejects_double_pawn_without_changing_position(self):
+        """同じ筋に自分の歩がある持ち歩打ちを拒否し、局面を変更しない。
+
+        相手の歩を誤って数えること、持ち駒を先に減らすこと、例外時に手番を交代する
+        ことを、先手・後手の両方で検出する。
+        """
+        for side, pawn_rank in ((Side.SENTE, 7), (Side.GOTE, 3)):
+            position = Position(Board(), side)
+            hand = (position.sente_hand if side == Side.SENTE
+                    else position.gote_hand)
+            hand.add(PieceType.PAWN)
+            position.board.set_piece(Square(5, pawn_rank),
+                                     Piece(PieceType.PAWN, side))
+            squares = [Square(file, rank) for file in range(1, 10)
+                       for rank in range(1, 10)]
+            before_board = [position.board.piece_at(square) for square in squares]
+            before_hands = self._hand_counts(position)
+            with self.subTest(side=side):
+                with self.assertRaises(ValueError):
+                    self._apply_drop(position, PieceType.PAWN, Square(5, 5))
+                self._assert_position_unchanged(position, before_board,
+                                                before_hands, side)
+
+    def test_allows_non_pawn_drop_on_file_with_own_pawn(self):
+        """同じ筋に自分の歩があっても、銀の打ちは二歩として拒否しない。
+
+        二歩の制限を歩以外の駒打ちへ誤って広げることを検出する。
+        """
+        position = Position(Board(), Side.SENTE)
+        position.sente_hand.add(PieceType.SILVER)
+        position.board.set_piece(Square(5, 7),
+                                 Piece(PieceType.PAWN, Side.SENTE))
+
+        self.assertIsNone(self._apply_drop(position, PieceType.SILVER,
+                                           Square(5, 5)))
+        self.assertEqual(position.board.piece_at(Square(5, 5)),
+                         Piece(PieceType.SILVER, Side.SENTE))
+
     def test_rejects_king_without_changing_position(self):
         """玉を打つ操作を拒否し、局面を変更しない。
 
