@@ -85,6 +85,10 @@ Refactor後に独立したコードレビューを行った。Critical・Importa
 
 補足：二歩の対象、拒否時の局面不変性、実装での検証順を理解できている。第27回の学習・設計・TDD実装・検証・Refactor後レビュー・理解確認は完了とする。
 
+## mainへの取り込み
+
+`codex/nifu` を `main` へfast-forwardで取り込んだ。取り込み後に `python3 -m unittest discover -s tests -v` を実行して114件成功、`python3 -m kaname_shogi` と `git diff --check` も成功を確認した。統合済みの `codex/nifu` ブランチは削除した。
+
 ## 今回は扱わないこと
 
 行き所のない歩・香・桂、打ち歩詰め、成り・不成、王手・詰み・合法手判定、CLI入力、対局履歴は扱わない。

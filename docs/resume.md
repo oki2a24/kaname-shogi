@@ -23,20 +23,19 @@
 
 ## 直近までの記録
 
-第27回では、設計合意後にRed → Green → Refactorで二歩を追加した。先後それぞれで、同じ筋に自分の歩がある持ち歩打ちは `ValueError` で拒否し、盤面・手番・双方の持ち駒を変えない。歩以外の銀打ちは同じ筋に自分の歩があっても成功する。Redは二歩で `ValueError` が出ないため2失敗、Green後は移動テスト93件成功だった。Refactor後の独立レビューはCritical/Importantなしで、テストdocstringの検証範囲を実態に合わせるMinorを修正した。全体検証と実装後理解確認、`main`への取り込みは未完了である。
+第27回では、設計合意後にRed → Green → Refactorで二歩を追加した。先後それぞれで、同じ筋に自分の歩がある持ち歩打ちは `ValueError` で拒否し、盤面・手番・双方の持ち駒を変えない。歩以外の銀打ちは同じ筋に自分の歩があっても成功する。Redは二歩で `ValueError` が出ないため2失敗、Green後は移動テスト93件成功だった。Refactor後の独立レビューはCritical/Importantなしで、テストdocstringの検証範囲を実態に合わせるMinorを修正した。全114テスト、CLI、`git diff --check`、実装後理解確認を完了し、`codex/nifu` はmainへ取り込み済みである。
 
 ## 次に行うこと
 
-1. 第27回の全体検証を実行し、実測結果を記録する。
-2. 実装後の理解確認を一問ずつ行い、本人の回答・補足・振り返りを記録する。
-3. 学習・設計・実装・検証・レビューの記録をコミットし、本人の承認後に `codex/nifu` を `main` へ取り込む。
+1. READMEと`docs/next-topics.md`から次テーマ候補を確認する。
+2. 本人が次テーマを選ぶまで、新しい学習・実装は始めない。
 
 ## 再開用プロンプト
 
 ```text
 kaname-shogiの続きをお願いします。
 AGENTS.md、README.md、docs/resume.mdから最新の学習・設計・実装記録とGit状態を確認してください。
-第26回はmainへの取り込みまで完了しています。次テーマは第27回「二歩」です。新しいセッションで、docs/handover-nifu.md、AGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/learning/26-hand-drops.md、docs/knowledge/19-hand-drops.md、docs/design/14-hand-drops.md、Git状態を確認してください。その後、一次資料で二歩の規則を確認し、確認問題を一問だけ出して本人の回答を待ってください。設計承認前にコードやテストを書かないでください。
+第27回「二歩」はmainへの取り込みまで完了しています。AGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/learning/27-nifu.md、docs/knowledge/20-nifu.md、docs/design/15-nifu.md、Git状態を確認してください。次テーマ候補を小さい順に示し、本人が選ぶまで新しい学習・実装は始めないでください。
 ```
 
 ## 実行場所とコマンド
