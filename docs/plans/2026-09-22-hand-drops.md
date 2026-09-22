@@ -220,6 +220,6 @@ git add README.md docs/resume.md docs/next-topics.md \
 git commit -m "docs: 記録 持ち駒を打つ実装"
 ```
 
-- [ ] **ステップ5: 実装後の理解確認を一問だけ行う**
+- [x] **ステップ5: 実装後の理解確認を一問だけ行う**
 
 実装・検証・レビュー後、先手または後手の持ち駒と空マスへの打ちを問う確認問題を一問だけ出す。回答と補足を `docs/learning/26-hand-drops.md` に記録し、次テーマへ進む前に振り返りを確認する。
