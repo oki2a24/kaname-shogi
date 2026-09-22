@@ -8,7 +8,7 @@
 
 ## 現在の状態
 
-初期配置のCLI表示と、玉・歩・金・銀・桂・香・飛車・角の移動先候補を求める関数、空マスへの移動適用、手番に合う駒だけの局面移動を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、`move_piece(board, source, destination)` は検証成功時に盤面を変更します。`apply_move(position, source, destination)` は出発駒の所有者が手番と一致し、既存の移動先候補に含まれる空マスの場合だけ盤面を移動し、成功後に手番を交代します。駒取りや対局全体の進行はまだできません。
+初期配置のCLI表示と、玉・歩・金・銀・桂・香・飛車・角の移動先候補を求める関数、空マスへの移動適用、手番に合う駒だけの局面移動、候補内の相手駒を取って持ち駒へ加える処理を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、`move_piece(board, source, destination)` は検証成功時に盤面を変更します。`apply_move(position, source, destination)` は出発駒の所有者が手番と一致し、既存の移動先候補に含まれる空マスへの移動または相手の玉以外の駒取りを適用し、成功後に手番を交代します。駒取りでは取った基本駒種を指した側の持ち駒へ加えます。持ち駒を打つ操作や対局全体の進行はまだできません。
 
 実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
 
@@ -28,7 +28,7 @@ python3 -m kaname_shogi
 python3 -m unittest discover -s tests -v
 ```
 
-座標の検証、駒の不変性、盤面の独立性、初期配置の全81マス・枚数・手番、CLI表示、歩・金・銀・桂・香・飛車・角の候補の向き・盤外・占有・盤面不変性、局面移動時の所有者照合と不変性を確認します。
+座標の検証、駒の不変性、盤面と持ち駒の独立性、初期配置の全81マス・枚数・手番、CLI表示、歩・金・銀・桂・香・飛車・角の候補の向き・盤外・占有・盤面不変性、局面移動時の所有者照合、駒取り、玉取り拒否、失敗時不変性を確認します。
 
 `-v` を付けると、英語のテストメソッド名に続けて、日本語のdocstringの先頭行が表示されます。テスト名は検索・個別実行に使える英語のまま、確認する振る舞いと検出したい誤りは日本語のdocstringで説明しています。
 
@@ -122,7 +122,7 @@ from kaname_shogi.movegen import move_piece
 move_piece(position.board, Square(7, 7), Square(7, 6))
 ```
 
-手番も含めて局面を進めるときは、`apply_move(position, source, destination)` を使います。出発駒の所有者と `position.side_to_move` が一致し、既存の移動先候補に含まれる到着マスが空なら、出発マスを空にして到着マスへ同じ駒を置き、先手・後手の手番を交代します。所有者と手番が違う場合、候補外、空の出発マス、占有された到着マス、同一マスは `ValueError` となり、盤面と手番は変更されません。候補に含まれる相手駒のマスへの駒取りは扱いません。今回は、成り、王手、合法手判定を検証しません。
+手番も含めて局面を進めるときは、`apply_move(position, source, destination)` を使います。出発駒の所有者と `position.side_to_move` が一致し、既存の移動先候補に含まれる到着マスが空なら、出発マスを空にして到着マスへ同じ駒を置き、先手・後手の手番を交代します。候補に含まれる相手の玉以外の駒があるマスなら、その駒を盤上から取り除き、取った基本駒種を指した側の `Position.sente_hand` または `Position.gote_hand` に1枚加えて手番を交代します。玉を取ろうとした場合、所有者と手番が違う場合、候補外、空の出発マス、自駒のある到着マス、同一マスは `ValueError` となり、盤面・手番・双方の持ち駒は変更されません。持ち駒を打つ操作、成り、王手、合法手判定は検証しません。
 
 ```python
 from kaname_shogi.model import Square, create_initial_position
@@ -146,6 +146,11 @@ print(bishop_move_candidates(board, Square(5, 5)))
 候補計算では角や他の駒を動かしたり取ったりしません。成り、馬の縦横1マス、王手、合法手の確定は扱いません。
 
 ## 文書
+
+- [第25回：駒取りと持ち駒の基礎](docs/learning/25-capture-and-hands.md)
+- [駒取りと持ち駒：参照メモ](docs/knowledge/18-capture-and-hands.md)
+- [駒取りと持ち駒の設計](docs/design/13-capture-and-hands.md)
+- [駒取りと持ち駒の実装計画](docs/plans/2026-09-22-capture-and-hands.md)
 
 - [第24回：移動先候補に合う空マスへだけ移動できること](docs/learning/24-candidate-only-empty-square-move.md)
 - [移動先候補に合う空マスへの移動：参照メモ](docs/knowledge/17-candidate-only-empty-square-move.md)

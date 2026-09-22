@@ -77,6 +77,7 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
 
     戻り値:
         なし（None）。成功時だけposition.boardとposition.side_to_moveを変更する。
+        駒取りの成功時は、指した側の持ち駒も変更する。
 
     例外:
         ValueError: 出発駒の所有者と手番が一致しない場合、到着マスが出発駒の

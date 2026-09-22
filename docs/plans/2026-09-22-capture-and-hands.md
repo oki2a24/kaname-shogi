@@ -34,6 +34,8 @@
 
 ### タスク1: 持ち駒データと局面の保持
 
+**状態:** 完了
+
 **ファイル:**
 - 変更: `kaname_shogi/model.py:1-170`
 - 変更: `tests/test_model.py:1-180`
@@ -41,7 +43,7 @@
 **インターフェース:**
 - 生産: `Hand()`、`Hand.count(piece_type: PieceType) -> int`、`Hand.add(piece_type: PieceType) -> None`、`Position.sente_hand: Hand`、`Position.gote_hand: Hand`。
 
-- [ ] **ステップ 1: 失敗するモデルテストを作成**
+- [x] **ステップ 1: 失敗するモデルテストを作成**
 
 `tests/test_model.py` のimportへ `Hand` と `Position` を追加し、次を加える。各docstringには検出したい共有・玉取りの誤りを日本語で説明する。
 
@@ -75,20 +77,20 @@ class PositionHandTests(unittest.TestCase):
         self.assertEqual(second.gote_hand.count(PieceType.ROOK), 0)
 ```
 
-- [ ] **ステップ 2: Redを確認**
+- [x] **ステップ 2: Redを確認**
 
 実行: `python3 -m unittest discover -s tests -p 'test_model.py' -v`
 
 期待値: `Hand` または `Position.sente_hand` が未実装で失敗する。テストの構文・読み込みではなく、未実装の公開APIが理由であることを確認する。
 
-- [ ] **ステップ 3: 最小実装を追加**
+- [x] **ステップ 3: 最小実装を追加**
 
 `dataclasses` のimportに `field` を加え、`Piece` の後ろに次の `Hand` を追加する。公開要素のdocstringには、`Hand` は一方の持ち駒データ、`count` は読取操作、`add` は加算操作、先後は持たないことを記す。
 
 ```python
 @dataclass
 class Hand:
-    _counts: dict[PieceType, int] = field(default_factory=dict)
+    _counts: dict[PieceType, int] = field(default_factory=dict, init=False, repr=False)
 
     def _validate_piece_type(self, piece_type: PieceType) -> None:
         if piece_type == PieceType.KING:
@@ -105,19 +107,21 @@ class Hand:
 
 `Position` を `board`、`side_to_move`、`sente_hand: Hand = field(default_factory=Hand)`、`gote_hand: Hand = field(default_factory=Hand)` の4フィールドにする。`create_initial_position()` は `Position(board, Side.SENTE)` のままとし、既定値で空の持ち駒を得る。
 
-- [ ] **ステップ 4: Greenを確認**
+- [x] **ステップ 4: Greenを確認**
 
 実行: `python3 -m unittest discover -s tests -p 'test_model.py' -v`
 
 期待値: 新しい `HandTests` と `PositionHandTests` を含む全テストが成功する。
 
-- [ ] **ステップ 5: Refactor要否を確認してコミット**
+- [x] **ステップ 5: Refactor要否を確認してコミット**
 
 持ち駒を打つ削除操作や不変化を先取りせず、`Hand` が枚数の読取・加算だけを持つことを確認する。
 
 実行: `git add kaname_shogi/model.py tests/test_model.py && git commit -m "feat: 持ち駒を局面に保持"`
 
 ### タスク2: 駒取りを含む局面移動
+
+**状態:** 完了
 
 **ファイル:**
 - 変更: `kaname_shogi/movegen.py:1-115`
@@ -127,7 +131,7 @@ class Hand:
 - 消費: `Position.sente_hand`、`Position.gote_hand`、`Hand.add(piece_type: PieceType) -> None`。
 - 生産: `apply_move(position: Position, source: Square, destination: Square) -> None`。空マス移動と相手駒の駒取りを成功時に適用し、失敗時は局面を変更しない。
 
-- [ ] **ステップ 1: 駒取りの失敗テストを作成**
+- [x] **ステップ 1: 駒取りの失敗テストを作成**
 
 `ApplyMoveTests` に次を追加する。既存の候補外・所有者不一致・空出発・同一マスの失敗テストへも、先後双方の持ち駒が0枚のままという検証を加える。
 
@@ -163,13 +167,13 @@ def test_rejects_capture_of_king_without_changing_position(self):
     self.assertEqual(position.sente_hand.count(PieceType.PAWN), 0)
 ```
 
-- [ ] **ステップ 2: 振る舞い上のRedを確認**
+- [x] **ステップ 2: 振る舞い上のRedを確認**
 
 実行: `python3 -m unittest discover -s tests -p 'test_movegen.py' -v`
 
 期待値: 駒取り成功は既存の `move_piece` が占有到着を拒否するため `ValueError` で失敗し、玉取り拒否は未実装のため失敗する。読み込みエラーではないことを確認する。
 
-- [ ] **ステップ 3: `apply_move` の最小分岐を実装**
+- [x] **ステップ 3: `apply_move` の最小分岐を実装**
 
 既存の手番・候補照合の後に到着駒を読む。空なら既存 `move_piece` を呼ぶ。相手駒なら玉を拒否し、手番側の `Hand` を選んで盤面更新と持ち駒加算を行う。`move_piece` は変更しない。
 
@@ -188,13 +192,13 @@ else:
 
 `apply_move` のdocstringを、相手駒を取る成功条件、玉取り拒否、失敗時に持ち駒も不変である契約へ更新する。
 
-- [ ] **ステップ 4: Greenを確認**
+- [x] **ステップ 4: Greenを確認**
 
 実行: `python3 -m unittest discover -s tests -p 'test_movegen.py' -v`
 
 期待値: 新しい先後の駒取り、玉取り拒否、既存の空マス移動・候補外拒否・手番照合を含む全テストが成功する。
 
-- [ ] **ステップ 5: Refactor要否を確認してコミット**
+- [x] **ステップ 5: Refactor要否を確認してコミット**
 
 `apply_move` が局面規則、`move_piece` が空マスへの盤面操作という責務分離を保つことを確認する。駒打ち・成り・王手判定を加えない。
 
@@ -210,17 +214,17 @@ else:
 - 消費: 実測したRed・Green・Refactor・検証結果。
 - 生産: 確定知識、学習記録、次回の開始点。
 
-- [ ] **ステップ 1: 全体検証を実行して事実を収集**
+- [x] **ステップ 1: 全体検証を実行して事実を収集**
 
 実行: `python3 -m unittest discover -s tests -v && python3 -m kaname_shogi && git diff --check`
 
 期待値: 全テスト成功、CLIが初期配置を表示して終了、`git diff --check` は出力なし。失敗時は記録・コミットの前に対象範囲内で修正する。
 
-- [ ] **ステップ 2: 文書を更新**
+- [x] **ステップ 2: 文書を更新**
 
 `docs/knowledge/18-capture-and-hands.md` に、駒取り・持ち駒・盤上にないこと・玉を持ち駒にしないこと・対象外と、日本将棋連盟「駒の動かし方」へのリンクを記す。`docs/learning/25-capture-and-hands.md` に今回の質問と回答、設計合意、Red・Green・Refactor・検証・レビューの実測結果を書く。`README.md`、`docs/resume.md`、`docs/next-topics.md` を実装済み範囲と「持ち駒を打つ操作と打ち場所の制限」が次候補である現在地へ更新する。未実施のレビュー・回答・検証を完了として記録しない。
 
-- [ ] **ステップ 3: 文書を含めて再検証し、コミット**
+- [x] **ステップ 3: 文書を含めて再検証し、コミット**
 
 実行: `python3 -m unittest discover -s tests -v && python3 -m kaname_shogi && git diff --check && git status --short`
 
