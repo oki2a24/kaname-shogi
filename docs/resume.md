@@ -17,9 +17,8 @@
 ## 読む順序
 
 1. ルートのAGENTS.md、[README](../README.md)、現在のGit状態。
-2. [第28回：行き所のない駒](learning/28-no-legal-destination-drops.md)、[参照メモ](knowledge/21-no-legal-destination-drops.md)、[設計](plans/2026-09-22-no-legal-destination-drops-design.md)、[実装計画](plans/2026-09-22-no-legal-destination-drops.md)。
-3. [第26回：持ち駒を打つ基本操作と打ち場所の制限](learning/26-hand-drops.md)、[参照メモ](knowledge/19-hand-drops.md)、[設計](design/14-hand-drops.md)、[実装計画](plans/2026-09-22-hand-drops.md)。
-4. [移動・候補生成のコード](../kaname_shogi/movegen.py)、[状態モデル](../kaname_shogi/model.py)、[テスト](../tests/test_model.py)と[移動テスト](../tests/test_movegen.py)。
+2. [成り・不成テーマの引き継ぎ](handover-promotion-and-non-promotion.md)、[第28回：行き所のない駒](learning/28-no-legal-destination-drops.md)、[参照メモ](knowledge/21-no-legal-destination-drops.md)。
+3. [状態モデル](../kaname_shogi/model.py)、[移動・候補生成](../kaname_shogi/movegen.py)、[モデルテスト](../tests/test_model.py)、[移動テスト](../tests/test_movegen.py)。
 
 ## 直近までの記録
 
@@ -27,16 +26,16 @@
 
 ## 次に行うこと
 
-1. 第28回の学習・知識・実装記録を確認する。
-2. 次テーマ候補から本人が一つ選ぶ。
-3. 選ばれたテーマの一次資料確認から始める。
+1. 新しいセッションで第29回「成り・不成の基礎」を、一次資料の確認から始める。
+2. 確認問題は一度に一問だけ出し、本人の回答・補足・振り返りを記録する。
+3. 設計承認前にコードやテストを書かない。
 
 ## 再開用プロンプト
 
 ```text
 kaname-shogiの続きをお願いします。
 AGENTS.md、README.md、docs/resume.mdから最新の学習・設計・実装記録とGit状態を確認してください。
-第27回「二歩」はmainへの取り込みまで完了しています。次テーマは第28回「行き所のない駒」です。新しいセッションで、docs/handover-no-legal-destination-drops.md、AGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/learning/27-nifu.md、docs/knowledge/20-nifu.md、docs/design/15-nifu.md、Git状態を確認してください。その後、日本将棋連盟などの一次資料で、歩・香・桂を行き所のない段へ打てない規則を確認し、確認問題を一問だけ出して本人の回答を待ってください。設計承認前にコードやテストを書かないでください。
+第28回「行き所のない駒」はmainへの取り込みまで完了しています。次テーマは第29回「成り・不成の基礎」です。新しいセッションで、docs/handover-promotion-and-non-promotion.md、AGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/learning/28-no-legal-destination-drops.md、docs/knowledge/21-no-legal-destination-drops.md、Git状態を確認してください。その後、日本将棋連盟などの一次資料で、成り・不成と強制的に成る場合を確認し、確認問題を一問だけ出して本人の回答を待ってください。設計承認前にコードやテストを書かないでください。
 ```
 
 ## 実行場所とコマンド

@@ -133,7 +133,7 @@ apply_move(position, Square(7, 7), Square(7, 6))
 # position.side_to_move は Side.GOTE
 ```
 
-持ち駒を打つときは `apply_drop(position, piece_type, destination)` を使います。`piece_type` は打つ基本駒種というデータ、`destination` は打ち先の筋・段を表す `Square` の値です。成功時は手番側の `Hand` から1枚減り、その側の駒が空マスへ置かれて手番が交代します。玉の指定、0枚の持ち駒、先手・後手いずれかの駒で占有されたマス、持ち歩を打つ筋に手番側の未成の歩がある二歩は `ValueError` となり、盤面・手番・双方の持ち駒を変更しません。
+持ち駒を打つときは `apply_drop(position, piece_type, destination)` を使います。`piece_type` は打つ基本駒種というデータ、`destination` は打ち先の筋・段を表す `Square` の値です。成功時は手番側の `Hand` から1枚減り、その側の駒が空マスへ置かれて手番が交代します。玉の指定、0枚の持ち駒、先手・後手いずれかの駒で占有されたマス、持ち歩を打つ筋に手番側の未成の歩がある二歩、歩・香・桂を行き所のない段へ打つ操作は `ValueError` となり、盤面・手番・双方の持ち駒を変更しません。
 
 ```python
 from kaname_shogi.model import PieceType, Square, create_initial_position
