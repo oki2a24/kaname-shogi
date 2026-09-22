@@ -157,7 +157,7 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
 
 `apply_move` は `move_piece` に盤面移動を委譲し、手番交代だけを追加する。`Side` の2値は明示的な条件分岐で交代しているため、今回の範囲では共通化や抽象化を追加しない。変更不要なら、この判断を学習記録へ残す。
 
-- [ ] **ステップ2: READMEへ使用例と対象外範囲を追加する**
+- [x] **ステップ2: READMEへ使用例と対象外範囲を追加する**
 
 ```python
 from kaname_shogi.model import Square, create_initial_position
@@ -170,11 +170,11 @@ apply_move(position, Square(7, 7), Square(7, 6))
 
 `move_piece` は盤面専用、`apply_move` は成功時だけ手番を交代すること、出発駒の所有者との一致を検証しないこと、今回扱わない規則を記録する。
 
-- [ ] **ステップ3: 学習記録と再開案内を更新する**
+- [x] **ステップ3: 学習記録と再開案内を更新する**
 
 第22回へ実装結果、Red→Green→Refactorの実測結果、検証、レビュー、将来の課題を追記する。`docs/resume.md` の到達点と次のテーマを更新し、理解確認が完了するまで駒取り・持ち駒・成りへ進まないことを記録する。
 
-- [ ] **ステップ4: 文書とコードの整合性、最終検証、コミット準備を確認する**
+- [x] **ステップ4: 文書とコードの整合性、最終検証、コミット準備を確認する**
 
 実行: `rg -n "apply_move|move_piece|手番" README.md docs/resume.md docs/learning/22-turn-update.md kaname_shogi/movegen.py`
 
@@ -188,7 +188,7 @@ apply_move(position, Square(7, 7), Square(7, 6))
 
 期待値: 全テストとCLIが成功し、空白エラーがなく、説明が一貫する。
 
-- [ ] **ステップ5: 検証・レビュー後に今回の変更をコミットする**
+- [x] **ステップ5: 検証・レビュー後に今回の変更をコミットする**
 
 実行: `git add README.md docs/learning/22-turn-update.md docs/resume.md docs/plans/2026-09-22-turn-update.md kaname_shogi/movegen.py tests/test_movegen.py`
 
