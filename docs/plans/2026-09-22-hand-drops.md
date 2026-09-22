@@ -184,7 +184,7 @@ git commit -m "feat: 持ち駒を打つ操作を追加"
 - 消費 (Consumes): `Hand.remove(piece_type: PieceType) -> None`、`apply_drop(position: Position, piece_type: PieceType, destination: Square) -> None`。
 - 生産 (Produces): 実装済み範囲、実行方法、次テーマ、実測検証結果を正しく参照できる文書。
 
-- [ ] **ステップ1: READMEを更新する**
+- [x] **ステップ1: READMEを更新する**
 
 現在の状態、テスト対象、コード例、文書リンクへ `apply_drop` を反映する。成功時の持ち駒減少・配置・手番交代と、持ち駒不足・占有マス・玉指定の不変な拒否を明記する。非対象の規則も明記する。
 
@@ -194,11 +194,11 @@ apply_drop(position, PieceType.PAWN, Square(5, 5))
 # ５五は先手の歩、先手の持ち駒の歩は0枚、手番は後手
 ```
 
-- [ ] **ステップ2: 再開・次テーマ・学習記録・知識メモを更新する**
+- [x] **ステップ2: 再開・次テーマ・学習記録・知識メモを更新する**
 
 `docs/resume.md` に今回の実装・実測結果・次の学習再開地点を追加する。`docs/next-topics.md` では今回の候補を完了状態にし、未実装の二歩・行き所のない駒などを次候補として残す。学習記録にはRed、Green、Refactor、レビュー、検証、実装後の理解確認を、実施済みの事実だけ記録する。知識メモは「実装予定」を実装済みの契約へ更新する。
 
-- [ ] **ステップ3: 対象テスト、全テスト、CLI、差分を確認する**
+- [x] **ステップ3: 対象テスト、全テスト、CLI、差分を確認する**
 
 実行:
 
@@ -212,7 +212,7 @@ git diff --check
 
 期待値: 全コマンドが成功し、`git diff --check` は出力なし。CLIは既存どおり初期配置と先手の手番を表示して終了する。
 
-- [ ] **ステップ4: 文書と最終検証結果をコミットする**
+- [x] **ステップ4: 文書と最終検証結果をコミットする**
 
 ```bash
 git add README.md docs/resume.md docs/next-topics.md \

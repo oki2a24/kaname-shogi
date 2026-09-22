@@ -9,7 +9,7 @@
 ## この段階の表現
 
 - `Hand` は一方の持ち駒の枚数を表す可変のデータである。
-- `Hand.remove(piece_type)` は玉以外の指定駒種を1枚減らす操作である。0枚の駒や玉なら `ValueError` とし、枚数を変えない。
+- `Hand.remove(piece_type)` は玉以外の指定駒種を1枚減らす操作である。0枚の駒や玉なら `ValueError` とし、全ての枚数を変えない。
 - `apply_drop(position, piece_type, destination)` は、手番側の持ち駒を1枚減らし、その側の `Piece` を空の `destination` へ置き、手番を交代する局面操作である。
 - 持ち駒不足、占有マス、玉の指定では `ValueError` とし、盤面・先後双方の持ち駒・手番は変更しない。
 

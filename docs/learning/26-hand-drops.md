@@ -42,6 +42,34 @@
 
 詳細は[持ち駒を打つ操作の設計](../design/14-hand-drops.md)を参照する。実装計画は設計書のレビュー承認後に作成する。
 
+## 実装記録
+
+### Red
+
+1. `Hand.remove` の成功、0枚の駒の拒否、玉の拒否をテストに追加した。未実装のため、2件は `AttributeError: 'Hand' object has no attribute 'remove'` で失敗した。読み込みエラーではない。
+2. `apply_drop` の先後双方の成功、持ち駒不足、先手・後手それぞれの占有マス、玉の指定をテストに追加した。未実装のため、6件は `apply_drop がまだ実装されていません` というアサーションで失敗した。既存91件は成功した。
+
+### Green と Refactor
+
+- `Hand.remove` は玉または0枚を `ValueError` で拒否し、成功時に指定駒種だけを1枚減らす。
+- `apply_drop` は玉、占有マス、持ち駒不足を局面変更前に検証する。成功時だけ手番側の持ち駒を減らし、空マスへその側の駒を置いて手番を交代する。
+- `Hand.add` / `remove` と、`apply_move` / `apply_drop` の共通化は、現在の短い責務を読む妨げになるため行わなかった。
+
+## レビュー
+
+- `Hand.remove` のレビューはCritical・Important・Minorなしでマージ可能だった。
+- `apply_drop` のレビューはCritical・Importantなしでマージ可能だった。後手番の持ち駒不足を追加するMinor提案は、成功と持ち駒不足が同じ手番側の `Hand` 選択を通り、既存の後手成功テストが先手固定の不具合を検出済みのため、重複として採用しなかった。
+
+## 検証
+
+実測結果：
+
+- `python3 -m unittest discover -s tests -p 'test_model.py' -v`：18件成功。
+- `python3 -m unittest discover -s tests -p 'test_movegen.py' -v`：91件成功。
+- `python3 -m unittest discover -s tests -v`：112件成功。
+- `python3 -m kaname_shogi`：初期配置と「手番：先手」を表示して終了。
+- `git diff --check`：出力なし。
+
 ## 今回は扱わないこと
 
 二歩、行き所のない歩・香・桂、打ち歩詰め、成り、王手・合法手判定、CLI入力は扱わない。
