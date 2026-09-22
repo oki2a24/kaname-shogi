@@ -142,6 +142,31 @@ def _has_unpromoted_pawn_on_file(board: Board, side: Side, file: int) -> bool:
     return False
 
 
+def _has_no_legal_destination(piece_type: PieceType, side: Side,
+                              rank: int) -> bool:
+    """piece_typeをsideがrank段へ打ったとき行き所がなければTrueを返す。
+
+    引数:
+        piece_type: 打つ基本駒種を表すデータ。
+        side: 打つ先手・後手を表す値。
+        rank: 打ち先の段を表す1〜9の整数。公開操作ではないため、apply_dropから
+            Square.rankを渡す。
+
+    戻り値:
+        歩・香・桂を打った直後に一度も進めない段ならTrue、それ以外ならFalse。
+
+    盤面・持ち駒・手番は変更しない。盤面を読まない判定にすることで、二歩の筋を
+    走査する判定と責務を分ける。
+    """
+    last_rank = 1 if side == Side.SENTE else 9
+    if piece_type in (PieceType.PAWN, PieceType.LANCE):
+        return rank == last_rank
+    if piece_type == PieceType.KNIGHT:
+        second_last_rank = 2 if side == Side.SENTE else 8
+        return rank in (last_rank, second_last_rank)
+    return False
+
+
 def apply_drop(position: Position, piece_type: PieceType,
                destination: Square) -> None:
     """手番側の持ち駒を空マスへ打ち、局面を一手進める。
@@ -157,13 +182,13 @@ def apply_drop(position: Position, piece_type: PieceType,
 
     例外:
         ValueError: 玉を指定した場合、手番側が指定駒種を持たない場合、
-            destinationが占有されている場合、または持ち歩を打つ同じ筋に手番側の
-            未成の歩がある場合。失敗時は盤面、手番、先手・後手の持ち駒を変更
-            しない。
+            destinationが占有されている場合、持ち歩を打つ同じ筋に手番側の
+            未成の歩がある場合、または歩・香・桂を行き所のない段へ打つ場合。
+            失敗時は盤面、手番、先手・後手の持ち駒を変更しない。
 
-    駒打ちは盤上の出発マスと移動先候補を持たないため、盤上移動のapply_moveと
-    分ける。歩を打つときは二歩を検証する。行き所のない歩・香・桂、打ち歩詰め、
-    成り、王手、合法手はこの段階では検証しない。
+        駒打ちは盤上の出発マスと移動先候補を持たないため、盤上移動のapply_moveと
+        分ける。歩を打つときは二歩を検証する。歩・香・桂は行き所のない段への
+        打ちも検証する。打ち歩詰め、成り、王手、合法手はこの段階では検証しない。
     """
     if piece_type == PieceType.KING:
         raise ValueError("玉は打てません")
@@ -174,6 +199,9 @@ def apply_drop(position: Position, piece_type: PieceType,
                                              position.side_to_move,
                                              destination.file)):
         raise ValueError("同じ筋に歩があるため二歩です")
+    if _has_no_legal_destination(piece_type, position.side_to_move,
+                                 destination.rank):
+        raise ValueError("行き所のない段へは打てません")
 
     hand = (position.sente_hand if position.side_to_move == Side.SENTE
             else position.gote_hand)

@@ -419,6 +419,66 @@ class ApplyDropTests(unittest.TestCase):
         self.assertEqual(position.board.piece_at(Square(5, 5)),
                          Piece(PieceType.SILVER, Side.SENTE))
 
+    def test_rejects_piece_with_no_legal_destination_without_changing_position(self):
+        """行き所のない段への歩・香・桂打ちを拒否し、局面を変更しない。
+
+        持ち駒を先に減らすこと、駒を盤上へ置くこと、例外時に手番を交代する
+        誤りを、先後それぞれの禁止段で検出する。
+        """
+        cases = (
+            (Side.SENTE, PieceType.PAWN, 1),
+            (Side.SENTE, PieceType.LANCE, 1),
+            (Side.SENTE, PieceType.KNIGHT, 1),
+            (Side.SENTE, PieceType.KNIGHT, 2),
+            (Side.GOTE, PieceType.PAWN, 9),
+            (Side.GOTE, PieceType.LANCE, 9),
+            (Side.GOTE, PieceType.KNIGHT, 8),
+            (Side.GOTE, PieceType.KNIGHT, 9),
+        )
+        for side, piece_type, rank in cases:
+            position = Position(Board(), side)
+            hand = (position.sente_hand if side == Side.SENTE
+                    else position.gote_hand)
+            hand.add(piece_type)
+            squares = [Square(file, board_rank) for file in range(1, 10)
+                       for board_rank in range(1, 10)]
+            before_board = [position.board.piece_at(square)
+                            for square in squares]
+            before_hands = self._hand_counts(position)
+            with self.subTest(side=side, piece_type=piece_type, rank=rank):
+                with self.assertRaises(ValueError):
+                    self._apply_drop(position, piece_type, Square(5, rank))
+                self._assert_position_unchanged(position, before_board,
+                                                before_hands, side)
+
+    def test_allows_piece_drop_just_before_no_legal_destination(self):
+        """禁止段の一つ手前へ歩・香・桂を打てる。
+
+        行き所のない駒の判定が必要以上に広がり、進める段への正しい駒打ちまで
+        拒否する誤りを、先後それぞれで検出する。
+        """
+        cases = (
+            (Side.SENTE, PieceType.PAWN, 2, Side.GOTE),
+            (Side.SENTE, PieceType.LANCE, 2, Side.GOTE),
+            (Side.SENTE, PieceType.KNIGHT, 3, Side.GOTE),
+            (Side.GOTE, PieceType.PAWN, 8, Side.SENTE),
+            (Side.GOTE, PieceType.LANCE, 8, Side.SENTE),
+            (Side.GOTE, PieceType.KNIGHT, 7, Side.SENTE),
+        )
+        for side, piece_type, rank, expected_turn in cases:
+            position = Position(Board(), side)
+            hand = (position.sente_hand if side == Side.SENTE
+                    else position.gote_hand)
+            destination = Square(5, rank)
+            hand.add(piece_type)
+            with self.subTest(side=side, piece_type=piece_type, rank=rank):
+                self.assertIsNone(self._apply_drop(position, piece_type,
+                                                    destination))
+                self.assertEqual(position.board.piece_at(destination),
+                                 Piece(piece_type, side))
+                self.assertEqual(hand.count(piece_type), 0)
+                self.assertEqual(position.side_to_move, expected_turn)
+
     def test_rejects_king_without_changing_position(self):
         """玉を打つ操作を拒否し、局面を変更しない。
 
