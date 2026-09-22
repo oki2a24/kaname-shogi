@@ -8,7 +8,7 @@
 
 ## 現在の状態
 
-初期配置のCLI表示と、玉・歩・金・銀・桂・香・飛車・角の移動先候補を求める関数、空マスへの移動適用、手番に合う駒だけの局面移動を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、`move_piece(board, source, destination)` は検証成功時に盤面を変更します。`apply_move(position, source, destination)` は出発駒の所有者が手番と一致するときだけ盤面を移動し、成功後に手番を交代します。駒取りや対局全体の進行はまだできません。
+初期配置のCLI表示と、玉・歩・金・銀・桂・香・飛車・角の移動先候補を求める関数、空マスへの移動適用、手番に合う駒だけの局面移動を実装しました。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、`move_piece(board, source, destination)` は検証成功時に盤面を変更します。`apply_move(position, source, destination)` は出発駒の所有者が手番と一致し、既存の移動先候補に含まれる空マスの場合だけ盤面を移動し、成功後に手番を交代します。駒取りや対局全体の進行はまだできません。
 
 実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
 
@@ -122,7 +122,7 @@ from kaname_shogi.movegen import move_piece
 move_piece(position.board, Square(7, 7), Square(7, 6))
 ```
 
-手番も含めて局面を進めるときは、`apply_move(position, source, destination)` を使います。出発駒の所有者と `position.side_to_move` が一致し、到着マスが空なら、出発マスを空にして到着マスへ同じ駒を置き、先手・後手の手番を交代します。所有者と手番が違う場合、空の出発マス、占有された到着マス、同一マスは `ValueError` となり、盤面と手番は変更されません。今回は、移動方向、駒取り、成り、王手、合法手判定を検証しません。
+手番も含めて局面を進めるときは、`apply_move(position, source, destination)` を使います。出発駒の所有者と `position.side_to_move` が一致し、既存の移動先候補に含まれる到着マスが空なら、出発マスを空にして到着マスへ同じ駒を置き、先手・後手の手番を交代します。所有者と手番が違う場合、候補外、空の出発マス、占有された到着マス、同一マスは `ValueError` となり、盤面と手番は変更されません。候補に含まれる相手駒のマスへの駒取りは扱いません。今回は、成り、王手、合法手判定を検証しません。
 
 ```python
 from kaname_shogi.model import Square, create_initial_position
@@ -147,6 +147,10 @@ print(bishop_move_candidates(board, Square(5, 5)))
 
 ## 文書
 
+- [第24回：移動先候補に合う空マスへだけ移動できること](docs/learning/24-candidate-only-empty-square-move.md)
+- [移動先候補に合う空マスへの移動：参照メモ](docs/knowledge/17-candidate-only-empty-square-move.md)
+- [移動先候補に合う空マスへの移動の設計](docs/design/12-candidate-only-empty-square-move.md)
+- [移動先候補に合う空マスへの移動の実装計画](docs/plans/2026-09-22-candidate-only-empty-square-move.md)
 - [第23回：手番に合う駒だけを移動できること](docs/learning/23-turn-ownership.md)
 - [手番と駒の所有者：参照メモ](docs/knowledge/16-turn-ownership.md)
 - [手番と駒の所有者の設計](docs/design/11-turn-ownership.md)

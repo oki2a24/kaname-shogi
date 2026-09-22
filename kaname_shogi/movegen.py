@@ -48,8 +48,26 @@ def move_piece(board: Board, source: Square, destination: Square) -> None:
     board.set_piece(destination, piece)
 
 
+def _move_candidates_for_piece(board: Board, source: Square) -> list[Square]:
+    """sourceの駒種に対応する既存の移動先候補を返す非公開の操作。"""
+    piece = board.piece_at(source)
+    if piece is None:
+        raise ValueError("出発マスに駒がありません")
+    candidate_functions = {
+        PieceType.KING: king_move_candidates,
+        PieceType.ROOK: rook_move_candidates,
+        PieceType.BISHOP: bishop_move_candidates,
+        PieceType.GOLD: gold_move_candidates,
+        PieceType.SILVER: silver_move_candidates,
+        PieceType.KNIGHT: knight_move_candidates,
+        PieceType.LANCE: lance_move_candidates,
+        PieceType.PAWN: pawn_move_candidates,
+    }
+    return candidate_functions[piece.piece_type](board, source)
+
+
 def apply_move(position: Position, source: Square, destination: Square) -> None:
-    """空の到着マスへの移動と手番交代を、渡された局面へ適用する。
+    """候補に含まれる空の到着マスへの移動と手番交代を、局面へ適用する。
 
     引数:
         position: 変更対象の盤面と手番を持つ可変の局面。
@@ -60,18 +78,22 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
         なし（None）。成功時だけposition.boardとposition.side_to_moveを変更する。
 
     例外:
-        ValueError: 出発駒の所有者と手番が一致しない場合、またはmove_pieceが
-            拒否する空の出発マス、占有された到着マス、同一マスの場合。失敗時は
-            盤面と手番を変更しない。
+        ValueError: 出発駒の所有者と手番が一致しない場合、到着マスが出発駒の
+            移動先候補に含まれない場合、またはmove_pieceが拒否する空の出発マス、
+            占有された到着マス、同一マスの場合。失敗時は盤面と手番を変更しない。
 
-    出発駒の所有者と局面の手番を照合し、一致するときだけ盤面移動をmove_pieceへ
-    委譲する。これにより、手番を知らないBoardの配置責務と、対局を一手進める
-    Positionの局面責務を分ける。成功後だけ手番を交代する。今回は移動方向、
-    駒取り、成り、王手、合法手を検証しない。
+    出発駒の所有者と局面の手番を照合し、既存の移動先候補に到着マスが含まれる
+    ときだけ盤面移動をmove_pieceへ委譲する。これにより、手番を知らないBoardの
+    配置責務と、対局を一手進めるPositionの局面責務を分ける。成功後だけ手番を
+    交代する。候補に相手駒のマスが含まれても、今回は駒取りを扱わないため、
+    move_pieceが占有された到着マスとして拒否する。成り、王手、合法手は検証しない。
     """
     piece = position.board.piece_at(source)
     if piece is not None and piece.side != position.side_to_move:
         raise ValueError("手番と出発駒の所有者が一致しません")
+    if (piece is not None
+            and destination not in _move_candidates_for_piece(position.board, source)):
+        raise ValueError("到着マスは出発駒の移動先候補に含まれません")
 
     move_piece(position.board, source, destination)
     if position.side_to_move == Side.SENTE:

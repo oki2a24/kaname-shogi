@@ -110,7 +110,9 @@ class ApplyMoveTests(unittest.TestCase):
             (Side.GOTE, Side.SENTE),
         ]:
             board = Board()
-            source, destination = Square(5, 5), Square(5, 4)
+            source = Square(5, 5)
+            destination = (Square(5, 4) if initial_turn == Side.SENTE
+                           else Square(5, 6))
             piece = Piece(PieceType.PAWN, initial_turn)
             board.set_piece(source, piece)
             position = Position(board, initial_turn)
@@ -119,6 +121,53 @@ class ApplyMoveTests(unittest.TestCase):
                 self.assertIsNone(position.board.piece_at(source))
                 self.assertEqual(position.board.piece_at(destination), piece)
                 self.assertEqual(position.side_to_move, expected_turn)
+
+    def test_moves_each_piece_to_an_empty_candidate_and_switches_turn(self):
+        """各駒種は候補内の空マスへ移動し、成功後に手番を交代する。
+
+        駒種から候補関数を選び忘れる誤りや、候補照合後に手番を交代しない誤りを検出する。
+        """
+        cases = [
+            (PieceType.KING, Square(5, 4)),
+            (PieceType.ROOK, Square(4, 5)),
+            (PieceType.BISHOP, Square(4, 4)),
+            (PieceType.GOLD, Square(5, 4)),
+            (PieceType.SILVER, Square(5, 4)),
+            (PieceType.KNIGHT, Square(4, 3)),
+            (PieceType.LANCE, Square(5, 4)),
+            (PieceType.PAWN, Square(5, 4)),
+        ]
+        for piece_type, destination in cases:
+            board = Board()
+            source = Square(5, 5)
+            piece = Piece(piece_type, Side.SENTE)
+            board.set_piece(source, piece)
+            position = Position(board, Side.SENTE)
+            with self.subTest(piece_type=piece_type):
+                self.assertIsNone(self._apply_move(position, source, destination))
+                self.assertIsNone(board.piece_at(source))
+                self.assertEqual(board.piece_at(destination), piece)
+                self.assertEqual(position.side_to_move, Side.GOTE)
+
+    def test_rejects_empty_destination_outside_piece_candidates_without_changing_position(self):
+        """候補外の空マスを拒否し、盤面と手番を変更しない。
+
+        空いているだけの任意のマスへ動かしてしまう誤りを、先後の歩の反対向きで検出する。
+        """
+        source = Square(5, 5)
+        squares = [Square(file, rank) for file in range(1, 10)
+                   for rank in range(1, 10)]
+        for side, destination in [(Side.SENTE, Square(5, 6)),
+                                  (Side.GOTE, Square(5, 4))]:
+            board = Board()
+            board.set_piece(source, Piece(PieceType.PAWN, side))
+            position = Position(board, side)
+            before = [board.piece_at(square) for square in squares]
+            with self.subTest(side=side):
+                with self.assertRaises(ValueError):
+                    self._apply_move(position, source, destination)
+                self.assertEqual([board.piece_at(square) for square in squares], before)
+                self.assertEqual(position.side_to_move, side)
 
     def test_rejects_invalid_move_without_changing_board_or_turn(self):
         """不正な移動は盤面と手番のどちらも変更しない。

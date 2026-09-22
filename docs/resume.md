@@ -11,7 +11,7 @@
 
 空マスへの移動適用として `move_piece(board, source, destination)` を追加した。検証成功時に出発マスを空にし、到着マスへ同じ駒を置く。空の出発マス、占有された到着マス、同一マスはValueErrorとし、失敗時は盤面を変更しない。移動方向、駒取り、手番更新、成り、王手、合法手判定は未実装。将来、評価・探索の段階で不変な盤面または局面を返す方式へ見直す課題を残している。
 
-`apply_move(position, source, destination)` は、出発駒の `Piece.side` と `Position.side_to_move` が一致するときだけ `move_piece` に盤面移動を委譲し、成功後だけ手番を交代する。不一致なら盤面移動の前に `ValueError` を送出し、盤面と手番は変更しない。空出発・占有到着・同一マスの既存の拒否契約も維持する。移動方向、候補生成結果、駒取り、持ち駒、成り、王手、合法手判定は未実装である。
+`apply_move(position, source, destination)` は、出発駒の `Piece.side` と `Position.side_to_move` が一致し、出発駒の既存候補に `destination` が含まれるときだけ `move_piece` に盤面移動を委譲し、成功後だけ手番を交代する。不一致・候補外では盤面移動の前に `ValueError` を送出し、盤面と手番は変更しない。空出発・占有到着・同一マスの既存の拒否契約も維持する。候補に含まれる相手駒のマスも、今回は駒取り未実装のため占有到着として拒否する。持ち駒、成り、王手、合法手判定は未実装である。
 
 ## 読む順序
 
@@ -23,6 +23,7 @@
 6. [候補生成のコード](../kaname_shogi/movegen.py)と[テスト](../tests/test_movegen.py)。
 7. [第20回：玉の学習](learning/20-king-move-candidates.md)、[玉の設計](design/09-king-move-candidates.md)、[玉の実装計画](plans/2026-09-20-king-move-candidates.md)。
 8. [第23回：手番と所有者の学習](learning/23-turn-ownership.md)、[参照メモ](knowledge/16-turn-ownership.md)、[設計](design/11-turn-ownership.md)、[実装計画](plans/2026-09-22-turn-ownership.md)。
+9. [第24回：候補内の空マスへの移動](learning/24-candidate-only-empty-square-move.md)、[参照メモ](knowledge/17-candidate-only-empty-square-move.md)、[設計](design/12-candidate-only-empty-square-move.md)、[実装計画](plans/2026-09-22-candidate-only-empty-square-move.md)。
 
 ## 直近までの記録
 
@@ -43,12 +44,12 @@
 ## 次に行うこと
 
 1. 現在のGit状態とREADME、最新の学習・設計・実装記録を確認する。
-2. [第23回](learning/23-turn-ownership.md)の実装後理解確認まで完了していることを確認する。
+2. [第24回](learning/24-candidate-only-empty-square-move.md)の実装後理解確認まで完了していることを確認する。
 3. [次のテーマ候補](next-topics.md)、README、プロジェクト背景・方向性を照合し、次の学習テーマを相談する。
 
 ## 次回セッションの開始点
 
-第23回では、`apply_move` が先手番には先手の駒、後手番には後手の駒だけを動かすようにした。`Piece.side` と `Position.side_to_move` が不一致なら、盤面と手番を変更せず `ValueError` にする。実装後の理解確認まで完了している。移動方向、候補生成結果、駒取り、持ち駒、成り、王手、合法手判定、CLI入力、評価、探索は扱わない。次回は次テーマの選択から再開する。
+第24回では、`apply_move` が手番に合う出発駒について、その既存候補に含まれる空マスだけを移動できるようにした。候補外、所有者不一致、空出発、占有到着、同一マスでは盤面と手番を変更せず `ValueError` にする。候補に含まれる相手駒のマスへの駒取り、持ち駒、成り、王手、合法手判定、CLI入力、評価、探索は扱わない。実装後の理解確認が残っているため、新しい機能へ進む前にその確認を再開する。
 
 次回も、一次情報の確認、確認問題一問、学習記録、設計相談と承認、設計書・実装計画、TDD、検証、レビュー、記録の順で進める。設計承認前にコードを書かない。
 
