@@ -1,4 +1,4 @@
-"""筋・段で扱う駒・盤面・局面と、平手の初期配置を定義する。
+"""筋・段で扱う駒・盤面・持ち駒・局面と、平手の初期配置を定義する。
 
 呼び出し側は９九などの筋・段で操作し、保存用の添字を意識しない。
 数学のxyは学習時の補助だったため、公開インターフェースには導入しない。
@@ -9,7 +9,7 @@
 docs/learning/04-first-implementation-design.md。
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Optional
 
@@ -91,6 +91,60 @@ class Piece:
     side: Side
 
 
+@dataclass
+class Hand:
+    """一方が保持する持ち駒の枚数を表す可変のデータ。
+
+    持ち駒は、相手から取って盤上にない駒である。Handは駒台という物理的な
+    場所ではなく、歩・香・桂・銀・金・角・飛の各駒種が何枚あるかを表す。
+    先手・後手、盤上の位置、手番は保持しない。どちらの持ち駒かはPositionが
+    対応付けることで、枚数のデータと局面規則を分ける。
+    """
+
+    _counts: dict[PieceType, int] = field(default_factory=dict)
+
+    def _validate_piece_type(self, piece_type: PieceType) -> None:
+        """持ち駒にできる基本駒種かを確認し、玉ならValueErrorにする。"""
+        if piece_type == PieceType.KING:
+            raise ValueError("玉は持ち駒にできません")
+
+    def count(self, piece_type: PieceType) -> int:
+        """piece_typeの持ち駒枚数を返し、状態を変更しない。
+
+        引数:
+            piece_type: 枚数を調べる玉以外の基本駒種。
+
+        戻り値:
+            その駒種の枚数。まだ一枚もなければ0。
+
+        例外:
+            ValueError: 玉を指定した場合。玉は取って持ち駒にする駒ではない。
+
+        countは枚数を読む操作であり、持ち駒や局面を変更しない。駒打ちの可否は
+        将来の別の操作で扱うため、ここでは判定しない。
+        """
+        self._validate_piece_type(piece_type)
+        return self._counts.get(piece_type, 0)
+
+    def add(self, piece_type: PieceType) -> None:
+        """piece_typeを1枚加え、持ち駒を変更する。
+
+        引数:
+            piece_type: 加える玉以外の基本駒種。
+
+        戻り値:
+            なし（None）。成功時は指定した駒種の枚数だけを1増やす。
+
+        例外:
+            ValueError: 玉を指定した場合。失敗時は枚数を変更しない。
+
+        addは枚数を増やす操作であり、駒がどちらの側のものかは判断しない。
+        Positionが駒取りを適用するときに、指した側のHandを選ぶ。
+        """
+        self._validate_piece_type(piece_type)
+        self._counts[piece_type] = self.count(piece_type) + 1
+
+
 class Board:
     """81マスの配置だけを保持する可変の盤。手番はPositionの責務。
 
@@ -128,16 +182,20 @@ class Board:
 
 @dataclass
 class Position:
-    """盤面boardと、次に指す側side_to_moveを保持する可変の局面。
+    """盤面board、手番、先後それぞれの持ち駒を保持する可変の局面。
 
     渡されたBoardをそのまま保持し、コピーはしない。同じBoardを二つの
     Positionに渡すと盤面も共有する。独立した開始局面は生成関数で作る。
-    手番の設定だけでは盤面は変わらない。持ち駒・手数・履歴は未実装で、
-    現在の情報だけでSFENや対局全体を表せるとはしない。
+    sente_handは先手、gote_handは後手が保持する持ち駒のデータであり、各既定値は
+    新しいHandを作るため別の局面や側と共有しない。手番の設定だけでは盤面・
+    持ち駒は変わらない。持ち駒を盤へ打つ操作、手数・履歴は未実装で、現在の
+    情報だけでSFENや対局全体を表せるとはしない。
     """
 
     board: Board
     side_to_move: Side
+    sente_hand: Hand = field(default_factory=Hand)
+    gote_hand: Hand = field(default_factory=Hand)
 
 
 def create_initial_position() -> Position:

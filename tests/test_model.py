@@ -3,6 +3,7 @@
 from dataclasses import FrozenInstanceError
 import unittest
 
+from kaname_shogi import model
 from kaname_shogi.model import Board, Piece, PieceType, Side, Square
 from kaname_shogi.model import create_initial_position
 
@@ -111,6 +112,54 @@ class BoardTests(unittest.TestCase):
                     setattr(piece, name, value)
         self.assertEqual(board.piece_at(Square(7, 6)),
                          Piece(PieceType.PAWN, Side.SENTE))
+
+
+class HandTests(unittest.TestCase):
+    def test_counts_start_at_zero_and_add_changes_only_one_piece_type(self):
+        """新しい持ち駒は0枚で、追加した駒種だけを1枚増やす。
+
+        駒種ごとの枚数を共有したり、最初から駒を持っていたりする誤りを検出する。
+        """
+        self.assertTrue(hasattr(model, "Hand"), "Hand がまだ実装されていません")
+        hand = model.Hand()
+        for piece_type in PieceType:
+            if piece_type != PieceType.KING:
+                self.assertEqual(hand.count(piece_type), 0)
+        hand.add(PieceType.PAWN)
+        self.assertEqual(hand.count(PieceType.PAWN), 1)
+        self.assertEqual(hand.count(PieceType.ROOK), 0)
+
+    def test_king_is_rejected_without_changing_hand(self):
+        """玉は持ち駒に加えられず、失敗後も枚数を変えない。
+
+        玉取りを持ち駒化してしまう誤りを、Hand単体の契約で検出する。
+        """
+        self.assertTrue(hasattr(model, "Hand"), "Hand がまだ実装されていません")
+        hand = model.Hand()
+        with self.assertRaises(ValueError):
+            hand.add(PieceType.KING)
+        with self.assertRaises(ValueError):
+            hand.count(PieceType.KING)
+        self.assertEqual(hand.count(PieceType.PAWN), 0)
+
+
+class PositionHandTests(unittest.TestCase):
+    def test_positions_and_sides_have_independent_hands(self):
+        """先後と別局面の持ち駒は互いに独立している。
+
+        dataclassの既定値を共有して、ある局面や側の駒取りが他方へ漏れる誤りを検出する。
+        """
+        first = model.Position(Board(), Side.SENTE)
+        second = model.Position(Board(), Side.SENTE)
+        self.assertTrue(hasattr(first, "sente_hand"),
+                        "Position.sente_hand がまだ実装されていません")
+        first.sente_hand.add(PieceType.PAWN)
+        first.gote_hand.add(PieceType.ROOK)
+        self.assertEqual(first.sente_hand.count(PieceType.PAWN), 1)
+        self.assertEqual(first.gote_hand.count(PieceType.ROOK), 1)
+        self.assertEqual(first.gote_hand.count(PieceType.PAWN), 0)
+        self.assertEqual(second.sente_hand.count(PieceType.PAWN), 0)
+        self.assertEqual(second.gote_hand.count(PieceType.ROOK), 0)
 
 
 class InitialPositionTests(unittest.TestCase):
