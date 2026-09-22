@@ -64,7 +64,7 @@ for initial_turn, expected_turn in [(Side.SENTE, Side.GOTE),
 
 - [ ] **ステップ3: 三種類の失敗時に盤面81マスと手番が不変であることをテストする**
 
-空の出発マス、占有された到着マス、同一マスを `subTest` で検査する。各ケースで移動前後の81マスをリストとして比較し、`Position(board, Side.SENTE)` の `side_to_move` が `Side.SENTE` のままであることを確認する。テストメソッド名は `test_rejects_invalid_move_without_changing_board_or_turn` とする。
+空の出発マス、占有された到着マス、同一マスを `subTest` で検査する。同一マスのケースでは、出発・到着の共通マスに駒を置いてから同じ `Square` を渡す。空の出発マスでは盤を空のままにし、占有された到着マスでは出発と到着へ別の駒を置く。各ケースで移動前後の81マスをリストとして比較し、`Position(board, Side.SENTE)` の `side_to_move` が `Side.SENTE` のままであることを確認する。テストメソッド名は `test_rejects_invalid_move_without_changing_board_or_turn` とする。
 
 - [ ] **ステップ4: 所有者一致を検証しないことをテストする**
 
