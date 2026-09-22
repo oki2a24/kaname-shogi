@@ -27,15 +27,16 @@
 
 ## 次に行うこと
 
-1. READMEと`docs/next-topics.md`から次テーマ候補を確認する。
-2. 本人が次テーマを選ぶまで、新しい学習・実装は始めない。
+1. 新しいセッションで第28回「行き所のない駒」を、一次資料の確認から始める。
+2. 確認問題は一度に一問だけ出し、本人の回答・補足・振り返りを記録する。
+3. 設計承認前にコードやテストを書かない。
 
 ## 再開用プロンプト
 
 ```text
 kaname-shogiの続きをお願いします。
 AGENTS.md、README.md、docs/resume.mdから最新の学習・設計・実装記録とGit状態を確認してください。
-第27回「二歩」はmainへの取り込みまで完了しています。AGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/learning/27-nifu.md、docs/knowledge/20-nifu.md、docs/design/15-nifu.md、Git状態を確認してください。次テーマ候補を小さい順に示し、本人が選ぶまで新しい学習・実装は始めないでください。
+第27回「二歩」はmainへの取り込みまで完了しています。次テーマは第28回「行き所のない駒」です。新しいセッションで、docs/handover-no-legal-destination-drops.md、AGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/learning/27-nifu.md、docs/knowledge/20-nifu.md、docs/design/15-nifu.md、Git状態を確認してください。その後、日本将棋連盟などの一次資料で、歩・香・桂を行き所のない段へ打てない規則を確認し、確認問題を一問だけ出して本人の回答を待ってください。設計承認前にコードやテストを書かないでください。
 ```
 
 ## 実行場所とコマンド
