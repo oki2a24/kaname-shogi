@@ -115,6 +115,14 @@ class BoardTests(unittest.TestCase):
 
 
 class HandTests(unittest.TestCase):
+    def test_counts_cannot_be_supplied_at_creation(self):
+        """持ち駒の内部枚数は生成時に外部から渡せない。
+
+        _countsへ玉を含む辞書などを直接渡して、公開操作の検証を回避する誤りを検出する。
+        """
+        with self.assertRaises(TypeError):
+            model.Hand({PieceType.KING: 1})
+
     def test_counts_start_at_zero_and_add_changes_only_one_piece_type(self):
         """新しい持ち駒は0枚で、追加した駒種だけを1枚増やす。
 

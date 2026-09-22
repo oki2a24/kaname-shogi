@@ -101,7 +101,8 @@ class Hand:
     対応付けることで、枚数のデータと局面規則を分ける。
     """
 
-    _counts: dict[PieceType, int] = field(default_factory=dict)
+    _counts: dict[PieceType, int] = field(default_factory=dict,
+                                          init=False, repr=False)
 
     def _validate_piece_type(self, piece_type: PieceType) -> None:
         """持ち駒にできる基本駒種かを確認し、玉ならValueErrorにする。"""
