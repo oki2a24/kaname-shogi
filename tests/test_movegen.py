@@ -93,6 +93,78 @@ class MovePieceTests(unittest.TestCase):
         self.assertEqual(after, before)
 
 
+class ApplyMoveTests(unittest.TestCase):
+    def _apply_move(self, position, source, destination):
+        """局面への移動適用関数を取得し、未実装をテスト失敗として扱う。"""
+        self.assertTrue(hasattr(movegen, "apply_move"),
+                        "apply_move がまだ実装されていません")
+        return movegen.apply_move(position, source, destination)
+
+    def test_moves_piece_and_switches_turn_after_success(self):
+        """成功した移動は盤面を更新し、先手・後手の手番を交代する。
+
+        盤面移動だけで手番を残す誤りと、交代方向を逆にする誤りを検出する。
+        """
+        for initial_turn, expected_turn in [
+            (Side.SENTE, Side.GOTE),
+            (Side.GOTE, Side.SENTE),
+        ]:
+            board = Board()
+            source, destination = Square(5, 5), Square(5, 4)
+            piece = Piece(PieceType.PAWN, Side.SENTE)
+            board.set_piece(source, piece)
+            position = Position(board, initial_turn)
+            with self.subTest(initial_turn=initial_turn):
+                self.assertIsNone(self._apply_move(position, source, destination))
+                self.assertIsNone(position.board.piece_at(source))
+                self.assertEqual(position.board.piece_at(destination), piece)
+                self.assertEqual(position.side_to_move, expected_turn)
+
+    def test_rejects_invalid_move_without_changing_board_or_turn(self):
+        """不正な移動は盤面と手番のどちらも変更しない。
+
+        盤面変更後に失敗する処理や、例外時にも手番だけ交代する誤りを検出する。
+        """
+        cases = [
+            ("empty_source", Square(5, 5), Square(5, 4), ()),
+            ("occupied_destination", Square(5, 5), Square(5, 4),
+             ((Square(5, 5), Piece(PieceType.PAWN, Side.SENTE)),
+              (Square(5, 4), Piece(PieceType.GOLD, Side.GOTE)))),
+            ("same_square", Square(5, 5), Square(5, 5),
+             ((Square(5, 5), Piece(PieceType.PAWN, Side.SENTE)),)),
+        ]
+        for name, source, destination, placements in cases:
+            board = Board()
+            for square, piece in placements:
+                board.set_piece(square, piece)
+            position = Position(board, Side.SENTE)
+            before_board = [board.piece_at(Square(file, rank))
+                            for file in range(1, 10) for rank in range(1, 10)]
+            with self.subTest(case=name):
+                with self.assertRaises(ValueError):
+                    self._apply_move(position, source, destination)
+                after_board = [board.piece_at(Square(file, rank))
+                               for file in range(1, 10) for rank in range(1, 10)]
+                self.assertEqual(after_board, before_board)
+                self.assertEqual(position.side_to_move, Side.SENTE)
+
+    def test_does_not_require_moving_piece_to_match_turn(self):
+        """今回は手番と出発駒の所有者が異なっても移動を適用する。
+
+        手番更新の学習範囲へ所有者検証を先取りして混ぜる誤りを検出する。
+        """
+        board = Board()
+        source, destination = Square(5, 5), Square(5, 4)
+        piece = Piece(PieceType.PAWN, Side.GOTE)
+        board.set_piece(source, piece)
+        position = Position(board, Side.SENTE)
+
+        self._apply_move(position, source, destination)
+
+        self.assertEqual(position.board.piece_at(destination), piece)
+        self.assertEqual(position.side_to_move, Side.GOTE)
+
+
 class KingMoveCandidatesTests(unittest.TestCase):
     def test_empty_source_is_rejected(self):
         """空の出発マスを玉候補の計算対象として受け付けない。

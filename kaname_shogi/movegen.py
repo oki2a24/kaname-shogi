@@ -1,8 +1,8 @@
 """駒の移動先候補を求め、空マスへの移動を盤面へ適用する。
 
-movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・桂・香・飛車・角の移動先と、
-空いている到着マスへの駒の移動適用を扱う。合法手の確定は行わない。全駒の専用関数を作る方針は
-まだ決めず、次の駒を学ぶ際に共有できる処理を検討する。
+movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・桂・香・飛車・角の移動先、
+空いている到着マスへの盤面移動、成功時だけ手番を交代する局面への移動適用を扱う。合法手の確定は
+行わない。全駒の専用関数を作る方針はまだ決めず、次の駒を学ぶ際に共有できる処理を検討する。
 
 契約と判断の背景：docs/design/02-pawn-move-candidates.md、
 docs/learning/06-pawn-move-candidates.md、docs/design/03-gold-move-candidates.md、
@@ -12,7 +12,7 @@ docs/learning/18-knight-move-candidates.md、docs/knowledge/15-knight-move-candi
 docs/design/08-knight-move-candidates.md。
 """
 
-from .model import Board, PieceType, Side, Square
+from .model import Board, PieceType, Position, Side, Square
 
 
 def move_piece(board: Board, source: Square, destination: Square) -> None:
@@ -46,6 +46,32 @@ def move_piece(board: Board, source: Square, destination: Square) -> None:
 
     board.set_piece(source, None)
     board.set_piece(destination, piece)
+
+
+def apply_move(position: Position, source: Square, destination: Square) -> None:
+    """空の到着マスへの移動と手番交代を、渡された局面へ適用する。
+
+    引数:
+        position: 変更対象の盤面と手番を持つ可変の局面。
+        source: 移動元の筋・段を表すSquare。
+        destination: 移動先の筋・段を表すSquare。
+
+    戻り値:
+        なし（None）。成功時だけposition.boardとposition.side_to_moveを変更する。
+
+    例外:
+        ValueError: move_pieceが拒否する空の出発マス、占有された到着マス、
+            または同一マスの場合。失敗時は盤面と手番を変更しない。
+
+    盤面移動はmove_pieceへ委譲し、成功後だけ手番を交代することで、
+    Boardの配置責務とPositionの局面責務を分ける。今回は移動方向、
+    出発駒の所有者と手番の一致、駒取り、成り、王手、合法手を検証しない。
+    """
+    move_piece(position.board, source, destination)
+    if position.side_to_move == Side.SENTE:
+        position.side_to_move = Side.GOTE
+    else:
+        position.side_to_move = Side.SENTE
 
 
 def king_move_candidates(board: Board, source: Square) -> list[Square]:

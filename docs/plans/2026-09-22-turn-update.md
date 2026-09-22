@@ -33,7 +33,7 @@
 - 消費: `Board.set_piece(square, piece)`、`Board.piece_at(square)`、`Position(board, side_to_move)`、`movegen` モジュール。
 - 生産: `apply_move(position: Position, source: Square, destination: Square) -> None` の振る舞いを固定する `ApplyMoveTests`。
 
-- [ ] **ステップ1: 未実装を振る舞いの失敗として扱う補助メソッドを追加する**
+- [x] **ステップ1: 未実装を振る舞いの失敗として扱う補助メソッドを追加する**
 
 ```python
 class ApplyMoveTests(unittest.TestCase):
@@ -44,7 +44,7 @@ class ApplyMoveTests(unittest.TestCase):
         return movegen.apply_move(position, source, destination)
 ```
 
-- [ ] **ステップ2: 成功時の盤面更新と先後両方向の手番交代をテストする**
+- [x] **ステップ2: 成功時の盤面更新と先後両方向の手番交代をテストする**
 
 ```python
 for initial_turn, expected_turn in [(Side.SENTE, Side.GOTE),
@@ -62,11 +62,11 @@ for initial_turn, expected_turn in [(Side.SENTE, Side.GOTE),
 
 テストメソッド名は `test_moves_piece_and_switches_turn_after_success` とし、日本語docstringで盤面だけの更新や交代方向の誤りを検出する目的を記録する。
 
-- [ ] **ステップ3: 三種類の失敗時に盤面81マスと手番が不変であることをテストする**
+- [x] **ステップ3: 三種類の失敗時に盤面81マスと手番が不変であることをテストする**
 
 空の出発マス、占有された到着マス、同一マスを `subTest` で検査する。同一マスのケースでは、出発・到着の共通マスに駒を置いてから同じ `Square` を渡す。空の出発マスでは盤を空のままにし、占有された到着マスでは出発と到着へ別の駒を置く。各ケースで移動前後の81マスをリストとして比較し、`Position(board, Side.SENTE)` の `side_to_move` が `Side.SENTE` のままであることを確認する。テストメソッド名は `test_rejects_invalid_move_without_changing_board_or_turn` とする。
 
-- [ ] **ステップ4: 所有者一致を検証しないことをテストする**
+- [x] **ステップ4: 所有者一致を検証しないことをテストする**
 
 ```python
 board = Board()
@@ -83,7 +83,7 @@ self.assertEqual(position.side_to_move, Side.GOTE)
 
 テストメソッド名は `test_does_not_require_moving_piece_to_match_turn` とし、日本語docstringで今回の範囲へ所有者検証を混ぜないことを説明する。
 
-- [ ] **ステップ5: Redを確認する**
+- [x] **ステップ5: Redを確認する**
 
 実行: `python3 -m unittest tests.test_movegen.ApplyMoveTests -v`
 
@@ -99,7 +99,7 @@ self.assertEqual(position.side_to_move, Side.GOTE)
 - 消費: タスク1の `ApplyMoveTests`、`move_piece(board, source, destination)`、`Position`、`Side`。
 - 生産: `apply_move(position: Position, source: Square, destination: Square) -> None`。
 
-- [ ] **ステップ1: `Position` をimportし、`move_piece` の直後に最小実装を追加する**
+- [x] **ステップ1: `Position` をimportし、`move_piece` の直後に最小実装を追加する**
 
 ```python
 def apply_move(position: Position, source: Square, destination: Square) -> None:
@@ -128,13 +128,13 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
         position.side_to_move = Side.SENTE
 ```
 
-- [ ] **ステップ2: 対象テストをGreenで確認する**
+- [x] **ステップ2: 対象テストをGreenで確認する**
 
 実行: `python3 -m unittest tests.test_movegen.ApplyMoveTests -v`
 
 期待値: `ApplyMoveTests` の全テストが成功する。
 
-- [ ] **ステップ3: 既存テストを含む全テストを実行する**
+- [x] **ステップ3: 既存テストを含む全テストを実行する**
 
 実行: `python3 -m unittest discover -s tests -v`
 
@@ -153,7 +153,7 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
 - 消費: タスク2の `apply_move(position, source, destination)` と成功・失敗時のテスト結果。
 - 生産: 責務・対象外範囲・実装結果・再開位置を説明する更新済み文書。
 
-- [ ] **ステップ1: Refactorの要否を判断する**
+- [x] **ステップ1: Refactorの要否を判断する**
 
 `apply_move` は `move_piece` に盤面移動を委譲し、手番交代だけを追加する。`Side` の2値は明示的な条件分岐で交代しているため、今回の範囲では共通化や抽象化を追加しない。変更不要なら、この判断を学習記録へ残す。
 
