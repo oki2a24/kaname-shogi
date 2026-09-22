@@ -107,7 +107,7 @@ git commit -m "feat: 持ち駒を減らす操作を追加"
 - 消費 (Consumes): `Hand.remove(piece_type: PieceType) -> None`、`Position.board`、`Position.sente_hand`、`Position.gote_hand`、`Position.side_to_move`。
 - 生産 (Produces): `apply_drop(position: Position, piece_type: PieceType, destination: Square) -> None`。成功時は手番側の持ち駒を1枚減らし、空マスにその側の駒を置き、手番を交代する。
 
-- [ ] **ステップ1: 失敗するテストを作成**
+- [x] **ステップ1: 失敗するテストを作成**
 
 `ApplyDropTests` を追加する。先手・後手の両方が持ち歩を空の５五へ打つ成功と、持ち駒不足、先手駒の占有、後手駒の占有、玉の指定を検証する。失敗ケースは盤面81マス、手番、双方の全持ち駒枚数の事前値と事後値を比較する。
 
@@ -128,13 +128,13 @@ def test_drops_hand_piece_to_empty_square_and_switches_turn(self):
 
 `_apply_drop` は `movegen.apply_drop` の存在を先にアサートして呼ぶ補助操作とする。拒否テストでは各ケースに `with self.assertRaises(ValueError):` を置く。
 
-- [ ] **ステップ2: テストが失敗することを確認するために実行**
+- [x] **ステップ2: テストが失敗することを確認するために実行**
 
 実行: `python3 -m unittest discover -s tests -p 'test_movegen.py' -v`
 
 期待値: `apply_drop がまだ実装されていません` というアサーションによるFAIL。インポート時のエラーではなく、新しい局面操作がないことを示す失敗であることを確認する。
 
-- [ ] **ステップ3: 最小限の実装を作成**
+- [x] **ステップ3: 最小限の実装を作成**
 
 `movegen.py` の `apply_move` の後に `apply_drop` を追加し、`Piece` を import する。盤面・持ち駒・手番を変える前に、玉、到着先の占有、手番側の持ち駒を検証する。
 
@@ -156,13 +156,13 @@ def apply_drop(position: Position, piece_type: PieceType,
 
 docstringには、引数、`None` の戻り値、成功時に変更する局面状態、`ValueError` の条件と不変性、`apply_move` と分ける理由、今回扱わない規則を記す。
 
-- [ ] **ステップ4: テストがパスすることを確認するために実行**
+- [x] **ステップ4: テストがパスすることを確認するために実行**
 
 実行: `python3 -m unittest discover -s tests -p 'test_movegen.py' -v`
 
 期待値: `ApplyDropTests` の全テストがPASS。
 
-- [ ] **ステップ5: リファクタ要否を確認してコミット**
+- [x] **ステップ5: リファクタ要否を確認してコミット**
 
 手番側の `Hand` を選ぶ処理を `apply_move` と共有するか検討する。短い条件式を別の非公開関数へ切り出すことで責務や学習上の理解が改善しなければ、共有化しない。
 

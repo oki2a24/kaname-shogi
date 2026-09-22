@@ -289,6 +289,118 @@ class ApplyMoveTests(unittest.TestCase):
                 self.assertEqual(self._hand_counts(position), before_hands)
 
 
+class ApplyDropTests(unittest.TestCase):
+    def _apply_drop(self, position, piece_type, destination):
+        """局面への駒打ち適用関数を取得し、未実装をテスト失敗として扱う。"""
+        self.assertTrue(hasattr(movegen, "apply_drop"),
+                        "apply_drop がまだ実装されていません")
+        return movegen.apply_drop(position, piece_type, destination)
+
+    def _hand_counts(self, position):
+        """先後の玉以外の持ち駒枚数を、比較用の変更不可の値として返す。"""
+        piece_types = [piece_type for piece_type in PieceType
+                       if piece_type != PieceType.KING]
+        return (
+            tuple(position.sente_hand.count(piece_type)
+                  for piece_type in piece_types),
+            tuple(position.gote_hand.count(piece_type)
+                  for piece_type in piece_types),
+        )
+
+    def _assert_position_unchanged(self, position, before_board, before_hands,
+                                   before_turn):
+        """盤面・双方の持ち駒・手番が、失敗前から変わらないことを確認する。"""
+        squares = [Square(file, rank) for file in range(1, 10)
+                   for rank in range(1, 10)]
+        self.assertEqual([position.board.piece_at(square) for square in squares],
+                         before_board)
+        self.assertEqual(self._hand_counts(position), before_hands)
+        self.assertEqual(position.side_to_move, before_turn)
+
+    def test_drops_hand_pawn_to_empty_square_and_switches_turn(self):
+        """手番側の持ち歩を空マスへ打ち、手番を交代する。
+
+        先後の取り違え、盤上への配置漏れ、持ち駒の減算漏れ、手番の交代漏れを
+        先手・後手の両方で検出する。
+        """
+        destination = Square(5, 5)
+        cases = [(Side.SENTE, Side.GOTE), (Side.GOTE, Side.SENTE)]
+        for side, expected_turn in cases:
+            position = Position(Board(), side)
+            hand = (position.sente_hand if side == Side.SENTE
+                    else position.gote_hand)
+            other_hand = (position.gote_hand if side == Side.SENTE
+                          else position.sente_hand)
+            hand.add(PieceType.PAWN)
+            with self.subTest(side=side):
+                self.assertIsNone(self._apply_drop(position, PieceType.PAWN,
+                                                    destination))
+                self.assertEqual(position.board.piece_at(destination),
+                                 Piece(PieceType.PAWN, side))
+                self.assertEqual(hand.count(PieceType.PAWN), 0)
+                self.assertEqual(other_hand.count(PieceType.PAWN), 0)
+                self.assertEqual(position.side_to_move, expected_turn)
+
+    def test_rejects_unowned_piece_without_changing_position(self):
+        """0枚の持ち駒を打つ操作を拒否し、局面を変更しない。
+
+        持っていない駒を盤上へ置く誤り、負の枚数への減算、例外時の手番交代を
+        検出する。
+        """
+        position = Position(Board(), Side.SENTE)
+        squares = [Square(file, rank) for file in range(1, 10)
+                   for rank in range(1, 10)]
+        before_board = [position.board.piece_at(square) for square in squares]
+        before_hands = self._hand_counts(position)
+
+        with self.assertRaises(ValueError):
+            self._apply_drop(position, PieceType.PAWN, Square(5, 5))
+
+        self._assert_position_unchanged(position, before_board, before_hands,
+                                        Side.SENTE)
+
+    def test_rejects_occupied_square_without_changing_position(self):
+        """先手・後手の駒があるマスへの打ちを拒否し、局面を変更しない。
+
+        到着駒を上書きする誤り、持ち駒を先に減らす誤り、例外時に手番を交代する
+        誤りを、占有する側の両方で検出する。
+        """
+        destination = Square(5, 5)
+        for occupying_side in Side:
+            position = Position(Board(), Side.SENTE)
+            position.sente_hand.add(PieceType.PAWN)
+            position.board.set_piece(destination,
+                                     Piece(PieceType.SILVER, occupying_side))
+            squares = [Square(file, rank) for file in range(1, 10)
+                       for rank in range(1, 10)]
+            before_board = [position.board.piece_at(square) for square in squares]
+            before_hands = self._hand_counts(position)
+            with self.subTest(occupying_side=occupying_side):
+                with self.assertRaises(ValueError):
+                    self._apply_drop(position, PieceType.PAWN, destination)
+                self._assert_position_unchanged(position, before_board,
+                                                before_hands, Side.SENTE)
+
+    def test_rejects_king_without_changing_position(self):
+        """玉を打つ操作を拒否し、局面を変更しない。
+
+        玉を盤上へ置く誤りや、玉の指定で既存の持ち駒・手番まで変える誤りを
+        検出する。
+        """
+        position = Position(Board(), Side.SENTE)
+        position.sente_hand.add(PieceType.PAWN)
+        squares = [Square(file, rank) for file in range(1, 10)
+                   for rank in range(1, 10)]
+        before_board = [position.board.piece_at(square) for square in squares]
+        before_hands = self._hand_counts(position)
+
+        with self.assertRaises(ValueError):
+            self._apply_drop(position, PieceType.KING, Square(5, 5))
+
+        self._assert_position_unchanged(position, before_board, before_hands,
+                                        Side.SENTE)
+
+
 class KingMoveCandidatesTests(unittest.TestCase):
     def test_empty_source_is_rejected(self):
         """空の出発マスを玉候補の計算対象として受け付けない。
