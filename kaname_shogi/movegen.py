@@ -1,19 +1,20 @@
 """駒の移動先候補を求め、移動・駒取りを局面へ適用する。
 
 movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・桂・香・飛車・角の移動先、
-空いている到着マスへの盤面移動、相手駒を取って指した側の持ち駒へ加える局面への移動適用を扱う。
-成功時だけ手番を交代する。合法手の確定は行わない。全駒の専用関数を作る方針はまだ決めず、次の駒を
-学ぶ際に共有できる処理を検討する。
+空いている到着マスへの盤面移動、相手駒を取って指した側の持ち駒へ加える局面への移動適用、持ち駒を
+空マスへ打つ局面への適用を扱う。成功時だけ手番を交代する。合法手の確定は行わない。全駒の専用関数を
+作る方針はまだ決めず、次の駒を学ぶ際に共有できる処理を検討する。
 
 契約と判断の背景：docs/design/02-pawn-move-candidates.md、
 docs/learning/06-pawn-move-candidates.md、docs/design/03-gold-move-candidates.md、
 docs/design/04-silver-move-candidates.md、docs/design/05-lance-move-candidates.md、
 docs/design/06-rook-move-candidates.md、docs/design/07-bishop-move-candidates.md、
 docs/learning/18-knight-move-candidates.md、docs/knowledge/15-knight-move-candidates.md、
-docs/design/08-knight-move-candidates.md、docs/design/13-capture-and-hands.md。
+docs/design/08-knight-move-candidates.md、docs/design/13-capture-and-hands.md、
+docs/design/14-hand-drops.md。
 """
 
-from .model import Board, PieceType, Position, Side, Square
+from .model import Board, Piece, PieceType, Position, Side, Square
 
 
 def move_piece(board: Board, source: Square, destination: Square) -> None:
@@ -113,6 +114,44 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
             hand.add(target_piece.piece_type)
             position.board.set_piece(source, None)
             position.board.set_piece(destination, piece)
+    if position.side_to_move == Side.SENTE:
+        position.side_to_move = Side.GOTE
+    else:
+        position.side_to_move = Side.SENTE
+
+
+def apply_drop(position: Position, piece_type: PieceType,
+               destination: Square) -> None:
+    """手番側の持ち駒を空マスへ打ち、局面を一手進める。
+
+    引数:
+        position: 変更対象の盤面、手番、双方の持ち駒を持つ可変の局面。
+        piece_type: 打つ玉以外の基本駒種を表すデータ。
+        destination: 打ち先の筋・段を表すSquare。
+
+    戻り値:
+        なし（None）。成功時は手番側の持ち駒を1枚減らし、その側のPieceを
+        destinationへ置き、手番を交代する。
+
+    例外:
+        ValueError: 玉を指定した場合、手番側が指定駒種を持たない場合、または
+            destinationが占有されている場合。失敗時は盤面、手番、先手・後手の
+            持ち駒を変更しない。
+
+    駒打ちは盤上の出発マスと移動先候補を持たないため、盤上移動のapply_moveと
+    分ける。二歩、行き所のない歩・香・桂、打ち歩詰め、成り、王手、合法手は
+    この段階では検証しない。
+    """
+    if piece_type == PieceType.KING:
+        raise ValueError("玉は打てません")
+    if position.board.piece_at(destination) is not None:
+        raise ValueError("到着マスは空にしてください")
+
+    hand = (position.sente_hand if position.side_to_move == Side.SENTE
+            else position.gote_hand)
+    hand.remove(piece_type)
+    position.board.set_piece(destination,
+                             Piece(piece_type, position.side_to_move))
     if position.side_to_move == Side.SENTE:
         position.side_to_move = Side.GOTE
     else:
