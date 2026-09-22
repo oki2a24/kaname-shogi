@@ -384,8 +384,8 @@ class ApplyDropTests(unittest.TestCase):
     def test_rejects_double_pawn_without_changing_position(self):
         """同じ筋に自分の歩がある持ち歩打ちを拒否し、局面を変更しない。
 
-        相手の歩を誤って数えること、持ち駒を先に減らすこと、例外時に手番を交代する
-        ことを、先手・後手の両方で検出する。
+        持ち駒を先に減らすこと、例外時に手番を交代することを、先手・後手の両方で
+        検出する。
         """
         for side, pawn_rank in ((Side.SENTE, 7), (Side.GOTE, 3)):
             position = Position(Board(), side)
