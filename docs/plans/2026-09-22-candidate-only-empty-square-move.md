@@ -160,7 +160,7 @@ docstringには、候補内の空マスだけを対象にすること、候補�
 
 候補関数の選択は非公開ヘルパーにだけ置く。各候補生成関数の共通化、`move_piece` への候補照合の移動、駒取り実装は行わない。重複した駒種選択や読みにくい処理がないことを確認し、不要ならコードを変えずにその判断を学習記録へ残す。
 
-### タスク3: 利用者向け記録を更新し、レビュー・コミットする（実行中）
+### タスク3: 利用者向け記録を更新し、レビュー・コミットする（完了）
 
 **ファイル:**
 - 変更: `README.md`
@@ -179,17 +179,17 @@ docstringには、候補内の空マスだけを対象にすること、候補�
 
 READMEの `apply_move` の説明を、手番と所有者に加えて「既存候補に含まれる空マスだけ」を照合する契約に更新する。候補に含まれる相手駒のマスへの駒取りは対象外であることを明記する。`docs/resume.md` と `docs/next-topics.md` は任意の空マスへ動けるという古い到達点を削除し、候補外を拒否する現在地と、次候補の駒取り・持ち駒の前提を記録する。
 
-- [ ] **ステップ 2: 実際に行ったTDD・検証・レビューを学習記録へ追記する**
+- [x] **ステップ 2: 実際に行ったTDD・検証・レビューを学習記録へ追記する**
 
 `docs/learning/24-candidate-only-empty-square-move.md` に、実際に観測したRedの失敗理由、Greenの最小実装、Refactorの判断、対象・全体テスト、CLI、差分検査、コードレビュー結果を事実として追記する。未実施の理解確認は記録しない。
 
-- [ ] **ステップ 3: 変更をセルフレビューする**
+- [x] **ステップ 3: 変更をセルフレビューする**
 
 実行: `git diff --check`
 
 確認内容: 設計書の範囲外である駒取り・持ち駒・成り・王手・CLI入力を追加していないこと、`move_piece` が候補照合と手番更新を知らないこと、失敗時の局面不変をテストしていること、公開docstringとREADMEが実装契約と一致すること。
 
-- [ ] **ステップ 4: 変更をコミットする**
+- [x] **ステップ 4: 変更をコミットする**
 
 実行: `git add README.md docs/resume.md docs/next-topics.md docs/learning/24-candidate-only-empty-square-move.md docs/knowledge/17-candidate-only-empty-square-move.md docs/design/12-candidate-only-empty-square-move.md docs/plans/2026-09-22-candidate-only-empty-square-move.md kaname_shogi/movegen.py tests/test_movegen.py`
 
