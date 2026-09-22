@@ -100,6 +100,17 @@ class ApplyMoveTests(unittest.TestCase):
                         "apply_move がまだ実装されていません")
         return movegen.apply_move(position, source, destination)
 
+    def _hand_counts(self, position):
+        """先後の玉以外の持ち駒枚数を、比較用の変更不可の値として返す。"""
+        piece_types = [piece_type for piece_type in PieceType
+                       if piece_type != PieceType.KING]
+        return (
+            tuple(position.sente_hand.count(piece_type)
+                  for piece_type in piece_types),
+            tuple(position.gote_hand.count(piece_type)
+                  for piece_type in piece_types),
+        )
+
     def test_moves_piece_and_switches_turn_after_success(self):
         """成功した移動は盤面を更新し、先手・後手の手番を交代する。
 
@@ -191,14 +202,14 @@ class ApplyMoveTests(unittest.TestCase):
         squares = [Square(file, rank) for file in range(1, 10)
                    for rank in range(1, 10)]
         before_board = [board.piece_at(square) for square in squares]
+        before_hands = self._hand_counts(position)
 
         with self.assertRaisesRegex(ValueError, "玉は取れません"):
             self._apply_move(position, source, destination)
 
         self.assertEqual([board.piece_at(square) for square in squares], before_board)
         self.assertEqual(position.side_to_move, Side.SENTE)
-        self.assertEqual(position.sente_hand.count(PieceType.PAWN), 0)
-        self.assertEqual(position.gote_hand.count(PieceType.PAWN), 0)
+        self.assertEqual(self._hand_counts(position), before_hands)
 
     def test_rejects_empty_destination_outside_piece_candidates_without_changing_position(self):
         """候補外の空マスを拒否し、盤面と手番を変更しない。
@@ -214,13 +225,13 @@ class ApplyMoveTests(unittest.TestCase):
             board.set_piece(source, Piece(PieceType.PAWN, side))
             position = Position(board, side)
             before = [board.piece_at(square) for square in squares]
+            before_hands = self._hand_counts(position)
             with self.subTest(side=side):
                 with self.assertRaises(ValueError):
                     self._apply_move(position, source, destination)
                 self.assertEqual([board.piece_at(square) for square in squares], before)
                 self.assertEqual(position.side_to_move, side)
-                self.assertEqual(position.sente_hand.count(PieceType.PAWN), 0)
-                self.assertEqual(position.gote_hand.count(PieceType.PAWN), 0)
+                self.assertEqual(self._hand_counts(position), before_hands)
 
     def test_rejects_invalid_move_without_changing_board_or_turn(self):
         """不正な移動は盤面と手番のどちらも変更しない。
@@ -242,6 +253,7 @@ class ApplyMoveTests(unittest.TestCase):
             position = Position(board, Side.SENTE)
             before_board = [board.piece_at(Square(file, rank))
                             for file in range(1, 10) for rank in range(1, 10)]
+            before_hands = self._hand_counts(position)
             with self.subTest(case=name):
                 with self.assertRaises(ValueError):
                     self._apply_move(position, source, destination)
@@ -249,8 +261,7 @@ class ApplyMoveTests(unittest.TestCase):
                                for file in range(1, 10) for rank in range(1, 10)]
                 self.assertEqual(after_board, before_board)
                 self.assertEqual(position.side_to_move, Side.SENTE)
-                self.assertEqual(position.sente_hand.count(PieceType.PAWN), 0)
-                self.assertEqual(position.gote_hand.count(PieceType.PAWN), 0)
+                self.assertEqual(self._hand_counts(position), before_hands)
 
     def test_rejects_piece_owned_by_the_other_side_without_changing_position(self):
         """手番と所有者が異なる駒を拒否し、局面を変更しない。
@@ -267,6 +278,7 @@ class ApplyMoveTests(unittest.TestCase):
             position = Position(board, turn)
             before_board = [board.piece_at(Square(file, rank))
                             for file in range(1, 10) for rank in range(1, 10)]
+            before_hands = self._hand_counts(position)
             with self.subTest(turn=turn, piece_side=piece_side):
                 with self.assertRaises(ValueError):
                     self._apply_move(position, source, destination)
@@ -274,8 +286,7 @@ class ApplyMoveTests(unittest.TestCase):
                                for file in range(1, 10) for rank in range(1, 10)]
                 self.assertEqual(after_board, before_board)
                 self.assertEqual(position.side_to_move, turn)
-                self.assertEqual(position.sente_hand.count(PieceType.PAWN), 0)
-                self.assertEqual(position.gote_hand.count(PieceType.PAWN), 0)
+                self.assertEqual(self._hand_counts(position), before_hands)
 
 
 class KingMoveCandidatesTests(unittest.TestCase):

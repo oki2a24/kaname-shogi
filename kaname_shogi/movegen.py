@@ -1,15 +1,16 @@
-"""駒の移動先候補を求め、空マスへの移動を盤面へ適用する。
+"""駒の移動先候補を求め、移動・駒取りを局面へ適用する。
 
 movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・桂・香・飛車・角の移動先、
-空いている到着マスへの盤面移動、成功時だけ手番を交代する局面への移動適用を扱う。合法手の確定は
-行わない。全駒の専用関数を作る方針はまだ決めず、次の駒を学ぶ際に共有できる処理を検討する。
+空いている到着マスへの盤面移動、相手駒を取って指した側の持ち駒へ加える局面への移動適用を扱う。
+成功時だけ手番を交代する。合法手の確定は行わない。全駒の専用関数を作る方針はまだ決めず、次の駒を
+学ぶ際に共有できる処理を検討する。
 
 契約と判断の背景：docs/design/02-pawn-move-candidates.md、
 docs/learning/06-pawn-move-candidates.md、docs/design/03-gold-move-candidates.md、
 docs/design/04-silver-move-candidates.md、docs/design/05-lance-move-candidates.md、
 docs/design/06-rook-move-candidates.md、docs/design/07-bishop-move-candidates.md、
 docs/learning/18-knight-move-candidates.md、docs/knowledge/15-knight-move-candidates.md、
-docs/design/08-knight-move-candidates.md。
+docs/design/08-knight-move-candidates.md、docs/design/13-capture-and-hands.md。
 """
 
 from .model import Board, PieceType, Position, Side, Square
