@@ -14,7 +14,8 @@ docs/design/08-knight-move-candidates.md、docs/design/13-capture-and-hands.md�
 docs/design/14-hand-drops.md。
 """
 
-from .model import Board, Piece, PieceType, Position, Side, Square
+from .model import (BasicPieceType, Board, Piece, PieceType, Position, Side,
+                    Square)
 
 
 def move_piece(board: Board, source: Square, destination: Square) -> None:
@@ -111,7 +112,7 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
                 raise ValueError("玉は取れません")
             hand = (position.sente_hand if position.side_to_move == Side.SENTE
                     else position.gote_hand)
-            hand.add(target_piece.piece_type)
+            hand.add(target_piece.base_piece_type)
             position.board.set_piece(source, None)
             position.board.set_piece(destination, piece)
     if position.side_to_move == Side.SENTE:
@@ -142,7 +143,7 @@ def _has_unpromoted_pawn_on_file(board: Board, side: Side, file: int) -> bool:
     return False
 
 
-def _has_no_legal_destination(piece_type: PieceType, side: Side,
+def _has_no_legal_destination(piece_type: BasicPieceType, side: Side,
                               rank: int) -> bool:
     """piece_typeをsideがrank段へ打ったとき行き所がなければTrueを返す。
 
@@ -159,15 +160,15 @@ def _has_no_legal_destination(piece_type: PieceType, side: Side,
     走査する判定と責務を分ける。
     """
     last_rank = 1 if side == Side.SENTE else 9
-    if piece_type in (PieceType.PAWN, PieceType.LANCE):
+    if piece_type in (BasicPieceType.PAWN, BasicPieceType.LANCE):
         return rank == last_rank
-    if piece_type == PieceType.KNIGHT:
+    if piece_type == BasicPieceType.KNIGHT:
         second_last_rank = 2 if side == Side.SENTE else 8
         return rank in (last_rank, second_last_rank)
     return False
 
 
-def apply_drop(position: Position, piece_type: PieceType,
+def apply_drop(position: Position, piece_type: BasicPieceType,
                destination: Square) -> None:
     """手番側の持ち駒を空マスへ打ち、局面を一手進める。
 
@@ -190,11 +191,11 @@ def apply_drop(position: Position, piece_type: PieceType,
         分ける。歩を打つときは二歩を検証する。歩・香・桂は行き所のない段への
         打ちも検証する。打ち歩詰め、成り、王手、合法手はこの段階では検証しない。
     """
-    if piece_type == PieceType.KING:
+    if piece_type == BasicPieceType.KING:
         raise ValueError("玉は打てません")
     if position.board.piece_at(destination) is not None:
         raise ValueError("到着マスは空にしてください")
-    if (piece_type == PieceType.PAWN
+    if (piece_type == BasicPieceType.PAWN
             and _has_unpromoted_pawn_on_file(position.board,
                                              position.side_to_move,
                                              destination.file)):
@@ -206,8 +207,9 @@ def apply_drop(position: Position, piece_type: PieceType,
     hand = (position.sente_hand if position.side_to_move == Side.SENTE
             else position.gote_hand)
     hand.remove(piece_type)
-    position.board.set_piece(destination,
-                             Piece(piece_type, position.side_to_move))
+    position.board.set_piece(
+        destination,
+        Piece(PieceType[piece_type.name], position.side_to_move))
     if position.side_to_move == Side.SENTE:
         position.side_to_move = Side.GOTE
     else:

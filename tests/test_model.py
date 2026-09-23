@@ -134,15 +134,27 @@ class HandTests(unittest.TestCase):
         self.assertTrue(hasattr(model, "BasicPieceType"))
 
     def test_promoted_piece_reports_basic_type_and_promotion(self):
-        """と金は歩へ復元でき、成駒として判定できる。
+        """6種類の成駒は基本駒種へ復元でき、成駒として判定できる。
 
-        成駒を持ち駒へ加えるときにと金のまま扱う誤りを検出する。
+        成駒を持ち駒へ加えるときに盤上駒種のまま扱う誤りを検出する。
         """
-        self.assertIn("PRO_PAWN", model.PieceType.__members__)
-        basic_piece_type = model.BasicPieceType.PAWN
-        piece = model.Piece(model.PieceType.PRO_PAWN, model.Side.SENTE)
-        self.assertEqual(piece.base_piece_type, basic_piece_type)
-        self.assertTrue(piece.is_promoted)
+        cases = {
+            model.PieceType.PRO_PAWN: model.BasicPieceType.PAWN,
+            model.PieceType.PRO_LANCE: model.BasicPieceType.LANCE,
+            model.PieceType.PRO_KNIGHT: model.BasicPieceType.KNIGHT,
+            model.PieceType.PRO_SILVER: model.BasicPieceType.SILVER,
+            model.PieceType.HORSE: model.BasicPieceType.BISHOP,
+            model.PieceType.DRAGON: model.BasicPieceType.ROOK,
+        }
+        for piece_type, basic_piece_type in cases.items():
+            with self.subTest(piece_type=piece_type):
+                piece = model.Piece(piece_type, model.Side.SENTE)
+                self.assertEqual(piece.base_piece_type, basic_piece_type)
+                self.assertTrue(piece.is_promoted)
+        for piece_type in model.PieceType:
+            if piece_type.name in model.BasicPieceType.__members__:
+                with self.subTest(piece_type=piece_type):
+                    self.assertFalse(model.Piece(piece_type, model.Side.SENTE).is_promoted)
 
     def test_hand_rejects_board_piece_type_without_changing_counts(self):
         """持ち駒は盤上駒種を受け取らず、枚数を変更しない。
@@ -153,6 +165,8 @@ class HandTests(unittest.TestCase):
         hand = model.Hand()
         with self.assertRaises(ValueError):
             hand.add(model.PieceType.PRO_PAWN)
+        with self.assertRaises(ValueError):
+            hand.add(model.PieceType.PAWN)
         self.assertEqual(hand.count(model.BasicPieceType.PAWN), 0)
 
     def test_counts_cannot_be_supplied_at_creation(self):
@@ -173,9 +187,9 @@ class HandTests(unittest.TestCase):
         for piece_type in BasicPieceType:
             if piece_type != BasicPieceType.KING:
                 self.assertEqual(hand.count(piece_type), 0)
-        hand.add(PieceType.PAWN)
-        self.assertEqual(hand.count(PieceType.PAWN), 1)
-        self.assertEqual(hand.count(PieceType.ROOK), 0)
+        hand.add(BasicPieceType.PAWN)
+        self.assertEqual(hand.count(BasicPieceType.PAWN), 1)
+        self.assertEqual(hand.count(BasicPieceType.ROOK), 0)
 
     def test_king_is_rejected_without_changing_hand(self):
         """玉は持ち駒に加えられず、失敗後も枚数を変えない。
@@ -185,10 +199,10 @@ class HandTests(unittest.TestCase):
         self.assertTrue(hasattr(model, "Hand"), "Hand がまだ実装されていません")
         hand = model.Hand()
         with self.assertRaises(ValueError):
-            hand.add(PieceType.KING)
+            hand.add(BasicPieceType.KING)
         with self.assertRaises(ValueError):
-            hand.count(PieceType.KING)
-        self.assertEqual(hand.count(PieceType.PAWN), 0)
+            hand.count(BasicPieceType.KING)
+        self.assertEqual(hand.count(BasicPieceType.PAWN), 0)
 
     def test_remove_decreases_only_one_owned_piece_type(self):
         """持ち駒を1枚減らし、他の駒種の枚数を変えない。
@@ -197,13 +211,13 @@ class HandTests(unittest.TestCase):
         検出する。
         """
         hand = model.Hand()
-        hand.add(PieceType.PAWN)
-        hand.add(PieceType.PAWN)
+        hand.add(BasicPieceType.PAWN)
+        hand.add(BasicPieceType.PAWN)
 
-        hand.remove(PieceType.PAWN)
+        hand.remove(BasicPieceType.PAWN)
 
-        self.assertEqual(hand.count(PieceType.PAWN), 1)
-        self.assertEqual(hand.count(PieceType.ROOK), 0)
+        self.assertEqual(hand.count(BasicPieceType.PAWN), 1)
+        self.assertEqual(hand.count(BasicPieceType.ROOK), 0)
 
     def test_remove_rejects_unowned_piece_and_king_without_changing_hand(self):
         """0枚の駒と玉を拒否し、持ち駒を変更しない。
@@ -212,15 +226,15 @@ class HandTests(unittest.TestCase):
         変更する誤りを検出する。
         """
         hand = model.Hand()
-        hand.add(PieceType.PAWN)
+        hand.add(BasicPieceType.PAWN)
 
         with self.assertRaises(ValueError):
-            hand.remove(PieceType.ROOK)
+            hand.remove(BasicPieceType.ROOK)
         with self.assertRaises(ValueError):
-            hand.remove(PieceType.KING)
+            hand.remove(BasicPieceType.KING)
 
-        self.assertEqual(hand.count(PieceType.PAWN), 1)
-        self.assertEqual(hand.count(PieceType.ROOK), 0)
+        self.assertEqual(hand.count(BasicPieceType.PAWN), 1)
+        self.assertEqual(hand.count(BasicPieceType.ROOK), 0)
 
 
 class PositionHandTests(unittest.TestCase):
@@ -233,13 +247,13 @@ class PositionHandTests(unittest.TestCase):
         second = model.Position(Board(), Side.SENTE)
         self.assertTrue(hasattr(first, "sente_hand"),
                         "Position.sente_hand がまだ実装されていません")
-        first.sente_hand.add(PieceType.PAWN)
-        first.gote_hand.add(PieceType.ROOK)
-        self.assertEqual(first.sente_hand.count(PieceType.PAWN), 1)
-        self.assertEqual(first.gote_hand.count(PieceType.ROOK), 1)
-        self.assertEqual(first.gote_hand.count(PieceType.PAWN), 0)
-        self.assertEqual(second.sente_hand.count(PieceType.PAWN), 0)
-        self.assertEqual(second.gote_hand.count(PieceType.ROOK), 0)
+        first.sente_hand.add(BasicPieceType.PAWN)
+        first.gote_hand.add(BasicPieceType.ROOK)
+        self.assertEqual(first.sente_hand.count(BasicPieceType.PAWN), 1)
+        self.assertEqual(first.gote_hand.count(BasicPieceType.ROOK), 1)
+        self.assertEqual(first.gote_hand.count(BasicPieceType.PAWN), 0)
+        self.assertEqual(second.sente_hand.count(BasicPieceType.PAWN), 0)
+        self.assertEqual(second.gote_hand.count(BasicPieceType.ROOK), 0)
 
 
 class InitialPositionTests(unittest.TestCase):

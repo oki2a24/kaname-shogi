@@ -185,8 +185,8 @@ class ApplyMoveTests(unittest.TestCase):
                         else position.gote_hand)
                 other_hand = (position.gote_hand if side == Side.SENTE
                               else position.sente_hand)
-                self.assertEqual(hand.count(PieceType.PAWN), 1)
-                self.assertEqual(other_hand.count(PieceType.PAWN), 0)
+                self.assertEqual(hand.count(BasicPieceType.PAWN), 1)
+                self.assertEqual(other_hand.count(BasicPieceType.PAWN), 0)
                 self.assertEqual(position.side_to_move, expected_turn)
 
     def test_rejects_capture_of_king_without_changing_position(self):
@@ -332,14 +332,14 @@ class ApplyDropTests(unittest.TestCase):
                     else position.gote_hand)
             other_hand = (position.gote_hand if side == Side.SENTE
                           else position.sente_hand)
-            hand.add(PieceType.PAWN)
+            hand.add(BasicPieceType.PAWN)
             with self.subTest(side=side):
-                self.assertIsNone(self._apply_drop(position, PieceType.PAWN,
+                self.assertIsNone(self._apply_drop(position, BasicPieceType.PAWN,
                                                     destination))
                 self.assertEqual(position.board.piece_at(destination),
                                  Piece(PieceType.PAWN, side))
-                self.assertEqual(hand.count(PieceType.PAWN), 0)
-                self.assertEqual(other_hand.count(PieceType.PAWN), 0)
+                self.assertEqual(hand.count(BasicPieceType.PAWN), 0)
+                self.assertEqual(other_hand.count(BasicPieceType.PAWN), 0)
                 self.assertEqual(position.side_to_move, expected_turn)
 
     def test_rejects_unowned_piece_without_changing_position(self):
@@ -355,7 +355,7 @@ class ApplyDropTests(unittest.TestCase):
         before_hands = self._hand_counts(position)
 
         with self.assertRaises(ValueError):
-            self._apply_drop(position, PieceType.PAWN, Square(5, 5))
+            self._apply_drop(position, BasicPieceType.PAWN, Square(5, 5))
 
         self._assert_position_unchanged(position, before_board, before_hands,
                                         Side.SENTE)
@@ -369,7 +369,7 @@ class ApplyDropTests(unittest.TestCase):
         destination = Square(5, 5)
         for occupying_side in Side:
             position = Position(Board(), Side.SENTE)
-            position.sente_hand.add(PieceType.PAWN)
+            position.sente_hand.add(BasicPieceType.PAWN)
             position.board.set_piece(destination,
                                      Piece(PieceType.SILVER, occupying_side))
             squares = [Square(file, rank) for file in range(1, 10)
@@ -378,7 +378,7 @@ class ApplyDropTests(unittest.TestCase):
             before_hands = self._hand_counts(position)
             with self.subTest(occupying_side=occupying_side):
                 with self.assertRaises(ValueError):
-                    self._apply_drop(position, PieceType.PAWN, destination)
+                    self._apply_drop(position, BasicPieceType.PAWN, destination)
                 self._assert_position_unchanged(position, before_board,
                                                 before_hands, Side.SENTE)
 
@@ -392,7 +392,7 @@ class ApplyDropTests(unittest.TestCase):
             position = Position(Board(), side)
             hand = (position.sente_hand if side == Side.SENTE
                     else position.gote_hand)
-            hand.add(PieceType.PAWN)
+            hand.add(BasicPieceType.PAWN)
             position.board.set_piece(Square(5, pawn_rank),
                                      Piece(PieceType.PAWN, side))
             squares = [Square(file, rank) for file in range(1, 10)
@@ -401,7 +401,7 @@ class ApplyDropTests(unittest.TestCase):
             before_hands = self._hand_counts(position)
             with self.subTest(side=side):
                 with self.assertRaises(ValueError):
-                    self._apply_drop(position, PieceType.PAWN, Square(5, 5))
+                    self._apply_drop(position, BasicPieceType.PAWN, Square(5, 5))
                 self._assert_position_unchanged(position, before_board,
                                                 before_hands, side)
 
@@ -411,11 +411,11 @@ class ApplyDropTests(unittest.TestCase):
         二歩の制限を歩以外の駒打ちへ誤って広げることを検出する。
         """
         position = Position(Board(), Side.SENTE)
-        position.sente_hand.add(PieceType.SILVER)
+        position.sente_hand.add(BasicPieceType.SILVER)
         position.board.set_piece(Square(5, 7),
                                  Piece(PieceType.PAWN, Side.SENTE))
 
-        self.assertIsNone(self._apply_drop(position, PieceType.SILVER,
+        self.assertIsNone(self._apply_drop(position, BasicPieceType.SILVER,
                                            Square(5, 5)))
         self.assertEqual(position.board.piece_at(Square(5, 5)),
                          Piece(PieceType.SILVER, Side.SENTE))
@@ -440,7 +440,7 @@ class ApplyDropTests(unittest.TestCase):
             position = Position(Board(), side)
             hand = (position.sente_hand if side == Side.SENTE
                     else position.gote_hand)
-            hand.add(piece_type)
+            hand.add(BasicPieceType[piece_type.name])
             squares = [Square(file, board_rank) for file in range(1, 10)
                        for board_rank in range(1, 10)]
             before_board = [position.board.piece_at(square)
@@ -471,13 +471,14 @@ class ApplyDropTests(unittest.TestCase):
             hand = (position.sente_hand if side == Side.SENTE
                     else position.gote_hand)
             destination = Square(5, rank)
-            hand.add(piece_type)
+            basic_piece_type = BasicPieceType[piece_type.name]
+            hand.add(basic_piece_type)
             with self.subTest(side=side, piece_type=piece_type, rank=rank):
-                self.assertIsNone(self._apply_drop(position, piece_type,
+                self.assertIsNone(self._apply_drop(position, basic_piece_type,
                                                     destination))
                 self.assertEqual(position.board.piece_at(destination),
                                  Piece(piece_type, side))
-                self.assertEqual(hand.count(piece_type), 0)
+                self.assertEqual(hand.count(BasicPieceType[piece_type.name]), 0)
                 self.assertEqual(position.side_to_move, expected_turn)
 
     def test_rejects_king_without_changing_position(self):
@@ -487,14 +488,14 @@ class ApplyDropTests(unittest.TestCase):
         検出する。
         """
         position = Position(Board(), Side.SENTE)
-        position.sente_hand.add(PieceType.PAWN)
+        position.sente_hand.add(BasicPieceType.PAWN)
         squares = [Square(file, rank) for file in range(1, 10)
                    for rank in range(1, 10)]
         before_board = [position.board.piece_at(square) for square in squares]
         before_hands = self._hand_counts(position)
 
         with self.assertRaises(ValueError):
-            self._apply_drop(position, PieceType.KING, Square(5, 5))
+            self._apply_drop(position, BasicPieceType.KING, Square(5, 5))
 
         self._assert_position_unchanged(position, before_board, before_hands,
                                         Side.SENTE)

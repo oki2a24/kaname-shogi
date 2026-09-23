@@ -142,14 +142,11 @@ class Hand:
     対応付けることで、枚数のデータと局面規則を分ける。
     """
 
-    _counts: dict[PieceType, int] = field(default_factory=dict,
+    _counts: dict[BasicPieceType, int] = field(default_factory=dict,
                                           init=False, repr=False)
 
     def _validate_piece_type(self, piece_type: BasicPieceType) -> BasicPieceType:
         """持ち駒にできる基本駒種へ正規化し、玉ならValueErrorにする。"""
-        if isinstance(piece_type, PieceType):
-            if piece_type.name in BasicPieceType.__members__:
-                piece_type = BasicPieceType[piece_type.name]
         if not isinstance(piece_type, BasicPieceType):
             raise ValueError("持ち駒には基本駒種を指定してください")
         if piece_type == BasicPieceType.KING:
