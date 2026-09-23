@@ -195,6 +195,30 @@ class ApplyMoveTests(unittest.TestCase):
                 self.assertEqual(other_hand.count(BasicPieceType.PAWN), 0)
                 self.assertEqual(position.side_to_move, expected_turn)
 
+    def test_capturing_each_promoted_piece_restores_basic_hand_piece(self):
+        """成駒を取ると、対応する基本駒種が持ち駒へ加わる。
+
+        成駒をそのまま持ち駒として保存する誤りと、別の基本駒種へ戻す誤りを検出する。
+        """
+        cases = [
+            (PieceType.PRO_PAWN, BasicPieceType.PAWN),
+            (PieceType.PRO_LANCE, BasicPieceType.LANCE),
+            (PieceType.PRO_KNIGHT, BasicPieceType.KNIGHT),
+            (PieceType.PRO_SILVER, BasicPieceType.SILVER),
+            (PieceType.HORSE, BasicPieceType.BISHOP),
+            (PieceType.DRAGON, BasicPieceType.ROOK),
+        ]
+        for promoted_type, basic_type in cases:
+            board = Board()
+            source, destination = Square(5, 5), Square(5, 4)
+            board.set_piece(source, Piece(PieceType.PAWN, Side.SENTE))
+            board.set_piece(destination, Piece(promoted_type, Side.GOTE))
+            position = Position(board, Side.SENTE)
+            with self.subTest(promoted_type=promoted_type):
+                self.assertIsNone(self._apply_move(position, source, destination))
+                self.assertEqual(position.sente_hand.count(basic_type), 1)
+                self.assertEqual(position.gote_hand.count(basic_type), 0)
+
     def test_rejects_capture_of_king_without_changing_position(self):
         """相手玉を取る移動を拒否し、局面のどの状態も変更しない。
 
@@ -571,6 +595,21 @@ class ApplyDropTests(unittest.TestCase):
                                            Square(5, 5)))
         self.assertEqual(position.board.piece_at(Square(5, 5)),
                          Piece(PieceType.SILVER, Side.SENTE))
+
+    def test_allows_drop_on_file_with_own_promoted_pawn(self):
+        """自分のと金がある筋でも、持ち歩を二歩として拒否しない。
+
+        成駒を未成歩と誤認して二歩にする判定を検出する。
+        """
+        position = Position(Board(), Side.SENTE)
+        position.sente_hand.add(BasicPieceType.PAWN)
+        position.board.set_piece(Square(5, 7),
+                                 Piece(PieceType.PRO_PAWN, Side.SENTE))
+
+        self.assertIsNone(self._apply_drop(
+            position, BasicPieceType.PAWN, Square(5, 5)))
+        self.assertEqual(position.board.piece_at(Square(5, 5)),
+                         Piece(PieceType.PAWN, Side.SENTE))
 
     def test_rejects_piece_with_no_legal_destination_without_changing_position(self):
         """行き所のない段への歩・香・桂打ちを拒否し、局面を変更しない。
