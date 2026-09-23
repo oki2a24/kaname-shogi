@@ -615,21 +615,65 @@ class ApplyMoveTests(unittest.TestCase):
                 self.assertEqual(board.piece_at(destination),
                                  Piece(promoted_type, side))
 
-    def test_rejects_move_of_promoted_piece_until_promoted_moves_are_implemented(self):
-        """成駒の移動を未成駒の候補で適用せず、現段階では拒否する。
+    def test_moves_each_promoted_piece_and_keeps_its_piece_type(self):
+        """6種類の成駒は候補内へ移動し、成駒種を保ったまま手番を交代する。
 
-        次回の成駒移動実装まで、誤った移動規則を許す回帰を検出する。
+        成駒を未成駒として扱う誤りと、成駒の移動を一律に拒否する誤りを検出する。
+        """
+        cases = [
+            (PieceType.PRO_PAWN, Square(5, 4)),
+            (PieceType.PRO_LANCE, Square(5, 4)),
+            (PieceType.PRO_KNIGHT, Square(5, 4)),
+            (PieceType.PRO_SILVER, Square(5, 4)),
+            (PieceType.HORSE, Square(4, 4)),
+            (PieceType.DRAGON, Square(4, 5)),
+        ]
+        for piece_type, destination in cases:
+            board = Board()
+            source = Square(5, 5)
+            piece = Piece(piece_type, Side.SENTE)
+            board.set_piece(source, piece)
+            position = Position(board, Side.SENTE)
+            with self.subTest(piece_type=piece_type):
+                self.assertIsNone(self._apply_move(position, source, destination))
+                self.assertIsNone(board.piece_at(source))
+                self.assertEqual(board.piece_at(destination), piece)
+                self.assertEqual(position.side_to_move, Side.GOTE)
+
+    def test_captures_with_promoted_piece_restores_captured_base_piece(self):
+        """成駒で相手駒を取ると、取った駒を基本駒種で持ち駒に加える。
+
+        成駒の移動だけ成功して駒取りや持ち駒復元を忘れる誤りを検出する。
         """
         board = Board()
-        source, destination = Square(5, 4), Square(5, 3)
-        board.set_piece(source, Piece(PieceType.PRO_PAWN, Side.SENTE))
+        source, destination = Square(5, 5), Square(4, 4)
+        board.set_piece(source, Piece(PieceType.HORSE, Side.SENTE))
+        board.set_piece(destination, Piece(PieceType.DRAGON, Side.GOTE))
+        position = Position(board, Side.SENTE)
+
+        self.assertIsNone(self._apply_move(position, source, destination))
+
+        self.assertEqual(board.piece_at(destination),
+                         Piece(PieceType.HORSE, Side.SENTE))
+        self.assertEqual(position.sente_hand.count(BasicPieceType.ROOK), 1)
+        self.assertEqual(position.side_to_move, Side.GOTE)
+
+    def test_rejects_promotion_flag_for_promoted_piece_without_changing_position(self):
+        """成駒への成り指定を拒否し、局面を変更しない。
+
+        成駒をもう一度成れる扱いにする誤りと、失敗時の部分変更を検出する。
+        """
+        board = Board()
+        source, destination = Square(5, 5), Square(5, 4)
+        piece = Piece(PieceType.PRO_PAWN, Side.SENTE)
+        board.set_piece(source, piece)
         position = Position(board, Side.SENTE)
 
         with self.assertRaises(ValueError):
-            self._apply_move(position, source, destination)
-        self.assertEqual(board.piece_at(source),
-                         Piece(PieceType.PRO_PAWN, Side.SENTE))
+            self._apply_move(position, source, destination, promote=True)
+        self.assertEqual(board.piece_at(source), piece)
         self.assertIsNone(board.piece_at(destination))
+        self.assertEqual(position.side_to_move, Side.SENTE)
 
 
 class ApplyDropTests(unittest.TestCase):

@@ -1,6 +1,6 @@
 """駒の移動先候補を求め、移動・駒取りを局面へ適用する。
 
-movegenはmove generation（指し手生成）の略。現段階では未成の歩・金・銀・桂・香・飛車・角の移動先、
+movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・桂・香・飛車・角と成駒6種の移動先、
 空いている到着マスへの盤面移動、相手駒を取って指した側の持ち駒へ加える局面への移動適用、持ち駒を
 空マスへ打つ局面への適用を扱う。成功時だけ手番を交代する。合法手の確定は行わない。全駒の専用関数を
 作る方針はまだ決めず、次の駒を学ぶ際に共有できる処理を検討する。
@@ -65,6 +65,12 @@ def _move_candidates_for_piece(board: Board, source: Square) -> list[Square]:
         PieceType.KNIGHT: knight_move_candidates,
         PieceType.LANCE: lance_move_candidates,
         PieceType.PAWN: pawn_move_candidates,
+        PieceType.PRO_PAWN: pro_pawn_move_candidates,
+        PieceType.PRO_LANCE: pro_lance_move_candidates,
+        PieceType.PRO_KNIGHT: pro_knight_move_candidates,
+        PieceType.PRO_SILVER: pro_silver_move_candidates,
+        PieceType.HORSE: horse_move_candidates,
+        PieceType.DRAGON: dragon_move_candidates,
     }
     return candidate_functions[piece.piece_type](board, source)
 
@@ -126,14 +132,14 @@ def apply_move(position: Position, source: Square, destination: Square,
     例外:
         ValueError: 出発駒の所有者と手番が一致しない場合、到着マスが出発駒の
             移動先候補に含まれない場合、相手の玉を取ろうとした場合、または
-            成れない駒への成り指定、成りが必要な局面での不成指定、既に成った駒の
-            移動、move_pieceが拒否する空の出発マス、同一マスの場合。失敗時は盤面、
+            成れない駒への成り指定、成りが必要な局面での不成指定、move_pieceが拒否する
+            空の出発マス、同一マスの場合。失敗時は盤面、
             手番、先手・後手の持ち駒を変更しない。
 
     出発駒の所有者と局面の手番を照合し、既存の移動先候補に到着マスが含まれる
     ときだけ局面を変更する。成りは移動元または移動先が相手陣にある場合だけ
-    選択でき、歩・香・桂が行き所を失う場合は強制される。成駒の移動先候補は
-    次回扱いのため現段階では拒否する。到着マスが空なら盤面移動をmove_pieceへ委譲する。
+    選択でき、歩・香・桂が行き所を失う場合は強制される。成駒は成駒自身の候補を
+    用いて移動し、移動後も成駒のまま保持する。到着マスが空なら盤面移動をmove_pieceへ委譲する。
     相手駒なら、出発駒を到着マスへ移し、取られた駒種を指した側の持ち駒へ1枚
     加える。これにより、手番を知らないBoardの配置責務と、対局を一手進める
     Positionの局面責務を分ける。玉は持ち駒にならないため取れない。成功後だけ
@@ -142,8 +148,6 @@ def apply_move(position: Position, source: Square, destination: Square,
     piece = position.board.piece_at(source)
     if piece is not None and piece.side != position.side_to_move:
         raise ValueError("手番と出発駒の所有者が一致しません")
-    if piece is not None and piece.is_promoted:
-        raise ValueError("成駒の移動はまだ扱いません")
     if (piece is not None
             and destination not in _move_candidates_for_piece(position.board, source)):
         raise ValueError("到着マスは出発駒の移動先候補に含まれません")
