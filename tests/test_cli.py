@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from kaname_shogi import cli
 from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
-                                Position, Side, Square)
+                                Position, Side, Square, create_initial_position)
 
 
 class CommandParsingTests(unittest.TestCase):
@@ -23,6 +23,12 @@ class CommandParsingTests(unittest.TestCase):
         self.assertEqual((drop.piece_type, drop.destination),
                          (BasicPieceType.PAWN, Square(5, 5)))
 
+    def test_parses_resign_command(self):
+        """resignを、局面を変更しない投了指示へ変換する。"""
+        command = cli.parse_command("resign")
+
+        self.assertIsInstance(command, cli._ResignCommand)
+
     def test_rejects_invalid_command_format(self):
         """未知の操作語・記号・引数・座標を入力形式エラーとして拒否する。"""
         invalid_commands = (
@@ -31,6 +37,8 @@ class CommandParsingTests(unittest.TestCase):
             "move 7 7 7 6 ＋",
             "move 7 7 7",
             "move 7 7 7 6 extra",
+            "resign now",
+            "ｒｅｓｉｇｎ",
             "drop 王 5 5",
             "drop 歩 10 5",
         )
@@ -113,6 +121,40 @@ class GameplayTests(unittest.TestCase):
         self.assertEqual(position.board.piece_at(Square(5, 5)),
                          Piece(PieceType.PAWN, Side.SENTE))
         self.assertEqual(position.sente_hand.count(BasicPieceType.PAWN), 0)
+
+    def test_stops_when_sente_resigns_without_changing_position(self):
+        """先手が投了すると、局面を変えず後手の勝ちを表示して終了する。"""
+        position = create_initial_position()
+        inputs = ScriptedInput(["resign"])
+        outputs = []
+
+        with patch.object(cli, "create_initial_position",
+                          return_value=position, create=True):
+            cli.run_game(input_fn=inputs, output_fn=outputs.append)
+
+        self.assertEqual(inputs.calls, 1)
+        self.assertEqual(position.side_to_move, Side.SENTE)
+        self.assertEqual(position.board.piece_at(Square(7, 7)),
+                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertIn("先手が投了しました。後手の勝ちです。", outputs)
+        self.assertNotIn("入力を終了しました。", outputs)
+
+    def test_stops_when_gote_resigns_after_sente_move(self):
+        """後手が投了すると、後手の投了と先手の勝ちを表示して終了する。"""
+        position = create_initial_position()
+        inputs = ScriptedInput(["move 7 7 7 6", "resign"])
+        outputs = []
+
+        with patch.object(cli, "create_initial_position",
+                          return_value=position, create=True):
+            cli.run_game(input_fn=inputs, output_fn=outputs.append)
+
+        self.assertEqual(inputs.calls, 2)
+        self.assertEqual(position.side_to_move, Side.GOTE)
+        self.assertEqual(position.board.piece_at(Square(7, 6)),
+                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertIn("後手が投了しました。先手の勝ちです。", outputs)
+        self.assertNotIn("入力を終了しました。", outputs)
 
     def test_stops_without_input_when_position_is_already_checkmate(self):
         """開始時点で詰みなら入力を読まず、勝者を表示して終了する。"""
