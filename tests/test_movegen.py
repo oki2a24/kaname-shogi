@@ -282,19 +282,35 @@ class CheckDetectionTests(unittest.TestCase):
     def test_check_detection_does_not_change_board(self):
         """王手判定は盤面を変更しない。
 
-        候補生成中に駒を動かしたり取ったりする実装を検出する。
+        王手・非王手・玉なしの各経路で、候補生成中に駒を動かしたり取ったりする
+        実装を検出する。
         """
-        board = Board()
-        board.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.GOTE))
-        board.set_piece(Square(5, 2), Piece(PieceType.KING, Side.SENTE))
-        before = [board.piece_at(Square(file, rank))
-                  for file in range(1, 10) for rank in range(1, 10)]
+        cases = []
 
-        movegen.is_in_check(board, Side.SENTE)
+        checked = Board()
+        checked.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.GOTE))
+        checked.set_piece(Square(5, 2), Piece(PieceType.KING, Side.SENTE))
+        cases.append(("checked", checked, Side.SENTE))
 
-        after = [board.piece_at(Square(file, rank))
-                 for file in range(1, 10) for rank in range(1, 10)]
-        self.assertEqual(after, before)
+        not_checked = Board()
+        not_checked.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.GOTE))
+        not_checked.set_piece(Square(5, 3),
+                              Piece(PieceType.BISHOP, Side.GOTE))
+        not_checked.set_piece(Square(5, 2), Piece(PieceType.KING, Side.SENTE))
+        cases.append(("not_checked", not_checked, Side.SENTE))
+
+        no_king = Board()
+        no_king.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.GOTE))
+        cases.append(("no_king", no_king, Side.SENTE))
+
+        for name, board, side in cases:
+            before = [board.piece_at(Square(file, rank))
+                      for file in range(1, 10) for rank in range(1, 10)]
+            with self.subTest(case=name):
+                movegen.is_in_check(board, side)
+                after = [board.piece_at(Square(file, rank))
+                         for file in range(1, 10) for rank in range(1, 10)]
+                self.assertEqual(after, before)
 
     def test_multiple_attackers_and_fully_blocked_lines_have_stable_results(self):
         """複数の攻撃駒があっても、攻撃線の状態だけで王手を決める。
