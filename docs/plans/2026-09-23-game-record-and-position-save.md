@@ -48,7 +48,7 @@
 - 消費 (Consumes): `Position.copy() -> Position`、`apply_move(position, source, destination, *, promote=False) -> None`、`apply_drop(position, piece_type, destination) -> None`
 - 生産 (Produces): `RecordedMove`、`RecordedDrop`、`GameRecord(initial_position: Position)`、`GameRecord.apply_move(source: Square, destination: Square, *, promote: bool = False) -> None`、`GameRecord.apply_drop(piece_type: BasicPieceType, destination: Square) -> None`、`GameRecord.moves -> tuple[RecordedMove | RecordedDrop, ...]`
 
-- [ ] **ステップ1: 失敗する対局記録テストを作成**
+- [x] **ステップ1: 失敗する対局記録テストを作成**
 
 `tests/test_game_record.py` に、初期局面から先手の７七歩→７六歩、後手の３三歩→３四歩を記録し、順番・値・現在手番を確認するテストを書く。持ち駒を追加した小局面では歩打ちも成功させ、`RecordedDrop` が履歴へ追加されることを確認する。さらに不正な移動の後、履歴と現在局面が変わらないことを確認する。
 
@@ -64,13 +64,13 @@ self.assertEqual(record.moves, (
 self.assertEqual(record.current_position.side_to_move, Side.SENTE)
 ```
 
-- [ ] **ステップ2: Redを確認する**
+- [x] **ステップ2: Redを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_game_record -v`
 
-期待値: `kaname_shogi.game_record` が存在しないため、テスト収集時ではなく、必要な公開型をインポートできないことによる失敗を確認する。その後のRedでは、各テストが期待する履歴・更新機能の不足で失敗することを確認する。
+期待値: テスト側で未実装モジュールを捕捉し、テスト収集時の読み込みエラーではなく「GameRecordの対局記録機能が未実装です」というAssertionErrorで3件が失敗する。読み込みエラーだけを機能のRedとは扱わない。
 
-- [ ] **ステップ3: 最小の対局記録実装を作成**
+- [x] **ステップ3: 最小の対局記録実装を作成**
 
 `kaname_shogi/game_record.py` に凍結データクラス `RecordedMove` と `RecordedDrop`、可変の `GameRecord` を実装する。コンストラクタは開始局面を複製し、現在局面も別の複製として保持する。各適用操作は既存の局面操作を現在局面へ先に実行し、成功後だけ履歴リストへ該当値を追加する。
 
@@ -93,7 +93,7 @@ class GameRecord:
 
 公開プロパティ `moves` は変更できないタプルを返す。全公開インターフェースのdocstringに、引数・戻り値・副作用・例外・開始局面からの経過を保持する理由を日本語で記す。
 
-- [ ] **ステップ4: Greenを確認する**
+- [x] **ステップ4: Greenを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_game_record -v`
 
