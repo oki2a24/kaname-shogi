@@ -266,6 +266,7 @@ class PositionHandTests(unittest.TestCase):
         board.set_piece(square, piece)
 
         clone = board.copy()
+        self.assertEqual(clone.piece_at(square), piece)
         clone.set_piece(square, None)
 
         self.assertEqual(board.piece_at(square), piece)
@@ -298,6 +299,10 @@ class PositionHandTests(unittest.TestCase):
         position.gote_hand.add(BasicPieceType.BISHOP)
 
         clone = position.copy()
+        self.assertEqual(clone.board.piece_at(square), piece)
+        self.assertEqual(clone.sente_hand.count(BasicPieceType.PAWN), 1)
+        self.assertEqual(clone.gote_hand.count(BasicPieceType.BISHOP), 1)
+        self.assertEqual(clone.side_to_move, Side.SENTE)
         clone.board.set_piece(square, None)
         clone.sente_hand.remove(BasicPieceType.PAWN)
         clone.gote_hand.remove(BasicPieceType.BISHOP)

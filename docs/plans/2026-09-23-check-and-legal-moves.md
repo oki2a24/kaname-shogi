@@ -59,7 +59,7 @@ self.assertEqual(position.side_to_move, Side.SENTE)
 
 実行: `python3 -m unittest tests.test_model -v`
 
-期待値: 新しいテストが `AttributeError: 'Position' object has no attribute 'copy'` により失敗する。テストモジュールの読み込みエラーではなく、未実装の振る舞いを確認する。
+期待値: 新しいテストが、最初に呼ばれる未実装の `copy` メソッドに対する `AttributeError` により失敗する。テストモジュールの読み込みエラーではなく、未実装の振る舞いを確認する。
 
 - [x] **ステップ3: 最小実装を追加**
 
