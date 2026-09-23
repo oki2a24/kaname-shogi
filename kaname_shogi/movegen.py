@@ -2,7 +2,8 @@
 
 movegenはmove generation（指し手生成）の略。現段階では歩・金・銀・桂・香・飛車・角と成駒6種の移動先、
 空いている到着マスへの盤面移動、相手駒を取って指した側の持ち駒へ加える局面への移動適用、持ち駒を
-空マスへ打つ局面への適用を扱う。成功時だけ手番を交代する。合法手の確定は行わない。全駒の専用関数を
+空マスへ打つ局面への適用を扱う。成功時だけ手番を交代する。王手を検出し、自玉を相手の利きに残す
+移動・駒打ちを拒否する。全駒の専用関数を
 作る方針はまだ決めず、次の駒を学ぶ際に共有できる処理を検討する。
 
 契約と判断の背景：docs/design/02-pawn-move-candidates.md、
@@ -14,7 +15,7 @@ docs/design/08-knight-move-candidates.md、docs/design/13-capture-and-hands.md�
 docs/design/14-hand-drops.md。
 """
 
-from typing import Optional
+from typing import Callable, Optional
 
 from .model import (BasicPieceType, Board, Piece, PieceType, Position, Side,
                     Square)
@@ -165,9 +166,9 @@ def _must_promote(piece: Piece, destination: Square) -> bool:
     return False
 
 
-def apply_move(position: Position, source: Square, destination: Square,
-               *, promote: bool = False) -> None:
-    """候補に含まれる到着マスへの移動・駒取り・手番交代を局面へ適用する。
+def _apply_move_unchecked(position: Position, source: Square,
+                          destination: Square, *, promote: bool = False) -> None:
+    """自玉の安全確認を除く移動規則を局面へ適用する非公開操作。
 
     引数:
         position: 変更対象の盤面と手番を持つ可変の局面。
@@ -193,7 +194,7 @@ def apply_move(position: Position, source: Square, destination: Square,
     相手駒なら、出発駒を到着マスへ移し、取られた駒種を指した側の持ち駒へ1枚
     加える。これにより、手番を知らないBoardの配置責務と、対局を一手進める
     Positionの局面責務を分ける。玉は持ち駒にならないため取れない。成功後だけ
-    手番を交代する。持ち駒を盤へ打つ操作、王手、合法手は検証しない。
+    手番を交代する。自玉が相手の利きに残るかは呼び出し側で確認する。
     """
     piece = position.board.piece_at(source)
     if piece is not None and piece.side != position.side_to_move:
@@ -232,6 +233,46 @@ def apply_move(position: Position, source: Square, destination: Square,
         position.side_to_move = Side.GOTE
     else:
         position.side_to_move = Side.SENTE
+
+
+def _apply_if_king_safe(position: Position,
+                        apply_unchecked: Callable[[Position], None]) -> None:
+    """複製局面で試し指しし、自玉が安全なら本物へ同じ操作を適用する。"""
+    side = position.side_to_move
+    trial = position.copy()
+    apply_unchecked(trial)
+    if is_in_check(trial.board, side):
+        raise ValueError("自玉が王手になる手は指せません")
+    apply_unchecked(position)
+
+
+def apply_move(position: Position, source: Square, destination: Square,
+               *, promote: bool = False) -> None:
+    """候補内の移動を試し指しし、自玉が安全な場合だけ局面へ適用する。
+
+    引数:
+        position: 変更対象の盤面・手番・持ち駒を持つ可変の局面。
+        source: 移動元の筋・段を表すSquare。
+        destination: 移動先の筋・段を表すSquare。
+        promote: 成りを選択するならTrue。省略時は不成として扱う。
+
+    戻り値:
+        なし（None）。成功時だけpositionの盤面・持ち駒・手番を変更する。
+
+    例外:
+        ValueError: 既存の移動規則に反する場合、または試し指し後に自玉が
+            相手の利きに残る場合。失敗時は本物の局面を変更しない。
+
+    既存の成り、駒取り、手番交代などの検証は `_apply_move_unchecked` と同じである。
+    成り、駒取り、手番交代などの既存検証に成功した後、独立した複製局面で
+    試し指しを行う。指した側の玉が相手の利きに残る場合は `ValueError` とし、
+    本物の盤面・持ち駒・手番を変更しない。相手玉への王手は許可するが、
+    詰みと打ち歩詰めは検証しない。
+    """
+    _apply_if_king_safe(
+        position,
+        lambda trial: _apply_move_unchecked(
+            trial, source, destination, promote=promote))
 
 
 def _has_unpromoted_pawn_on_file(board: Board, side: Side, file: int) -> bool:
@@ -281,9 +322,9 @@ def _has_no_legal_destination(piece_type: BasicPieceType, side: Side,
     return False
 
 
-def apply_drop(position: Position, piece_type: BasicPieceType,
-               destination: Square) -> None:
-    """手番側の持ち駒を空マスへ打ち、局面を一手進める。
+def _apply_drop_unchecked(position: Position, piece_type: BasicPieceType,
+                          destination: Square) -> None:
+    """自玉の安全確認を除く駒打ち規則を局面へ適用する非公開操作。
 
     引数:
         position: 変更対象の盤面、手番、双方の持ち駒を持つ可変の局面。
@@ -302,7 +343,7 @@ def apply_drop(position: Position, piece_type: BasicPieceType,
 
         駒打ちは盤上の出発マスと移動先候補を持たないため、盤上移動のapply_moveと
         分ける。歩を打つときは二歩を検証する。歩・香・桂は行き所のない段への
-        打ちも検証する。打ち歩詰め、成り、王手、合法手はこの段階では検証しない。
+        打ちも検証する。自玉が相手の利きに残るかは呼び出し側で確認する。
     """
     if piece_type == BasicPieceType.KING:
         raise ValueError("玉は打てません")
@@ -327,6 +368,31 @@ def apply_drop(position: Position, piece_type: BasicPieceType,
         position.side_to_move = Side.GOTE
     else:
         position.side_to_move = Side.SENTE
+
+
+def apply_drop(position: Position, piece_type: BasicPieceType,
+               destination: Square) -> None:
+    """持ち駒を試し打ちし、自玉が安全な場合だけ局面へ適用する。
+
+    引数:
+        position: 変更対象の盤面・手番・持ち駒を持つ可変の局面。
+        piece_type: 打つ玉以外の基本駒種を表すデータ。
+        destination: 打ち先の筋・段を表すSquare。
+
+    戻り値:
+        なし（None）。成功時だけ指定側の持ち駒、盤面、手番を変更する。
+
+    例外:
+        ValueError: 玉、持ち駒不足、占有マス、二歩、行き所のない段、または
+            試し打ち後に自玉が相手の利きに残る場合。失敗時は本物の局面を変更しない。
+
+    既存の玉・占有・持ち駒・二歩・行き所のない駒の検証を行った後、独立した
+    複製局面で試し打ちする。打った側の玉が相手の利きに残る場合は `ValueError`
+    とし、本物の盤面・持ち駒・手番を変更しない。打ち歩詰めと詰みは検証しない。
+    """
+    _apply_if_king_safe(
+        position,
+        lambda trial: _apply_drop_unchecked(trial, piece_type, destination))
 
 
 def king_move_candidates(board: Board, source: Square) -> list[Square]:

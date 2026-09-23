@@ -328,6 +328,166 @@ class CheckDetectionTests(unittest.TestCase):
         self.assertFalse(movegen.is_in_check(board, Side.GOTE))
 
 
+class LegalMoveTests(unittest.TestCase):
+    def _snapshot(self, position):
+        """合法性確認前後を比べるため局面の配置・持ち駒・手番を読む。"""
+        squares = [Square(file, rank)
+                   for file in range(1, 10) for rank in range(1, 10)]
+        piece_types = [piece_type for piece_type in BasicPieceType
+                       if piece_type != BasicPieceType.KING]
+        return (
+            tuple(position.board.piece_at(square) for square in squares),
+            tuple(position.sente_hand.count(piece_type)
+                  for piece_type in piece_types),
+            tuple(position.gote_hand.count(piece_type)
+                  for piece_type in piece_types),
+            position.side_to_move,
+        )
+
+    def test_rejects_move_that_leaves_own_king_in_check(self):
+        """王手を受けている側の無関係な移動を拒否する。
+
+        王手放置を成功させたり、失敗時に盤面・持ち駒・手番だけを部分変更したりする
+        誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.GOTE))
+        board.set_piece(Square(4, 7), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        before = self._snapshot(position)
+
+        with self.assertRaisesRegex(ValueError, "王手"):
+            movegen.apply_move(position, Square(4, 7), Square(4, 6))
+
+        self.assertEqual(self._snapshot(position), before)
+
+    def test_rejects_king_move_into_opponent_attack(self):
+        """玉を相手の金の利きへ動かす手を拒否する。
+
+        移動先候補に含まれるだけで安全とみなす誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 3), Piece(PieceType.GOLD, Side.GOTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        before = self._snapshot(position)
+
+        with self.assertRaisesRegex(ValueError, "王手"):
+            movegen.apply_move(position, Square(5, 5), Square(5, 4))
+
+        self.assertEqual(self._snapshot(position), before)
+
+    def test_rejects_move_that_unblocks_attack_on_own_king(self):
+        """自玉との間を塞ぐ銀を動かして飛車の利きを通す手を拒否する。
+
+        自玉以外の駒を動かして自ら王手を受ける反則を見逃す誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 3), Piece(PieceType.SILVER, Side.SENTE))
+        board.set_piece(Square(5, 1), Piece(PieceType.ROOK, Side.GOTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        before = self._snapshot(position)
+
+        with self.assertRaisesRegex(ValueError, "王手"):
+            movegen.apply_move(position, Square(5, 3), Square(4, 4))
+
+        self.assertEqual(self._snapshot(position), before)
+
+    def test_allows_king_to_escape_from_check(self):
+        """玉を相手飛車の利きから安全な隣接マスへ逃がせる。
+
+        王手中は全ての玉移動を拒否する誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 1), Piece(PieceType.ROOK, Side.GOTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        position = Position(board, Side.SENTE)
+
+        self.assertIsNone(movegen.apply_move(
+            position, Square(5, 5), Square(4, 5)))
+        self.assertEqual(board.piece_at(Square(4, 5)),
+                         Piece(PieceType.KING, Side.SENTE))
+        self.assertEqual(position.side_to_move, Side.GOTE)
+
+    def test_allows_king_to_capture_checking_piece(self):
+        """玉が安全な王手駒を取って王手を防げる。
+
+        相手駒を取る玉移動を一律に拒否する誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 4), Piece(PieceType.GOLD, Side.GOTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        position = Position(board, Side.SENTE)
+
+        self.assertIsNone(movegen.apply_move(
+            position, Square(5, 5), Square(5, 4)))
+        self.assertEqual(board.piece_at(Square(5, 4)),
+                         Piece(PieceType.KING, Side.SENTE))
+        self.assertEqual(position.sente_hand.count(BasicPieceType.GOLD), 1)
+
+    def test_allows_drop_between_king_and_rook(self):
+        """飛車の直線王手に対する合い駒の打ちを許可する。
+
+        駒打ち後の王手判定を行わない誤りと、合い駒を一律に拒否する誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 1), Piece(PieceType.ROOK, Side.GOTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        position.sente_hand.add(BasicPieceType.GOLD)
+
+        self.assertIsNone(movegen.apply_drop(
+            position, BasicPieceType.GOLD, Square(5, 3)))
+        self.assertEqual(board.piece_at(Square(5, 3)),
+                         Piece(PieceType.GOLD, Side.SENTE))
+        self.assertEqual(position.sente_hand.count(BasicPieceType.GOLD), 0)
+        self.assertEqual(position.side_to_move, Side.GOTE)
+
+    def test_rejects_drop_as_response_to_knight_check(self):
+        """桂馬の王手に対する合い駒の打ちを拒否する。
+
+        桂馬の飛び越しを合い駒で遮れると誤って扱う実装を検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(4, 3), Piece(PieceType.KNIGHT, Side.GOTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        position.sente_hand.add(BasicPieceType.GOLD)
+        before = self._snapshot(position)
+
+        with self.assertRaisesRegex(ValueError, "王手"):
+            movegen.apply_drop(position, BasicPieceType.GOLD, Square(5, 4))
+
+        self.assertEqual(self._snapshot(position), before)
+
+    def test_rejects_drop_that_leaves_own_king_in_check(self):
+        """王手を遮らない駒打ちを拒否する。
+
+        駒打ちでは自玉の安全確認を省略する誤りと、持ち駒を先に減らす誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 1), Piece(PieceType.ROOK, Side.GOTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        position.sente_hand.add(BasicPieceType.GOLD)
+        before = self._snapshot(position)
+
+        with self.assertRaisesRegex(ValueError, "王手"):
+            movegen.apply_drop(position, BasicPieceType.GOLD, Square(4, 4))
+
+        self.assertEqual(self._snapshot(position), before)
+
+
 class MovePieceTests(unittest.TestCase):
     def _move_piece(self, board, source, destination):
         """移動適用関数を取得し、未実装をテスト失敗として扱う。"""

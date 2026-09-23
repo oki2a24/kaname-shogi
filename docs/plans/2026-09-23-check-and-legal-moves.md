@@ -157,7 +157,7 @@ def is_in_check(board: Board, side: Side) -> bool:
 - 消費: `Position.copy() -> Position`、`is_in_check(board, side) -> bool`、既存の移動・駒打ち規則。
 - 生産: 自玉が王手となる指し手を `ValueError` で拒否する `apply_move(position, source, destination, *, promote=False) -> None` と `apply_drop(position, piece_type, destination) -> None`。
 
-- [ ] **ステップ1: 失敗するテストを作成**
+- [x] **ステップ1: 失敗するテストを作成**
 
 王手放置、相手の利きへの玉移動、遮蔽を外す移動を拒否し、各拒否で盤面81マス・先後双方の持ち駒・手番が不変であるテストを追加する。玉の退避、王手駒の取得、飛車・角・香への合い駒、駒打ちでの合い駒を許可するテストも追加する。桂馬への合い駒と、王手放置の駒打ちは拒否する。
 
@@ -170,13 +170,13 @@ with self.assertRaisesRegex(ValueError, "王手"):
     movegen.apply_move(position, Square(5, 7), Square(4, 6))
 ```
 
-- [ ] **ステップ2: Redを確認するために実行**
+- [x] **ステップ2: Redを確認するために実行**
 
 実行: `python3 -m unittest tests.test_movegen -v`
 
 期待値: 新しい拒否テストが `ValueError not raised` で失敗する。既存テストの読み込みエラーではなく、未実装の合法性判定を確認する。
 
-- [ ] **ステップ3: 最小実装を追加**
+- [x] **ステップ3: 最小実装を追加**
 
 既存の局面変更本体を `_apply_move_unchecked` と `_apply_drop_unchecked` へ移す。公開操作は複製局面へ非公開操作を適用し、指す前の手番側の玉を `is_in_check` で調べ、安全なら本物にも同じ非公開操作を一度だけ適用する。
 
@@ -192,17 +192,17 @@ def _apply_if_king_safe(position: Position, apply_unchecked) -> None:
 
 公開操作のdocstringを、試し指し、拒否条件、副作用に合わせて更新する。既存の `ValueError` 条件と順序を保つ。
 
-- [ ] **ステップ4: Greenと回帰を確認するために実行**
+- [x] **ステップ4: Greenと回帰を確認するために実行**
 
 実行: `python3 -m unittest tests.test_movegen -v && python3 -m unittest discover -s tests -v`
 
 期待値: 新しい合法手テストと既存の全テストが成功する。
 
-- [ ] **ステップ5: Refactor要否を確認する**
+- [x] **ステップ5: Refactor要否を確認する**
 
 移動と駒打ちの共通する試し指しだけを小さな非公開操作へまとめ、成り・駒取り・二歩の個別規則を過度に共通化しない。各失敗経路で本物の局面を変更しないことを確認する。
 
-- [ ] **ステップ6: コミット**
+- [x] **ステップ6: コミット**
 
 実行: `git add kaname_shogi/movegen.py tests/test_movegen.py && git commit -m "feat: 自玉を守る合法手判定を追加"`
 
