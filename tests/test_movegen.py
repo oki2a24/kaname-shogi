@@ -629,16 +629,26 @@ class ApplyMoveTests(unittest.TestCase):
             (PieceType.DRAGON, Square(4, 5)),
         ]
         for piece_type, destination in cases:
-            board = Board()
-            source = Square(5, 5)
-            piece = Piece(piece_type, Side.SENTE)
-            board.set_piece(source, piece)
-            position = Position(board, Side.SENTE)
-            with self.subTest(piece_type=piece_type):
-                self.assertIsNone(self._apply_move(position, source, destination))
-                self.assertIsNone(board.piece_at(source))
-                self.assertEqual(board.piece_at(destination), piece)
-                self.assertEqual(position.side_to_move, Side.GOTE)
+            for side in Side:
+                side_destination = destination
+                if piece_type == PieceType.PRO_PAWN or piece_type == PieceType.PRO_LANCE:
+                    side_destination = Square(5, 5 + (-1 if side == Side.SENTE else 1))
+                elif piece_type == PieceType.PRO_KNIGHT or piece_type == PieceType.PRO_SILVER:
+                    side_destination = Square(5, 5 + (-1 if side == Side.SENTE else 1))
+                elif piece_type == PieceType.HORSE:
+                    side_destination = Square(4, 4 if side == Side.SENTE else 6)
+                board = Board()
+                source = Square(5, 5)
+                piece = Piece(piece_type, side)
+                board.set_piece(source, piece)
+                position = Position(board, side)
+                expected_turn = Side.GOTE if side == Side.SENTE else Side.SENTE
+                with self.subTest(piece_type=piece_type, side=side):
+                    self.assertIsNone(self._apply_move(
+                        position, source, side_destination))
+                    self.assertIsNone(board.piece_at(source))
+                    self.assertEqual(board.piece_at(side_destination), piece)
+                    self.assertEqual(position.side_to_move, expected_turn)
 
     def test_captures_with_promoted_piece_restores_captured_base_piece(self):
         """成駒で相手駒を取ると、取った駒を基本駒種で持ち駒に加える。
