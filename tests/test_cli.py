@@ -259,8 +259,28 @@ class GameplayTests(unittest.TestCase):
         def interrupt():
             raise KeyboardInterrupt
 
-        cli.run_game(input_fn=interrupt, output_fn=outputs.append)
+        record = cli.run_game(input_fn=interrupt, output_fn=outputs.append)
 
+        self.assertEqual(record.moves, ())
+        self.assertEqual(record.current_position.side_to_move, Side.SENTE)
         self.assertEqual(outputs[-1], "入力を終了しました。")
         self.assertFalse(any("投了しました。" in output for output in outputs))
         self.assertFalse(any("勝ちです。" in output for output in outputs))
+
+    def test_returns_record_when_position_is_already_checkmate(self):
+        """開始時点の詰みでも空の対局記録を返す。
+
+        入力を読まずに終局する分岐でも、呼び出し側が局面を再現できる記録を
+        受け取れることを検出する。
+        """
+        inputs = ScriptedInput([])
+        outputs = []
+
+        with patch.object(cli, "create_initial_position",
+                          side_effect=self._mated_sente_position, create=True):
+            record = cli.run_game(input_fn=inputs, output_fn=outputs.append)
+
+        self.assertEqual(inputs.calls, 0)
+        self.assertEqual(record.moves, ())
+        self.assertEqual(record.current_position.side_to_move, Side.SENTE)
+        self.assertIn("詰みです。後手の勝ちです。", outputs)

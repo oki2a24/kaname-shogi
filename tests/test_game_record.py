@@ -94,6 +94,28 @@ class GameRecordTests(unittest.TestCase):
             self.assertEqual(after.gote_hand.count(piece_type),
                              before.gote_hand.count(piece_type))
 
+    def test_rejected_drop_does_not_change_record(self):
+        """失敗した駒打ちでは履歴と現在局面を変更しない。
+
+        持ち駒不足による合法性エラーを使い、盤上移動だけでなく駒打ちでも失敗した
+        入力を棋譜へ追加しないことを検出する。
+        """
+        self._require_implementation()
+        record = GameRecord(create_initial_position())
+        before = record.current_position
+
+        with self.assertRaisesRegex(ValueError, "持ち駒"):
+            record.apply_drop(BasicPieceType.ROOK, Square(5, 5))
+
+        self.assertEqual(record.moves, ())
+        after = record.current_position
+        self.assertEqual(after.side_to_move, before.side_to_move)
+        for file in range(1, 10):
+            for rank in range(1, 10):
+                square = Square(file, rank)
+                self.assertEqual(after.board.piece_at(square),
+                                 before.board.piece_at(square))
+
     def test_exposed_positions_are_independent_copies(self):
         """開始局面・現在局面の返却値を変更しても記録内部を変更しない。
 
