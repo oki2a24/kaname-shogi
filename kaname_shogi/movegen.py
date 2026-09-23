@@ -69,13 +69,55 @@ def _move_candidates_for_piece(board: Board, source: Square) -> list[Square]:
     return candidate_functions[piece.piece_type](board, source)
 
 
-def apply_move(position: Position, source: Square, destination: Square) -> None:
+def _is_enemy_camp(side: Side, rank: int) -> bool:
+    """rank段がsideから見た相手陣（1〜3段または7〜9段）ならTrueを返す。"""
+    return rank <= 3 if side == Side.SENTE else rank >= 7
+
+
+def _promoted_piece_type(piece_type: PieceType) -> PieceType:
+    """成れる基本駒種を盤上の成駒種へ変換する。"""
+    promoted = {
+        PieceType.PAWN: PieceType.PRO_PAWN,
+        PieceType.LANCE: PieceType.PRO_LANCE,
+        PieceType.KNIGHT: PieceType.PRO_KNIGHT,
+        PieceType.SILVER: PieceType.PRO_SILVER,
+        PieceType.BISHOP: PieceType.HORSE,
+        PieceType.ROOK: PieceType.DRAGON,
+    }
+    try:
+        return promoted[piece_type]
+    except KeyError as error:
+        raise ValueError("指定した駒種は成れません") from error
+
+
+def _can_promote(piece: Piece, source: Square, destination: Square) -> bool:
+    """駒と移動元・移動先から、成りを選択できるか判定する。"""
+    if piece.is_promoted or piece.piece_type in (PieceType.KING, PieceType.GOLD):
+        return False
+    return (_is_enemy_camp(piece.side, source.rank)
+            or _is_enemy_camp(piece.side, destination.rank))
+
+
+def _must_promote(piece: Piece, destination: Square) -> bool:
+    """歩・香・桂が到達先で不成にできないか判定する。"""
+    last_rank = 1 if piece.side == Side.SENTE else 9
+    if piece.piece_type in (PieceType.PAWN, PieceType.LANCE):
+        return destination.rank == last_rank
+    if piece.piece_type == PieceType.KNIGHT:
+        second_last_rank = 2 if piece.side == Side.SENTE else 8
+        return destination.rank in (last_rank, second_last_rank)
+    return False
+
+
+def apply_move(position: Position, source: Square, destination: Square,
+               *, promote: bool = False) -> None:
     """候補に含まれる到着マスへの移動・駒取り・手番交代を局面へ適用する。
 
     引数:
         position: 変更対象の盤面と手番を持つ可変の局面。
         source: 移動元の筋・段を表すSquare。
         destination: 移動先の筋・段を表すSquare。
+        promote: 成りを選択するならTrue。省略時は不成として扱う。
 
     戻り値:
         なし（None）。成功時だけposition.boardとposition.side_to_moveを変更する。
@@ -84,11 +126,14 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
     例外:
         ValueError: 出発駒の所有者と手番が一致しない場合、到着マスが出発駒の
             移動先候補に含まれない場合、相手の玉を取ろうとした場合、または
-            move_pieceが拒否する空の出発マス、同一マスの場合。失敗時は盤面、
+            成れない駒への成り指定、成りが必要な局面での不成指定、既に成った駒の
+            移動、move_pieceが拒否する空の出発マス、同一マスの場合。失敗時は盤面、
             手番、先手・後手の持ち駒を変更しない。
 
     出発駒の所有者と局面の手番を照合し、既存の移動先候補に到着マスが含まれる
-    ときだけ局面を変更する。到着マスが空なら盤面移動をmove_pieceへ委譲する。
+    ときだけ局面を変更する。成りは移動元または移動先が相手陣にある場合だけ
+    選択でき、歩・香・桂が行き所を失う場合は強制される。成駒の移動先候補は
+    次回扱いのため現段階では拒否する。到着マスが空なら盤面移動をmove_pieceへ委譲する。
     相手駒なら、出発駒を到着マスへ移し、取られた駒種を指した側の持ち駒へ1枚
     加える。これにより、手番を知らないBoardの配置責務と、対局を一手進める
     Positionの局面責務を分ける。玉は持ち駒にならないため取れない。成功後だけ
@@ -97,16 +142,30 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
     piece = position.board.piece_at(source)
     if piece is not None and piece.side != position.side_to_move:
         raise ValueError("手番と出発駒の所有者が一致しません")
+    if piece is not None and piece.is_promoted:
+        raise ValueError("成駒の移動はまだ扱いません")
     if (piece is not None
             and destination not in _move_candidates_for_piece(position.board, source)):
         raise ValueError("到着マスは出発駒の移動先候補に含まれません")
+    if piece is not None:
+        if promote and not _can_promote(piece, source, destination):
+            raise ValueError("この移動では成れません")
+        if not promote and _must_promote(piece, destination):
+            raise ValueError("この移動では成りが必要です")
+
+    moving_piece = (Piece(_promoted_piece_type(piece.piece_type), piece.side)
+                    if piece is not None and promote else piece)
 
     if piece is None:
         move_piece(position.board, source, destination)
     else:
         target_piece = position.board.piece_at(destination)
         if target_piece is None:
-            move_piece(position.board, source, destination)
+            if moving_piece is piece:
+                move_piece(position.board, source, destination)
+            else:
+                position.board.set_piece(source, None)
+                position.board.set_piece(destination, moving_piece)
         else:
             if target_piece.piece_type == PieceType.KING:
                 raise ValueError("玉は取れません")
@@ -114,7 +173,7 @@ def apply_move(position: Position, source: Square, destination: Square) -> None:
                     else position.gote_hand)
             hand.add(target_piece.base_piece_type)
             position.board.set_piece(source, None)
-            position.board.set_piece(destination, piece)
+            position.board.set_piece(destination, moving_piece)
     if position.side_to_move == Side.SENTE:
         position.side_to_move = Side.GOTE
     else:

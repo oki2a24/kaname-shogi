@@ -95,11 +95,17 @@ class MovePieceTests(unittest.TestCase):
 
 
 class ApplyMoveTests(unittest.TestCase):
-    def _apply_move(self, position, source, destination):
+    def _apply_move(self, position, source, destination, *, promote=False):
         """局面への移動適用関数を取得し、未実装をテスト失敗として扱う。"""
         self.assertTrue(hasattr(movegen, "apply_move"),
                         "apply_move がまだ実装されていません")
-        return movegen.apply_move(position, source, destination)
+        try:
+            if promote:
+                return movegen.apply_move(position, source, destination,
+                                          promote=True)
+            return movegen.apply_move(position, source, destination)
+        except (TypeError, KeyError) as error:
+            raise AssertionError("成り指定または成駒の拒否が未実装です") from error
 
     def _hand_counts(self, position):
         """先後の玉以外の持ち駒枚数を、比較用の変更不可の値として返す。"""
@@ -288,6 +294,152 @@ class ApplyMoveTests(unittest.TestCase):
                 self.assertEqual(after_board, before_board)
                 self.assertEqual(position.side_to_move, turn)
                 self.assertEqual(self._hand_counts(position), before_hands)
+
+    def test_promotes_optional_piece_when_source_or_destination_is_enemy_camp(self):
+        """未成の歩を敵陣へ成りとして動かし、成駒を置く。
+
+        成り指定を無視して未成駒を置く誤りを、先後双方で検出する。
+        """
+        cases = (
+            (Side.SENTE, Square(5, 4), Square(5, 3)),
+            (Side.GOTE, Square(5, 6), Square(5, 7)),
+        )
+        for side, source, destination in cases:
+            board = Board()
+            board.set_piece(source, Piece(PieceType.PAWN, side))
+            position = Position(board, side)
+            with self.subTest(side=side):
+                self.assertIsNone(self._apply_move(
+                    position, source, destination, promote=True))
+                self.assertEqual(board.piece_at(destination),
+                                 Piece(PieceType.PRO_PAWN, side))
+
+    def test_promotes_when_only_source_is_in_enemy_camp(self):
+        """移動前だけが敵陣でも、成りを選べる。
+
+        敵陣から出る移動で移動後だけを調べる誤りを検出する。
+        """
+        board = Board()
+        source, destination = Square(5, 3), Square(4, 4)
+        board.set_piece(source, Piece(PieceType.SILVER, Side.SENTE))
+        position = Position(board, Side.SENTE)
+
+        self.assertIsNone(self._apply_move(
+            position, source, destination, promote=True))
+        self.assertEqual(board.piece_at(destination),
+                         Piece(PieceType.PRO_SILVER, Side.SENTE))
+
+    def test_rejects_promotion_outside_enemy_camp_without_changing_position(self):
+        """敵陣に関係しない成り指定を拒否し、局面を変更しない。
+
+        任意の移動を成りとして適用する誤りを検出する。
+        """
+        board = Board()
+        source, destination = Square(5, 5), Square(5, 4)
+        board.set_piece(source, Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+        before = [board.piece_at(Square(file, rank))
+                  for file in range(1, 10) for rank in range(1, 10)]
+
+        with self.assertRaises(ValueError):
+            self._apply_move(position, source, destination, promote=True)
+
+        self.assertEqual([board.piece_at(Square(file, rank))
+                          for file in range(1, 10) for rank in range(1, 10)],
+                         before)
+        self.assertEqual(position.side_to_move, Side.SENTE)
+
+    def test_rejects_gold_promotion_without_changing_position(self):
+        """金の成り指定を拒否し、局面を変更しない。
+
+        敵陣に入る駒はすべて成れると誤って扱う実装を検出する。
+        """
+        board = Board()
+        source, destination = Square(5, 4), Square(5, 3)
+        board.set_piece(source, Piece(PieceType.GOLD, Side.SENTE))
+        position = Position(board, Side.SENTE)
+
+        with self.assertRaises(ValueError):
+            self._apply_move(position, source, destination, promote=True)
+        self.assertEqual(board.piece_at(source), Piece(PieceType.GOLD, Side.SENTE))
+        self.assertIsNone(board.piece_at(destination))
+        self.assertEqual(position.side_to_move, Side.SENTE)
+
+    def test_rejects_non_promotion_when_pawn_has_no_destination(self):
+        """歩を最奥段へ不成で進める操作を拒否する。
+
+        行き所のない駒を盤上に残す誤りを検出する。
+        """
+        board = Board()
+        source, destination = Square(5, 2), Square(5, 1)
+        board.set_piece(source, Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+
+        with self.assertRaises(ValueError):
+            self._apply_move(position, source, destination)
+        self.assertEqual(board.piece_at(source), Piece(PieceType.PAWN, Side.SENTE))
+        self.assertIsNone(board.piece_at(destination))
+        self.assertEqual(position.side_to_move, Side.SENTE)
+
+    def test_rejects_non_promotion_when_knight_has_no_destination(self):
+        """桂を最奥段へ不成で進める操作を拒否する。
+
+        桂の強制成りの境界を歩の規則だけで扱う誤りを検出する。
+        """
+        board = Board()
+        source, destination = Square(5, 3), Square(4, 1)
+        board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
+        position = Position(board, Side.SENTE)
+
+        with self.assertRaises(ValueError):
+            self._apply_move(position, source, destination)
+        self.assertEqual(board.piece_at(source), Piece(PieceType.KNIGHT, Side.SENTE))
+        self.assertIsNone(board.piece_at(destination))
+
+    def test_forces_promotion_for_pawn_lance_and_knight(self):
+        """歩・香・桂は行き所のない段への移動で成駒になる。
+
+        不成を拒否するだけで成り駒を配置しない実装を、先後と駒種の境界で検出する。
+        """
+        cases = [
+            (Side.SENTE, PieceType.PAWN, Square(5, 2), Square(5, 1),
+             PieceType.PRO_PAWN),
+            (Side.SENTE, PieceType.LANCE, Square(5, 2), Square(5, 1),
+             PieceType.PRO_LANCE),
+            (Side.SENTE, PieceType.KNIGHT, Square(5, 3), Square(4, 1),
+             PieceType.PRO_KNIGHT),
+            (Side.GOTE, PieceType.PAWN, Square(5, 8), Square(5, 9),
+             PieceType.PRO_PAWN),
+            (Side.GOTE, PieceType.LANCE, Square(5, 8), Square(5, 9),
+             PieceType.PRO_LANCE),
+            (Side.GOTE, PieceType.KNIGHT, Square(5, 7), Square(4, 9),
+             PieceType.PRO_KNIGHT),
+        ]
+        for side, piece_type, source, destination, promoted_type in cases:
+            board = Board()
+            board.set_piece(source, Piece(piece_type, side))
+            position = Position(board, side)
+            with self.subTest(side=side, piece_type=piece_type):
+                self.assertIsNone(self._apply_move(
+                    position, source, destination, promote=True))
+                self.assertEqual(board.piece_at(destination),
+                                 Piece(promoted_type, side))
+
+    def test_rejects_move_of_promoted_piece_until_promoted_moves_are_implemented(self):
+        """成駒の移動を未成駒の候補で適用せず、現段階では拒否する。
+
+        次回の成駒移動実装まで、誤った移動規則を許す回帰を検出する。
+        """
+        board = Board()
+        source, destination = Square(5, 4), Square(5, 3)
+        board.set_piece(source, Piece(PieceType.PRO_PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+
+        with self.assertRaises(ValueError):
+            self._apply_move(position, source, destination)
+        self.assertEqual(board.piece_at(source),
+                         Piece(PieceType.PRO_PAWN, Side.SENTE))
+        self.assertIsNone(board.piece_at(destination))
 
 
 class ApplyDropTests(unittest.TestCase):
