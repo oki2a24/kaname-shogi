@@ -145,7 +145,7 @@
 - 消費: `render_position(position: Position) -> str`
 - 生産: 成駒を含む局面にも例外なく表示文字列を返す `render_position`
 
-- [ ] **ステップ1: 成駒表示の失敗するテストを作成する**
+- [x] **ステップ1: 成駒表示の失敗するテストを作成する**
 
   6種の成駒を空の盤へ置いた局面を作り、表示文字列に `+と`、`+成香`、`+成桂`、
   `+成銀`、`+馬`、`+竜` が含まれることを確認するテストを追加する。
@@ -163,13 +163,13 @@
           self.assertIn("+" + name, rendered)
   ```
 
-- [ ] **ステップ2: Redを確認する**
+- [x] **ステップ2: Redを確認する**
 
   実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_display.DisplayTests.test_renders_all_promoted_piece_names -v`
 
   期待値: 現在の `names` 辞書に成駒がなく、`KeyError` による失敗となる。
 
-- [ ] **ステップ3: 最小の表示実装を追加する**
+- [x] **ステップ3: 最小の表示実装を追加する**
 
   `display.py` の `names` に成駒6種の表示名を加え、`render_position` のdocstringの
   「基本8種類」前提を14種対応へ更新する。マス幅の整列は既存の文字列連結方式を保ち、
@@ -184,13 +184,13 @@
   }
   ```
 
-- [ ] **ステップ4: Greenを確認する**
+- [x] **ステップ4: Greenを確認する**
 
   実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_display.DisplayTests -v`
 
   期待値: 成駒表示テストと既存表示テストが全て成功する。
 
-- [ ] **ステップ5: Refactor要否を確認しコミットする**
+- [x] **ステップ5: Refactor要否を確認しコミットする**
 
   玉・王の既存分岐を維持し、14種の盤上駒名が一つの対応表で完結していることを確認する。
 

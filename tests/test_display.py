@@ -6,7 +6,8 @@ import sys
 import unittest
 
 from kaname_shogi.display import render_position
-from kaname_shogi.model import Side, create_initial_position
+from kaname_shogi.model import (Board, Piece, PieceType, Position, Side,
+                                Square, create_initial_position)
 
 
 EXPECTED = """手番：先手
@@ -25,6 +26,25 @@ EXPECTED = """手番：先手
 
 
 class DisplayTests(unittest.TestCase):
+    def test_renders_all_promoted_piece_names(self):
+        """成駒6種を含む局面を、KeyErrorにせず名称付きで表示する。"""
+        position = Position(Board(), Side.SENTE)
+        promoted_pieces = (
+            (Square(1, 1), PieceType.PRO_PAWN),
+            (Square(2, 1), PieceType.PRO_LANCE),
+            (Square(3, 1), PieceType.PRO_KNIGHT),
+            (Square(4, 1), PieceType.PRO_SILVER),
+            (Square(5, 1), PieceType.HORSE),
+            (Square(6, 1), PieceType.DRAGON),
+        )
+        for square, piece_type in promoted_pieces:
+            position.board.set_piece(square, Piece(piece_type, Side.SENTE))
+
+        rendered = render_position(position)
+
+        for name in ("と", "成香", "成桂", "成銀", "馬", "竜"):
+            self.assertIn("+" + name, rendered)
+
     def test_initial_position_matches_full_display(self):
         """初期配置を先手視点で筋段・所有者付きで表示する。
 
