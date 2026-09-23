@@ -29,7 +29,7 @@
 - `docs/knowledge/26-uchi-fuzume.md`: 一次資料、接続、対象外を記録する。
 - `docs/learning/33-uchi-fuzume.md`: 設計、実施、レビュー、検証、理解確認を事実に基づき記録する。
 
-### タスク1: 打ち歩詰めと打ち不詰をRedで固定する
+### タスク1: 打ち歩詰めと、打ち歩詰めにならない歩打ちをRedで固定する
 
 **ファイル:** `tests/test_movegen.py` に `UchiFuzumeTests` を追加する。
 
@@ -38,10 +38,12 @@
 **生産:** 歩打ちの受理・拒否を固定するテスト。
 
 - [ ] 両玉を持つ「持ち歩を打つと詰む」局面ヘルパーを追加する。
-- [ ] `test_rejects_pawn_drop_that_gives_unavoidable_check` を追加する。`ValueError` と、盤面・持ち駒・手番が不変であることを確認する。
+- [ ] `test_rejects_pawn_drop_that_gives_unavoidable_check` を追加する。先手・後手を `subTest` で両方試し、先手は段が減る向き、後手は段が増える向きの歩打ちで `ValueError` と81マス・双方の持ち駒・手番の不変性を確認する。
 - [ ] `python3 -m unittest tests.test_movegen.UchiFuzumeTests.test_rejects_pawn_drop_that_gives_unavoidable_check -v` を実行し、未実装により `ValueError not raised` となるRedを確認する。
 - [ ] `test_allows_pawn_drop_when_king_can_capture_the_pawn` を追加する。後手玉が５一、先手玉が９九、先手が５二へ歩を打ち、後手玉が歩を取れる局面を使う。
-- [ ] `python3 -m unittest tests.test_movegen.UchiFuzumeTests -v` を実行し、打ち不詰は成功、拒否だけが失敗することを確認する。
+- [ ] `test_allows_pawn_drop_without_check` を追加する。持ち歩を打っても相手玉を利かせない局面が受理されることを確認する。
+- [ ] `test_allows_pawn_drop_when_king_can_escape` を追加する。後手番の局面を使い、玉が打った歩を取れなくても安全な逃げ先を持つ歩打ちが受理されることを確認する。
+- [ ] `python3 -m unittest tests.test_movegen.UchiFuzumeTests -v` を実行し、打ち歩詰めにならない三種類の歩打ちは成功、打ち歩詰めの拒否だけが失敗することを確認する。
 
 ### タスク2: 循環しない内部経路を最小実装する
 
@@ -54,6 +56,7 @@
 - [ ] 非公開3操作を追加し、公開 `apply_drop`、`has_legal_move`、`is_checkmate` は既存シグネチャのまま有効設定で委譲する。
 - [ ] `_apply_drop` は既存の自玉安全確認後、持ち歩かつ有効設定の場合だけ、試し局面で無効設定の `_is_checkmate` を呼ぶ。真なら `ValueError("打ち歩詰めはできません")`、偽なら本物を一度だけ適用する。
 - [ ] `_is_checkmate` は既存の玉なし・非王手を `False` に保って `_has_legal_move` を呼ぶ。`_has_legal_move` の駒打ち候補は渡された設定をそのまま `_apply_drop` へ渡し、応手探索で打ち歩詰め確認を再開しない。
+- [ ] 相手側が持ち歩を持つ局面で、打ち歩詰め確認用の `_has_legal_move(..., check_uchi_fuzume=False)` が駒打ち候補へ同じ `False` を渡すことを、`unittest.mock.patch` で `_apply_drop` の呼出し引数を記録して確認する。このテストは局面規則の代替ではなく、再入を断つ内部接続だけを固定する。
 - [ ] `python3 -m unittest tests.test_movegen.UchiFuzumeTests -v` を実行してGreenを確認する。
 - [ ] 既存の安全確認・未検証適用を重複させず、内部設定を公開APIへ漏らしていないかRefactor要否を確認する。
 - [ ] `git add kaname_shogi/movegen.py tests/test_movegen.py` と `git commit -m "feat: 打ち歩詰めを拒否する"` を実行する。
@@ -66,7 +69,8 @@
 
 **生産:** 対象外・玉なし・合法手の契約。
 
-- [ ] `test_allows_non_pawn_drop_that_gives_checkmate`、`test_allows_board_pawn_move_that_gives_checkmate`、`test_allows_pawn_drop_in_kingless_partial_position`、`test_does_not_count_pawn_drop_mate_as_legal_move` を追加する。それぞれ日本語docstringで防ぐ誤りを記す。
+- [ ] `test_allows_non_pawn_drop_that_gives_checkmate`、`test_allows_board_pawn_move_that_gives_checkmate`、`test_allows_pawn_drop_in_kingless_partial_position` を追加する。それぞれ日本語docstringで防ぐ誤りを記す。
+- [ ] `test_does_not_count_pawn_drop_mate_as_legal_move` を追加する。局面ヘルパーの契約を「手番側は持ち歩を打つ以外の盤上移動・成り・別種類の駒打ちをできず、その歩打ちだけが打ち歩詰めとなる」と明記し、`has_legal_move` が `False` となることを確認する。
 - [ ] 対象テストを一つずつ実行し、各Redが振る舞いのアサーション失敗であることを確認する。
 - [ ] 歩だけの限定、玉なしの `False`、公開合法手探索の有効設定に不足があれば最小補正する。
 - [ ] `python3 -m unittest tests.test_movegen.UchiFuzumeTests -v` を実行し、全Greenを確認する。

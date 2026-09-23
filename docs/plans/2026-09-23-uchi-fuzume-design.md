@@ -40,9 +40,9 @@ flowchart TD
     A["apply_drop: 持ち駒を打つ"] --> B["既存規則と自玉の安全を試し局面で確認"]
     B --> C{"打った駒は歩で、相手玉が王手？"}
     C -- "いいえ" --> D["通常どおり本物の局面へ適用"]
-    C -- "はい" --> E["試し局面で is_checkmate を確認"]
-    E --> F["has_legal_move が相手の応手を探索"]
-    F --> G["内部専用の駒打ち適用で候補を試す"]
+    C -- "はい" --> E["_is_checkmate(..., check_uchi_fuzume=False)"]
+    E --> F["_has_legal_move(..., check_uchi_fuzume=False) が相手の応手を探索"]
+    F --> G["_apply_drop(..., check_uchi_fuzume=False) で候補を試す"]
     G --> H{"相手に応手がある？"}
     H -- "はい" --> D
     H -- "いいえ" --> I["ValueError: 打ち歩詰めとして拒否"]
