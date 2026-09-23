@@ -97,7 +97,7 @@ def copy(self) -> "Position":
 - 消費: `_move_candidates_for_piece(board, source) -> list[Square]`、`Board.piece_at(square) -> Optional[Piece]`、`Piece.side`。
 - 生産: `is_in_check(board: Board, side: Side) -> bool`。
 
-- [ ] **ステップ1: 失敗するテストを作成**
+- [x] **ステップ1: 失敗するテストを作成**
 
 `PieceType` 全14種類と攻撃側の先後を表にし、指定側の玉を各駒種の移動候補へ置いたとき `True` となる表駆動テストを `tests/test_movegen.py` に追加する。表には玉、飛、角、金、銀、桂、香、歩、と金、成香、成桂、成銀、馬、竜を含める。各ケースでは両方の玉を盤上へ置き、攻撃対象ではない側を指定すると `False` であることも確認する。
 
@@ -114,13 +114,13 @@ for piece_type, attacker, king_square in cases:
         self.assertTrue(movegen.is_in_check(board, defender))
 ```
 
-- [ ] **ステップ2: Redを確認するために実行**
+- [x] **ステップ2: Redを確認するために実行**
 
 実行: `python3 -m unittest tests.test_movegen -v`
 
 期待値: 新しいテストが `AttributeError: module 'kaname_shogi.movegen' has no attribute 'is_in_check'` により失敗する。
 
-- [ ] **ステップ3: 最小実装を追加**
+- [x] **ステップ3: 最小実装を追加**
 
 盤の全81マスから指定側の玉を探す。玉がなければ `False` を返す。玉があれば相手側の各駒の既存候補に玉マスが含まれるときだけ `True` を返す。補助操作は非公開で盤面を変更しない。公開関数のdocstringに、部分局面での扱いと既存候補を利用する理由を記載する。
 
@@ -133,17 +133,17 @@ def is_in_check(board: Board, side: Side) -> bool:
                for source in _squares_with_side(board, _opposite_side(side)))
 ```
 
-- [ ] **ステップ4: Greenと回帰を確認するために実行**
+- [x] **ステップ4: Greenと回帰を確認するために実行**
 
 実行: `python3 -m unittest tests.test_movegen -v`
 
 期待値: 新しい王手検出テストと既存テストが全件成功する。
 
-- [ ] **ステップ5: Refactor要否を確認する**
+- [x] **ステップ5: Refactor要否を確認する**
 
 複数駒で同じ玉を攻撃する局面と、複数の攻撃線をすべて遮った局面の決定的テストで、盤の走査順・候補順が真偽に影響しないことを確認する。全駒候補生成の再構成はしない。
 
-- [ ] **ステップ6: コミット**
+- [x] **ステップ6: コミット**
 
 実行: `git add kaname_shogi/movegen.py tests/test_movegen.py && git commit -m "feat: 王手判定を追加"`
 

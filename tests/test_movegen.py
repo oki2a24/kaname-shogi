@@ -179,6 +179,139 @@ class DragonMoveCandidateTests(unittest.TestCase):
                           for file in range(1, 10) for rank in range(1, 10)], before)
 
 
+class CheckDetectionTests(unittest.TestCase):
+    def test_detects_check_from_every_piece_type_for_both_sides(self):
+        """全14駒種の利きによる王手を先後とも検出する。
+
+        王手判定の駒種対応漏れ、先後の向きの逆転、成駒の候補表未接続を検出する。
+        """
+        cases = [
+            (PieceType.KING, Square(5, 4), Square(5, 6)),
+            (PieceType.ROOK, Square(5, 4), Square(5, 6)),
+            (PieceType.BISHOP, Square(4, 4), Square(4, 6)),
+            (PieceType.GOLD, Square(5, 4), Square(5, 6)),
+            (PieceType.SILVER, Square(5, 4), Square(5, 6)),
+            (PieceType.KNIGHT, Square(4, 3), Square(4, 7)),
+            (PieceType.LANCE, Square(5, 4), Square(5, 6)),
+            (PieceType.PAWN, Square(5, 4), Square(5, 6)),
+            (PieceType.PRO_PAWN, Square(5, 4), Square(5, 6)),
+            (PieceType.PRO_LANCE, Square(5, 4), Square(5, 6)),
+            (PieceType.PRO_KNIGHT, Square(5, 4), Square(5, 6)),
+            (PieceType.PRO_SILVER, Square(5, 4), Square(5, 6)),
+            (PieceType.HORSE, Square(4, 4), Square(4, 6)),
+            (PieceType.DRAGON, Square(5, 4), Square(5, 6)),
+        ]
+        source = Square(5, 5)
+        for piece_type, sente_target, gote_target in cases:
+            for attacker_side, target in ((Side.SENTE, sente_target),
+                                          (Side.GOTE, gote_target)):
+                defender_side = (Side.GOTE if attacker_side == Side.SENTE
+                                 else Side.SENTE)
+                board = Board()
+                board.set_piece(source, Piece(piece_type, attacker_side))
+                board.set_piece(target, Piece(PieceType.KING, defender_side))
+                board.set_piece(Square(9, 9),
+                                Piece(PieceType.KING, attacker_side))
+                with self.subTest(piece_type=piece_type,
+                                  attacker_side=attacker_side):
+                    self.assertTrue(movegen.is_in_check(board, defender_side))
+                    if piece_type == PieceType.KING:
+                        self.assertTrue(movegen.is_in_check(board, attacker_side))
+                    else:
+                        self.assertFalse(movegen.is_in_check(board, attacker_side))
+
+    def test_long_range_check_stops_at_own_or_opponent_blocker(self):
+        """長距離駒は手前の駒で止まり、遮蔽された玉を王手としない。
+
+        飛車・角・香・馬・竜の走査停止条件を王手判定から取り違える誤りを検出する。
+        """
+        cases = [
+            (PieceType.ROOK, Square(5, 2), Square(5, 3), PieceType.BISHOP),
+            (PieceType.BISHOP, Square(2, 2), Square(3, 3), PieceType.ROOK),
+            (PieceType.LANCE, Square(5, 2), Square(5, 4), PieceType.BISHOP),
+            (PieceType.HORSE, Square(2, 2), Square(3, 3), PieceType.ROOK),
+            (PieceType.DRAGON, Square(5, 2), Square(5, 3), PieceType.BISHOP),
+        ]
+        source = Square(5, 5)
+        for piece_type, king_square, blocker_square, blocker_piece_type in cases:
+            for blocker_side in Side:
+                board = Board()
+                board.set_piece(source, Piece(piece_type, Side.SENTE))
+                board.set_piece(king_square, Piece(PieceType.KING, Side.GOTE))
+                board.set_piece(blocker_square,
+                                Piece(blocker_piece_type, blocker_side))
+                with self.subTest(piece_type=piece_type,
+                                  blocker_side=blocker_side):
+                    self.assertFalse(movegen.is_in_check(board, Side.GOTE))
+
+    def test_knight_check_ignores_intermediate_occupancy(self):
+        """桂馬の王手は途中の駒に遮られない。
+
+        桂馬を長距離駒と同じ遮蔽規則で扱う誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.KNIGHT, Side.SENTE))
+        board.set_piece(Square(4, 3), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(5, 4), Piece(PieceType.PAWN, Side.GOTE))
+        board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.SENTE))
+
+        self.assertTrue(movegen.is_in_check(board, Side.GOTE))
+
+    def test_adjacent_kings_are_mutually_in_check(self):
+        """隣接した玉は互いの利きに入る。
+
+        玉の候補を王手判定から除外する誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 4), Piece(PieceType.KING, Side.GOTE))
+
+        self.assertTrue(movegen.is_in_check(board, Side.SENTE))
+        self.assertTrue(movegen.is_in_check(board, Side.GOTE))
+
+    def test_check_detection_returns_false_without_a_king(self):
+        """指定側の玉がない部分局面は王手なしとして扱う。
+
+        候補生成用の部分局面を既存の単体テストどおり利用できる契約を確認する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.GOTE))
+
+        self.assertFalse(movegen.is_in_check(board, Side.SENTE))
+
+    def test_check_detection_does_not_change_board(self):
+        """王手判定は盤面を変更しない。
+
+        候補生成中に駒を動かしたり取ったりする実装を検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.GOTE))
+        board.set_piece(Square(5, 2), Piece(PieceType.KING, Side.SENTE))
+        before = [board.piece_at(Square(file, rank))
+                  for file in range(1, 10) for rank in range(1, 10)]
+
+        movegen.is_in_check(board, Side.SENTE)
+
+        after = [board.piece_at(Square(file, rank))
+                 for file in range(1, 10) for rank in range(1, 10)]
+        self.assertEqual(after, before)
+
+    def test_multiple_attackers_and_fully_blocked_lines_have_stable_results(self):
+        """複数の攻撃駒があっても、攻撃線の状態だけで王手を決める。
+
+        盤の走査順に依存する早期終了や、遮蔽された線を数える誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 2), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.SENTE))
+        board.set_piece(Square(2, 5), Piece(PieceType.BISHOP, Side.SENTE))
+        self.assertTrue(movegen.is_in_check(board, Side.GOTE))
+
+        board.set_piece(Square(5, 3), Piece(PieceType.BISHOP, Side.SENTE))
+        board.set_piece(Square(3, 4), Piece(PieceType.PAWN, Side.SENTE))
+        self.assertFalse(movegen.is_in_check(board, Side.GOTE))
+
+
 class MovePieceTests(unittest.TestCase):
     def _move_piece(self, board, source, destination):
         """移動適用関数を取得し、未実装をテスト失敗として扱う。"""

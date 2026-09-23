@@ -14,6 +14,8 @@ docs/design/08-knight-move-candidates.md、docs/design/13-capture-and-hands.md�
 docs/design/14-hand-drops.md。
 """
 
+from typing import Optional
+
 from .model import (BasicPieceType, Board, Piece, PieceType, Position, Side,
                     Square)
 
@@ -73,6 +75,54 @@ def _move_candidates_for_piece(board: Board, source: Square) -> list[Square]:
         PieceType.DRAGON: dragon_move_candidates,
     }
     return candidate_functions[piece.piece_type](board, source)
+
+
+def _opponent_side(side: Side) -> Side:
+    """sideと反対の先後を返す非公開の値操作。"""
+    return Side.GOTE if side == Side.SENTE else Side.SENTE
+
+
+def _find_king_square(board: Board, side: Side) -> Optional[Square]:
+    """指定側の玉のマスを探し、なければNoneを返す非公開の読み取り操作。"""
+    for file in range(1, 10):
+        for rank in range(1, 10):
+            square = Square(file, rank)
+            if board.piece_at(square) == Piece(PieceType.KING, side):
+                return square
+    return None
+
+
+def is_in_check(board: Board, side: Side) -> bool:
+    """指定側の玉が相手の駒の移動候補に入っているかを返す。
+
+    引数:
+        board: 王手を調べる盤面。盤面は変更しない。
+        side: 玉を調べる先手・後手。
+
+    戻り値:
+        指定側の玉が盤上にあり、相手側のいずれかの駒の既存候補に含まれれば
+        True。玉がない部分局面、またはどの相手駒からも攻撃されていない場合は
+        False。
+
+    玉の位置と相手側の全駒を盤から読み、既存の駒種別候補生成を再利用する。
+    候補生成と同じく、相手駒のマスは候補に含め、長距離駒の遮蔽や桂馬の飛び越しも
+    その規則に従う。判定だけを行い、盤面・手番・持ち駒は変更しない。玉がない
+    部分局面をFalseとするのは、候補生成を個別に確認する既存テストとの互換性のため。
+    """
+    king_square = _find_king_square(board, side)
+    if king_square is None:
+        return False
+
+    opponent = _opponent_side(side)
+    for file in range(1, 10):
+        for rank in range(1, 10):
+            source = Square(file, rank)
+            piece = board.piece_at(source)
+            if piece is None or piece.side != opponent:
+                continue
+            if king_square in _move_candidates_for_piece(board, source):
+                return True
+    return False
 
 
 def _is_enemy_camp(side: Side, rank: int) -> bool:
