@@ -1,6 +1,6 @@
 # 学習・開発の再開案内
 
-第32回「詰み・終局判定」は完了し、次テーマは第33回「打ち歩詰め」に決定している。詳細な引き継ぎは[第33回引き継ぎ](handover-uchi-fuzume.md)を参照する。
+第33回「打ち歩詰め」は完了し、次テーマは第34回「CLIでの指し手入力と対局進行」に決定している。詳細な引き継ぎは[第34回引き継ぎ](handover-cli-gameplay.md)を参照する。
 
 ## テーマ間のセッション再開手順
 
@@ -8,7 +8,7 @@
 
 実装計画を文書として作成・更新した場合も、内容を提示して本人の明示承認を待つ。承認前にTDD、コード・テスト変更、実装を開始しない。
 
-最終整理：2026-09-23。恒常的な運用方針はルートのAGENTS.mdを参照する。現在はmainで第32回まで完了し、第33回を新しいセッションで開始する準備ができている。
+最終整理：2026-09-23。恒常的な運用方針はルートのAGENTS.mdを参照する。現在はmainで第33回まで完了し、第34回を新しいセッションで開始する準備ができている。
 
 ## 現在の到達点
 
@@ -18,27 +18,27 @@
 
 `is_in_check(board, side)` は指定側の玉への相手の利きを読み取る。`has_legal_move(position)` は盤上移動、不成・成り、玉以外の持ち駒打ちを複製局面で試し、現在実装済みの規則で合法手があるかを返す。`is_checkmate(position)` は手番側の玉が盤上にあり、王手を受け、合法手がないときだけ真を返す。`is_game_over(position)` は今回、詰みだけを終局とする。
 
-打ち歩詰め、投了、千日手、持将棋、入玉、CLI入力、履歴、評価、探索、USI/SFENは未実装である。
+投了、千日手、持将棋、入玉、CLI入力、履歴、評価、探索、USI/SFENは未実装である。打ち歩詰めは持ち歩による解除不能な王手を拒否する。
 
 ## 直近までの記録
 
 - 第31回で王手判定と、盤上移動・駒打ちの自玉安全確認を実装した。
 - 第32回で全候補を複製局面に適用する `has_legal_move`、王手かつ合法手なしの `is_checkmate`、詰みだけを終局とする `is_game_over` を実装した。
 - 第32回は独立レビューで、王手駒取りのテストが逃げでも通る Important を発見した。玉の逃げを塞いだ王手駒取りと、玉以外の駒による王手駒取りを追加して解消し、再レビューは Critical・Important・Minor なしだった。
-- `main` 取り込み後に168件のテスト、CLI起動、差分チェックを成功させ、最後の理解確認の回答と補足を記録した。
+- `main` 取り込み後に177件のテスト、CLI起動、差分チェックを成功させ、最後の理解確認の回答と補足を記録した。
 
 ## 次に行うこと
 
-1. 第33回「打ち歩詰め」の一次資料を確認し、最初の確認問題を一問だけ出して回答を待つ。
-2. 設計承認前に、対象範囲と、持ち歩を打つ操作から詰み判定へつなぐ方法を合意する。
-3. 計画を文書化した後は、本人の明示承認まで実装を開始しない。
+1. [第34回引き継ぎ](handover-cli-gameplay.md)に従って現在の状態と一次資料を確認する。
+2. CLIの入力形式、合法手適用、エラー時の再入力、終局時の停止範囲について確認問題を一問ずつ進める。
+3. 設計と実装計画を本人の明示承認までに確定し、承認前にコードやテストを変更しない。
 
-## 第33回の再開用プロンプト
+## 第34回の再開用プロンプト
 
 ```text
-kaname-shogiの第33回「打ち歩詰め」を始めてください。
-最初にAGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/learning/32-checkmate-and-game-end.md、docs/knowledge/25-checkmate-and-game-end.md、docs/02-project-direction.md、kaname_shogi/model.py、kaname_shogi/movegen.py、kaname_shogi/display.py、tests/test_movegen.py、docs/handover-uchi-fuzume.mdを読み、git status --short --branchで現在の状態を確認してください。
-日本将棋連盟などの一次資料で打ち歩詰めの規則を確認し、確認問題を一度に一問だけ出して私の回答を待ってください。設計承認前にコードやテストを書かないでください。打ち歩詰めの対象範囲、`apply_drop`・`has_legal_move`・`is_checkmate` の関係、循環を避ける方法、玉なし部分局面の扱いを設計で合意してからTDDで実装してください。実装後は独立レビューと全検証を行い、最後の理解確認を一問出して回答と補足を記録してください。コミットメッセージは日本語のConventional Commitにしてください。
+kaname-shogiの第34回「CLIでの指し手入力と対局進行」を始めてください。
+最初にAGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/02-project-direction.md、docs/learning/33-uchi-fuzume.md、docs/knowledge/26-uchi-fuzume.md、kaname_shogi/model.py、kaname_shogi/movegen.py、kaname_shogi/display.py、tests/test_movegen.py、docs/handover-cli-gameplay.mdを読み、git status --short --branchで現在の状態を確認してください。
+日本将棋連盟などの一次資料で、CLIの入力と対局進行に関係する着手・終局・反則の規則を確認し、確認問題を一度に一問だけ出して私の回答を待ってください。入力形式、合法手適用、エラー時の再入力、終局時の停止範囲を設計で合意するまでコードやテストを書かないでください。設計承認後にTDDで実装し、独立レビューと全検証を行い、最後の理解確認を一問出して回答と補足を記録してください。コミットメッセージは日本語のConventional Commitにしてください。
 ```
 
 ## 実行場所とコマンド
