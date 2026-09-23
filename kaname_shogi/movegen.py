@@ -584,6 +584,55 @@ def gold_move_candidates(board: Board, source: Square) -> list[Square]:
     return candidates
 
 
+def _gold_like_move_candidates(board: Board, source: Square) -> list[Square]:
+    """金と同じ6方向を、駒種検証済みの成駒について調べる非公開操作。"""
+    piece = board.piece_at(source)
+    forward = -1 if piece.side == Side.SENTE else 1
+    offsets = ((0, forward), (1, forward), (-1, forward),
+               (1, 0), (-1, 0), (0, -forward))
+    candidates = []
+    for df, dr in offsets:
+        next_file, next_rank = source.file + df, source.rank + dr
+        if not (1 <= next_file <= 9 and 1 <= next_rank <= 9):
+            continue
+        target = Square(next_file, next_rank)
+        occupant = board.piece_at(target)
+        if occupant is not None and occupant.side == piece.side:
+            continue
+        candidates.append(target)
+    return candidates
+
+
+def _promoted_minor_candidates(board: Board, source: Square,
+                               piece_type: PieceType,
+                               name: str) -> list[Square]:
+    """指定した金相当の成駒だけを受け付け、候補を返す非公開操作。"""
+    piece = board.piece_at(source)
+    if piece is None or piece.piece_type != piece_type:
+        raise ValueError(f"出発マスには{name}を指定してください")
+    return _gold_like_move_candidates(board, source)
+
+
+def pro_pawn_move_candidates(board: Board, source: Square) -> list[Square]:
+    """と金（PRO_PAWN）の金と同じ移動先候補を返す。"""
+    return _promoted_minor_candidates(board, source, PieceType.PRO_PAWN, "と金")
+
+
+def pro_lance_move_candidates(board: Board, source: Square) -> list[Square]:
+    """成香（PRO_LANCE）の金と同じ移動先候補を返す。"""
+    return _promoted_minor_candidates(board, source, PieceType.PRO_LANCE, "成香")
+
+
+def pro_knight_move_candidates(board: Board, source: Square) -> list[Square]:
+    """成桂（PRO_KNIGHT）の金と同じ移動先候補を返す。"""
+    return _promoted_minor_candidates(board, source, PieceType.PRO_KNIGHT, "成桂")
+
+
+def pro_silver_move_candidates(board: Board, source: Square) -> list[Square]:
+    """成銀（PRO_SILVER）の金と同じ移動先候補を返す。"""
+    return _promoted_minor_candidates(board, source, PieceType.PRO_SILVER, "成銀")
+
+
 def pawn_move_candidates(board: Board, source: Square) -> list[Square]:
     """出発マスの歩について、移動先候補を0個または1個のリストで返す。
 

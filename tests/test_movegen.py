@@ -13,6 +13,74 @@ from kaname_shogi.movegen import (
 )
 
 
+class PromotedMinorMoveCandidateTests(unittest.TestCase):
+    def test_promoted_minor_pieces_move_like_gold_for_sente_and_gote(self):
+        """と金・成香・成桂・成銀は先後とも金と同じ6方向へ進める。
+
+        成駒を未成駒の動きや同じ関数の未実装扱いにする誤りを検出する。
+        """
+        function_names = (
+            ("pro_pawn_move_candidates", PieceType.PRO_PAWN),
+            ("pro_lance_move_candidates", PieceType.PRO_LANCE),
+            ("pro_knight_move_candidates", PieceType.PRO_KNIGHT),
+            ("pro_silver_move_candidates", PieceType.PRO_SILVER),
+        )
+        source = Square(5, 5)
+        for function_name, piece_type in function_names:
+            self.assertTrue(hasattr(movegen, function_name),
+                            function_name + " がまだ実装されていません")
+            function = getattr(movegen, function_name)
+            for side in Side:
+                board = Board()
+                board.set_piece(source, Piece(piece_type, side))
+                forward = -1 if side == Side.SENTE else 1
+                expected = [Square(5, 5 + forward),
+                            Square(6, 5 + forward),
+                            Square(4, 5 + forward),
+                            Square(6, 5), Square(4, 5),
+                            Square(5, 5 - forward)]
+                with self.subTest(piece_type=piece_type, side=side):
+                    self.assertEqual(function(board, source), expected)
+
+    def test_promoted_minor_candidates_exclude_own_piece_and_include_opponent(self):
+        """金相当の成駒は自駒を除き、相手駒のマスを候補に含める。
+
+        候補生成で相手駒まで除外する誤りと、自駒を取れる扱いを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.PRO_PAWN, Side.SENTE))
+        board.set_piece(Square(6, 5), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(4, 5), Piece(PieceType.PAWN, Side.GOTE))
+
+        self.assertTrue(hasattr(movegen, "pro_pawn_move_candidates"),
+                        "pro_pawn_move_candidates がまだ実装されていません")
+        result = movegen.pro_pawn_move_candidates(board, source)
+
+        self.assertNotIn(Square(6, 5), result)
+        self.assertIn(Square(4, 5), result)
+
+    def test_promoted_minor_candidate_generation_does_not_change_board(self):
+        """金相当の成駒候補生成は盤面を変更しない。
+
+        候補計算中の駒移動や駒取りによる状態変更を検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        piece = Piece(PieceType.PRO_SILVER, Side.GOTE)
+        board.set_piece(source, piece)
+        before = [board.piece_at(Square(file, rank))
+                  for file in range(1, 10) for rank in range(1, 10)]
+
+        self.assertTrue(hasattr(movegen, "pro_silver_move_candidates"),
+                        "pro_silver_move_candidates がまだ実装されていません")
+        movegen.pro_silver_move_candidates(board, source)
+
+        after = [board.piece_at(Square(file, rank))
+                 for file in range(1, 10) for rank in range(1, 10)]
+        self.assertEqual(after, before)
+
+
 class MovePieceTests(unittest.TestCase):
     def _move_piece(self, board, source, destination):
         """移動適用関数を取得し、未実装をテスト失敗として扱う。"""
