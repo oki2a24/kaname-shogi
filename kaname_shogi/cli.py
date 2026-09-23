@@ -38,7 +38,7 @@ def parse_command(text: str) -> Union[_MoveCommand, _DropCommand,
     """入力文字列を盤上移動または駒打ちの指示へ変換する。
 
     引数:
-        text: `move` または `drop` で始まるCLI入力。区切りは半角・全角空白、
+        text: `move`、`drop`、または `resign` のCLI入力。区切りは半角・全角空白、
             筋段は半角・全角数字を受け付ける。
 
     戻り値:
@@ -121,7 +121,7 @@ def run_game(*, input_fn: Callable[[], str] = input,
         output_fn: 表示文字列を一つ受け取る操作。テストではprintを差し替える。
 
     戻り値:
-        なし（None）。詰み、EOF、Ctrl-Cのいずれかで終了する。
+        なし（None）。詰み、投了、EOF、Ctrl-Cのいずれかで終了する。
 
     副作用:
         初期局面を作り、局面表示と入力案内をoutput_fnへ渡す。合法な入力だけが

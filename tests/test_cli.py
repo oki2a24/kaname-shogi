@@ -125,6 +125,7 @@ class GameplayTests(unittest.TestCase):
     def test_stops_when_sente_resigns_without_changing_position(self):
         """先手が投了すると、局面を変えず後手の勝ちを表示して終了する。"""
         position = create_initial_position()
+        position.sente_hand.add(BasicPieceType.PAWN)
         inputs = ScriptedInput(["resign"])
         outputs = []
 
@@ -136,6 +137,7 @@ class GameplayTests(unittest.TestCase):
         self.assertEqual(position.side_to_move, Side.SENTE)
         self.assertEqual(position.board.piece_at(Square(7, 7)),
                          Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(position.sente_hand.count(BasicPieceType.PAWN), 1)
         self.assertIn("先手が投了しました。後手の勝ちです。", outputs)
         self.assertNotIn("入力を終了しました。", outputs)
 
@@ -190,6 +192,8 @@ class GameplayTests(unittest.TestCase):
 
         self.assertEqual(inputs.calls, 1)
         self.assertEqual(outputs[-1], "入力を終了しました。")
+        self.assertFalse(any("投了しました。" in output for output in outputs))
+        self.assertFalse(any("勝ちです。" in output for output in outputs))
 
     def test_finishes_normally_on_keyboard_interrupt(self):
         """Ctrl-Cは勝敗にせず、終了メッセージを表示して正常終了する。"""
@@ -201,3 +205,5 @@ class GameplayTests(unittest.TestCase):
         cli.run_game(input_fn=interrupt, output_fn=outputs.append)
 
         self.assertEqual(outputs[-1], "入力を終了しました。")
+        self.assertFalse(any("投了しました。" in output for output in outputs))
+        self.assertFalse(any("勝ちです。" in output for output in outputs))
