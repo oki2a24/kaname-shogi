@@ -269,7 +269,7 @@ git diff --check
 
 一次資料の出典、全5問の本人回答と補足、承認日、実際のTDDのRed/Green/Refactor、レビュー結果、検証コマンドと実測結果、対象外、次回候補を日本語で記録する。実施していない手順を実施済みと書かない。
 
-- [ ] **ステップ4: 文書を確認してコミットする**
+- [x] **ステップ4: 文書を確認してコミットする**
 
 ```bash
 git add README.md docs/02-project-direction.md docs/learning/36-game-record-and-position-save.md docs/knowledge/29-game-record-and-position-save.md docs/next-topics.md docs/resume.md
