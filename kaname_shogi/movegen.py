@@ -395,6 +395,53 @@ def apply_drop(position: Position, piece_type: BasicPieceType,
         lambda trial: _apply_drop_unchecked(trial, piece_type, destination))
 
 
+def has_legal_move(position: Position) -> bool:
+    """手番側に現在実装済みの規則で指せる手が一つでもあるかを返す。
+
+    引数:
+        position: 調べる盤面、手番、先後の持ち駒を持つ局面。
+
+    戻り値:
+        手番側の盤上移動または駒打ちを一つでも適用できるならTrue。全候補が
+        既存規則で拒否されるならFalse。
+
+    副作用:
+        positionの盤面、手番、双方の持ち駒を変更しない。
+
+    手番側の全駒の既存候補を調べ、不成と成りの両方を複製局面へ試し指しする。
+    さらに玉以外の全持ち駒種と全81マスを複製局面へ試し打ちする。既存の
+    apply_moveとapply_dropに、成り、二歩、行き所のない駒、自玉の安全などの
+    検証を委ねることで、詰み判定用に同じ規則を重複実装しない。打ち歩詰めは
+    まだ扱わないため、この戻り値は現在実装済みの規則に限る合法手を表す。
+    """
+    for file in range(1, 10):
+        for rank in range(1, 10):
+            source = Square(file, rank)
+            piece = position.board.piece_at(source)
+            if piece is None or piece.side != position.side_to_move:
+                continue
+            for destination in _move_candidates_for_piece(position.board, source):
+                for promote in (False, True):
+                    try:
+                        apply_move(position.copy(), source, destination,
+                                   promote=promote)
+                    except ValueError:
+                        continue
+                    return True
+
+    for piece_type in BasicPieceType:
+        if piece_type == BasicPieceType.KING:
+            continue
+        for file in range(1, 10):
+            for rank in range(1, 10):
+                try:
+                    apply_drop(position.copy(), piece_type, Square(file, rank))
+                except ValueError:
+                    continue
+                return True
+    return False
+
+
 def king_move_candidates(board: Board, source: Square) -> list[Square]:
     """出発マスの玉について、周囲8方向の移動先候補を返す。
 

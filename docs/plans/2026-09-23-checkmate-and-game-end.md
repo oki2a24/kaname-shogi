@@ -30,7 +30,7 @@
 - 消費: `Position.copy() -> Position`、`_move_candidates_for_piece(board, source) -> list[Square]`、`apply_move(position, source, destination, *, promote=False) -> None`、`apply_drop(position, piece_type, destination) -> None`
 - 生産: `has_legal_move(position: Position) -> bool`
 
-- [ ] **ステップ 1: 失敗するテストを作成**
+- [x] **ステップ 1: 失敗するテストを作成**
 
 `LegalMoveEnumerationTests` を `tests/test_movegen.py` に追加し、盤上の一手、持ち駒を打つ一手、成りでのみ王手を防げる一手、全候補が既存規則で拒否される局面を検証する。各テストで判定前後の盤面81マス・双方の持ち駒・手番を比較する。
 
@@ -47,13 +47,13 @@ def test_finds_a_legal_drop_without_changing_position(self):
     self.assertEqual(self._snapshot(position), before)
 ```
 
-- [ ] **ステップ 2: テストが失敗することを確認するために実行**
+- [x] **ステップ 2: テストが失敗することを確認するために実行**
 
 実行: `python3 -m unittest tests.test_movegen.LegalMoveEnumerationTests -v`
 
 期待値: `movegen.has_legal_move` が未実装であるため、`AttributeError` ではなく、テストの `hasattr` による明示的なアサーション失敗となる。盤上移動・駒打ち・成りの各経路を同一の欠如で失敗させず、最初のテストごとに失敗理由を読む。
 
-- [ ] **ステップ 3: 最小限の実装を作成**
+- [x] **ステップ 3: 最小限の実装を作成**
 
 `movegen.py` に、手番側の盤上駒・既存候補・成りの二指定・玉以外の持ち駒種・全81マスを走査し、各試行の複製局面へ既存公開操作を適用する実装を追加する。`ValueError` だけを候補不成立として捕捉する。
 
@@ -74,13 +74,18 @@ def has_legal_move(position: Position) -> bool:
     return False
 ```
 
-- [ ] **ステップ 4: テストがパスすることを確認するために実行**
+- [x] **ステップ 4: テストがパスすることを確認するために実行**
 
 実行: `python3 -m unittest tests.test_movegen.LegalMoveEnumerationTests -v`
 
 期待値: 追加した各テストが成功し、テストした全経路で元の局面が不変である。
 
-- [ ] **ステップ 5: コミット**
+- [x] **ステップ 5: Refactorの要否を確認する**
+
+候補規則は既存の `apply_move` と `apply_drop` へ委譲でき、今回だけの補助抽出や
+駒種別の共通化は不要と判断した。変更しない。
+
+- [~] **ステップ 6: コミット**
 
 ```bash
 git add kaname_shogi/movegen.py tests/test_movegen.py

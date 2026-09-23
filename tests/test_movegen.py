@@ -2451,3 +2451,75 @@ class PawnMoveCandidatesTests(unittest.TestCase):
                 self.assertEqual(pawn_move_candidates(position.board, Square(7, 3)),
                                  [Square(7, 4)])
                 self.assertEqual(position.side_to_move, turn)
+
+
+class LegalMoveEnumerationTests(unittest.TestCase):
+    def _snapshot(self, position):
+        """合法手の有無を調べる前後で局面全体を比較する。"""
+        squares = [Square(file, rank)
+                   for file in range(1, 10) for rank in range(1, 10)]
+        piece_types = [piece_type for piece_type in BasicPieceType
+                       if piece_type != BasicPieceType.KING]
+        return (
+            tuple(position.board.piece_at(square) for square in squares),
+            tuple(position.sente_hand.count(piece_type)
+                  for piece_type in piece_types),
+            tuple(position.gote_hand.count(piece_type)
+                  for piece_type in piece_types),
+            position.side_to_move,
+        )
+
+    def test_finds_legal_board_move_without_changing_position(self):
+        """盤上の一手があれば合法手ありと判定し、局面を変更しない。
+
+        盤上移動を走査しない、成功した試し指しを元の局面へ漏らす誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(5, 5), Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+        before = self._snapshot(position)
+
+        self.assertTrue(hasattr(movegen, "has_legal_move"),
+                        "has_legal_move がまだ実装されていません")
+        self.assertTrue(movegen.has_legal_move(position))
+        self.assertEqual(self._snapshot(position), before)
+
+    def test_finds_legal_drop_without_changing_position(self):
+        """持ち駒を打つ一手があれば合法手ありと判定し、局面を変更しない。
+
+        盤上移動だけを調べて駒打ちを見落とす、試し打ちで持ち駒を減らす誤りを検出する。
+        """
+        board = Board()
+        for file in range(1, 10):
+            for rank in range(1, 10):
+                if Square(file, rank) != Square(5, 9):
+                    board.set_piece(Square(file, rank),
+                                    Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+        position.sente_hand.add(BasicPieceType.GOLD)
+        before = self._snapshot(position)
+
+        self.assertTrue(hasattr(movegen, "has_legal_move"),
+                        "has_legal_move がまだ実装されていません")
+        self.assertTrue(movegen.has_legal_move(position))
+        self.assertEqual(self._snapshot(position), before)
+
+    def test_returns_false_when_current_rules_reject_every_candidate(self):
+        """全候補が自駒で塞がれた局面では合法手なしを返す。
+
+        候補外や自駒への移動を成功扱いにする、候補の失敗を見落とす誤りを検出する。
+        """
+        board = Board()
+        for file in range(1, 10):
+            for rank in range(1, 10):
+                board.set_piece(Square(file, rank),
+                                Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+        before = self._snapshot(position)
+
+        self.assertTrue(hasattr(movegen, "has_legal_move"),
+                        "has_legal_move がまだ実装されていません")
+        self.assertFalse(movegen.has_legal_move(position))
+        self.assertEqual(self._snapshot(position), before)
