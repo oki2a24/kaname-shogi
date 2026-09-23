@@ -1,12 +1,12 @@
 # 学習・開発の再開案内
 
-次テーマは第31回「王手と合法手判定」です。詳細な引き継ぎは[第31回引き継ぎ](handover-check-and-legal-moves.md)を参照してください。
+第31回「王手と合法手判定」は完了しています。次テーマは[次テーマ候補](next-topics.md)から本人が選びます。
 
 ## テーマ間のセッション再開手順
 
 次テーマを選んだら、アシスタントが引き継ぎ文書とこのファイルに再開用プロンプトを記録する。その後、人間が再開用プロンプトを新しいセッションへ入力する。入力を受け取る前に、アシスタントは次テーマの一次資料確認・確認問題・設計・実装を開始しない。人間の入力を起点に、現在のGit状態と記録を確認してから次テーマを始める。
 
-最終整理：2026-09-23。恒常的な運用方針はルートのAGENTS.mdを参照する。現在はmainで第30回まで完了し、次セッションで第31回を開始する。
+最終整理：2026-09-23。恒常的な運用方針はルートのAGENTS.mdを参照する。現在はmainで第31回まで完了し、次テーマは未選択である。
 
 ## 現在の到達点
 
@@ -18,13 +18,14 @@
 
 `apply_drop(position, piece_type, destination)` は、手番側の持ち駒を1枚減らして空マスへその側の駒を置き、手番を交代する。玉の指定、持ち駒不足、先後いずれかの駒があるマス、持ち歩を打つ筋に手番側の未成の歩がある二歩、歩・香・桂を行き所のない段へ打つ操作は `ValueError` で拒否し、局面を変えない。
 
-行き所のない歩・香・桂の駒打ち制限、成り・不成、強制成り、成駒の移動、成駒を取ったときの基本駒種への復元は実装済みである。打ち歩詰め、王手・詰み・合法手、CLI入力、履歴、評価、探索は未実装である。
+行き所のない歩・香・桂の駒打ち制限、成り・不成、強制成り、成駒の移動、成駒を取ったときの基本駒種への復元、王手の読み取り、自玉の安全を確認する合法手判定は実装済みである。詰み・終局判定、打ち歩詰め、CLI入力、履歴、評価、探索は未実装である。
 
 ## 読む順序
 
 1. ルートのAGENTS.md、[README](../README.md)、現在のGit状態。
 2. [成り・不成テーマの引き継ぎ](handover-promotion-and-non-promotion.md)、[第28回：行き所のない駒](learning/28-no-legal-destination-drops.md)、[第29回：成り・不成の基礎](learning/29-promotion-and-non-promotion.md)、[第30回：成駒の移動](learning/30-promoted-piece-movement.md)、[参照メモ](knowledge/23-promoted-piece-movement.md)。
 3. [状態モデル](../kaname_shogi/model.py)、[移動・候補生成](../kaname_shogi/movegen.py)、[モデルテスト](../tests/test_model.py)、[移動テスト](../tests/test_movegen.py)。
+4. [第31回：王手と合法手判定](learning/31-check-and-legal-moves.md)、[王手と合法手判定：参照メモ](knowledge/24-check-and-legal-moves.md)、[設計仕様](plans/2026-09-23-check-and-legal-moves-design.md)。
 
 ## 直近までの記録
 
@@ -34,15 +35,11 @@
 
 1. 第29回の実装・検証・独立レビュー・最後の理解確認・記録は完了し、`main`へ取り込んだ。
 2. 第30回「成駒の移動」は学習・実装・検証・レビュー・最後の理解確認・mainへの取り込みまで完了した。次テーマは第31回「王手と合法手判定」に決定した。
+3. 第31回「王手と合法手判定」は、設計承認、TDD、独立レビュー、main取り込み、全157テストの再検証、最後の理解確認まで完了した。次テーマは未選択である。
 
-## 第31回の再開用プロンプト
+## 次テーマの再開用プロンプト
 
-```text
-kaname-shogiの第31回「王手と合法手判定」を始めてください。
-最初にAGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/learning/30-promoted-piece-movement.md、docs/knowledge/23-promoted-piece-movement.md、docs/02-project-direction.md、kaname_shogi/model.py、kaname_shogi/movegen.py、kaname_shogi/display.py、tests/test_movegen.pyを読み、git status --short --branchで現在の状態を確認してください。
-日本将棋連盟などの一次資料で王手・合法手の規則を確認し、確認問題を一度に一問だけ出して私の回答を待ってください。設計承認前にコードやテストを書かないでください。実装後は最後の理解確認を一問行い、回答と補足を記録してから次テーマ候補を示してください。
-コミットメッセージは日本語のConventional Commitにしてください。
-```
+次テーマを本人が選んだ後、選定理由・完了事項・Git状態・直近の検証・次に読むファイルを引き継ぎ文書へ記録し、新しいセッションで使う再開用プロンプトをここへ追加する。
 
 ## 実行場所とコマンド
 
