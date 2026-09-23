@@ -2808,7 +2808,7 @@ class UchiFuzumeTests(unittest.TestCase):
     def test_allows_pawn_drop_when_king_can_escape(self):
         """相手玉に安全な逃げ場がある歩打ちは拒否しない。
 
-        王手を検出しただけで詰みと判定する誤りを、後手の歩の向きでも検出する。
+        王手を検出しただけで詰みと判定する誤りを、先手の歩の向きで検出する。
         """
         position = self._pawn_drop_mate_position(Side.SENTE)
         position.board.set_piece(Square(4, 1), None)
@@ -2875,3 +2875,14 @@ class UchiFuzumeTests(unittest.TestCase):
 
         self.assertTrue(any(call.kwargs.get("check_uchi_fuzume") is False
                             for call in apply_drop.call_args_list))
+
+    def test_pawn_drop_mate_position_has_no_legal_move(self):
+        """歩打ち後に詰んだ側の公開合法手判定はFalseを返す。
+
+        打ち歩詰めとなる歩打ち後の相手局面を、合法手ありとして数える誤りを検出する。
+        """
+        position = self._pawn_drop_mate_position(Side.SENTE)
+        movegen._apply_drop_unchecked(position, BasicPieceType.PAWN,
+                                      Square(5, 2))
+
+        self.assertFalse(movegen.has_legal_move(position))
