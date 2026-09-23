@@ -277,11 +277,11 @@ git diff --cached --check
 git commit -m "docs: 第36回の学習記録を追加する"
 ```
 
-- [ ] **ステップ5: mainへの取り込み前に承認を求める**
+- [x] **ステップ5: mainへの取り込み前に承認を求める**
 
 作業ブランチ、コミット一覧、レビュー結論、全検証の実測結果、取り込み予定を提示し、本人の明示承認を待つ。承認前に `main` を変更しない。
 
-- [ ] **ステップ6: 承認後にmainへ取り込み、取り込み先で再検証する**
+- [x] **ステップ6: 承認後にmainへ取り込み、取り込み先で再検証する**
 
 ```bash
 git switch main
@@ -290,7 +290,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 git status --short --branch
 ```
 
-期待値: `main` が作業ブランチの変更をfast-forwardで取り込み、全テストがPASSし、追跡対象の未コミット変更がない。
+実績: `main` が作業ブランチの変更をfast-forwardで取り込み、全199件のテストがPASSし、追跡対象の未コミット変更がないことを確認した。作業ブランチは削除した。
 
 - [ ] **ステップ7: 最後の理解確認を一問だけ出し、回答を記録する**
 

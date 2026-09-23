@@ -113,6 +113,7 @@ CLIは `GameRecord` を作成して指し手を記録経由で適用し、終了
 - `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`：199件成功。
 - `printf 'move 7 7 7 6\nresign\n' | PYTHONDONTWRITEBYTECODE=1 python3 -m kaname_shogi`：初期局面、７六歩後の局面、後手投了と先手勝利を表示して終了。
 - `git diff --check`：出力なし。
+- 作業ブランチを `main` へfast-forwardで取り込み、main上で `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v` を再実行して199件成功。作業ブランチを削除し、`main` の作業ツリーがクリーンであることを確認した。
 
 ## 未解決事項
 
@@ -120,6 +121,6 @@ CLIは `GameRecord` を作成して指し手を記録経由で適用し、終了
 
 ## 最後の理解確認
 
-main取り込み後に次の一問を出し、本人の回答を待つ。
+main取り込みと取り込み先検証まで完了したため、次の一問を出し、本人の回答を待つ。
 
 問題：なぜ現在局面だけを保存するのではなく、開始局面と成功手の履歴から任意手数の局面を再現できるようにしたのか。
