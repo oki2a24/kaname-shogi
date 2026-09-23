@@ -36,23 +36,23 @@
 
 **生産するインターフェース:** `BasicPieceType`、14値の`PieceType`、`Piece.base_piece_type: BasicPieceType`、`Piece.is_promoted: bool`、`Hand.{count,add,remove}(BasicPieceType)`。
 
-- [ ] **ステップ1: ブランチを作る**
+- [x] **ステップ1: ブランチを作る**
 
 実行: `git switch -c codex/promotion-and-non-promotion`。続けて`git status --short --branch`を実行し、新ブランチかつ未コミット変更なしを確認する。
 
-- [ ] **ステップ2: 失敗するモデルテストと型移行テストを書く**
+- [x] **ステップ2: 失敗するモデルテストと型移行テストを書く**
 
 `Piece(PieceType.PRO_PAWN, Side.SENTE)`の`base_piece_type`が`BasicPieceType.PAWN`、`is_promoted`が真であるテストを加える。全成駒6種の復元、`Hand.add(PieceType.PRO_PAWN)`の`ValueError`と不変性を確認する。既存のHand・駒打ちテストは`BasicPieceType`へ移行する。
 
-- [ ] **ステップ3: Redを確認する**
+- [x] **ステップ3: Redを確認する**
 
 実行: `python3 -m unittest tests.test_model -v`。`PRO_PAWN`、`BasicPieceType`、または読み取り値の未実装による振る舞い上の失敗を確認する。読み込みエラーはRedと扱わない。
 
-- [ ] **ステップ4: 最小実装を加える**
+- [x] **ステップ4: 最小実装を加える**
 
 `PieceType`に`PRO_PAWN`（と金）、`PRO_LANCE`（成香）、`PRO_KNIGHT`（成桂）、`PRO_SILVER`（成銀）、`HORSE`（馬）、`DRAGON`（竜）を加える。`BasicPieceType`には未成8種だけを置く。`Piece.base_piece_type`は成駒6種の対応表と同名未成駒の変換で返し、`is_promoted`は対応表のキーで判定する。`Hand`は`BasicPieceType`以外を拒否する。
 
-- [ ] **ステップ5: Greenとコミットを確認する**
+- [x] **ステップ5: Greenとコミットを確認する**
 
 実行: `python3 -m unittest tests.test_model tests.test_movegen -v`。成功後、対象4ファイルを`feat: 盤上駒種と持ち駒種を分離`としてコミットする。
 

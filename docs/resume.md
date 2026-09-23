@@ -1,23 +1,23 @@
 # 学習・開発の再開案内
 
-最終整理：2026-09-22。恒常的な運用方針はルートのAGENTS.mdを参照する。
+最終整理：2026-09-23。恒常的な運用方針はルートのAGENTS.mdを参照する。
 
 ## 現在の到達点
 
 玉・歩・金・銀・桂・香・飛車・角について、盤上の駒の所有者に応じた移動先候補を計算できる。候補計算は盤面・手番・持ち駒を変更せず、盤外と自駒を除外し、相手駒のあるマスを候補に含める。
 
-`Position` は盤面、手番、先手の `sente_hand`、後手の `gote_hand` を持つ。`Hand` は一方の持ち駒の枚数を扱う可変のデータで、先後・盤面・手番は知らない。`count` は枚数を読み、`add` は1枚加え、`remove` は1枚減らす。玉は持ち駒に入れない。
+`PieceType` は盤上14種、`BasicPieceType` は持ち駒8種を表す。`Piece` は不変値で、成駒の`base_piece_type`と`is_promoted`を提供する。`Position` は盤面、手番、先手の `sente_hand`、後手の `gote_hand` を持つ。`Hand` は`BasicPieceType`だけを受け付ける可変データで、玉は持ち駒に入れない。
 
-`move_piece(board, source, destination)` は空マスへの盤面操作だけを担う。`apply_move(position, source, destination)` は出発駒の所有者が手番と一致し、既存候補に含まれるときだけ局面を進める。到着マスが空なら移動し、相手の玉以外なら取り、手番側の持ち駒へ基本駒種を加える。玉取り、候補外、所有者不一致、空出発、自駒の到着、同一マスでは `ValueError` とし、盤面・手番・双方の持ち駒を変えない。
+`move_piece(board, source, destination)` は空マスへの盤面操作だけを担う。`apply_move(position, source, destination, *, promote=False)` は出発駒の所有者が手番と一致し、既存候補に含まれるときだけ局面を進める。敵陣での任意成り、歩・香・桂の強制成りを検証し、成駒は次回まで移動を拒否する。到着マスが空なら移動し、相手の玉以外なら取り、成駒も基本駒種へ戻して手番側の持ち駒へ加える。失敗時は盤面・手番・双方の持ち駒を変えない。
 
 `apply_drop(position, piece_type, destination)` は、手番側の持ち駒を1枚減らして空マスへその側の駒を置き、手番を交代する。玉の指定、持ち駒不足、先後いずれかの駒があるマス、持ち歩を打つ筋に手番側の未成の歩がある二歩、歩・香・桂を行き所のない段へ打つ操作は `ValueError` で拒否し、局面を変えない。
 
-行き所のない歩・香・桂の駒打ち制限は実装済みである。打ち歩詰め、成り・不成、成駒を取ったときの基本駒種への復元、王手・詰み・合法手、CLI入力、履歴、評価、探索は未実装である。
+行き所のない歩・香・桂の駒打ち制限、成り・不成、強制成り、成駒を取ったときの基本駒種への復元は実装済みである。成駒の移動、打ち歩詰め、王手・詰み・合法手、CLI入力、履歴、評価、探索は未実装である。
 
 ## 読む順序
 
 1. ルートのAGENTS.md、[README](../README.md)、現在のGit状態。
-2. [成り・不成テーマの引き継ぎ](handover-promotion-and-non-promotion.md)、[第28回：行き所のない駒](learning/28-no-legal-destination-drops.md)、[参照メモ](knowledge/21-no-legal-destination-drops.md)。
+2. [成り・不成テーマの引き継ぎ](handover-promotion-and-non-promotion.md)、[第28回：行き所のない駒](learning/28-no-legal-destination-drops.md)、[第29回：成り・不成の基礎](learning/29-promotion-and-non-promotion.md)、[参照メモ](knowledge/22-promotion-and-non-promotion.md)。
 3. [状態モデル](../kaname_shogi/model.py)、[移動・候補生成](../kaname_shogi/movegen.py)、[モデルテスト](../tests/test_model.py)、[移動テスト](../tests/test_movegen.py)。
 
 ## 直近までの記録
@@ -26,16 +26,15 @@
 
 ## 次に行うこと
 
-1. 新しいセッションで第29回「成り・不成の基礎」を、一次資料の確認から始める。
-2. 確認問題は一度に一問だけ出し、本人の回答・補足・振り返りを記録する。
-3. 設計承認前にコードやテストを書かない。
+1. 第29回の実装・検証・独立レビュー・記録は完了した。`codex/promotion-and-non-promotion`の取り込みは本人の承認を待つ。
+2. 次テーマを選ぶまで新しい学習・実装へ進まない。候補は成駒の移動先候補、成駒の移動、または打ち歩詰めである。
 
 ## 再開用プロンプト
 
 ```text
 kaname-shogiの続きをお願いします。
-AGENTS.md、README.md、docs/resume.mdから最新の学習・設計・実装記録とGit状態を確認してください。
-第28回「行き所のない駒」はmainへの取り込みまで完了しています。次テーマは第29回「成り・不成の基礎」です。新しいセッションで、docs/handover-promotion-and-non-promotion.md、AGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/learning/28-no-legal-destination-drops.md、docs/knowledge/21-no-legal-destination-drops.md、Git状態を確認してください。その後、日本将棋連盟などの一次資料で、成り・不成と強制的に成る場合を確認し、確認問題を一問だけ出して本人の回答を待ってください。設計承認前にコードやテストを書かないでください。
+AGENTS.md、README.md、docs/resume.md、docs/next-topics.mdと現在のGit状態を確認してください。
+第29回「成り・不成の基礎」は実装・検証・独立レビュー・記録まで完了しています。作業ブランチ codex/promotion-and-non-promotion の取り込みは本人の承認を待ち、次テーマの候補を小さい順に示してください。成駒の移動はまだ未実装です。
 ```
 
 ## 実行場所とコマンド

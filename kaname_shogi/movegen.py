@@ -137,7 +137,7 @@ def apply_move(position: Position, source: Square, destination: Square,
     相手駒なら、出発駒を到着マスへ移し、取られた駒種を指した側の持ち駒へ1枚
     加える。これにより、手番を知らないBoardの配置責務と、対局を一手進める
     Positionの局面責務を分ける。玉は持ち駒にならないため取れない。成功後だけ
-    手番を交代する。持ち駒を盤へ打つ操作、成り、王手、合法手は検証しない。
+    手番を交代する。持ち駒を盤へ打つ操作、王手、合法手は検証しない。
     """
     piece = position.board.piece_at(source)
     if piece is not None and piece.side != position.side_to_move:

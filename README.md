@@ -140,7 +140,7 @@ from kaname_shogi.model import BasicPieceType, Square, create_initial_position
 from kaname_shogi.movegen import apply_drop
 
 position = create_initial_position()
-position.sente_hand.add(PieceType.PAWN)
+position.sente_hand.add(BasicPieceType.PAWN)
 apply_drop(position, BasicPieceType.PAWN, Square(5, 5))
 # ５五は先手の歩、先手の持ち駒の歩は0枚、手番は後手
 ```
