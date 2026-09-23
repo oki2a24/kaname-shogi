@@ -2861,16 +2861,18 @@ class UchiFuzumeTests(unittest.TestCase):
                          Piece(PieceType.PAWN, Side.SENTE))
 
     def test_reply_search_disables_nested_uchi_fuzume_check(self):
-        """打ち歩詰め確認中の応手探索は再度の打ち歩詰め確認を開始しない。
+        """王手中の応手探索へFalse設定を伝播させる。
 
-        公開apply_dropへ再入してRecursionErrorへ至る循環を、内部設定の伝播で防ぐ。
+        打ち歩詰め確認中に公開apply_dropへ再入する循環を、内部設定の伝播で防ぐ。
         """
-        position = Position(Board(), Side.GOTE)
+        position = self._pawn_drop_mate_position(Side.SENTE)
+        movegen._apply_drop_unchecked(position, BasicPieceType.PAWN,
+                                      Square(5, 2))
         position.gote_hand.add(BasicPieceType.PAWN)
 
         with patch.object(movegen, "_apply_drop",
                           wraps=movegen._apply_drop) as apply_drop:
-            self.assertTrue(movegen._has_legal_move(
+            self.assertFalse(movegen._has_legal_move(
                 position, check_uchi_fuzume=False))
 
         self.assertTrue(any(call.kwargs.get("check_uchi_fuzume") is False
