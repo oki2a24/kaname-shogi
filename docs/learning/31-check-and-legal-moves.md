@@ -62,11 +62,12 @@
 
 - タスク1レビュー：Critical 0、Important 0、Minor 2。複製直後の内容確認とRed期待値を修正した。
 - タスク2レビュー：Critical 0、Important 0、Minor 1。王手・非王手・玉なしの盤面不変テストを追加した。
-- タスク3レビュー：Critical 0、Important 0、Minor 1。READMEの旧記述を文書タスクで更新する。
+- タスク3レビュー：Critical 0、Important 0、Minor 1。READMEの旧記述を文書タスクで更新し、解消した。
+- 累積レビュー：実装コードのCritical 0、Important 0。Minorとして合い駒の駒種・手段を増やす余地があるが、今回の範囲では14駒種・遮蔽・桂馬・代表的な合い駒と局面不変を決定的テストで確認し、ファズテストは導入しない。`docs/resume.md` と `docs/next-topics.md` の第31回完了への更新は、main取り込み後に行う。
 
 ## 検証
 
-実装記録時点で、対象テストと既存回帰テストが成功している。最終的な全テスト、CLI、`git diff --check`、ブランチ状態はタスク4で再確認する。
+最終確認として `python3 -m unittest discover -s tests -v` を実行し、157件すべて成功した。`python3 -m kaname_shogi` は初期局面を表示して終了し、`git diff --check` は出力なし、`git status --short --branch` は `codex/check-and-legal-moves` のクリーンな状態を示した。
 
 ## 最後の理解確認
 
