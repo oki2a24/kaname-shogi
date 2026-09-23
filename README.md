@@ -8,7 +8,7 @@
 
 ## 現在の状態
 
-初期配置のCLI表示と、玉・歩・金・銀・桂・香・飛車・角の移動先候補を求める関数、空マスへの移動適用、手番に合う駒だけの局面移動、候補内の相手駒を取って持ち駒へ加える処理、持ち駒を打つ処理を実装しました。盤上の駒種は未成8種と成駒6種の14種を`PieceType`で表し、持ち駒は基本駒種8種の`BasicPieceType`で表します。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、`move_piece(board, source, destination)` は検証成功時に盤面を変更します。`apply_move(position, source, destination, *, promote=False)` は出発駒の所有者が手番と一致し、既存の移動先候補に含まれる移動を適用します。`promote=True` は移動元または移動先が敵陣のときだけ成りとして新しい成駒を置き、歩・香・桂が行き所を失う移動では成りを強制します。駒取りでは成駒も基本駒種へ戻して指した側の持ち駒へ加えます。`apply_drop(position, piece_type, destination)` は、手番側の持ち駒を1枚減らして空の到着マスへその側の駒を置き、手番を交代します。持ち駒不足、占有マス、玉の指定、持ち歩を打つ筋に手番側の未成の歩がある二歩、歩・香・桂を行き所のない段へ打つ操作は `ValueError` で拒否し、局面を変更しません。成駒の移動、打ち歩詰め、王手・合法手、CLI入力はまだ扱いません。
+初期配置のCLI表示と、未成駒・成駒を含む14種の移動先候補を求める関数、空マスへの移動適用、手番に合う駒だけの局面移動、候補内の相手駒を取って持ち駒へ加える処理、持ち駒を打つ処理を実装しました。盤上の駒種は未成8種と成駒6種の14種を`PieceType`で表し、持ち駒は基本駒種8種の`BasicPieceType`で表します。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、`move_piece(board, source, destination)` は検証成功時に盤面を変更します。`apply_move(position, source, destination, *, promote=False)` は出発駒の所有者が手番と一致し、既存の移動先候補に含まれる移動を適用します。`promote=True` は移動元または移動先が敵陣のときだけ成りとして新しい成駒を置き、歩・香・桂が行き所を失う移動では成りを強制します。成駒は固有の移動候補で移動し、駒取りでは基本駒種へ戻して指した側の持ち駒へ加えます。`apply_drop(position, piece_type, destination)` は、手番側の持ち駒を1枚減らして空の到着マスへその側の駒を置き、手番を交代します。持ち駒不足、占有マス、玉の指定、持ち歩を打つ筋に手番側の未成の歩がある二歩、歩・香・桂を行き所のない段へ打つ操作は `ValueError` で拒否し、局面を変更しません。打ち歩詰め、王手・合法手、CLI入力はまだ扱いません。
 
 実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
 
@@ -122,7 +122,7 @@ from kaname_shogi.movegen import move_piece
 move_piece(position.board, Square(7, 7), Square(7, 6))
 ```
 
-手番も含めて局面を進めるときは、`apply_move(position, source, destination, *, promote=False)` を使います。出発駒の所有者と`position.side_to_move`が一致し、既存の移動先候補に含まれる到着マスが空なら、出発マスを空にして駒を置き、手番を交代します。`promote=True` は移動元または移動先が敵陣にある歩・香・桂・銀・角・飛でだけ指定でき、歩・香・桂が行き所を失う移動では強制されます。成りでは不変の`Piece`を変更せず、成駒を表す新しい値を置きます。候補に含まれる相手の玉以外の駒を取る場合、成駒は基本駒種へ戻して指した側の持ち駒に加えます。玉を取ろうとした場合、所有者と手番が違う場合、候補外、成れない成り指定、強制成りでの不成、成駒の移動、空の出発マス、自駒のある到着マス、同一マスは`ValueError`となり、盤面・手番・双方の持ち駒は変更されません。成駒の移動先候補、持ち駒を打つ操作、王手、合法手判定は別の範囲です。
+手番も含めて局面を進めるときは、`apply_move(position, source, destination, *, promote=False)` を使います。出発駒の所有者と`position.side_to_move`が一致し、既存の移動先候補に含まれる到着マスが空なら、出発マスを空にして駒を置き、手番を交代します。`promote=True` は移動元または移動先が敵陣にある歩・香・桂・銀・角・飛でだけ指定でき、歩・香・桂が行き所を失う移動では強制されます。成駒は固有の候補で移動し、成駒種を保ちます。候補に含まれる相手の玉以外の駒を取る場合、取った駒は基本駒種へ戻して指した側の持ち駒に加えます。玉を取ろうとした場合、所有者と手番が違う場合、候補外、成れない成り指定、強制成りでの不成、空の出発マス、自駒のある到着マス、同一マスは`ValueError`となり、盤面・手番・双方の持ち駒は変更されません。持ち駒を打つ操作、王手、合法手判定は別の範囲です。
 
 ```python
 from kaname_shogi.model import Square, create_initial_position
@@ -145,7 +145,7 @@ apply_drop(position, BasicPieceType.PAWN, Square(5, 5))
 # ５五は先手の歩、先手の持ち駒の歩は0枚、手番は後手
 ```
 
-成駒の移動、打ち歩詰め、王手・合法手は検証しません。
+打ち歩詰め、王手・合法手は検証しません。
 
 角は `bishop_move_candidates(board, source)` で調べます。bishopは角、move_candidatesは移動先候補を求める操作です。右前・左前・右後ろ・左後ろの順に各方向を近い順で走査し、空マスと最初の相手駒のマスを候補に含めます。自駒のマスとその先は含めません。先後は出発マスの角から読み、手番には制限されません。出発点が空または角以外なら `ValueError` です。
 
@@ -170,6 +170,8 @@ print(bishop_move_candidates(board, Square(5, 5)))
 - [行き所のない駒：参照メモ](docs/knowledge/21-no-legal-destination-drops.md)
 - [第29回：成り・不成の基礎](docs/learning/29-promotion-and-non-promotion.md)
 - [成り・不成の基礎：参照メモ](docs/knowledge/22-promotion-and-non-promotion.md)
+- [第30回：成駒の移動](docs/learning/30-promoted-piece-movement.md)
+- [成駒の移動：参照メモ](docs/knowledge/23-promoted-piece-movement.md)
 - [行き所のない駒の設計](docs/plans/2026-09-22-no-legal-destination-drops-design.md)
 - [行き所のない駒の実装計画](docs/plans/2026-09-22-no-legal-destination-drops.md)
 

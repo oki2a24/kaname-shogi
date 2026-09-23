@@ -8,16 +8,16 @@
 
 `PieceType` は盤上14種、`BasicPieceType` は持ち駒8種を表す。`Piece` は不変値で、成駒の`base_piece_type`と`is_promoted`を提供する。`Position` は盤面、手番、先手の `sente_hand`、後手の `gote_hand` を持つ。`Hand` は`BasicPieceType`だけを受け付ける可変データで、玉は持ち駒に入れない。
 
-`move_piece(board, source, destination)` は空マスへの盤面操作だけを担う。`apply_move(position, source, destination, *, promote=False)` は出発駒の所有者が手番と一致し、既存候補に含まれるときだけ局面を進める。敵陣での任意成り、歩・香・桂の強制成りを検証し、成駒は次回まで移動を拒否する。到着マスが空なら移動し、相手の玉以外なら取り、成駒も基本駒種へ戻して手番側の持ち駒へ加える。失敗時は盤面・手番・双方の持ち駒を変えない。
+`move_piece(board, source, destination)` は空マスへの盤面操作だけを担う。`apply_move(position, source, destination, *, promote=False)` は出発駒の所有者が手番と一致し、既存候補に含まれるときだけ局面を進める。敵陣での任意成り、歩・香・桂の強制成りを検証し、成駒は固有の候補で移動する。到着マスが空なら移動し、相手の玉以外なら取り、取った成駒は基本駒種へ戻して手番側の持ち駒へ加える。失敗時は盤面・手番・双方の持ち駒を変えない。
 
 `apply_drop(position, piece_type, destination)` は、手番側の持ち駒を1枚減らして空マスへその側の駒を置き、手番を交代する。玉の指定、持ち駒不足、先後いずれかの駒があるマス、持ち歩を打つ筋に手番側の未成の歩がある二歩、歩・香・桂を行き所のない段へ打つ操作は `ValueError` で拒否し、局面を変えない。
 
-行き所のない歩・香・桂の駒打ち制限、成り・不成、強制成り、成駒を取ったときの基本駒種への復元は実装済みである。成駒の移動、打ち歩詰め、王手・詰み・合法手、CLI入力、履歴、評価、探索は未実装である。
+行き所のない歩・香・桂の駒打ち制限、成り・不成、強制成り、成駒の移動、成駒を取ったときの基本駒種への復元は実装済みである。打ち歩詰め、王手・詰み・合法手、CLI入力、履歴、評価、探索は未実装である。
 
 ## 読む順序
 
 1. ルートのAGENTS.md、[README](../README.md)、現在のGit状態。
-2. [成り・不成テーマの引き継ぎ](handover-promotion-and-non-promotion.md)、[第28回：行き所のない駒](learning/28-no-legal-destination-drops.md)、[第29回：成り・不成の基礎](learning/29-promotion-and-non-promotion.md)、[参照メモ](knowledge/22-promotion-and-non-promotion.md)。
+2. [成り・不成テーマの引き継ぎ](handover-promotion-and-non-promotion.md)、[第28回：行き所のない駒](learning/28-no-legal-destination-drops.md)、[第29回：成り・不成の基礎](learning/29-promotion-and-non-promotion.md)、[第30回：成駒の移動](learning/30-promoted-piece-movement.md)、[参照メモ](knowledge/23-promoted-piece-movement.md)。
 3. [状態モデル](../kaname_shogi/model.py)、[移動・候補生成](../kaname_shogi/movegen.py)、[モデルテスト](../tests/test_model.py)、[移動テスト](../tests/test_movegen.py)。
 
 ## 直近までの記録
@@ -27,7 +27,7 @@
 ## 次に行うこと
 
 1. 第29回の実装・検証・独立レビュー・最後の理解確認・記録は完了し、`main`へ取り込んだ。
-2. 次テーマは第30回「成駒の移動」に決定した。人間が下記の再開用プロンプトを新しいセッションへ入力してから、一次資料と現在の状態を確認する。
+2. 第30回「成駒の移動」は実装と検証まで完了した。最後の理解確認への回答後、次テーマを選ぶ。
 
 ## 再開用プロンプト
 
