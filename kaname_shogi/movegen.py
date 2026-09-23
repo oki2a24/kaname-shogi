@@ -670,3 +670,70 @@ def pawn_move_candidates(board: Board, source: Square) -> list[Square]:
     if occupant is not None and occupant.side == piece.side:
         return []
     return [target]
+
+
+def horse_move_candidates(board: Board, source: Square) -> list[Square]:
+    """馬（HORSE）の角の長距離と縦横1マスの候補を返す。"""
+    piece = board.piece_at(source)
+    if piece is None or piece.piece_type != PieceType.HORSE:
+        raise ValueError("出発マスには馬を指定してください")
+    forward = -1 if piece.side == Side.SENTE else 1
+    directions = ((-1, forward), (1, forward), (-1, -forward),
+                  (1, -forward))
+    candidates = []
+    for file_step, rank_step in directions:
+        next_file = source.file + file_step
+        next_rank = source.rank + rank_step
+        while 1 <= next_file <= 9 and 1 <= next_rank <= 9:
+            target = Square(next_file, next_rank)
+            occupant = board.piece_at(target)
+            if occupant is not None and occupant.side == piece.side:
+                break
+            candidates.append(target)
+            if occupant is not None:
+                break
+            next_file += file_step
+            next_rank += rank_step
+    for file_step, rank_step in ((0, forward), (-1, 0),
+                                 (0, -forward), (1, 0)):
+        next_file, next_rank = source.file + file_step, source.rank + rank_step
+        if not (1 <= next_file <= 9 and 1 <= next_rank <= 9):
+            continue
+        target = Square(next_file, next_rank)
+        occupant = board.piece_at(target)
+        if occupant is None or occupant.side != piece.side:
+            candidates.append(target)
+    return candidates
+
+
+def dragon_move_candidates(board: Board, source: Square) -> list[Square]:
+    """竜（DRAGON）の飛車の長距離と斜め1マスの候補を返す。"""
+    piece = board.piece_at(source)
+    if piece is None or piece.piece_type != PieceType.DRAGON:
+        raise ValueError("出発マスには竜を指定してください")
+    forward = -1 if piece.side == Side.SENTE else 1
+    directions = ((-1, 0), (1, 0), (0, forward), (0, -forward))
+    candidates = []
+    for file_step, rank_step in directions:
+        next_file = source.file + file_step
+        next_rank = source.rank + rank_step
+        while 1 <= next_file <= 9 and 1 <= next_rank <= 9:
+            target = Square(next_file, next_rank)
+            occupant = board.piece_at(target)
+            if occupant is not None and occupant.side == piece.side:
+                break
+            candidates.append(target)
+            if occupant is not None:
+                break
+            next_file += file_step
+            next_rank += rank_step
+    for file_step, rank_step in ((-1, forward), (1, forward),
+                                 (-1, -forward), (1, -forward)):
+        next_file, next_rank = source.file + file_step, source.rank + rank_step
+        if not (1 <= next_file <= 9 and 1 <= next_rank <= 9):
+            continue
+        target = Square(next_file, next_rank)
+        occupant = board.piece_at(target)
+        if occupant is None or occupant.side != piece.side:
+            candidates.append(target)
+    return candidates

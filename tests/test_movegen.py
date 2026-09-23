@@ -81,6 +81,104 @@ class PromotedMinorMoveCandidateTests(unittest.TestCase):
         self.assertEqual(after, before)
 
 
+class HorseMoveCandidateTests(unittest.TestCase):
+    def test_horse_combines_bishop_moves_with_one_square_orthogonal_moves(self):
+        """馬は角の長距離移動と縦横1マスを候補に含める。
+
+        馬を角または玉のどちらか一方の動きだけにする誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.HORSE, Side.SENTE))
+
+        self.assertTrue(hasattr(movegen, "horse_move_candidates"),
+                        "horse_move_candidates がまだ実装されていません")
+        result = movegen.horse_move_candidates(board, source)
+
+        expected = ([Square(4, 4), Square(3, 3), Square(2, 2), Square(1, 1),
+                     Square(6, 4), Square(7, 3), Square(8, 2), Square(9, 1),
+                     Square(4, 6), Square(3, 7), Square(2, 8), Square(1, 9),
+                     Square(6, 6), Square(7, 7), Square(8, 8), Square(9, 9)]
+                    + [Square(5, 4), Square(4, 5), Square(5, 6),
+                       Square(6, 5)])
+        self.assertEqual(result, expected)
+
+    def test_horse_respects_occupancy_and_preserves_board(self):
+        """馬は長距離の駒を飛び越さず、自駒を除き相手駒を含める。
+
+        追加1マスと角の長距離部分で占有規則を別々に誤る実装を検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.HORSE, Side.SENTE))
+        board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 4), Piece(PieceType.PAWN, Side.GOTE))
+        board.set_piece(Square(5, 4), Piece(PieceType.PAWN, Side.SENTE))
+        before = [board.piece_at(Square(file, rank))
+                  for file in range(1, 10) for rank in range(1, 10)]
+
+        self.assertTrue(hasattr(movegen, "horse_move_candidates"),
+                        "horse_move_candidates がまだ実装されていません")
+        result = movegen.horse_move_candidates(board, source)
+
+        self.assertNotIn(Square(4, 4), result)
+        self.assertNotIn(Square(3, 3), result)
+        self.assertIn(Square(6, 4), result)
+        self.assertNotIn(Square(5, 4), result)
+        self.assertEqual([board.piece_at(Square(file, rank))
+                          for file in range(1, 10) for rank in range(1, 10)], before)
+
+
+class DragonMoveCandidateTests(unittest.TestCase):
+    def test_dragon_combines_rook_moves_with_one_square_diagonal_moves(self):
+        """竜は飛車の長距離移動と斜め1マスを候補に含める。
+
+        竜を飛車または玉のどちらか一方の動きだけにする誤りを検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.DRAGON, Side.SENTE))
+
+        self.assertTrue(hasattr(movegen, "dragon_move_candidates"),
+                        "dragon_move_candidates がまだ実装されていません")
+        result = movegen.dragon_move_candidates(board, source)
+
+        expected = ([Square(4, 5), Square(3, 5), Square(2, 5), Square(1, 5),
+                     Square(6, 5), Square(7, 5), Square(8, 5), Square(9, 5),
+                     Square(5, 4), Square(5, 3), Square(5, 2), Square(5, 1),
+                     Square(5, 6), Square(5, 7), Square(5, 8), Square(5, 9)]
+                    + [Square(4, 4), Square(6, 4), Square(4, 6),
+                       Square(6, 6)])
+        self.assertEqual(result, expected)
+
+    def test_dragon_respects_occupancy_and_preserves_board(self):
+        """竜は長距離の駒を飛び越さず、自駒を除き相手駒を含める。
+
+        追加1マスと飛車の長距離部分で占有規則を別々に誤る実装を検出する。
+        """
+        board = Board()
+        source = Square(5, 5)
+        board.set_piece(source, Piece(PieceType.DRAGON, Side.SENTE))
+        board.set_piece(Square(4, 5), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 5), Piece(PieceType.PAWN, Side.GOTE))
+        board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 4), Piece(PieceType.PAWN, Side.GOTE))
+        before = [board.piece_at(Square(file, rank))
+                  for file in range(1, 10) for rank in range(1, 10)]
+
+        self.assertTrue(hasattr(movegen, "dragon_move_candidates"),
+                        "dragon_move_candidates がまだ実装されていません")
+        result = movegen.dragon_move_candidates(board, source)
+
+        self.assertNotIn(Square(4, 5), result)
+        self.assertNotIn(Square(3, 5), result)
+        self.assertIn(Square(6, 5), result)
+        self.assertNotIn(Square(4, 4), result)
+        self.assertIn(Square(6, 4), result)
+        self.assertEqual([board.piece_at(Square(file, rank))
+                          for file in range(1, 10) for rank in range(1, 10)], before)
+
+
 class MovePieceTests(unittest.TestCase):
     def _move_piece(self, board, source, destination):
         """移動適用関数を取得し、未実装をテスト失敗として扱う。"""
