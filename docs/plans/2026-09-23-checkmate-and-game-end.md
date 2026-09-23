@@ -102,7 +102,7 @@ git commit -m "feat: 合法手の有無を判定する"
 - 消費: `is_in_check(board: Board, side: Side) -> bool`、`has_legal_move(position: Position) -> bool`
 - 生産: `is_checkmate(position: Position) -> bool`、`is_game_over(position: Position) -> bool`
 
-- [ ] **ステップ 1: 失敗するテストを作成**
+- [x] **ステップ 1: 失敗するテストを作成**
 
 `CheckmateAndGameEndTests` を追加し、詰み、玉の退避・王手駒の取得・盤上合い駒・持ち駒合い駒で防げる王手、非王手、玉なし部分局面を検証する。`is_game_over` は詰みで真、他で偽であることを確認する。各操作の局面不変性を確認する。
 
@@ -121,13 +121,13 @@ def test_checkmate_and_game_over_are_true_when_checked_king_has_no_legal_move(se
     self.assertEqual(self._snapshot(position), before)
 ```
 
-- [ ] **ステップ 2: テストが失敗することを確認するために実行**
+- [x] **ステップ 2: テストが失敗することを確認するために実行**
 
 実行: `python3 -m unittest tests.test_movegen.CheckmateAndGameEndTests -v`
 
 期待値: `is_checkmate` と `is_game_over` が未実装であるため、最初の詰みテストが明示的な未実装アサーションで失敗する。局面構成の誤りやテスト読込エラーではないことを確認する。
 
-- [ ] **ステップ 3: 最小限の実装を作成**
+- [x] **ステップ 3: 最小限の実装を作成**
 
 `is_checkmate` は手番側の玉がない、または王手でない場合に `False` を返し、それ以外では `not has_legal_move(position)` を返す。`is_game_over` は `is_checkmate(position)` の結果を返す。両方のdocstringへ引数、戻り値、副作用、部分局面、詰みだけを終局とする理由を記す。
 
@@ -143,13 +143,18 @@ def is_game_over(position: Position) -> bool:
     return is_checkmate(position)
 ```
 
-- [ ] **ステップ 4: テストがパスすることを確認するために実行**
+- [x] **ステップ 4: テストがパスすることを確認するために実行**
 
 実行: `python3 -m unittest tests.test_movegen.CheckmateAndGameEndTests -v`
 
 期待値: 詰み、詰みでない王手、非王手、玉なし、局面不変性の全テストが成功する。
 
-- [ ] **ステップ 5: コミット**
+- [x] **ステップ 5: Refactorの要否を確認する**
+
+`is_checkmate` は玉の有無・王手・既存の `has_legal_move` を合成するだけであり、
+`is_game_over` も今回の範囲では詰みへ委譲する。追加の抽出や共通化は不要と判断した。
+
+- [~] **ステップ 6: コミット**
 
 ```bash
 git add kaname_shogi/movegen.py tests/test_movegen.py

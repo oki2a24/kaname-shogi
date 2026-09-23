@@ -2523,3 +2523,160 @@ class LegalMoveEnumerationTests(unittest.TestCase):
                         "has_legal_move がまだ実装されていません")
         self.assertFalse(movegen.has_legal_move(position))
         self.assertEqual(self._snapshot(position), before)
+
+
+class CheckmateAndGameEndTests(unittest.TestCase):
+    def _assert_public_operations_exist(self):
+        """詰み・終局の公開操作が未実装なら、明示的なテスト失敗にする。"""
+        self.assertTrue(hasattr(movegen, "is_checkmate"),
+                        "is_checkmate がまだ実装されていません")
+        self.assertTrue(hasattr(movegen, "is_game_over"),
+                        "is_game_over がまだ実装されていません")
+
+    def _snapshot(self, position):
+        """詰み・終局判定の前後で局面全体を比較する。"""
+        squares = [Square(file, rank)
+                   for file in range(1, 10) for rank in range(1, 10)]
+        piece_types = [piece_type for piece_type in BasicPieceType
+                       if piece_type != BasicPieceType.KING]
+        return (
+            tuple(position.board.piece_at(square) for square in squares),
+            tuple(position.sente_hand.count(piece_type)
+                  for piece_type in piece_types),
+            tuple(position.gote_hand.count(piece_type)
+                  for piece_type in piece_types),
+            position.side_to_move,
+        )
+
+    def _mated_sente_position(self):
+        """先手玉が飛車王手を防げない局面を作る。"""
+        board = Board()
+        board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 8), Piece(PieceType.ROOK, Side.GOTE))
+        board.set_piece(Square(6, 7), Piece(PieceType.GOLD, Side.GOTE))
+        board.set_piece(Square(4, 8), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 8), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(4, 9), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 9), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        return Position(board, Side.SENTE)
+
+    def test_returns_true_for_checked_king_with_no_legal_move(self):
+        """王手を受けた玉に防ぐ合法手がなければ、詰みと終局を返す。
+
+        王手だけで詰みと決めない、または終局判定を詰みへ接続しない誤りを検出する。
+        """
+        position = self._mated_sente_position()
+        before = self._snapshot(position)
+
+        self._assert_public_operations_exist()
+        self.assertTrue(movegen.is_checkmate(position))
+        self.assertTrue(movegen.is_game_over(position))
+        self.assertEqual(self._snapshot(position), before)
+
+    def test_returns_false_when_king_can_escape_check(self):
+        """玉が安全な逃げ場を持つ王手は詰みと終局にしない。
+
+        防御手の探索をせず王手だけで詰みとする誤りを検出する。
+        """
+        position = self._mated_sente_position()
+        position.board.set_piece(Square(4, 9), None)
+        before = self._snapshot(position)
+
+        self._assert_public_operations_exist()
+        self.assertFalse(movegen.is_checkmate(position))
+        self.assertFalse(movegen.is_game_over(position))
+        self.assertEqual(self._snapshot(position), before)
+
+    def test_returns_false_when_king_can_capture_checking_piece(self):
+        """安全に王手駒を取れる王手は詰みと終局にしない。
+
+        玉による王手駒の取得を防御手から漏らす誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 8), Piece(PieceType.ROOK, Side.GOTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        position = Position(board, Side.SENTE)
+
+        self._assert_public_operations_exist()
+        self.assertFalse(movegen.is_checkmate(position))
+        self.assertFalse(movegen.is_game_over(position))
+
+    def test_returns_false_when_board_piece_can_interpose(self):
+        """盤上の金で飛車王手を遮れる局面は詰みと終局にしない。
+
+        玉移動と王手駒取得だけを試し、盤上の合い駒を漏らす誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.GOTE))
+        board.set_piece(Square(4, 8), Piece(PieceType.GOLD, Side.SENTE))
+        board.set_piece(Square(6, 8), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(4, 9), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 9), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        position = Position(board, Side.SENTE)
+
+        self._assert_public_operations_exist()
+        self.assertFalse(movegen.is_checkmate(position))
+        self.assertFalse(movegen.is_game_over(position))
+
+    def test_returns_false_when_hand_piece_can_interpose(self):
+        """持ち金で飛車王手を遮れる局面は詰みと終局にしない。
+
+        盤上移動だけを試し、持ち駒による合い駒を漏らす誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.GOTE))
+        board.set_piece(Square(4, 8), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 8), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(4, 9), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 9), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        position.sente_hand.add(BasicPieceType.GOLD)
+
+        self._assert_public_operations_exist()
+        self.assertFalse(movegen.is_checkmate(position))
+        self.assertFalse(movegen.is_game_over(position))
+
+    def test_returns_false_when_forced_promotion_can_interpose(self):
+        """強制成りの歩が飛車王手を遮れる局面は詰みと終局にしない。
+
+        不成だけを試して強制成りの防御手を取りこぼす誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 1), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(1, 1), Piece(PieceType.ROOK, Side.GOTE))
+        board.set_piece(Square(4, 2), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(5, 2), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 2), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 1), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.GOTE))
+        position = Position(board, Side.SENTE)
+
+        self._assert_public_operations_exist()
+        self.assertFalse(movegen.is_checkmate(position))
+        self.assertFalse(movegen.is_game_over(position))
+
+    def test_returns_false_for_non_checked_or_kingless_partial_position(self):
+        """王手でない局面と玉なし部分局面は詰み・終局にしない。
+
+        合法手なしだけを詰みとする、玉なしを例外や詰みとする誤りを検出する。
+        """
+        non_checked = Position(Board(), Side.SENTE)
+        non_checked.board.set_piece(Square(5, 5),
+                                    Piece(PieceType.KING, Side.SENTE))
+        non_checked.board.set_piece(Square(9, 1),
+                                    Piece(PieceType.KING, Side.GOTE))
+        kingless = Position(Board(), Side.SENTE)
+
+        for position in (non_checked, kingless):
+            with self.subTest(position=position):
+                before = self._snapshot(position)
+                self._assert_public_operations_exist()
+                self.assertFalse(movegen.is_checkmate(position))
+                self.assertFalse(movegen.is_game_over(position))
+                self.assertEqual(self._snapshot(position), before)

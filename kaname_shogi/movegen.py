@@ -442,6 +442,49 @@ def has_legal_move(position: Position) -> bool:
     return False
 
 
+def is_checkmate(position: Position) -> bool:
+    """手番側が王手を受け、合法手がなければ詰みかを返す。
+
+    引数:
+        position: 調べる盤面、手番、先後の持ち駒を持つ局面。
+
+    戻り値:
+        手番側の玉が盤上にあり王手を受け、現在実装済みの規則で防ぐ手が
+        一つもないときTrue。それ以外はFalse。
+
+    副作用:
+        positionの盤面、手番、双方の持ち駒を変更しない。
+
+    詰みは防ぎようのない王手なので、王手でない局面を合法手なしだけで詰みには
+    しない。玉がない部分局面も、既存のis_in_checkと同じく詰みではないFalseと
+    する。終局規則のうち投了、千日手、持将棋、入玉、反則勝敗、打ち歩詰めは
+    この操作の対象外である。
+    """
+    side = position.side_to_move
+    if _find_king_square(position.board, side) is None:
+        return False
+    return (is_in_check(position.board, side)
+            and not has_legal_move(position))
+
+
+def is_game_over(position: Position) -> bool:
+    """今回の範囲で、詰みによって対局が終局かを返す。
+
+    引数:
+        position: 調べる盤面、手番、先後の持ち駒を持つ局面。
+
+    戻り値:
+        今回唯一扱う終局である詰みならTrue、それ以外ならFalse。
+
+    副作用:
+        positionの盤面、手番、双方の持ち駒を変更しない。
+
+    終局という判定を詰みから分けることで、将来に投了や千日手などを扱う場所を
+    明確にする。今回の終局範囲は詰みだけなので、is_checkmateの結果を返す。
+    """
+    return is_checkmate(position)
+
+
 def king_move_candidates(board: Board, source: Square) -> list[Square]:
     """出発マスの玉について、周囲8方向の移動先候補を返す。
 
