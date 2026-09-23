@@ -50,6 +50,10 @@
 
 ## 再開用プロンプト
 
+## セッション再開の手順
+
+次テーマを選んだ後、アシスタントはこの引き継ぎ文書と `docs/resume.md` に再開用プロンプトを記録する。人間がそのコードブロックを新しいセッションへ入力して初めて、次テーマの学習を開始する。アシスタントは人間の入力前に、一次資料の確認、確認問題、設計、実装を先取りしない。この入力手順自体を、テーマ間の学習・実装を安全に分離する工程として扱う。
+
 ```text
 kaname-shogiの第31回「王手と合法手判定」を始めてください。
 最初にAGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/learning/30-promoted-piece-movement.md、docs/knowledge/23-promoted-piece-movement.md、docs/02-project-direction.md、kaname_shogi/model.py、kaname_shogi/movegen.py、kaname_shogi/display.py、tests/test_movegen.pyを読み、git status --short --branchで現在の状態を確認してください。
