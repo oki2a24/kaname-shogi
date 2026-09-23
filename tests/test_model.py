@@ -4,7 +4,8 @@ from dataclasses import FrozenInstanceError
 import unittest
 
 from kaname_shogi import model
-from kaname_shogi.model import Board, Piece, PieceType, Side, Square
+from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType, Side,
+                                Square)
 from kaname_shogi.model import create_initial_position
 
 
@@ -115,6 +116,45 @@ class BoardTests(unittest.TestCase):
 
 
 class HandTests(unittest.TestCase):
+    def test_piece_type_contains_six_promoted_board_variants(self):
+        """盤上駒種は6種類の成駒を含む14種類である。
+
+        成駒を未成駒と別の盤上状態として保持できない誤りを検出する。
+        """
+        for name in ["PRO_PAWN", "PRO_LANCE", "PRO_KNIGHT", "PRO_SILVER",
+                     "HORSE", "DRAGON"]:
+            with self.subTest(name=name):
+                self.assertIn(name, model.PieceType.__members__)
+
+    def test_basic_piece_type_is_separate_from_board_piece_type(self):
+        """持ち駒用の基本駒種型が盤上駒種型と分かれている。
+
+        成駒を持ち駒へそのまま加える混用を、型の責務分離で防ぐための前提を確認する。
+        """
+        self.assertTrue(hasattr(model, "BasicPieceType"))
+
+    def test_promoted_piece_reports_basic_type_and_promotion(self):
+        """と金は歩へ復元でき、成駒として判定できる。
+
+        成駒を持ち駒へ加えるときにと金のまま扱う誤りを検出する。
+        """
+        self.assertIn("PRO_PAWN", model.PieceType.__members__)
+        basic_piece_type = model.BasicPieceType.PAWN
+        piece = model.Piece(model.PieceType.PRO_PAWN, model.Side.SENTE)
+        self.assertEqual(piece.base_piece_type, basic_piece_type)
+        self.assertTrue(piece.is_promoted)
+
+    def test_hand_rejects_board_piece_type_without_changing_counts(self):
+        """持ち駒は盤上駒種を受け取らず、枚数を変更しない。
+
+        成駒を含むPieceTypeを持ち駒へ混入させる誤りを検出する。
+        """
+        self.assertIn("PRO_PAWN", model.PieceType.__members__)
+        hand = model.Hand()
+        with self.assertRaises(ValueError):
+            hand.add(model.PieceType.PRO_PAWN)
+        self.assertEqual(hand.count(model.BasicPieceType.PAWN), 0)
+
     def test_counts_cannot_be_supplied_at_creation(self):
         """持ち駒の内部枚数は生成時に外部から渡せない。
 
@@ -130,8 +170,8 @@ class HandTests(unittest.TestCase):
         """
         self.assertTrue(hasattr(model, "Hand"), "Hand がまだ実装されていません")
         hand = model.Hand()
-        for piece_type in PieceType:
-            if piece_type != PieceType.KING:
+        for piece_type in BasicPieceType:
+            if piece_type != BasicPieceType.KING:
                 self.assertEqual(hand.count(piece_type), 0)
         hand.add(PieceType.PAWN)
         self.assertEqual(hand.count(PieceType.PAWN), 1)

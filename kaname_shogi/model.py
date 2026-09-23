@@ -26,11 +26,30 @@ class Side(Enum):
 
 
 class PieceType(Enum):
-    """成る前の基本8種類。所有者と表示名はこの型に含めない。
+    """盤上の駒種14種類。成駒名は日本将棋の盤上表現を表す。
 
-    玉と王は同じKINGとして扱う。成り状態は必要な実装段階で追加する。
+    玉と王は同じKINGとして扱う。持ち駒で使う基本駒種はBasicPieceTypeで表す。
     auto()の数値を外部形式や永続化の識別子として使用しない。
     """
+
+    KING = auto()    # 玉将・王将（玉・王）
+    ROOK = auto()    # 飛車（飛）
+    BISHOP = auto()  # 角行（角）
+    GOLD = auto()    # 金将（金）
+    SILVER = auto()  # 銀将（銀）
+    KNIGHT = auto()  # 桂馬（桂）
+    LANCE = auto()   # 香車（香）
+    PAWN = auto()    # 歩兵（歩）
+    PRO_PAWN = auto()    # と金
+    PRO_LANCE = auto()   # 成香
+    PRO_KNIGHT = auto()  # 成桂
+    PRO_SILVER = auto()  # 成銀
+    HORSE = auto()       # 龍馬（馬）
+    DRAGON = auto()      # 龍王（竜）
+
+
+class BasicPieceType(Enum):
+    """持ち駒と成駒からの復元に使う基本8種類。"""
 
     KING = auto()    # 玉将・王将（玉・王）
     ROOK = auto()    # 飛車（飛）
@@ -79,16 +98,38 @@ class Square:
 
 @dataclass(frozen=True)
 class Piece:
-    """駒種piece_typeと所有者sideを組にした、変更不可の値。
+    """盤上の駒種piece_typeと所有者sideを組にした、変更不可の値。
 
     位置はBoardが保持するため、Piece自身には座標や個体番号を持たせない。
-    将来、成りや所有者変更を扱う場合は新しいPieceで置き換える方針。
-    現在は成り状態を持たない。型注釈は実行時の型検証ではないので、
-    呼び出し側はPieceTypeとSideの列挙値を渡す。
+    成りや所有者変更は既存値を書き換えず、新しいPieceで置き換える。
     """
 
     piece_type: PieceType
     side: Side
+
+    @property
+    def base_piece_type(self) -> BasicPieceType:
+        """盤上の駒種を持ち駒用の基本駒種へ戻す読み取り専用の値を返す。"""
+        promoted_types = {
+            PieceType.PRO_PAWN: BasicPieceType.PAWN,
+            PieceType.PRO_LANCE: BasicPieceType.LANCE,
+            PieceType.PRO_KNIGHT: BasicPieceType.KNIGHT,
+            PieceType.PRO_SILVER: BasicPieceType.SILVER,
+            PieceType.HORSE: BasicPieceType.BISHOP,
+            PieceType.DRAGON: BasicPieceType.ROOK,
+        }
+        if self.piece_type in promoted_types:
+            return promoted_types[self.piece_type]
+        return BasicPieceType[self.piece_type.name]
+
+    @property
+    def is_promoted(self) -> bool:
+        """盤上の駒が成駒ならTrue、未成駒ならFalseを返す。"""
+        return self.piece_type in {
+            PieceType.PRO_PAWN, PieceType.PRO_LANCE,
+            PieceType.PRO_KNIGHT, PieceType.PRO_SILVER,
+            PieceType.HORSE, PieceType.DRAGON,
+        }
 
 
 @dataclass
@@ -104,12 +145,18 @@ class Hand:
     _counts: dict[PieceType, int] = field(default_factory=dict,
                                           init=False, repr=False)
 
-    def _validate_piece_type(self, piece_type: PieceType) -> None:
-        """持ち駒にできる基本駒種かを確認し、玉ならValueErrorにする。"""
-        if piece_type == PieceType.KING:
+    def _validate_piece_type(self, piece_type: BasicPieceType) -> BasicPieceType:
+        """持ち駒にできる基本駒種へ正規化し、玉ならValueErrorにする。"""
+        if isinstance(piece_type, PieceType):
+            if piece_type.name in BasicPieceType.__members__:
+                piece_type = BasicPieceType[piece_type.name]
+        if not isinstance(piece_type, BasicPieceType):
+            raise ValueError("持ち駒には基本駒種を指定してください")
+        if piece_type == BasicPieceType.KING:
             raise ValueError("玉は持ち駒にできません")
+        return piece_type
 
-    def count(self, piece_type: PieceType) -> int:
+    def count(self, piece_type: BasicPieceType) -> int:
         """piece_typeの持ち駒枚数を返し、状態を変更しない。
 
         引数:
@@ -124,10 +171,10 @@ class Hand:
         countは枚数を読む操作であり、持ち駒や局面を変更しない。駒打ちの可否は
         将来の別の操作で扱うため、ここでは判定しない。
         """
-        self._validate_piece_type(piece_type)
+        piece_type = self._validate_piece_type(piece_type)
         return self._counts.get(piece_type, 0)
 
-    def add(self, piece_type: PieceType) -> None:
+    def add(self, piece_type: BasicPieceType) -> None:
         """piece_typeを1枚加え、持ち駒を変更する。
 
         引数:
@@ -142,10 +189,10 @@ class Hand:
         addは枚数を増やす操作であり、駒がどちらの側のものかは判断しない。
         Positionが駒取りを適用するときに、指した側のHandを選ぶ。
         """
-        self._validate_piece_type(piece_type)
+        piece_type = self._validate_piece_type(piece_type)
         self._counts[piece_type] = self.count(piece_type) + 1
 
-    def remove(self, piece_type: PieceType) -> None:
+    def remove(self, piece_type: BasicPieceType) -> None:
         """piece_typeを1枚減らし、持ち駒を変更する。
 
         引数:
@@ -161,7 +208,7 @@ class Hand:
         removeは枚数を減らす操作であり、盤面・先後・手番は判断しない。局面操作が
         持ち駒を盤へ打つときに、どちらのHandを減らすかを選ぶ。
         """
-        self._validate_piece_type(piece_type)
+        piece_type = self._validate_piece_type(piece_type)
         if self.count(piece_type) == 0:
             raise ValueError("指定した駒は持ち駒にありません")
         self._counts[piece_type] = self.count(piece_type) - 1

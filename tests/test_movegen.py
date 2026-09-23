@@ -3,7 +3,8 @@
 import unittest
 
 from kaname_shogi import movegen
-from kaname_shogi.model import Board, Piece, PieceType, Position, Side, Square
+from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
+                                Position, Side, Square)
 from kaname_shogi.movegen import (
     bishop_move_candidates, gold_move_candidates, lance_move_candidates,
     king_move_candidates, knight_move_candidates, pawn_move_candidates,
@@ -102,8 +103,8 @@ class ApplyMoveTests(unittest.TestCase):
 
     def _hand_counts(self, position):
         """先後の玉以外の持ち駒枚数を、比較用の変更不可の値として返す。"""
-        piece_types = [piece_type for piece_type in PieceType
-                       if piece_type != PieceType.KING]
+        piece_types = [piece_type for piece_type in BasicPieceType
+                       if piece_type != BasicPieceType.KING]
         return (
             tuple(position.sente_hand.count(piece_type)
                   for piece_type in piece_types),
@@ -298,8 +299,8 @@ class ApplyDropTests(unittest.TestCase):
 
     def _hand_counts(self, position):
         """先後の玉以外の持ち駒枚数を、比較用の変更不可の値として返す。"""
-        piece_types = [piece_type for piece_type in PieceType
-                       if piece_type != PieceType.KING]
+        piece_types = [piece_type for piece_type in BasicPieceType
+                       if piece_type != BasicPieceType.KING]
         return (
             tuple(position.sente_hand.count(piece_type)
                   for piece_type in piece_types),
