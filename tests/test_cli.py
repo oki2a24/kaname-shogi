@@ -3,6 +3,7 @@
 import unittest
 from unittest.mock import patch
 
+from kaname_shogi.game_record import RecordedDrop, RecordedMove
 from kaname_shogi import cli
 from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
                                 Position, Side, Square, create_initial_position)
@@ -116,11 +117,60 @@ class GameplayTests(unittest.TestCase):
 
         with patch.object(cli, "create_initial_position",
                           return_value=position, create=True):
-            cli.run_game(input_fn=inputs, output_fn=outputs.append)
+            record = cli.run_game(input_fn=inputs, output_fn=outputs.append)
 
-        self.assertEqual(position.board.piece_at(Square(5, 5)),
+        self.assertIsNotNone(record, "run_gameが対局記録を返していません")
+        if record is None:
+            return
+        self.assertEqual(record.moves,
+                         (RecordedDrop(BasicPieceType.PAWN, Square(5, 5)),))
+        self.assertEqual(record.current_position.board.piece_at(Square(5, 5)),
                          Piece(PieceType.PAWN, Side.SENTE))
-        self.assertEqual(position.sente_hand.count(BasicPieceType.PAWN), 0)
+        self.assertEqual(record.current_position.sente_hand.count(
+            BasicPieceType.PAWN), 0)
+
+    def test_returns_record_with_successful_moves_on_eof(self):
+        """EOF時に成功手を含む対局記録を返す。
+
+        CLI表示だけで履歴を失わず、終了時点の局面と順序どおりの記録を呼び出し側へ
+        渡せることを検出する。
+        """
+        inputs = ScriptedInput(["move 7 7 7 6", "move 3 3 3 4"])
+        outputs = []
+
+        record = cli.run_game(input_fn=inputs, output_fn=outputs.append)
+
+        self.assertIsNotNone(record, "run_gameが対局記録を返していません")
+        if record is None:
+            return
+        self.assertEqual(record.moves, (
+            RecordedMove(Square(7, 7), Square(7, 6), False),
+            RecordedMove(Square(3, 3), Square(3, 4), False),
+        ))
+        self.assertEqual(record.current_position.side_to_move, Side.SENTE)
+
+    def test_returns_empty_record_when_sente_resigns(self):
+        """投了時に空の対局記録を返す。
+
+        投了は指し手履歴へ含めず、開始局面から変化していない記録を呼び出し側へ
+        渡すことを検出する。
+        """
+        inputs = ScriptedInput(["resign"])
+        outputs = []
+
+        record = cli.run_game(input_fn=inputs, output_fn=outputs.append)
+
+        self.assertIsNotNone(record, "run_gameが対局記録を返していません")
+        if record is None:
+            return
+        self.assertEqual(record.moves, ())
+        initial = record.position_at(0)
+        current = record.current_position
+        self.assertEqual(current.side_to_move, Side.SENTE)
+        for square in (Square(7, 7), Square(2, 8), Square(5, 9),
+                       Square(5, 1)):
+            self.assertEqual(current.board.piece_at(square),
+                             initial.board.piece_at(square))
 
     def test_stops_when_sente_resigns_without_changing_position(self):
         """先手が投了すると、局面を変えず後手の勝ちを表示して終了する。"""
@@ -131,13 +181,17 @@ class GameplayTests(unittest.TestCase):
 
         with patch.object(cli, "create_initial_position",
                           return_value=position, create=True):
-            cli.run_game(input_fn=inputs, output_fn=outputs.append)
+            record = cli.run_game(input_fn=inputs, output_fn=outputs.append)
 
+        self.assertIsNotNone(record, "run_gameが対局記録を返していません")
+        if record is None:
+            return
         self.assertEqual(inputs.calls, 1)
-        self.assertEqual(position.side_to_move, Side.SENTE)
-        self.assertEqual(position.board.piece_at(Square(7, 7)),
+        self.assertEqual(record.current_position.side_to_move, Side.SENTE)
+        self.assertEqual(record.current_position.board.piece_at(Square(7, 7)),
                          Piece(PieceType.PAWN, Side.SENTE))
-        self.assertEqual(position.sente_hand.count(BasicPieceType.PAWN), 1)
+        self.assertEqual(record.current_position.sente_hand.count(
+            BasicPieceType.PAWN), 1)
         self.assertIn("先手が投了しました。後手の勝ちです。", outputs)
         self.assertNotIn("入力を終了しました。", outputs)
 
@@ -149,11 +203,14 @@ class GameplayTests(unittest.TestCase):
 
         with patch.object(cli, "create_initial_position",
                           return_value=position, create=True):
-            cli.run_game(input_fn=inputs, output_fn=outputs.append)
+            record = cli.run_game(input_fn=inputs, output_fn=outputs.append)
 
+        self.assertIsNotNone(record, "run_gameが対局記録を返していません")
+        if record is None:
+            return
         self.assertEqual(inputs.calls, 2)
-        self.assertEqual(position.side_to_move, Side.GOTE)
-        self.assertEqual(position.board.piece_at(Square(7, 6)),
+        self.assertEqual(record.current_position.side_to_move, Side.GOTE)
+        self.assertEqual(record.current_position.board.piece_at(Square(7, 6)),
                          Piece(PieceType.PAWN, Side.SENTE))
         self.assertIn("後手が投了しました。先手の勝ちです。", outputs)
         self.assertNotIn("入力を終了しました。", outputs)

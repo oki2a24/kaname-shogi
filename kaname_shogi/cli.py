@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from typing import Callable, Union
 
 from .display import render_position
-from .model import BasicPieceType, Position, Side, Square, create_initial_position
-from .movegen import apply_drop, apply_move, is_game_over
+from .game_record import GameRecord
+from .model import BasicPieceType, Side, Square, create_initial_position
+from .movegen import is_game_over
 
 
 FORMAT_ERROR = "入力形式が正しくありません。"
@@ -88,14 +89,26 @@ def parse_command(text: str) -> Union[_MoveCommand, _DropCommand,
     raise ValueError(FORMAT_ERROR)
 
 
-def _apply_command(position: Position,
+def _apply_command(record: GameRecord,
                    command: Union[_MoveCommand, _DropCommand]) -> None:
-    """解析済みの指示を対応する既存の局面操作へ一度だけ渡す。"""
+    """解析済みの指示を対局記録の操作へ一度だけ渡す。
+
+    引数:
+        record: 開始局面と成功手の履歴を保持する対局記録。
+        command: 形式解析済みの盤上移動または駒打ちのデータ。
+
+    戻り値:
+        なし（None）。合法な指示ならrecordの現在局面と履歴が更新される。
+
+    副作用:
+        `GameRecord`へ委譲し、合法性エラー時は記録を変更しない。入力イベントの
+        解析と履歴更新を分離し、成功した指し手だけを棋譜へ残すための操作である。
+    """
     if isinstance(command, _MoveCommand):
-        apply_move(position, command.source, command.destination,
-                    promote=command.promote)
+        record.apply_move(command.source, command.destination,
+                          promote=command.promote)
         return
-    apply_drop(position, command.piece_type, command.destination)
+    record.apply_drop(command.piece_type, command.destination)
 
 
 def _resignation_message(side_to_move: Side) -> str:
@@ -113,7 +126,7 @@ def _checkmate_message(side_to_move: Side) -> str:
 
 
 def run_game(*, input_fn: Callable[[], str] = input,
-             output_fn: Callable[[str], None] = print) -> None:
+             output_fn: Callable[[str], None] = print) -> GameRecord:
     """初期局面から入力を受け、合法手または投了まで対局を進める。
 
     引数:
@@ -121,35 +134,37 @@ def run_game(*, input_fn: Callable[[], str] = input,
         output_fn: 表示文字列を一つ受け取る操作。テストではprintを差し替える。
 
     戻り値:
-        なし（None）。詰み、投了、EOF、Ctrl-Cのいずれかで終了する。
+        詰み、投了、EOF、Ctrl-Cのいずれかで終了した時点の`GameRecord`。成功した
+        move / dropだけを履歴に含み、投了・EOF・Ctrl-Cは履歴に含めない。
 
     副作用:
-        初期局面を作り、局面表示と入力案内をoutput_fnへ渡す。合法な入力だけが
-        Positionを変更し、形式・合法性エラーでは同じ手番で再入力する。`resign` は
-        入力時点の手番を投了側として表示し、局面を変更せずに終了する。
+        初期局面から記録を作り、局面表示と入力案内をoutput_fnへ渡す。合法な入力だけが
+        記録の現在局面と履歴を変更し、形式・合法性エラーでは同じ手番で再入力する。
+        `resign` は入力時点の手番を投了側として表示し、記録の局面を変更せずに終了する。
 
     前提条件:
         詰みは入力前に優先して確認する。EOF/Ctrl-Cは投了や勝敗に変換しない。
         標準のinputとprintを差し替え可能にすることで、端末以外でも同じ進行を検証する。
     """
-    position = create_initial_position()
-    output_fn(render_position(position))
+    record = GameRecord(create_initial_position())
+    output_fn(render_position(record.current_position))
     while True:
+        position = record.current_position
         if is_game_over(position):
             output_fn(_checkmate_message(position.side_to_move))
-            return
+            return record
 
         output_fn("指し手を入力してください（例: move 7 7 7 6）:")
         try:
             command = parse_command(input_fn())
             if isinstance(command, _ResignCommand):
                 output_fn(_resignation_message(position.side_to_move))
-                return
-            _apply_command(position, command)
+                return record
+            _apply_command(record, command)
         except (EOFError, KeyboardInterrupt):
             output_fn("入力を終了しました。")
-            return
+            return record
         except ValueError as error:
             output_fn("エラー：" + str(error))
             continue
-        output_fn(render_position(position))
+        output_fn(render_position(record.current_position))

@@ -185,7 +185,7 @@ git commit -m "feat: 対局記録から局面を再現する"
 - 消費 (Consumes): `GameRecord(initial_position: Position)`、`GameRecord.current_position -> Position`、`GameRecord.apply_move(...) -> None`、`GameRecord.apply_drop(...) -> None`
 - 生産 (Produces): `run_game(*, input_fn: Callable[[], str] = input, output_fn: Callable[[str], None] = print) -> GameRecord`
 
-- [ ] **ステップ1: 失敗するCLI記録テストを作成**
+- [x] **ステップ1: 失敗するCLI記録テストを作成**
 
 既存のゲーム進行テストで `run_game` の戻り値を受け取り、2手の `move` の後にEOFとなった記録の履歴と現在局面を確認する。投了時の戻り値は空の履歴で、開始局面と同じ局面を再現できることを確認する。駒打ちテストでは戻り値の履歴が `RecordedDrop` となることを確認する。
 
@@ -198,13 +198,13 @@ self.assertEqual(len(record.moves), 2)
 self.assertEqual(record.current_position.side_to_move, Side.SENTE)
 ```
 
-- [ ] **ステップ2: Redを確認する**
+- [x] **ステップ2: Redを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli -v`
 
 期待値: 既存の `run_game` は `None` を返すため、戻り値の `moves` を確認する新しいテストが属性不足としてFAILする。既存テストはこの時点で維持される。
 
-- [ ] **ステップ3: 最小のCLI接続を実装する**
+- [x] **ステップ3: 最小のCLI接続を実装する**
 
 `cli.py` で `GameRecord` をインポートし、初期局面から一度だけ作る。`_apply_command` は `Position` ではなく `GameRecord` を受け、対応する記録操作を呼ぶ。`run_game` の表示・詰み判定・投了表示には `record.current_position` を使い、すべての終了分岐で同じ `record` を返す。
 
@@ -220,13 +220,13 @@ while True:
 
 `run_game` と `_apply_command` のdocstringを更新し、戻り値が対局記録であること、投了・EOF・Ctrl-Cは履歴に含めないことを明記する。入力形式、エラーメッセージ、投了・詰みの優先順位を変更しない。
 
-- [ ] **ステップ4: Greenを確認する**
+- [x] **ステップ4: Greenを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli -v`
 
 期待値: 新規の戻り値テストと既存のCLIテストがすべてPASSし、形式・合法性エラー、投了、詰み、EOF、Ctrl-Cの既存表示が維持される。
 
-- [ ] **ステップ5: タスク3をコミットする**
+- [x] **ステップ5: タスク3をコミットする**
 
 ```bash
 git add kaname_shogi/cli.py tests/test_cli.py
