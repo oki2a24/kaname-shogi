@@ -45,7 +45,7 @@ def pro_silver_move_candidates(board: Board, source: Square) -> list[Square]: ..
 - [ ] `python3 -m unittest tests.test_movegen.PromotedMinorMoveCandidateTests -v` を実行し、未実装関数による `ImportError` または `AttributeError` のRedを確認する。
 - [ ] 駒種検証後に金と同じ方向を返す非公開操作を追加し、各公開関数が委譲する最小実装と日本語docstringを追加する。
 - [ ] 同じコマンドを実行し、追加したテストがPASSすることを確認する。
-- [ ] `git add kaname_shogi/movegen.py tests/test_movegen.py && git commit -m "feat: add gold-like promoted move candidates"` を実行する。
+- [ ] `git add kaname_shogi/movegen.py tests/test_movegen.py && git commit -m "feat: 金相当の成駒の移動候補を追加"` を実行する。
 
 ### タスク2: 馬・竜の候補生成
 
@@ -62,7 +62,7 @@ def dragon_move_candidates(board: Board, source: Square) -> list[Square]: ...
 - [ ] `python3 -m unittest tests.test_movegen.HorseMoveCandidateTests tests.test_movegen.DragonMoveCandidateTests -v` を実行し、関数未実装によるRedを確認する。
 - [ ] 既存の角・飛車と同じ停止規則で長い移動を追加し、馬は上・右・下・左、竜は右上・左上・右下・左下の1マスを追加する。
 - [ ] 同じコマンドを実行し、追加したテストがPASSすることを確認する。
-- [ ] `git add kaname_shogi/movegen.py tests/test_movegen.py && git commit -m "feat: add horse and dragon move candidates"` を実行する。
+- [ ] `git add kaname_shogi/movegen.py tests/test_movegen.py && git commit -m "feat: 馬と竜の移動候補を追加"` を実行する。
 
 ### タスク3: 成駒の局面移動
 
@@ -75,7 +75,7 @@ def dragon_move_candidates(board: Board, source: Square) -> list[Square]: ...
 - [ ] `_move_candidates_for_piece` の対応表へ6成駒を追加し、`apply_move`の成駒一律拒否だけを外す。`promote=True`は既存の `_can_promote` により引き続き拒否する。
 - [ ] 同じコマンドを実行し、成駒移動・取得・不変性を含むテストがPASSすることを確認する。
 - [ ] 重複が公開関数の規則を読みにくくしていないかRefactorの要否を確認し、必要なら非公開の1マス候補操作だけを抽出して再テストする。
-- [ ] `git add kaname_shogi/movegen.py tests/test_movegen.py && git commit -m "feat: allow promoted piece moves"` を実行する。
+- [ ] `git add kaname_shogi/movegen.py tests/test_movegen.py && git commit -m "feat: 成駒の局面移動を追加"` を実行する。
 
 ### タスク4: 統合検証・記録・独立レビュー
 
