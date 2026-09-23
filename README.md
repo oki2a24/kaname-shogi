@@ -10,6 +10,8 @@
 
 初期配置のCLI表示と、未成駒・成駒を含む14種の移動先候補を求める関数、空マスへの移動適用、手番に合う駒だけの局面移動、候補内の相手駒を取って持ち駒へ加える処理、持ち駒を打つ処理を実装しました。盤上の駒種は未成8種と成駒6種の14種を`PieceType`で表し、持ち駒は基本駒種8種の`BasicPieceType`で表します。`Board.copy()`・`Hand.copy()`・`Position.copy()` は可変状態を共有しない複製を返します。CLIは平手の初期配置と「手番：先手」を表示して終了します。候補計算は盤面を変更せず、`move_piece(board, source, destination)` は検証成功時に盤面を変更します。`is_in_check(board, side)` は指定側の玉が相手駒の候補に入るかを判定します。`apply_move(position, source, destination, *, promote=False)` は出発駒の所有者、既存候補、成り、駒取りを検証した後、複製局面で試し指しし、自玉が相手の利きに残る場合は `ValueError` で拒否します。`promote=True` は移動元または移動先が敵陣のときだけ成りとして新しい成駒を置き、歩・香・桂が行き所を失う移動では成りを強制します。成駒は固有の移動候補で移動し、駒取りでは基本駒種へ戻して指した側の持ち駒へ加えます。`apply_drop(position, piece_type, destination)` も複製局面で試し打ちし、自玉が王手になる場合は拒否します。持ち駒不足、占有マス、玉の指定、持ち歩を打つ筋に手番側の未成の歩がある二歩、歩・香・桂を行き所のない段へ打つ操作も `ValueError` で拒否し、局面を変更しません。王手の検出と王手放置の禁止を扱い、詰み・打ち歩詰め・CLI入力はまだ扱いません。
 
+`has_legal_move(position)` は、手番側の全ての盤上移動・成り・駒打ちを複製局面で試し、現在実装済みの規則で一つでも指せる手があるかを返します。`is_checkmate(position)` は手番側が王手を受け、合法手がないときだけ `True` を返します。`is_game_over(position)` は今回の最小範囲では詰みだけを終局として判定します。玉がない部分局面は詰み・終局とも `False` です。打ち歩詰め、投了、千日手、持将棋、入玉、CLI入力はまだ扱いません。
+
 実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
 
 ## 実行方法
@@ -176,6 +178,10 @@ print(bishop_move_candidates(board, Square(5, 5)))
 - [王手と合法手判定：参照メモ](docs/knowledge/24-check-and-legal-moves.md)
 - [王手と合法手判定の設計仕様](docs/plans/2026-09-23-check-and-legal-moves-design.md)
 - [王手と合法手判定の実装計画](docs/plans/2026-09-23-check-and-legal-moves.md)
+- [第32回：詰み・終局判定](docs/learning/32-checkmate-and-game-end.md)
+- [詰み・終局判定：参照メモ](docs/knowledge/25-checkmate-and-game-end.md)
+- [詰み・終局判定の設計仕様](docs/plans/2026-09-23-checkmate-and-game-end-design.md)
+- [詰み・終局判定の実装計画](docs/plans/2026-09-23-checkmate-and-game-end.md)
 - [行き所のない駒の設計](docs/plans/2026-09-22-no-legal-destination-drops-design.md)
 - [行き所のない駒の実装計画](docs/plans/2026-09-22-no-legal-destination-drops.md)
 
