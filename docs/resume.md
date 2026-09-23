@@ -1,6 +1,6 @@
 # 学習・開発の再開案内
 
-第36回「棋譜・局面の保存」は実装・検証・独立レビュー・main取り込み・最後の理解確認まで完了した。次テーマは未選択である。
+第36回「棋譜・局面の保存」は実装・検証・独立レビュー・main取り込み・最後の理解確認まで完了した。次テーマとして第37回「棋譜・局面のファイル保存」を選定し、新しいセッションで始める準備を完了した。
 
 ## テーマ間のセッション再開手順
 
@@ -8,7 +8,7 @@
 
 実装計画を文書として作成・更新した場合も、内容を提示して本人の明示承認を待つ。承認前にTDD、コード・テスト変更、実装を開始しない。
 
-最終整理：2026-09-23。恒常的な運用方針はルートのAGENTS.mdを参照する。現在はmainで第36回の実装・レビュー・検証・取り込み・理解確認を完了し、本人が次テーマを選ぶまで待機している。
+最終整理：2026-09-23。恒常的な運用方針はルートのAGENTS.mdを参照する。現在はmainで第36回の実装・レビュー・検証・取り込み・理解確認を完了している。第37回のファイル形式・保存対象・読込時の扱いは未決定であり、新しいセッションで一次資料を確認し、確認問題を一問ずつ行って設計合意してから実装する。
 
 ## 現在の到達点
 
@@ -30,9 +30,16 @@
 
 ## 次に行うこと
 
-1. `docs/next-topics.md`、README、方向性を見直し、本人が次テーマを選ぶまで新しい実装を開始しない。
+1. `docs/handover-game-record-file-save.md` の再開手順に従い、現在の状態を確認する。
+2. 第37回の一次資料確認と確認問題を開始する。設計承認前にはコード・テストを変更しない。
 
-## 第36回で参照した再開用プロンプト
+## 第37回の再開用プロンプト
+
+```text
+kaname-shogiの第37回「棋譜・局面のファイル保存」を新しいセッションで始めてください。最初にAGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/02-project-direction.md、docs/learning/36-game-record-and-position-save.md、docs/knowledge/29-game-record-and-position-save.md、docs/handover-game-record-file-save.md、kaname_shogi/game_record.py、kaname_shogi/cli.py、kaname_shogi/model.py、tests/test_game_record.py、tests/test_cli.pyを読み、git status --short --branchで現在の状態を確認してください。日本将棋連盟などの一次資料で棋譜・記録に関係する規則を確認し、ファイル形式、保存対象、保存・読込の時機、エラー時の扱い、CLIとの関係、SFEN/USIの扱いを、確認問題として一度に一問ずつ出して私の回答を待ちながら合意してください。設計合意と設計承認までコードやテストを書かないでください。承認後にTDD、独立レビュー、全検証、学習記録、mainへの取り込みを行い、最後に理解確認を一問だけ出してください。コミットメッセージは日本語のConventional Commitにしてください。
+```
+
+## 第36回で参照した再開用プロンプト（履歴）
 
 ```text
 kaname-shogiの第36回「棋譜・局面の保存」を新しいセッションで始めてください。最初にAGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/02-project-direction.md、docs/learning/35-game-end-reasons.md、docs/knowledge/28-game-end-reasons.md、docs/handover-game-record-and-position-save.md、kaname_shogi/cli.py、kaname_shogi/model.py、kaname_shogi/movegen.py、tests/test_cli.pyを読み、git status --short --branchで現在の状態を確認してください。日本将棋連盟などの一次資料で棋譜・記録に関係する規則を確認し、保存対象、保存時機、再現範囲、CLIとの関係、SFEN/USIの扱いを、確認問題として一度に一問ずつ出して私の回答を待ちながら合意してください。設計合意と設計承認までコードやテストを書かないでください。承認後にTDD、独立レビュー、全検証、学習記録、mainへの取り込みを行い、最後に理解確認を一問だけ出してください。コミットメッセージは日本語のConventional Commitにしてください。
