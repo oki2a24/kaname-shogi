@@ -1,6 +1,7 @@
 """歩・金・銀・桂馬・香・飛車・角の向き・占有・盤外と、盤面不変の契約を検証する。"""
 
 import unittest
+from unittest.mock import patch
 
 from kaname_shogi import movegen
 from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
@@ -2711,3 +2712,179 @@ class CheckmateAndGameEndTests(unittest.TestCase):
                 self.assertFalse(movegen.is_checkmate(position))
                 self.assertFalse(movegen.is_game_over(position))
                 self.assertEqual(self._snapshot(position), before)
+
+
+class UchiFuzumeTests(unittest.TestCase):
+    def _snapshot(self, position):
+        """打ち歩詰め判定の前後で局面全体を比較する。"""
+        squares = [Square(file, rank)
+                   for file in range(1, 10) for rank in range(1, 10)]
+        piece_types = [piece_type for piece_type in BasicPieceType
+                       if piece_type != BasicPieceType.KING]
+        return (
+            tuple(position.board.piece_at(square) for square in squares),
+            tuple(position.sente_hand.count(piece_type)
+                  for piece_type in piece_types),
+            tuple(position.gote_hand.count(piece_type)
+                  for piece_type in piece_types),
+            position.side_to_move,
+        )
+
+    def _pawn_drop_mate_position(self, side):
+        """sideが相手玉へ歩を打つと詰む、先後両玉を持つ局面を作る。"""
+        board = Board()
+        if side == Side.SENTE:
+            board.set_piece(Square(5, 1), Piece(PieceType.KING, Side.GOTE))
+            board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
+            board.set_piece(Square(4, 3), Piece(PieceType.GOLD, Side.SENTE))
+            for square in (Square(4, 1), Square(6, 1),
+                           Square(4, 2), Square(6, 2)):
+                board.set_piece(square, Piece(PieceType.PAWN, Side.GOTE))
+            position = Position(board, Side.SENTE)
+            position.sente_hand.add(BasicPieceType.PAWN)
+            return position
+
+        board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(4, 7), Piece(PieceType.GOLD, Side.GOTE))
+        for square in (Square(4, 9), Square(6, 9),
+                       Square(4, 8), Square(6, 8)):
+            board.set_piece(square, Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.GOTE)
+        position.gote_hand.add(BasicPieceType.PAWN)
+        return position
+
+    def test_rejects_pawn_drop_that_gives_unavoidable_check(self):
+        """持ち歩で解除不能な王手をかける打ち歩詰めを拒否する。
+
+        先後の歩の向きと、拒否後の盤面・持ち駒・手番の不変性を確認する。
+        """
+        for side in Side:
+            with self.subTest(side=side):
+                position = self._pawn_drop_mate_position(side)
+                destination = (Square(5, 2) if side == Side.SENTE
+                               else Square(5, 8))
+                before = self._snapshot(position)
+
+                with self.assertRaises(ValueError):
+                    movegen.apply_drop(position, BasicPieceType.PAWN,
+                                       destination)
+
+                self.assertEqual(self._snapshot(position), before)
+
+    def test_allows_pawn_drop_when_king_can_capture_the_pawn(self):
+        """玉が打った歩を安全に取れる歩打ちは拒否しない。
+
+        王手になる持ち歩をすべて打ち歩詰めとして拒否する誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
+        position = Position(board, Side.SENTE)
+        position.sente_hand.add(BasicPieceType.PAWN)
+
+        movegen.apply_drop(position, BasicPieceType.PAWN, Square(5, 2))
+
+        self.assertEqual(position.board.piece_at(Square(5, 2)),
+                         Piece(PieceType.PAWN, Side.SENTE))
+
+    def test_allows_pawn_drop_without_check(self):
+        """相手玉を利かせない歩打ちは拒否しない。
+
+        歩を打っただけで打ち歩詰めと判定する誤りを検出する。
+        """
+        position = Position(Board(), Side.SENTE)
+        position.board.set_piece(Square(5, 1),
+                                  Piece(PieceType.KING, Side.GOTE))
+        position.board.set_piece(Square(9, 9),
+                                  Piece(PieceType.KING, Side.SENTE))
+        position.sente_hand.add(BasicPieceType.PAWN)
+
+        movegen.apply_drop(position, BasicPieceType.PAWN, Square(4, 5))
+
+        self.assertEqual(position.board.piece_at(Square(4, 5)),
+                         Piece(PieceType.PAWN, Side.SENTE))
+
+    def test_allows_pawn_drop_when_king_can_escape(self):
+        """相手玉に安全な逃げ場がある歩打ちは拒否しない。
+
+        王手を検出しただけで詰みと判定する誤りを、先手の歩の向きで検出する。
+        """
+        position = self._pawn_drop_mate_position(Side.SENTE)
+        position.board.set_piece(Square(4, 1), None)
+        before = self._snapshot(position)
+
+        movegen.apply_drop(position, BasicPieceType.PAWN, Square(5, 2))
+
+        self.assertNotEqual(self._snapshot(position), before)
+
+    def test_allows_non_pawn_drop_that_gives_checkmate(self):
+        """歩以外の駒打ちによる詰みは打ち歩詰めとして拒否しない。
+
+        打つ駒の種類を歩だけに限定し忘れる誤りを検出する。
+        """
+        position = self._pawn_drop_mate_position(Side.SENTE)
+        position.sente_hand.remove(BasicPieceType.PAWN)
+        position.sente_hand.add(BasicPieceType.GOLD)
+
+        movegen.apply_drop(position, BasicPieceType.GOLD, Square(5, 2))
+
+        self.assertEqual(position.board.piece_at(Square(5, 2)),
+                         Piece(PieceType.GOLD, Side.SENTE))
+
+    def test_allows_board_pawn_move_that_gives_checkmate(self):
+        """盤上の歩の移動による詰みは打ち歩詰めとして拒否しない。
+
+        盤上の歩の移動まで持ち歩打ちの反則へ広げる誤りを検出する。
+        """
+        position = self._pawn_drop_mate_position(Side.SENTE)
+        position.sente_hand.remove(BasicPieceType.PAWN)
+        position.board.set_piece(Square(5, 3),
+                                 Piece(PieceType.PAWN, Side.SENTE))
+
+        movegen.apply_move(position, Square(5, 3), Square(5, 2))
+
+        self.assertEqual(position.board.piece_at(Square(5, 2)),
+                         Piece(PieceType.PAWN, Side.SENTE))
+
+    def test_allows_pawn_drop_in_kingless_partial_position(self):
+        """玉のない部分局面の歩打ちは打ち歩詰めとして拒否しない。
+
+        既存のis_checkmateの玉なしFalse契約を駒打ちへ誤って広げる誤りを検出する。
+        """
+        position = Position(Board(), Side.SENTE)
+        position.sente_hand.add(BasicPieceType.PAWN)
+
+        movegen.apply_drop(position, BasicPieceType.PAWN, Square(5, 5))
+
+        self.assertEqual(position.board.piece_at(Square(5, 5)),
+                         Piece(PieceType.PAWN, Side.SENTE))
+
+    def test_reply_search_disables_nested_uchi_fuzume_check(self):
+        """王手中の応手探索へFalse設定を伝播させる。
+
+        打ち歩詰め確認中に公開apply_dropへ再入する循環を、内部設定の伝播で防ぐ。
+        """
+        position = self._pawn_drop_mate_position(Side.SENTE)
+        movegen._apply_drop_unchecked(position, BasicPieceType.PAWN,
+                                      Square(5, 2))
+        position.gote_hand.add(BasicPieceType.PAWN)
+
+        with patch.object(movegen, "_apply_drop",
+                          wraps=movegen._apply_drop) as apply_drop:
+            self.assertFalse(movegen._has_legal_move(
+                position, check_uchi_fuzume=False))
+
+        self.assertTrue(any(call.kwargs.get("check_uchi_fuzume") is False
+                            for call in apply_drop.call_args_list))
+
+    def test_pawn_drop_mate_position_has_no_legal_move(self):
+        """歩打ち後に詰んだ側の公開合法手判定はFalseを返す。
+
+        打ち歩詰めとなる歩打ち後の相手局面を、合法手ありとして数える誤りを検出する。
+        """
+        position = self._pawn_drop_mate_position(Side.SENTE)
+        movegen._apply_drop_unchecked(position, BasicPieceType.PAWN,
+                                      Square(5, 2))
+
+        self.assertFalse(movegen.has_legal_move(position))

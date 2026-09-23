@@ -370,6 +370,20 @@ def _apply_drop_unchecked(position: Position, piece_type: BasicPieceType,
         position.side_to_move = Side.SENTE
 
 
+def _apply_drop(position: Position, piece_type: BasicPieceType,
+                destination: Square, *, check_uchi_fuzume: bool) -> None:
+    """駒打ちを適用し、必要なら打ち歩詰めを拒否する非公開操作。"""
+    side = position.side_to_move
+    trial = position.copy()
+    _apply_drop_unchecked(trial, piece_type, destination)
+    if is_in_check(trial.board, side):
+        raise ValueError("自玉が王手になる手は指せません")
+    if (check_uchi_fuzume and piece_type == BasicPieceType.PAWN
+            and _is_checkmate(trial, check_uchi_fuzume=False)):
+        raise ValueError("打ち歩詰めはできません")
+    _apply_drop_unchecked(position, piece_type, destination)
+
+
 def apply_drop(position: Position, piece_type: BasicPieceType,
                destination: Square) -> None:
     """持ち駒を試し打ちし、自玉が安全な場合だけ局面へ適用する。
@@ -383,37 +397,20 @@ def apply_drop(position: Position, piece_type: BasicPieceType,
         なし（None）。成功時だけ指定側の持ち駒、盤面、手番を変更する。
 
     例外:
-        ValueError: 玉、持ち駒不足、占有マス、二歩、行き所のない段、または
-            試し打ち後に自玉が相手の利きに残る場合。失敗時は本物の局面を変更しない。
+        ValueError: 玉、持ち駒不足、占有マス、二歩、行き所のない段、試し打ち後に
+            自玉が相手の利きに残る場合、または持ち歩で相手玉へ解除不能な王手を
+            かける場合。失敗時は本物の局面を変更しない。
 
     既存の玉・占有・持ち駒・二歩・行き所のない駒の検証を行った後、独立した
-    複製局面で試し打ちする。打った側の玉が相手の利きに残る場合は `ValueError`
-    とし、本物の盤面・持ち駒・手番を変更しない。打ち歩詰めと詰みは検証しない。
+    複製局面で試し打ちする。打った側の玉が相手の利きに残る場合、または持ち歩で
+    相手玉へ解除不能な王手をかける場合は `ValueError` とし、本物の盤面・持ち駒・
+    手番を変更しない。打ち歩詰めの確認中は非公開操作で再帰を一段止める。
     """
-    _apply_if_king_safe(
-        position,
-        lambda trial: _apply_drop_unchecked(trial, piece_type, destination))
+    _apply_drop(position, piece_type, destination, check_uchi_fuzume=True)
 
 
-def has_legal_move(position: Position) -> bool:
-    """手番側に現在実装済みの規則で指せる手が一つでもあるかを返す。
-
-    引数:
-        position: 調べる盤面、手番、先後の持ち駒を持つ局面。
-
-    戻り値:
-        手番側の盤上移動または駒打ちを一つでも適用できるならTrue。全候補が
-        既存規則で拒否されるならFalse。
-
-    副作用:
-        positionの盤面、手番、双方の持ち駒を変更しない。
-
-    手番側の全駒の既存候補を調べ、不成と成りの両方を複製局面へ試し指しする。
-    さらに玉以外の全持ち駒種と全81マスを複製局面へ試し打ちする。既存の
-    apply_moveとapply_dropに、成り、二歩、行き所のない駒、自玉の安全などの
-    検証を委ねることで、詰み判定用に同じ規則を重複実装しない。打ち歩詰めは
-    まだ扱わないため、この戻り値は現在実装済みの規則に限る合法手を表す。
-    """
+def _has_legal_move(position: Position, *, check_uchi_fuzume: bool) -> bool:
+    """指定方針で、手番側に合法手があるかを返す非公開操作。"""
     for file in range(1, 10):
         for rank in range(1, 10):
             source = Square(file, rank)
@@ -435,11 +432,44 @@ def has_legal_move(position: Position) -> bool:
         for file in range(1, 10):
             for rank in range(1, 10):
                 try:
-                    apply_drop(position.copy(), piece_type, Square(file, rank))
+                    _apply_drop(position.copy(), piece_type,
+                                Square(file, rank),
+                                check_uchi_fuzume=check_uchi_fuzume)
                 except ValueError:
                     continue
                 return True
     return False
+
+
+def has_legal_move(position: Position) -> bool:
+    """手番側に現在実装済みの規則で指せる手が一つでもあるかを返す。
+
+    引数:
+        position: 調べる盤面、手番、先後の持ち駒を持つ局面。
+
+    戻り値:
+        手番側の盤上移動または駒打ちを一つでも適用できるならTrue。全候補が
+        既存規則で拒否されるならFalse。
+
+    副作用:
+        positionの盤面、手番、双方の持ち駒を変更しない。
+
+    手番側の全駒の既存候補を調べ、不成と成りの両方を複製局面へ試し指しする。
+    さらに玉以外の全持ち駒種と全81マスを複製局面へ試し打ちする。既存の
+    apply_moveとapply_dropに、成り、二歩、行き所のない駒、自玉の安全、打ち歩詰めの
+    検証を委ねることで、詰み判定用に同じ規則を重複実装しない。
+    """
+    return _has_legal_move(position, check_uchi_fuzume=True)
+
+
+def _is_checkmate(position: Position, *, check_uchi_fuzume: bool) -> bool:
+    """指定方針で、手番側が詰みかを返す非公開操作。"""
+    side = position.side_to_move
+    if _find_king_square(position.board, side) is None:
+        return False
+    return (is_in_check(position.board, side)
+            and not _has_legal_move(position,
+                                    check_uchi_fuzume=check_uchi_fuzume))
 
 
 def is_checkmate(position: Position) -> bool:
@@ -457,14 +487,11 @@ def is_checkmate(position: Position) -> bool:
 
     詰みは防ぎようのない王手なので、王手でない局面を合法手なしだけで詰みには
     しない。玉がない部分局面も、既存のis_in_checkと同じく詰みではないFalseと
-    する。終局規則のうち投了、千日手、持将棋、入玉、反則勝敗、打ち歩詰めは
-    この操作の対象外である。
+    する。打ち歩詰め自体を返り値として判定するのではなく、合法手探索で
+    打ち歩詰めとなる駒打ちを除外する。終局規則のうち投了、千日手、持将棋、
+    入玉、反則勝敗はこの操作の対象外である。
     """
-    side = position.side_to_move
-    if _find_king_square(position.board, side) is None:
-        return False
-    return (is_in_check(position.board, side)
-            and not has_legal_move(position))
+    return _is_checkmate(position, check_uchi_fuzume=True)
 
 
 def is_game_over(position: Position) -> bool:
