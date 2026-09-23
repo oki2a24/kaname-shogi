@@ -104,18 +104,18 @@
 
 **ファイル:** 実装・テスト4ファイル、`README.md`、`docs/knowledge/22-promotion-and-non-promotion.md`、`docs/learning/29-promotion-and-non-promotion.md`
 
-- [ ] **ステップ1: Refactor要否を確認する**
+- [x] **ステップ1: Refactor要否を確認する**
 
 対応表の重複、判定と局面変更の混在、公開docstringの不一致を確認する。必要なら対応表を一つの非公開操作へ集約するが、候補生成の再構成はしない。
 
-- [ ] **ステップ2: 全検証を実行する**
+- [x] **ステップ2: 全検証を実行する**
 
 `python3 -m unittest discover -s tests -v`、`python3 -m kaname_shogi`、`git diff --check main...HEAD`、`git status --short --branch`を順に実行する。全テスト成功、CLIの初期局面表示、差分検査出力なし、新ブランチを確認する。
 
-- [ ] **ステップ3: 独立コードレビューを実施する**
+- [x] **ステップ3: 独立コードレビューを実施する**
 
 敵陣の先後・出発・到着判定、強制成りの不変性、成駒取り、と金の二歩除外、成駒の未成扱い拒否、二つの駒種の混用を確認する。Critical・Important・Minorと対応を記録し、CriticalまたはImportantは修正・再検証・再レビューする。
 
-- [ ] **ステップ4: README・知識・学習記録を更新してコミットする**
+- [x] **ステップ4: README・知識・学習記録を更新してコミットする**
 
 READMEには14種/8種の区別、`promote`、成駒取り、成駒移動が未実装であることを記す。知識メモには一次資料、敵陣、任意成り・不成・強制成り、復元と二歩を記す。学習記録には確認問題6問、承認済み設計、実際のRed/Green/検証/レビュー結果だけを記す。全ファイルを`docs: 成り・不成の学習を記録`としてコミットし、mainへの取り込みは本人の承認を待つ。
