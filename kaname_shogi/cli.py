@@ -1,9 +1,11 @@
 """指し手入力の解析と、標準入出力による対局進行を扱う。"""
 
 from dataclasses import dataclass
-from typing import Union
+from typing import Callable, Union
 
-from .model import BasicPieceType, Square
+from .display import render_position
+from .model import BasicPieceType, Position, Side, Square, create_initial_position
+from .movegen import apply_drop, apply_move, is_game_over
 
 
 FORMAT_ERROR = "入力形式が正しくありません。"
@@ -76,3 +78,59 @@ def parse_command(text: str) -> Union[_MoveCommand, _DropCommand]:
             raise ValueError(FORMAT_ERROR) from error
 
     raise ValueError(FORMAT_ERROR)
+
+
+def _apply_command(position: Position,
+                   command: Union[_MoveCommand, _DropCommand]) -> None:
+    """解析済みの指示を対応する既存の局面操作へ一度だけ渡す。"""
+    if isinstance(command, _MoveCommand):
+        apply_move(position, command.source, command.destination,
+                    promote=command.promote)
+        return
+    apply_drop(position, command.piece_type, command.destination)
+
+
+def _checkmate_message(side_to_move: Side) -> str:
+    """詰まされた手番から勝者表示を作る。"""
+    winner = Side.GOTE if side_to_move == Side.SENTE else Side.SENTE
+    winner_name = "先手" if winner == Side.SENTE else "後手"
+    return f"詰みです。{winner_name}の勝ちです。"
+
+
+def run_game(*, input_fn: Callable[[], str] = input,
+             output_fn: Callable[[str], None] = print) -> None:
+    """初期局面から入力を受け、合法手を適用して詰みまで対局を進める。
+
+    引数:
+        input_fn: 入力文字列を一つ返す操作。テストでは端末のinputを差し替える。
+        output_fn: 表示文字列を一つ受け取る操作。テストではprintを差し替える。
+
+    戻り値:
+        なし（None）。詰み、EOF、Ctrl-Cのいずれかで終了する。
+
+    副作用:
+        初期局面を作り、局面表示と入力案内をoutput_fnへ渡す。合法な入力だけが
+        Positionを変更し、形式・合法性エラーでは同じ手番で再入力する。
+
+    前提条件:
+        今回の終局判定は詰みだけであり、投了・反則勝敗などは扱わない。標準の
+        inputとprintを差し替え可能にすることで、端末以外でも同じ進行を検証する。
+    """
+    position = create_initial_position()
+    output_fn(render_position(position))
+    while True:
+        if is_game_over(position):
+            output_fn(_checkmate_message(position.side_to_move))
+            return
+
+        output_fn("指し手を入力してください（例: move 7 7 7 6）:")
+        try:
+            command = parse_command(input_fn())
+            _apply_command(position, command)
+        except (EOFError, KeyboardInterrupt):
+            output_fn("入力を終了しました。")
+            return
+        except ValueError as error:
+            output_fn("エラー：" + str(error))
+            continue
+        output_fn(render_position(position))

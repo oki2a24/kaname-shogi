@@ -211,7 +211,7 @@
 - 消費: `parse_command(text: str)`、`apply_move`、`apply_drop`、`is_game_over`、`render_position`
 - 生産: `run_game(*, input_fn: Callable[[], str] = input, output_fn: Callable[[str], None] = print) -> None`
 
-- [ ] **ステップ1: 進行の失敗するテストを作成する**
+- [x] **ステップ1: 進行の失敗するテストを作成する**
 
   `tests/test_cli.py` に、値を順番に返す `ScriptedInput` と出力文字列を蓄積する
   `outputs.append` を用意する。以下を個別テストにする。
@@ -237,14 +237,14 @@
   詰み、先手が５三→５二と指して後手を詰ませる局面を同じ方法で作り、それぞれ終了
   メッセージまたは `詰みです。先手の勝ちです。` と、余分に入力を読まないことを確認する。
 
-- [ ] **ステップ2: Redを確認する**
+- [x] **ステップ2: Redを確認する**
 
   実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli.GameplayTests -v`
 
   期待値: `run_game` が未実装、または入力を一度表示して終了する現在の挙動では、再入力・
   終局停止・中断メッセージのアサーションが失敗する。読み込みエラーだけではRed完了としない。
 
-- [ ] **ステップ3: 最小の進行実装を追加する**
+- [x] **ステップ3: 最小の進行実装を追加する**
 
   `run_game` は初期局面を作って `render_position` を出力し、各周回で
   `指し手を入力してください（例: move 7 7 7 6）:` を出力してから `input_fn()` を呼ぶ。
@@ -276,13 +276,13 @@
   する前提、例外を端末へ出さず再入力・終了へ変換する理由を記す。`__main__.py` は
   `from .cli import run_game` と `run_game()` だけに変更する。
 
-- [ ] **ステップ4: Greenを確認する**
+- [x] **ステップ4: Greenを確認する**
 
   実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli.GameplayTests -v`
 
   期待値: 移動・駒打ち、形式エラー・合法性エラーの再入力、詰み、EOF、Ctrl-Cの全テストが成功する。
 
-- [ ] **ステップ5: 実プロセスのCLIを更新して確認する**
+- [x] **ステップ5: 実プロセスのCLIを更新して確認する**
 
   `tests/test_display.py` の既存CLIテストを、空の標準入力を渡してEOF終了を確認する形に
   更新する。初期局面、入力案内、`入力を終了しました。`、stderrなし、終了コード0を
@@ -292,7 +292,7 @@
 
   期待値: 実プロセスでも入力待ちが残らず、定めた文言で成功する。
 
-- [ ] **ステップ6: Refactor要否を確認しコミットする**
+- [x] **ステップ6: Refactor要否を確認しコミットする**
 
   形式解析と適用を分け、合法手規則をCLIへ重複させず、終了・エラー文言を一箇所へ保てて
   いることを確認する。

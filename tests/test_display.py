@@ -62,16 +62,21 @@ class DisplayTests(unittest.TestCase):
         self.assertEqual(render_position(position),
                          EXPECTED.replace("手番：先手", "手番：後手", 1))
 
-    def test_cli_prints_initial_position_and_exits(self):
-        """CLIは初期配置を出力し、エラーなく終了する。
+    def test_cli_starts_game_and_exits_on_eof(self):
+        """CLIは初期配置を表示し、EOFで終了メッセージを出して終了する。
 
-        実プロセスで起動し、入口の接続・末尾改行・不要なエラー出力を確認する。
+        実プロセスで起動し、入口の接続・入力終了・不要なエラー出力を確認する。
         """
         result = subprocess.run(
             [sys.executable, "-m", "kaname_shogi"],
             cwd=Path(__file__).resolve().parents[1],
-            capture_output=True, text=True, encoding="utf-8", check=False,
+            input="", capture_output=True, text=True, encoding="utf-8", check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout, EXPECTED + "\n")
+        self.assertEqual(
+            result.stdout,
+            EXPECTED + "\n"
+            "指し手を入力してください（例: move 7 7 7 6）:\n"
+            "入力を終了しました。\n",
+        )
         self.assertEqual(result.stderr, "")
