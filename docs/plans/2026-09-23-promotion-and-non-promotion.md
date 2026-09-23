@@ -62,19 +62,19 @@
 
 **生産するインターフェース:** `apply_move(position: Position, source: Square, destination: Square, *, promote: bool = False) -> None`。
 
-- [ ] **ステップ1: 失敗する成りテストを書く**
+- [x] **ステップ1: 失敗する成りテストを書く**
 
 先後双方について、敵陣へ入る任意成り、不成、移動前だけ敵陣の成り、歩・香・桂の強制成り、玉・金・成駒・敵陣外での成り指定を追加する。成駒を出発駒にした移動も拒否する。拒否時には盤面・手番・双方の持ち駒の不変性を確認する。
 
-- [ ] **ステップ2: Redを確認する**
+- [x] **ステップ2: Redを確認する**
 
 実行: `python3 -m unittest tests.test_movegen.ApplyMoveTests -v`。`promote`未対応または強制成りの未拒否による失敗を確認する。
 
-- [ ] **ステップ3: 最小実装を加える**
+- [x] **ステップ3: 最小実装を加える**
 
 `_is_enemy_camp(side, rank)`は先手の一〜三段、後手の七〜九段を返す。`_can_promote(piece, source, destination)`は未成の飛・角・銀・桂・香・歩で、出発または到着が敵陣のときだけ真とする。`_must_promote(piece, destination)`は先手の歩・香の一段、桂の一・二段と、後手の歩・香の九段、桂の八・九段で真とする。`apply_move`は全検証後にだけ更新し、`promote=True`は未成→成駒の対応表で新しい`Piece`を置く。成駒は候補関数へ渡す前に拒否する。
 
-- [ ] **ステップ4: Greenとコミットを確認する**
+- [x] **ステップ4: Greenとコミットを確認する**
 
 実行: `python3 -m unittest tests.test_movegen.ApplyMoveTests -v`。成功後、2ファイルを`feat: 成りと強制成りを適用する`としてコミットする。
 
@@ -84,19 +84,19 @@
 
 **生産するインターフェース:** `apply_drop(position: Position, piece_type: BasicPieceType, destination: Square) -> None`。成駒取りは`target_piece.base_piece_type`を持ち駒へ加える。
 
-- [ ] **ステップ1: 失敗する境界テストを書く**
+- [x] **ステップ1: 失敗する境界テストを書く**
 
 と金・成香・成桂・成銀・馬・竜の各駒取りで、歩・香・桂・銀・角・飛が持ち駒へ増えることを確認する。同じ筋にと金だけがある場合、`BasicPieceType.PAWN`を打てることも確認する。
 
-- [ ] **ステップ2: Redを確認する**
+- [x] **ステップ2: Redを確認する**
 
 実行: `python3 -m unittest tests.test_movegen.ApplyMoveTests tests.test_movegen.ApplyDropTests -v`。成駒が基本駒種へ戻らない、または二歩がと金を数える失敗を確認する。
 
-- [ ] **ステップ3: 最小実装を加える**
+- [x] **ステップ3: 最小実装を加える**
 
 駒取りは`hand.add(target_piece.base_piece_type)`を使う。`apply_drop`は`BasicPieceType`と同名の未成`PieceType`を置く。二歩の走査は`PieceType.PAWN`だけを数え、`PRO_PAWN`を除外する。
 
-- [ ] **ステップ4: Greenとコミットを確認する**
+- [x] **ステップ4: Greenとコミットを確認する**
 
 実行: `python3 -m unittest tests.test_movegen.ApplyMoveTests tests.test_movegen.ApplyDropTests -v`。成功後、2ファイルを`feat: 成駒を基本駒種として持ち駒へ戻す`としてコミットする。
 
