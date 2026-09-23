@@ -4,8 +4,8 @@ from dataclasses import FrozenInstanceError
 import unittest
 
 from kaname_shogi import model
-from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType, Side,
-                                Square)
+from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
+                                Position, Side, Square)
 from kaname_shogi.model import create_initial_position
 
 
@@ -254,6 +254,59 @@ class PositionHandTests(unittest.TestCase):
         self.assertEqual(first.gote_hand.count(BasicPieceType.PAWN), 0)
         self.assertEqual(second.sente_hand.count(BasicPieceType.PAWN), 0)
         self.assertEqual(second.gote_hand.count(BasicPieceType.ROOK), 0)
+
+    def test_board_copy_has_independent_cells(self):
+        """Board.copyは盤のマスを複製し、複製先の配置変更を元へ伝えない。
+
+        盤の内部リストを共有すると、試し指しが本物の局面を変更するため検出する。
+        """
+        board = Board()
+        square = Square(5, 5)
+        piece = Piece(PieceType.PAWN, Side.SENTE)
+        board.set_piece(square, piece)
+
+        clone = board.copy()
+        clone.set_piece(square, None)
+
+        self.assertEqual(board.piece_at(square), piece)
+        self.assertIsNone(clone.piece_at(square))
+
+    def test_hand_copy_has_independent_counts(self):
+        """Hand.copyは枚数を複製し、複製先の増減を元へ伝えない。
+
+        枚数辞書を共有すると、試し指しの駒取りや駒打ちが本物へ漏れるため検出する。
+        """
+        hand = model.Hand()
+        hand.add(BasicPieceType.PAWN)
+
+        clone = hand.copy()
+        clone.remove(BasicPieceType.PAWN)
+
+        self.assertEqual(hand.count(BasicPieceType.PAWN), 1)
+        self.assertEqual(clone.count(BasicPieceType.PAWN), 0)
+
+    def test_position_copy_has_independent_board_hands_and_turn(self):
+        """Position.copyは盤・先後の持ち駒・手番を独立して複製する。
+
+        いずれかの可変状態だけを共有すると、王手判定の試し指しで元局面が壊れるため検出する。
+        """
+        position = Position(Board(), Side.SENTE)
+        square = Square(5, 5)
+        piece = Piece(PieceType.PAWN, Side.SENTE)
+        position.board.set_piece(square, piece)
+        position.sente_hand.add(BasicPieceType.PAWN)
+        position.gote_hand.add(BasicPieceType.BISHOP)
+
+        clone = position.copy()
+        clone.board.set_piece(square, None)
+        clone.sente_hand.remove(BasicPieceType.PAWN)
+        clone.gote_hand.remove(BasicPieceType.BISHOP)
+        clone.side_to_move = Side.GOTE
+
+        self.assertEqual(position.board.piece_at(square), piece)
+        self.assertEqual(position.sente_hand.count(BasicPieceType.PAWN), 1)
+        self.assertEqual(position.gote_hand.count(BasicPieceType.BISHOP), 1)
+        self.assertEqual(position.side_to_move, Side.SENTE)
 
 
 class InitialPositionTests(unittest.TestCase):

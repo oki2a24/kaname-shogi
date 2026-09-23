@@ -210,6 +210,20 @@ class Hand:
             raise ValueError("指定した駒は持ち駒にありません")
         self._counts[piece_type] = self.count(piece_type) - 1
 
+    def copy(self) -> "Hand":
+        """持ち駒の枚数を複製した、独立したHandを返す。
+
+        戻り値:
+            元の枚数辞書を共有しない新しいHand。Pieceや局面は複製しない。
+
+        元のHandと複製先は可変データなので、試し指しで持ち駒を増減しても
+        本物の局面へ影響しないよう辞書だけを複製する。読み取りだけの操作で、
+        元のHandの枚数は変更しない。
+        """
+        clone = Hand()
+        clone._counts = self._counts.copy()
+        return clone
+
 
 class Board:
     """81マスの配置だけを保持する可変の盤。手番はPositionの責務。
@@ -245,6 +259,20 @@ class Board:
         """
         self._cells[square.to_index()] = piece
 
+    def copy(self) -> "Board":
+        """81マスの配置を複製した、独立したBoardを返す。
+
+        戻り値:
+            元のマス列を共有しない新しいBoard。各マスのPieceは変更不可の値なので
+            同じ値を参照する。
+
+        試し指しで複製先の配置だけを変更できるよう、可変なマス列を複製する。
+        この操作は元のBoardを変更しない。
+        """
+        clone = Board()
+        clone._cells = self._cells.copy()
+        return clone
+
 
 @dataclass
 class Position:
@@ -262,6 +290,20 @@ class Position:
     side_to_move: Side
     sente_hand: Hand = field(default_factory=Hand)
     gote_hand: Hand = field(default_factory=Hand)
+
+    def copy(self) -> "Position":
+        """盤・先後の持ち駒・手番を独立に複製した局面を返す。
+
+        戻り値:
+            `Board`、二つの`Hand`、`side_to_move`を持つ新しいPosition。元の
+            Positionと可変状態を共有しない。
+
+        `Square`と`Piece`は変更不可の値なので共有し、盤のマス列と持ち駒の
+        枚数辞書は各copy操作で複製する。王手判定の試し指しが本物の局面を
+        変更しないよう、局面全体をこの操作で分離する。
+        """
+        return Position(self.board.copy(), self.side_to_move,
+                        self.sente_hand.copy(), self.gote_hand.copy())
 
 
 def create_initial_position() -> Position:
