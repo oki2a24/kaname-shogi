@@ -1,6 +1,8 @@
 # 学習・開発の再開案内
 
-最終整理：2026-09-23。恒常的な運用方針はルートのAGENTS.mdを参照する。
+次テーマは第31回「王手と合法手判定」です。詳細な引き継ぎは[第31回引き継ぎ](handover-check-and-legal-moves.md)を参照してください。
+
+最終整理：2026-09-23。恒常的な運用方針はルートのAGENTS.mdを参照する。現在はmainで第30回まで完了し、次セッションで第31回を開始する。
 
 ## 現在の到達点
 
@@ -27,14 +29,15 @@
 ## 次に行うこと
 
 1. 第29回の実装・検証・独立レビュー・最後の理解確認・記録は完了し、`main`へ取り込んだ。
-2. 第30回「成駒の移動」は学習・実装・検証・レビュー・最後の理解確認まで完了した。mainへの取り込みと次テーマ選択を行う。
+2. 第30回「成駒の移動」は学習・実装・検証・レビュー・最後の理解確認・mainへの取り込みまで完了した。次テーマは第31回「王手と合法手判定」に決定した。
 
-## 再開用プロンプト
+## 第31回の再開用プロンプト
 
 ```text
-kaname-shogiの第30回「成駒の移動」を始めてください。
-最初にAGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/handover-promotion-and-non-promotion.md、docs/learning/29-promotion-and-non-promotion.md、docs/knowledge/22-promotion-and-non-promotion.md、kaname_shogi/model.py、kaname_shogi/movegen.pyを読み、git status --short --branchで現在の状態を確認してください。
-日本将棋連盟などの一次資料で成駒の動きを確認し、確認問題を一度に一問だけ出して私の回答を待ってください。設計承認前にコードやテストを書かないでください。実装後は最後の理解確認を一問行い、回答と補足を記録してから次テーマ候補を示してください。
+kaname-shogiの第31回「王手と合法手判定」を始めてください。
+最初にAGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/learning/30-promoted-piece-movement.md、docs/knowledge/23-promoted-piece-movement.md、docs/02-project-direction.md、kaname_shogi/model.py、kaname_shogi/movegen.py、kaname_shogi/display.py、tests/test_movegen.pyを読み、git status --short --branchで現在の状態を確認してください。
+日本将棋連盟などの一次資料で王手・合法手の規則を確認し、確認問題を一度に一問だけ出して私の回答を待ってください。設計承認前にコードやテストを書かないでください。実装後は最後の理解確認を一問行い、回答と補足を記録してから次テーマ候補を示してください。
+コミットメッセージは日本語のConventional Commitにしてください。
 ```
 
 ## 実行場所とコマンド
