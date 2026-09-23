@@ -6,7 +6,8 @@ import sys
 import unittest
 
 from kaname_shogi.display import render_position
-from kaname_shogi.model import Side, create_initial_position
+from kaname_shogi.model import (Board, Piece, PieceType, Position, Side,
+                                Square, create_initial_position)
 
 
 EXPECTED = """手番：先手
@@ -25,6 +26,25 @@ EXPECTED = """手番：先手
 
 
 class DisplayTests(unittest.TestCase):
+    def test_renders_all_promoted_piece_names(self):
+        """成駒6種を含む局面を、KeyErrorにせず名称付きで表示する。"""
+        position = Position(Board(), Side.SENTE)
+        promoted_pieces = (
+            (Square(1, 1), PieceType.PRO_PAWN),
+            (Square(2, 1), PieceType.PRO_LANCE),
+            (Square(3, 1), PieceType.PRO_KNIGHT),
+            (Square(4, 1), PieceType.PRO_SILVER),
+            (Square(5, 1), PieceType.HORSE),
+            (Square(6, 1), PieceType.DRAGON),
+        )
+        for square, piece_type in promoted_pieces:
+            position.board.set_piece(square, Piece(piece_type, Side.SENTE))
+
+        rendered = render_position(position)
+
+        for name in ("と", "成香", "成桂", "成銀", "馬", "竜"):
+            self.assertIn("+" + name, rendered)
+
     def test_initial_position_matches_full_display(self):
         """初期配置を先手視点で筋段・所有者付きで表示する。
 
@@ -42,16 +62,21 @@ class DisplayTests(unittest.TestCase):
         self.assertEqual(render_position(position),
                          EXPECTED.replace("手番：先手", "手番：後手", 1))
 
-    def test_cli_prints_initial_position_and_exits(self):
-        """CLIは初期配置を出力し、エラーなく終了する。
+    def test_cli_starts_game_and_exits_on_eof(self):
+        """CLIは初期配置を表示し、EOFで終了メッセージを出して終了する。
 
-        実プロセスで起動し、入口の接続・末尾改行・不要なエラー出力を確認する。
+        実プロセスで起動し、入口の接続・入力終了・不要なエラー出力を確認する。
         """
         result = subprocess.run(
             [sys.executable, "-m", "kaname_shogi"],
             cwd=Path(__file__).resolve().parents[1],
-            capture_output=True, text=True, encoding="utf-8", check=False,
+            input="", capture_output=True, text=True, encoding="utf-8", check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout, EXPECTED + "\n")
+        self.assertEqual(
+            result.stdout,
+            EXPECTED + "\n"
+            "指し手を入力してください（例: move 7 7 7 6）:\n"
+            "入力を終了しました。\n",
+        )
         self.assertEqual(result.stderr, "")
