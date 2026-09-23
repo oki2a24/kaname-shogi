@@ -63,6 +63,40 @@ class GameRecord:
         """現在局面の独立複製を返す読み取り操作。"""
         return self._current_position.copy()
 
+    @property
+    def initial_position(self) -> Position:
+        """開始局面の独立複製を返す読み取り操作。"""
+        return self._initial_position.copy()
+
+    def position_at(self, move_count: int) -> Position:
+        """開始局面から指定手数を再適用した、独立した局面を作る。
+
+        引数:
+            move_count: 開始局面から適用する履歴の手数。0は開始局面、履歴長は
+                現在局面を表す。
+
+        戻り値:
+            指定手数までの指し手を開始局面へ適用した新しい `Position`。
+
+        例外:
+            ValueError: 手数が整数でない、負数、または現在の履歴長を超える場合。
+
+        副作用:
+            記録内部の開始局面・現在局面・履歴を変更しない。履歴を再適用して
+            過去局面を作ることで、各手後の局面を全件保持せずに再現範囲を提供する。
+        """
+        if type(move_count) is not int or not 0 <= move_count <= len(self._moves):
+            raise ValueError("手数は履歴の範囲で指定してください")
+
+        position = self._initial_position.copy()
+        for move in self._moves[:move_count]:
+            if isinstance(move, RecordedMove):
+                apply_move(position, move.source, move.destination,
+                           promote=move.promote)
+            else:
+                apply_drop(position, move.piece_type, move.destination)
+        return position
+
     def apply_move(self, source: Square, destination: Square,
                    *, promote: bool = False) -> None:
         """合法な盤上移動を現在局面へ適用し、成功後だけ履歴へ追加する。

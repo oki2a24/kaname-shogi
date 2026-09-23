@@ -118,7 +118,7 @@ git commit -m "feat: 対局記録に指し手履歴を追加する"
 - 消費 (Consumes): タスク1の `GameRecord`、`RecordedMove`、`RecordedDrop`
 - 生産 (Produces): `GameRecord.initial_position -> Position`、`GameRecord.current_position -> Position`、`GameRecord.position_at(move_count: int) -> Position`
 
-- [ ] **ステップ1: 失敗する再現・複製テストを作成**
+- [x] **ステップ1: 失敗する再現・複製テストを作成**
 
 開始局面と現在局面のプロパティで受け取った局面を手動変更しても、記録から再取得した局面が変わらないことを確認する。2手の履歴で `position_at(0)`、`position_at(1)`、`position_at(2)` を比較し、各時点の駒位置・手番を確認する。`-1` と履歴長より大きい値が `ValueError` となることも確認する。
 
@@ -132,13 +132,13 @@ with self.assertRaisesRegex(ValueError, "手数"):
     record.position_at(3)
 ```
 
-- [ ] **ステップ2: Redを確認する**
+- [x] **ステップ2: Redを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_game_record -v`
 
 期待値: `initial_position`、`current_position`、`position_at` が未実装である、または複製を返さず再現範囲を検証しないため、新しい振る舞いテストがFAILする。
 
-- [ ] **ステップ3: 最小の再現・複製実装を追加する**
+- [x] **ステップ3: 最小の再現・複製実装を追加する**
 
 局面プロパティは内部局面の `copy()` を返す。`position_at` は手数の型を `int` とし、`0 <= move_count <= len(self._moves)` を満たさなければ「手数」を含む `ValueError` を送出する。開始局面の複製から履歴を先頭順に適用し、型により盤上移動・駒打ちを分岐して適用する。
 
@@ -158,15 +158,15 @@ def position_at(self, move_count: int) -> Position:
 
 `current_position` は再現結果を毎回計算せず、成功時に更新済みの内部局面の複製を返す。これにより、現在表示の責務と任意手数再現の学習目的を分ける。
 
-- [ ] **ステップ4: Greenを確認する**
+- [x] **ステップ4: Greenを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_game_record -v`
 
 期待値: タスク1・2の全テストがPASSし、外部から返された局面の変更が記録に影響せず、任意手数の局面が開始局面から再現される。
 
-- [ ] **ステップ5: Refactor要否を確認してコミットする**
+- [x] **ステップ5: Refactor要否を確認してコミットする**
 
-履歴の再適用と現在局面更新に重複があれば、既存の公開インターフェースを変えずに非公開ヘルパーへ抽出する。重複がなければ変更しない理由を学習記録へ残す。
+履歴の再適用分岐は `position_at` にだけ存在し、現在局面更新は盤上移動・駒打ちの公開操作がそれぞれ異なるため、今回の抽出は行わない。公開APIを増やさず、処理の責務も分かれていることを学習記録へ残す。
 
 ```bash
 git add kaname_shogi/game_record.py tests/test_game_record.py
