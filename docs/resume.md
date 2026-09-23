@@ -27,14 +27,14 @@
 ## 次に行うこと
 
 1. 第29回の実装・検証・独立レビュー・最後の理解確認・記録は完了し、`main`へ取り込んだ。
-2. 次テーマは第30回「成駒の移動」に決定した。新しい学習・実装へ進む前に、一次資料と現在の状態を確認する。
+2. 次テーマは第30回「成駒の移動」に決定した。人間が下記の再開用プロンプトを新しいセッションへ入力してから、一次資料と現在の状態を確認する。
 
 ## 再開用プロンプト
 
 ```text
-kaname-shogiの続きをお願いします。
-AGENTS.md、README.md、docs/resume.md、docs/next-topics.mdと現在のGit状態を確認してください。
-第29回「成り・不成の基礎」は実装・検証・独立レビュー・記録まで完了しています。作業ブランチ codex/promotion-and-non-promotion の取り込みは本人の承認を待ち、次テーマの候補を小さい順に示してください。成駒の移動はまだ未実装です。
+kaname-shogiの第30回「成駒の移動」を始めてください。
+最初にAGENTS.md、README.md、docs/resume.md、docs/next-topics.md、docs/handover-promotion-and-non-promotion.md、docs/learning/29-promotion-and-non-promotion.md、docs/knowledge/22-promotion-and-non-promotion.md、kaname_shogi/model.py、kaname_shogi/movegen.pyを読み、git status --short --branchで現在の状態を確認してください。
+日本将棋連盟などの一次資料で成駒の動きを確認し、確認問題を一度に一問だけ出して私の回答を待ってください。設計承認前にコードやテストを書かないでください。実装後は最後の理解確認を一問行い、回答と補足を記録してから次テーマ候補を示してください。
 ```
 
 ## 実行場所とコマンド
