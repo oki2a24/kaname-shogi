@@ -2591,17 +2591,48 @@ class CheckmateAndGameEndTests(unittest.TestCase):
     def test_returns_false_when_king_can_capture_checking_piece(self):
         """安全に王手駒を取れる王手は詰みと終局にしない。
 
+        玉の逃げを許したまま王手駒取りを確認したことにする誤りと、
         玉による王手駒の取得を防御手から漏らす誤りを検出する。
         """
         board = Board()
         board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
         board.set_piece(Square(5, 8), Piece(PieceType.ROOK, Side.GOTE))
+        board.set_piece(Square(4, 8), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 8), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(4, 9), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 9), Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         position = Position(board, Side.SENTE)
+        before = self._snapshot(position)
 
         self._assert_public_operations_exist()
         self.assertFalse(movegen.is_checkmate(position))
         self.assertFalse(movegen.is_game_over(position))
+        self.assertEqual(self._snapshot(position), before)
+
+    def test_returns_false_when_piece_can_capture_checking_piece(self):
+        """盤上の金で王手駒を取れる王手は詰みと終局にしない。
+
+        玉の移動・合い駒だけを調べ、玉以外の駒による王手駒の取得を
+        防御手から漏らす誤りを検出する。飛車は後手の金で守るため、
+        玉による取得は防御手にならない。
+        """
+        board = Board()
+        board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 8), Piece(PieceType.ROOK, Side.GOTE))
+        board.set_piece(Square(6, 7), Piece(PieceType.GOLD, Side.GOTE))
+        board.set_piece(Square(4, 9), Piece(PieceType.GOLD, Side.SENTE))
+        board.set_piece(Square(4, 8), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 8), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(6, 9), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        before = self._snapshot(position)
+
+        self._assert_public_operations_exist()
+        self.assertFalse(movegen.is_checkmate(position))
+        self.assertFalse(movegen.is_game_over(position))
+        self.assertEqual(self._snapshot(position), before)
 
     def test_returns_false_when_board_piece_can_interpose(self):
         """盤上の金で飛車王手を遮れる局面は詰みと終局にしない。
