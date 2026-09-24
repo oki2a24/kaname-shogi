@@ -1,5 +1,8 @@
 """対局記録の履歴と更新を検証する。"""
 
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 
 from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
@@ -189,6 +192,204 @@ class GameRecordTests(unittest.TestCase):
             position_at(-1)
         with self.assertRaisesRegex(ValueError, "手数"):
             position_at(1)
+
+    def test_saves_initial_position_and_recorded_moves_as_json(self):
+        """開始局面と成功手を固定文字列のJSONへ保存する。
+
+        現在局面やEnumの内部番号を保存してしまう誤り、通常移動・成り・駒打ちの
+        いずれかを履歴から落とす誤りを検出する。
+        """
+        self._require_implementation()
+        board = Board()
+        board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(2, 2), Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+        position.sente_hand.add(BasicPieceType.PAWN)
+        position.gote_hand.add(BasicPieceType.PAWN)
+        record = GameRecord(position)
+
+        save = getattr(record, "save", None)
+        self.assertIsNotNone(save, "GameRecordのJSON保存操作が未実装です")
+        if save is None:
+            return
+
+        record.apply_move(Square(2, 2), Square(2, 1), promote=True)
+        record.apply_drop(BasicPieceType.PAWN, Square(4, 4))
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "record.json"
+            save(path)
+            payload = json.loads(path.read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["format"], "kaname-shogi-game-record-v1")
+        self.assertEqual(payload["initial_position"]["side_to_move"], "SENTE")
+        self.assertIn({"file": 2, "rank": 2, "piece_type": "PAWN",
+                       "side": "SENTE"},
+                      payload["initial_position"]["pieces"])
+        self.assertEqual(payload["initial_position"]["hands"]["SENTE"],
+                         {"PAWN": 1})
+        self.assertEqual(payload["initial_position"]["hands"]["GOTE"],
+                         {"PAWN": 1})
+        self.assertEqual(payload["moves"], [
+            {"kind": "move", "source": {"file": 2, "rank": 2},
+             "destination": {"file": 2, "rank": 1}, "promote": True},
+            {"kind": "drop", "piece_type": "PAWN",
+             "destination": {"file": 4, "rank": 4}},
+        ])
+
+    def test_loads_saved_record_and_replays_current_position(self):
+        """保存済みの開始局面と履歴から独立した記録を再現する。
+
+        現在局面をJSONから直接採用する誤り、返却記録が元の記録と可変状態を
+        共有する誤りを検出する。
+        """
+        self._require_implementation()
+        record = GameRecord(create_initial_position())
+        record.apply_move(Square(7, 7), Square(7, 6))
+        record.apply_move(Square(3, 3), Square(3, 4))
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "record.json"
+            record.save(path)
+            load = getattr(GameRecord, "load", None)
+            self.assertIsNotNone(load, "GameRecordのJSON読込操作が未実装です")
+            if load is None:
+                return
+            loaded = load(path)
+
+        self.assertEqual(loaded.moves, record.moves)
+        self.assertEqual(loaded.current_position.board.piece_at(Square(7, 6)),
+                         Piece(PieceType.PAWN, Side.SENTE))
+        loaded.apply_move(Square(7, 6), Square(7, 5))
+        self.assertEqual(len(record.moves), 2)
+
+    def test_rejects_invalid_json_values_and_illegal_history(self):
+        """形式不正または不合法な履歴のJSONをValueErrorで拒否する。"""
+        self._require_implementation()
+        invalid_payloads = (
+            "{",
+            json.dumps({"format": "wrong", "initial_position": {},
+                        "moves": []}),
+            json.dumps({
+                "format": "kaname-shogi-game-record-v1",
+                "initial_position": {
+                    "side_to_move": "SENTE", "pieces": [],
+                    "hands": {"SENTE": {"KING": 1}, "GOTE": {}},
+                },
+                "moves": [],
+            }),
+            json.dumps({
+                "format": "kaname-shogi-game-record-v1",
+                "initial_position": {
+                    "side_to_move": "SENTE", "pieces": [],
+                    "hands": {"SENTE": {}, "GOTE": {}},
+                },
+                "moves": [{
+                    "kind": "move",
+                    "source": {"file": 7, "rank": 7},
+                    "destination": {"file": 7, "rank": 6},
+                    "promote": False,
+                }],
+            }),
+        )
+        load = getattr(GameRecord, "load", None)
+        self.assertIsNotNone(load, "GameRecordのJSON読込操作が未実装です")
+        if load is None:
+            return
+        with TemporaryDirectory() as directory:
+            for index, text in enumerate(invalid_payloads):
+                path = Path(directory) / f"invalid-{index}.json"
+                path.write_text(text, encoding="utf-8")
+                with self.subTest(index=index):
+                    with self.assertRaises(ValueError):
+                        load(path)
+
+    def test_propagates_missing_file_error_when_loading(self):
+        """存在しない読込先はOSErrorとして通知する。"""
+        self._require_implementation()
+        load = getattr(GameRecord, "load", None)
+        self.assertIsNotNone(load, "GameRecordのJSON読込操作が未実装です")
+        if load is None:
+            return
+        with TemporaryDirectory() as directory:
+            with self.assertRaises(FileNotFoundError):
+                load(Path(directory) / "missing.json")
+
+    def test_save_does_not_change_record_and_overwrites_existing_file(self):
+        """保存しても記録を変更せず、既存ファイルは新しい内容へ置き換える。
+
+        保存用の局面参照が内部状態を直接変更する誤りと、既存ファイルを残して
+        新しい棋譜を書き込まない誤りを検出する。
+        """
+        self._require_implementation()
+        record = GameRecord(create_initial_position())
+        before = record.current_position
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "record.json"
+            path.write_text("old", encoding="utf-8")
+            record.save(path)
+            payload = json.loads(path.read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["format"], "kaname-shogi-game-record-v1")
+        self.assertEqual(record.moves, ())
+        self.assertEqual(record.current_position.side_to_move,
+                         before.side_to_move)
+        self.assertEqual(record.current_position.board.piece_at(Square(7, 7)),
+                         before.board.piece_at(Square(7, 7)))
+
+    def test_rejects_malformed_nested_values(self):
+        """余分キー、重複マス、0枚、真偽値座標、不正な成りを拒否する。
+
+        JSONの形だけを受理して、局面や履歴の値を曖昧に解釈する誤りを検出する。
+        """
+        self._require_implementation()
+        record = GameRecord(create_initial_position())
+        record.apply_move(Square(7, 7), Square(7, 6))
+        load = getattr(GameRecord, "load", None)
+        self.assertIsNotNone(load, "GameRecordのJSON読込操作が未実装です")
+        if load is None:
+            return
+        with TemporaryDirectory() as directory:
+            valid_path = Path(directory) / "valid.json"
+            record.save(valid_path)
+            valid = json.loads(valid_path.read_text(encoding="utf-8"))
+            invalid_payloads = []
+
+            extra = json.loads(json.dumps(valid))
+            extra["extra"] = True
+            invalid_payloads.append(extra)
+
+            duplicate = json.loads(json.dumps(valid))
+            duplicate["initial_position"]["pieces"].append(
+                duplicate["initial_position"]["pieces"][0])
+            invalid_payloads.append(duplicate)
+
+            zero_hand = json.loads(json.dumps(valid))
+            zero_hand["initial_position"]["hands"]["SENTE"] = {"PAWN": 0}
+            invalid_payloads.append(zero_hand)
+
+            bool_file = json.loads(json.dumps(valid))
+            bool_file["initial_position"]["pieces"][0]["file"] = True
+            invalid_payloads.append(bool_file)
+
+            bad_promote = json.loads(json.dumps(valid))
+            bad_promote["moves"][0]["promote"] = "false"
+            invalid_payloads.append(bad_promote)
+
+            for index, payload in enumerate(invalid_payloads):
+                path = Path(directory) / f"malformed-{index}.json"
+                path.write_text(json.dumps(payload), encoding="utf-8")
+                with self.subTest(index=index):
+                    with self.assertRaises(ValueError):
+                        load(path)
+
+    def test_raises_file_error_when_save_parent_is_missing(self):
+        """存在しない保存先の親ディレクトリはOSErrorとして通知する。"""
+        self._require_implementation()
+        record = GameRecord(create_initial_position())
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "missing" / "record.json"
+            with self.assertRaises(FileNotFoundError):
+                record.save(path)
 
 
 if __name__ == "__main__":
