@@ -101,6 +101,7 @@ def test_saves_initial_position_and_recorded_moves_as_json(self):
     board.set_piece(Square(2, 2), Piece(PieceType.PAWN, Side.SENTE))
     position = Position(board, Side.SENTE)
     position.sente_hand.add(BasicPieceType.PAWN)
+    position.gote_hand.add(BasicPieceType.PAWN)
     record = GameRecord(position)
     record.apply_move(Square(2, 2), Square(2, 1), promote=True)
     record.apply_drop(BasicPieceType.PAWN, Square(4, 4))
@@ -119,6 +120,8 @@ def test_saves_initial_position_and_recorded_moves_as_json(self):
     self.assertIn({"file": 2, "rank": 2, "piece_type": "PAWN",
                    "side": "SENTE"}, payload["initial_position"]["pieces"])
     self.assertEqual(payload["initial_position"]["hands"]["SENTE"],
+                     {"PAWN": 1})
+    self.assertEqual(payload["initial_position"]["hands"]["GOTE"],
                      {"PAWN": 1})
     self.assertEqual(payload["moves"], [
         {"kind": "move", "source": {"file": 2, "rank": 2},
@@ -208,7 +211,7 @@ def test_loads_saved_record_and_replays_current_position(self):
     self.assertEqual(loaded.moves, record.moves)
     self.assertEqual(loaded.current_position.board.piece_at(Square(7, 6)),
                      Piece(PieceType.PAWN, Side.SENTE))
-    loaded.apply_move(Square(2, 2), Square(2, 3))
+    loaded.apply_move(Square(7, 6), Square(7, 5))
     self.assertEqual(len(record.moves), 2)
 
 
