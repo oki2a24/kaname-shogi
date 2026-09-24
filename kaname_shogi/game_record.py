@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Union
 
-from .model import (BasicPieceType, Board, Piece, PieceType, Position, Side,
-                    Square)
+from .model import (BasicPieceType, Board, Hand, Piece, PieceType, Position,
+                    Side, Square)
 from .movegen import apply_drop, apply_move
 
 
@@ -322,7 +322,7 @@ def _payload_to_position(payload: object) -> Position:
     hands = {}
     for side_name, hand_payload in hands_payload.items():
         _require_dict(hand_payload, f"{side_name}の持ち駒")
-        hand = Position(board, side).sente_hand
+        hand = Hand()
         for name, count in hand_payload.items():
             piece_type = _enum_from_name(BasicPieceType, name,
                                          f"{side_name}の持ち駒")
