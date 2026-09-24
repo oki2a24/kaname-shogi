@@ -121,7 +121,7 @@
 - `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`：206件成功。
 - `printf 'move 7 7 7 6\\nresign\\n' | PYTHONDONTWRITEBYTECODE=1 python3 -m kaname_shogi`：初期局面、7六歩後の局面、後手投了と先手勝利を表示して終了。
 - `git diff --check`：出力なし。
-- 文書更新後の最終検証は、文書コミット後に再実行する。
+- main取り込み後に `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -q` を再実行し、206件成功。CLIスモークと `git diff --check` も成功し、mainの作業ツリーはクリーンだった。
 
 ## 未解決事項
 
@@ -129,6 +129,8 @@ SFEN、USI、CLIの保存読込コマンド、時間記録、千日手、持将�
 
 ## 最後の理解確認
 
-main取り込みと取り込み先検証の後に、次の一問だけを出す。本人の回答を待つまでは未回答として扱う。
-
 問題：なぜ読込時にJSONへ保存した現在局面をそのまま使わず、開始局面と成功手を既存の規則で再適用して現在局面を作るのか。
+
+本人の回答：開始局面と成功手があれば現在局面は作れるから
+
+補足：その通り。開始局面と成功手の順序があれば、同じ合法手適用を再実行して現在局面を一意に再現できる。現在局面を併せて保存すると、履歴と現在局面が食い違う二重管理の可能性が増える。読込時にも既存規則で手を検証するため、壊れたJSONや不合法な履歴を受け入れずに済む。
