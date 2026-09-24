@@ -12,9 +12,29 @@
 
 第32回で `has_legal_move(position)`、`is_checkmate(position)`、`is_game_over(position)` を追加しました。手番側の全ての盤上移動・成り・駒打ちを複製局面で試し、現在実装済みの規則で一つでも指せる手があるかを判定します。第33回では打ち歩詰めとなる歩打ちを合法手から除外しました。第34回ではCLIの入力解析と対局進行を追加し、第35回では `resign` による投了終局を追加しました。`move` / `drop` / `resign` と成りの `+` は半角で、区切りと筋段は半角・全角の空白・数字を受け付けます（実装はPythonの`str.split()`を使うため、その他のUnicode空白も区切りになります）。詰みは「手番側が王手を受け、合法手がない」場合だけ、`is_game_over` は局面から判定できる詰みだけを返します。CLIは入力前に詰みを優先し、`resign` なら局面を変更せず投了側と勝者を表示します。玉がない部分局面は詰み・終局とも `False` です。千日手、持将棋、入玉、時間、反則勝敗、USI/SFENはまだ扱いません。
 
-第36回では `GameRecord` が開始局面、成功した盤上移動・駒打ちの履歴、現在局面をメモリ上で保持します。`position_at(move_count)` は開始局面から任意手数を再適用して局面を再現し、公開される局面は独立複製です。CLIの `run_game` は合法手を記録経由で適用し、詰み・投了・EOF・Ctrl-Cの終了時に記録を返します。ファイル保存、SFEN、USI、時間記録はまだ扱いません。
+第36回では `GameRecord` が開始局面、成功した盤上移動・駒打ちの履歴、現在局面をメモリ上で保持します。`position_at(move_count)` は開始局面から任意手数を再適用して局面を再現し、公開される局面は独立複製です。CLIの `run_game` は合法手を記録経由で適用し、詰み・投了・EOF・Ctrl-Cの終了時に記録を返します。第37回では `GameRecord.save(path)` と `GameRecord.load(path)` を追加し、開始局面と成功手の履歴を `kaname-shogi-game-record-v1` のJSONへ明示的に保存・読込できるようにしました。現在局面は保存せず、読込時に履歴を再適用して再現します。CLIの自動保存・保存読込コマンド、SFEN、USI、時間記録はまだ扱いません。
 
 実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
+
+## 棋譜をJSONへ保存・読込する
+
+CLIは対局終了時に自動保存しません。`run_game` などから受け取った `GameRecord` に保存先を明示して呼び出します。JSONには開始局面と成功した `move` / `drop` の履歴だけを保存し、読込時には既存の合法手適用で現在局面を再現します。
+
+```python
+from pathlib import Path
+
+from kaname_shogi.game_record import GameRecord
+from kaname_shogi.model import Square, create_initial_position
+
+record = GameRecord(create_initial_position())
+record.apply_move(Square(7, 7), Square(7, 6))
+record.save(Path("game.json"))
+
+loaded = GameRecord.load(Path("game.json"))
+print(loaded.current_position.board.piece_at(Square(7, 6)))
+```
+
+保存形式はこのプログラム専用のJSONで、列挙値の内部番号ではなく固定文字列を使います。不正な内容や不合法な履歴は `ValueError`、ファイルの不存在や入出力失敗は `OSError` になります。SFEN・USIへの変換やCLI通信は別テーマです。
 
 ## 実行方法
 
@@ -237,6 +257,12 @@ print(bishop_move_candidates(board, Square(5, 5)))
 - [終局理由の拡張：参照メモ](docs/knowledge/28-game-end-reasons.md)
 - [終局理由の拡張の設計仕様](docs/plans/2026-09-23-game-end-reasons-design.md)
 - [終局理由の拡張の実装計画](docs/plans/2026-09-23-game-end-reasons.md)
+- [第36回：棋譜・局面の保存](docs/learning/36-game-record-and-position-save.md)
+- [棋譜・局面の保存：参照メモ](docs/knowledge/29-game-record-and-position-save.md)
+- [第37回：棋譜・局面のファイル保存](docs/learning/37-game-record-file-save.md)
+- [棋譜・局面のファイル保存：参照メモ](docs/knowledge/30-game-record-file-save.md)
+- [第37回の設計仕様](docs/plans/2026-09-24-game-record-file-save-design.md)
+- [第37回の実装計画](docs/plans/2026-09-24-game-record-file-save.md)
 - [行き所のない駒の設計](docs/plans/2026-09-22-no-legal-destination-drops-design.md)
 - [行き所のない駒の実装計画](docs/plans/2026-09-22-no-legal-destination-drops.md)
 
