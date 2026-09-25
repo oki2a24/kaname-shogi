@@ -250,7 +250,7 @@ self.assertEqual(first, second)
 
 **前提:** 全テスト成功、独立レビューでCritical・Importantが0件、記録の内容確認が完了し、本人の取り込み承認があること。
 
-- [ ] **ステップ 1: 取り込み候補を確認する**
+- [x] **ステップ 1: 取り込み候補を確認する**
 
 実行: `git status --short --branch && git log --oneline main..codex/weak-move-selection && git diff --check main...codex/weak-move-selection`
 
