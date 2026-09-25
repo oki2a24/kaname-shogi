@@ -1,5 +1,6 @@
 """歩・金・銀・桂馬・香・飛車・角の向き・占有・盤外と、盤面不変の契約を検証する。"""
 
+import random
 import unittest
 from unittest.mock import patch
 
@@ -2617,6 +2618,58 @@ class LegalMoveEnumerationTests(unittest.TestCase):
                         "has_legal_move がまだ実装されていません")
         self.assertFalse(movegen.has_legal_move(position))
         self.assertEqual(self._snapshot(position), before)
+
+
+class WeakMoveSelectionTests(unittest.TestCase):
+    def _require_implementation(self):
+        """弱い一手選択の実装不足を属性エラーでなく明示的に失敗させる。"""
+        self.assertTrue(hasattr(movegen, "choose_weak_move"),
+                        "choose_weak_move がまだ実装されていません")
+
+    def test_returns_reproducible_member_for_seeded_random_generator(self):
+        """固定種の乱数生成器で合法手一覧から一手を再現可能に選ぶ。
+
+        乱数を選択器の内部で生成してテスト不能にする誤りと、一覧外の値を
+        作る誤りを検出する。
+        """
+        moves = (
+            BoardMove(Square(7, 7), Square(7, 6), False),
+            DropMove(BasicPieceType.PAWN, Square(5, 5)),
+        )
+
+        self._require_implementation()
+        first = movegen.choose_weak_move(moves, random.Random(20260925))
+        second = movegen.choose_weak_move(moves, random.Random(20260925))
+
+        self.assertIn(first, moves)
+        self.assertEqual(first, second)
+
+    def test_returns_none_for_empty_legal_move_list(self):
+        """合法手一覧が空なら、終局を決めずにNoneを返す。
+
+        選択器が勝敗や投了を担当する誤りと、空一覧を乱数選択へ渡す誤りを
+        検出する。
+        """
+        self._require_implementation()
+
+        self.assertIsNone(movegen.choose_weak_move(
+            (), random.Random(20260925)))
+
+    def test_does_not_change_the_input_move_tuple(self):
+        """一手選択は渡された合法手タプルを変更しない。
+
+        選択器が候補の並び替えや削除を行い、列挙順の契約を壊す誤りを検出する。
+        """
+        moves = (
+            BoardMove(Square(7, 7), Square(7, 6), False),
+            DropMove(BasicPieceType.PAWN, Square(5, 5)),
+        )
+        before = moves
+
+        self._require_implementation()
+        movegen.choose_weak_move(moves, random.Random(20260925))
+
+        self.assertEqual(moves, before)
 
 
 class CheckmateAndGameEndTests(unittest.TestCase):

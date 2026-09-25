@@ -15,6 +15,7 @@ docs/design/08-knight-move-candidates.md、docs/design/13-capture-and-hands.md�
 docs/design/14-hand-drops.md。
 """
 
+import random
 from typing import Callable, Optional, Tuple
 
 from .move import BoardMove, DropMove, Move
@@ -475,6 +476,31 @@ def legal_moves(position: Position) -> Tuple[Move, ...]:
         作るために定める。
     """
     return _legal_moves(position, check_uchi_fuzume=True)
+
+
+def choose_weak_move(moves: Tuple[Move, ...],
+                     rng: random.Random) -> Optional[Move]:
+    """合法手一覧から、指定された乱数生成器で一手を選ぶ。
+
+    引数:
+        moves: `legal_moves` が返した合法手の変更不可タプル。
+        rng: 呼び出し側が用意する `random.Random`。テストでは固定種を渡せる。
+
+    戻り値:
+        movesが空でなければ、その中から一様に選んだ一手。空ならNone。
+
+    副作用:
+        局面や一手の値は変更しない。抽選のために渡されたrngの状態だけを進める。
+
+    前提条件:
+        movesの合法性は `legal_moves` が保証し、ここでは再検証しない。今回の
+        弱い選択器は終局・投了・勝敗を決めず、合法手がないことだけをNoneで
+        表す。乱数生成器を内部で作らないことで、本番の変化とテストの再現性を
+        両立する。
+    """
+    if not moves:
+        return None
+    return rng.choice(moves)
 
 
 def has_legal_move(position: Position) -> bool:
