@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import patch
 
 from kaname_shogi import movegen
+from kaname_shogi.move import BoardMove, DropMove
 from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
                                 Position, Side, Square)
 from kaname_shogi.movegen import (
@@ -2452,6 +2453,98 @@ class PawnMoveCandidatesTests(unittest.TestCase):
                 self.assertEqual(pawn_move_candidates(position.board, Square(7, 3)),
                                  [Square(7, 4)])
                 self.assertEqual(position.side_to_move, turn)
+
+
+class LegalMoveListTests(unittest.TestCase):
+    def _require_implementation(self):
+        """合法手一覧の実装不足を属性エラーでなく明示的に失敗させる。"""
+        self.assertTrue(hasattr(movegen, "legal_moves"),
+                        "legal_moves がまだ実装されていません")
+
+    def _snapshot(self, position):
+        """合法手一覧の前後で局面全体を比較する。"""
+        squares = [Square(file, rank)
+                   for file in range(1, 10) for rank in range(1, 10)]
+        piece_types = [piece_type for piece_type in BasicPieceType
+                       if piece_type != BasicPieceType.KING]
+        return (
+            tuple(position.board.piece_at(square) for square in squares),
+            tuple(position.sente_hand.count(piece_type)
+                  for piece_type in piece_types),
+            tuple(position.gote_hand.count(piece_type)
+                  for piece_type in piece_types),
+            position.side_to_move,
+        )
+
+    def test_returns_board_move_without_changing_position(self):
+        """合法な盤上移動を固定順で返し、局面を変更しない。
+
+        盤上移動を一手データへ変換する責務と、一覧作成時の試し指しで
+        元の局面を変更しない契約を確認する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+        before = self._snapshot(position)
+
+        self._require_implementation()
+        self.assertEqual(
+            movegen.legal_moves(position),
+            (BoardMove(Square(5, 5), Square(5, 4), False),))
+        self.assertEqual(self._snapshot(position), before)
+
+    def test_puts_nonpromotion_before_promotion(self):
+        """同じ移動で不成を成りより先に固定する。
+
+        列挙順を選択の強さと混同せず、既存の不成・成り試行順を再現できる
+        仕様として保持することを確認する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 4), Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+
+        self._require_implementation()
+        self.assertEqual(
+            movegen.legal_moves(position),
+            (BoardMove(Square(5, 4), Square(5, 3), False),
+             BoardMove(Square(5, 4), Square(5, 3), True)))
+
+    def test_puts_drops_after_board_moves_in_piece_and_square_order(self):
+        """駒打ちは盤上移動の後、駒種とマスの固定順で並べる。
+
+        選択器へ渡す一覧の大きな順序、持ち駒の列挙順、１一からの打ち先順を
+        同時に確認する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+        position.sente_hand.add(BasicPieceType.GOLD)
+
+        self._require_implementation()
+        moves = movegen.legal_moves(position)
+
+        self.assertEqual(moves[0],
+                         BoardMove(Square(5, 5), Square(5, 4), False))
+        self.assertEqual(moves[1], DropMove(BasicPieceType.GOLD,
+                                            Square(1, 1)))
+        self.assertEqual(moves[2], DropMove(BasicPieceType.GOLD,
+                                            Square(1, 2)))
+
+    def test_returns_empty_tuple_when_current_rules_reject_every_candidate(self):
+        """全候補が自駒で塞がれた局面では空の合法手一覧を返す。
+
+        合法手がない結果を例外や勝敗へ変換せず、選択器へ渡せる空タプルで
+        表現することを確認する。
+        """
+        board = Board()
+        for file in range(1, 10):
+            for rank in range(1, 10):
+                board.set_piece(Square(file, rank),
+                                Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+
+        self._require_implementation()
+        self.assertEqual(movegen.legal_moves(position), ())
 
 
 class LegalMoveEnumerationTests(unittest.TestCase):

@@ -15,8 +15,9 @@ docs/design/08-knight-move-candidates.md、docs/design/13-capture-and-hands.md�
 docs/design/14-hand-drops.md。
 """
 
-from typing import Callable, Optional
+from typing import Callable, Optional, Tuple
 
+from .move import BoardMove, DropMove, Move
 from .model import (BasicPieceType, Board, Piece, PieceType, Position, Side,
                     Square)
 
@@ -409,8 +410,9 @@ def apply_drop(position: Position, piece_type: BasicPieceType,
     _apply_drop(position, piece_type, destination, check_uchi_fuzume=True)
 
 
-def _has_legal_move(position: Position, *, check_uchi_fuzume: bool) -> bool:
-    """指定方針で、手番側に合法手があるかを返す非公開操作。"""
+def _legal_moves(position: Position, *, check_uchi_fuzume: bool) -> Tuple[Move, ...]:
+    """指定方針で、手番側の合法手を固定順に列挙する非公開操作。"""
+    moves = []
     for file in range(1, 10):
         for rank in range(1, 10):
             source = Square(file, rank)
@@ -424,7 +426,7 @@ def _has_legal_move(position: Position, *, check_uchi_fuzume: bool) -> bool:
                                    promote=promote)
                     except ValueError:
                         continue
-                    return True
+                    moves.append(BoardMove(source, destination, promote))
 
     for piece_type in BasicPieceType:
         if piece_type == BasicPieceType.KING:
@@ -437,8 +439,42 @@ def _has_legal_move(position: Position, *, check_uchi_fuzume: bool) -> bool:
                                 check_uchi_fuzume=check_uchi_fuzume)
                 except ValueError:
                     continue
-                return True
-    return False
+                moves.append(DropMove(piece_type, Square(file, rank)))
+    return tuple(moves)
+
+
+def _has_legal_move(position: Position, *, check_uchi_fuzume: bool) -> bool:
+    """指定方針で、手番側に合法手があるかを返す非公開操作。
+
+    打ち歩詰めの確認中に、公開の `legal_moves` を再帰呼び出ししないための
+    内部境界である。通常の有無判定は `legal_moves` の空・非空へ委譲する。
+    """
+    return bool(_legal_moves(position, check_uchi_fuzume=check_uchi_fuzume))
+
+
+def legal_moves(position: Position) -> Tuple[Move, ...]:
+    """手番側の全合法手を、固定順の変更不可タプルで返す。
+
+    引数:
+        position: 調べる盤面、手番、先手・後手の持ち駒を持つ局面。
+
+    戻り値:
+        現在実装済みの規則で適用できる `BoardMove` または `DropMove` のタプル。
+        合法手がなければ空タプルを返す。順序は盤上移動、駒打ちの順で、各内部
+        順序は出発・打ち先の１一から九九、不成から成り、駒打ちの飛・角・金・
+        銀・桂・香・歩で固定する。
+
+    副作用:
+        positionの盤面、手番、双方の持ち駒を変更しない。各候補は独立した
+        `Position.copy()` へ試し指し・試し打ちして確認する。
+
+    前提条件:
+        一覧の各要素は既存の `apply_move` / `apply_drop` で適用できた一手である。
+        成り、二歩、行き所のない駒、自玉の安全、打ち歩詰めの規則は既存操作へ
+        委譲する。固定順は評価や強さの優先順位ではなく、再現可能なデータ境界を
+        作るために定める。
+    """
+    return _legal_moves(position, check_uchi_fuzume=True)
 
 
 def has_legal_move(position: Position) -> bool:
@@ -459,7 +495,7 @@ def has_legal_move(position: Position) -> bool:
     apply_moveとapply_dropに、成り、二歩、行き所のない駒、自玉の安全、打ち歩詰めの
     検証を委ねることで、詰み判定用に同じ規則を重複実装しない。
     """
-    return _has_legal_move(position, check_uchi_fuzume=True)
+    return bool(legal_moves(position))
 
 
 def _is_checkmate(position: Position, *, check_uchi_fuzume: bool) -> bool:
