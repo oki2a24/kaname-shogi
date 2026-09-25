@@ -14,6 +14,8 @@
 
 第36回では `GameRecord` が開始局面、成功した盤上移動・駒打ちの履歴、現在局面をメモリ上で保持します。`position_at(move_count)` は開始局面から任意手数を再適用して局面を再現し、公開される局面は独立複製です。CLIの `run_game` は合法手を記録経由で適用し、詰み・投了・EOF・Ctrl-Cの終了時に記録を返します。第37回では `GameRecord.save(path)` と `GameRecord.load(path)` を追加し、開始局面と成功手の履歴を `kaname-shogi-game-record-v1` のJSONへ明示的に保存・読込できるようにしました。現在局面は保存せず、読込時に履歴を再適用して再現します。CLIの自動保存・保存読込コマンド、SFEN、USI、時間記録はまだ扱いません。
 
+第38回では `BoardMove`、`DropMove`、`Move` を局面を変更しない一手データとして追加しました。`legal_moves(position)` は、現在実装済みの規則で指せる一手を、盤上移動（不成・成り）から駒打ちへ続く固定順のタプルで返します。試し指し・試し打ちは複製局面へ行うため、元の局面は変わりません。`has_legal_move(position)` はこの一覧の空判定へ委譲します。`choose_weak_move(moves, rng)` は呼び出し側から受け取った `random.Random` で一覧から一様に一手を選び、空一覧なら `None` を返します。CLI、USI・SFEN、評価・探索はまだ変更・実装していません。
+
 実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
 
 ## 棋譜をJSONへ保存・読込する
@@ -35,6 +37,24 @@ print(loaded.current_position.board.piece_at(Square(7, 6)))
 ```
 
 保存形式はこのプログラム専用のJSONで、列挙値の内部番号ではなく固定文字列を使います。不正な内容や不合法な履歴は `ValueError`、ファイルの不存在や入出力失敗は `OSError` になります。SFEN・USIへの変換やCLI通信は別テーマです。
+
+## 合法手を列挙し、弱い一手を選ぶ
+
+`legal_moves` は現在実装済みの規則を満たす一手だけを、固定順のタプルで返します。`choose_weak_move` は一覧と注入した乱数生成器だけを使うため、テストでは固定種で結果を再現できます。
+
+```python
+import random
+
+from kaname_shogi.model import create_initial_position
+from kaname_shogi.movegen import choose_weak_move, legal_moves
+
+position = create_initial_position()
+moves = legal_moves(position)
+selected = choose_weak_move(moves, random.Random(20260925))
+print(selected)
+```
+
+合法手がないときの `None` は、選択器が一手を返せないことだけを表します。詰み・投了・勝敗の判定や、USIなど外部文字列への変換は別の層で扱います。
 
 ## 実行方法
 
@@ -97,7 +117,7 @@ resign
 python3 -m unittest discover -s tests -v
 ```
 
-座標の検証、駒の不変性、盤面と持ち駒の独立性、局面複製、初期配置の全81マス・枚数・手番、CLI表示、入力解析、全角入力、合法手の再入力、詰み停止、EOF/Ctrl-C、14種の候補の向き・盤外・占有・盤面不変性、王手の全駒種・先後・遮蔽・桂馬・隣接玉・玉なし、局面移動時の所有者照合、駒取り、玉取り拒否、持ち駒の減算、王手放置、自玉の利きへの移動、合い駒、空マスへの駒打ち、二歩、駒打ち失敗時の不変性を確認します。
+座標の検証、駒の不変性、盤面と持ち駒の独立性、局面複製、初期配置の全81マス・枚数・手番、CLI表示、入力解析、全角入力、合法手の再入力、詰み停止、EOF/Ctrl-C、14種の候補の向き・盤外・占有・盤面不変性、王手の全駒種・先後・遮蔽・桂馬・隣接玉・玉なし、局面移動時の所有者照合、駒取り、玉取り拒否、持ち駒の減算、王手放置、自玉の利きへの移動、合い駒、空マスへの駒打ち、二歩、駒打ち失敗時の不変性、合法手の固定順・局面不変性・空一覧、乱数注入による弱い一手選択を確認します。
 
 `-v` を付けると、英語のテストメソッド名に続けて、日本語のdocstringの先頭行が表示されます。テスト名は検索・個別実行に使える英語のまま、確認する振る舞いと検出したい誤りは日本語のdocstringで説明しています。
 
