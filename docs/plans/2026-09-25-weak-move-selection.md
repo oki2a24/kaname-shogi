@@ -256,11 +256,11 @@ self.assertEqual(first, second)
 
 期待値：作業ブランチがクリーンで、取り込み対象と差分チェック結果を本人へ提示できる。
 
-- [ ] **ステップ 2: 本人のmain取り込み承認を待つ**
+- [x] **ステップ 2: 本人のmain取り込み承認を待つ**
 
 承認前には `main` へ取り込まない。
 
-- [ ] **ステップ 3: 承認後にmainで再検証する**
+- [x] **ステップ 3: 承認後にmainで再検証する**
 
 `git switch main`、`git merge --no-ff codex/weak-move-selection` の後、全テスト、CLIスモーク、`git diff --check`、`git status --short --branch` を実行する。期待値は、全検証成功とmain作業ツリーがクリーンであること。
 
