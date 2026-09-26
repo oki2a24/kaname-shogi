@@ -2457,6 +2457,11 @@ class PawnMoveCandidatesTests(unittest.TestCase):
 
 
 class LegalMoveListTests(unittest.TestCase):
+    _DROP_ORDER = (BasicPieceType.ROOK, BasicPieceType.BISHOP,
+                   BasicPieceType.GOLD, BasicPieceType.SILVER,
+                   BasicPieceType.KNIGHT, BasicPieceType.LANCE,
+                   BasicPieceType.PAWN)
+
     def _require_implementation(self):
         """合法手一覧の実装不足を属性エラーでなく明示的に失敗させる。"""
         self.assertTrue(hasattr(movegen, "legal_moves"),
@@ -2475,6 +2480,31 @@ class LegalMoveListTests(unittest.TestCase):
             tuple(position.gote_hand.count(piece_type)
                   for piece_type in piece_types),
             position.side_to_move,
+        )
+
+    def _position_with_all_drops(self, side):
+        """全7駒種を一枚ずつ持つ、駒打ちだけを調べる空盤面を作る。"""
+        position = Position(Board(), side)
+        hand = (position.sente_hand if side == Side.SENTE
+                else position.gote_hand)
+        for piece_type in self._DROP_ORDER:
+            hand.add(piece_type)
+        return position
+
+    def _expected_drops(self, side):
+        """既存の打ち駒規則を反映した、実装から独立した期待一覧を作る。"""
+        excluded_ranks = {
+            BasicPieceType.PAWN: ({1} if side == Side.SENTE else {9}),
+            BasicPieceType.LANCE: ({1} if side == Side.SENTE else {9}),
+            BasicPieceType.KNIGHT: (
+                {1, 2} if side == Side.SENTE else {8, 9}),
+        }
+        return tuple(
+            DropMove(piece_type, Square(file, rank))
+            for piece_type in self._DROP_ORDER
+            for file in range(1, 10)
+            for rank in range(1, 10)
+            if rank not in excluded_ranks.get(piece_type, set())
         )
 
     def test_returns_board_move_without_changing_position(self):
@@ -2530,6 +2560,49 @@ class LegalMoveListTests(unittest.TestCase):
                                             Square(1, 1)))
         self.assertEqual(moves[2], DropMove(BasicPieceType.GOLD,
                                             Square(1, 2)))
+
+    def test_drop_order_does_not_follow_basic_piece_type_iteration(self):
+        """駒打ち順はBasicPieceTypeの反復順に依存しない。
+
+        持ち駒の種類を表す列挙の反復順を変えても、公開APIの契約である
+        飛・角・金・銀・桂・香・歩の順が変わらないことを確認する。
+        """
+        class ReorderedBasicPieceTypes:
+            KING = BasicPieceType.KING
+            ROOK = BasicPieceType.ROOK
+            BISHOP = BasicPieceType.BISHOP
+            GOLD = BasicPieceType.GOLD
+            SILVER = BasicPieceType.SILVER
+            KNIGHT = BasicPieceType.KNIGHT
+            LANCE = BasicPieceType.LANCE
+            PAWN = BasicPieceType.PAWN
+
+            def __iter__(self):
+                return iter((self.KING, self.PAWN, self.LANCE,
+                             self.KNIGHT, self.SILVER, self.GOLD,
+                             self.BISHOP, self.ROOK))
+
+        position = self._position_with_all_drops(Side.SENTE)
+        before = self._snapshot(position)
+        with patch.object(movegen, "BasicPieceType",
+                          ReorderedBasicPieceTypes()):
+            self.assertEqual(movegen.legal_moves(position),
+                             self._expected_drops(Side.SENTE))
+        self.assertEqual(self._snapshot(position), before)
+
+    def test_returns_all_drops_in_fixed_order_for_each_side(self):
+        """全持ち駒の駒打ちを先後別の固定順で返し、局面を変更しない。
+
+        全7駒種と全81マスを対象に、行き所のない段だけを除いた順序と、
+        複数の持ち駒を試し打ちしても局面が変わらない契約を確認する。
+        """
+        for side in Side:
+            with self.subTest(side=side):
+                position = self._position_with_all_drops(side)
+                before = self._snapshot(position)
+                self.assertEqual(movegen.legal_moves(position),
+                                 self._expected_drops(side))
+                self.assertEqual(self._snapshot(position), before)
 
     def test_returns_empty_tuple_when_current_rules_reject_every_candidate(self):
         """全候補が自駒で塞がれた局面では空の合法手一覧を返す。
