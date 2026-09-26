@@ -164,15 +164,15 @@ def test_returns_all_drops_in_fixed_order_for_each_side(self):
 
   `python3 -m unittest discover -s tests -v`、`printf 'move 7 7 7 6\\n' | python3 -m kaname_shogi`、`git diff --check` を実行する。全テストPASS、CLIスモークで後手の自動手・次の入力案内・EOF終了、差分検査の成功を確認する。
 
-- [x] **ステップ3: 学習記録と知識メモを作成する**
+- [x] **ステップ3: 学習記録と知識メモを作成・コミットする**
 
   学習記録には一次資料との切り分け、確認問題と本人の回答・補足、合意、TDDのRed/Green、Refactor要否、独立レビュー、全検証、main取り込み結果、最後の理解確認を時系列で記録する。知識メモには順序定数の責務、`BasicPieceType`との分離、公開APIの再現性、対象外を記録する。`git commit -m "docs: 第40回の駒打ち順保守改善を記録する"` を使う。
 
-- [ ] **ステップ4: mainへの取り込み承認を本人へ求める**
+- [x] **ステップ4: mainへの取り込み承認を本人へ求める**
 
   作業ブランチの変更、レビュー結論、検証結果、作業ディレクトリと取り込み先を示し、`main`への取り込みを本人が明示承認するまで待つ。
 
-- [ ] **ステップ5: 承認後にmainへ取り込み、mainで再検証する**
+- [x] **ステップ5: 承認後にmainへ取り込み、mainで再検証する**
 
   `git switch main`、`git merge --no-ff codex/drop-order-maintenance -m "merge: 駒打ち順保守改善を取り込む"` の後、全テスト、CLIスモーク、`git diff --check`をmain上で再実行する。
 
