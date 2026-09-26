@@ -165,7 +165,9 @@ def _run_computer_turn(record: GameRecord, rng: random.Random,
     if selected is None:
         output_fn("コンピュータの合法手がありません。")
         return False
-    output_fn("後手の指し手: " + _format_selected_move(selected))
+    side_name = ("先手" if record.current_position.side_to_move == Side.SENTE
+                 else "後手")
+    output_fn(side_name + "の指し手: " + _format_selected_move(selected))
     _apply_selected_move(record, selected)
     output_fn(render_position(record.current_position))
     return True
