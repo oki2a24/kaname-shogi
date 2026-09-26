@@ -28,7 +28,7 @@
 - 消費: `legal_moves(position) -> Tuple[Move, ...]`、`DropMove(piece_type, destination)`、既存の局面スナップショット。
 - 生産: 先手・後手の全7駒種・全打ち先、局面不変性、`BasicPieceType`反復順からの独立性を確認するテスト。
 
-- [ ] **ステップ1: 期待する駒打ち順とテスト局面の補助を追加する**
+- [x] **ステップ1: 期待する駒打ち順とテスト局面の補助を追加する**
 
   実装側の定数を参照しない期待順をテストへ置く。空盤面の手番側に飛・角・金・銀・桂・香・歩を各1枚加える。期待値は駒種ごとに筋1から9、各筋の段1から9を走査し、先手は歩・香の一段と桂の一・二段、後手は歩・香の九段と桂の八・九段を除外する。
 
@@ -58,7 +58,7 @@ def _expected_drops(self, side):
                  if rank not in excluded_ranks.get(piece_type, set()))
 ```
 
-- [ ] **ステップ2: 反復順を入れ替える失敗テストを追加する**
+- [x] **ステップ2: 反復順を入れ替える失敗テストを追加する**
 
   `unittest.mock.patch.object` で `movegen.BasicPieceType` だけを、歩から始まる別順序で反復するテスト用オブジェクトへ一時的に置き換える。各属性値は本物の`BasicPieceType`を使うため、持ち駒・合法性規則は変えない。現実装は直接反復するため、最初の`DropMove`が飛でなく歩となり、一覧全体との比較が`AssertionError`で失敗する。
 
@@ -89,7 +89,7 @@ def test_drop_order_does_not_follow_basic_piece_type_iteration(self):
     self.assertEqual(self._snapshot(position), before)
 ```
 
-- [ ] **ステップ3: Redを確認する**
+- [x] **ステップ3: Redを確認する**
 
   `python3 -m unittest -v tests.test_movegen.LegalMoveListTests.test_drop_order_does_not_follow_basic_piece_type_iteration` を実行する。読み込みエラーではなく、公開順の独立性が未実装である`AssertionError`を確認する。
 
@@ -103,7 +103,7 @@ def test_drop_order_does_not_follow_basic_piece_type_iteration(self):
 - 消費: タスク1の期待順、テスト局面、独立性テスト。
 - 生産: `_DROP_PIECE_TYPES: Tuple[BasicPieceType, ...]` と、それを使う `_legal_moves(position, *, check_uchi_fuzume) -> Tuple[Move, ...]`。
 
-- [ ] **ステップ1: モジュール非公開の順序定数を追加する**
+- [x] **ステップ1: モジュール非公開の順序定数を追加する**
 
 ```python
 _DROP_PIECE_TYPES = (BasicPieceType.ROOK, BasicPieceType.BISHOP,
@@ -112,11 +112,11 @@ _DROP_PIECE_TYPES = (BasicPieceType.ROOK, BasicPieceType.BISHOP,
                      BasicPieceType.PAWN)
 ```
 
-- [ ] **ステップ2: 駒打ち列挙を最小変更する**
+- [x] **ステップ2: 駒打ち列挙を最小変更する**
 
   `_legal_moves` の`for piece_type in BasicPieceType`と玉除外分岐を、`for piece_type in _DROP_PIECE_TYPES`へ置き換える。打ち先の筋・段ループ、試し打ち、例外時の継続、`DropMove`追加は変えない。
 
-- [ ] **ステップ3: 先手・後手の全件順序テストを追加する**
+- [x] **ステップ3: 先手・後手の全件順序テストを追加する**
 
   全期待値との一致、一覧前後の局面不変性、行き所のない段の除外を先手・後手ごとに確認する。期待値は実装の`_DROP_PIECE_TYPES`を参照しない。
 
@@ -132,15 +132,15 @@ def test_returns_all_drops_in_fixed_order_for_each_side(self):
             self.assertEqual(self._snapshot(position), before)
 ```
 
-- [ ] **ステップ4: Greenを確認する**
+- [x] **ステップ4: Greenを確認する**
 
   `python3 -m unittest -v tests.test_movegen.LegalMoveListTests` を実行する。既存テストと、新しい独立性・先後全件・不変性テストがすべてPASSすることを確認する。
 
-- [ ] **ステップ5: Refactor要否を確認して対象テストを再実行する**
+- [x] **ステップ5: Refactor要否を確認して対象テストを再実行する**
 
   順序定数以外の共通化、`BasicPieceType`変更、打ち先走査変更は不要と判断する。対象テストを再実行する。
 
-- [ ] **ステップ6: 作業ブランチへコミットする**
+- [x] **ステップ6: 作業ブランチへコミットする**
 
   `git add kaname_shogi/movegen.py tests/test_movegen.py` の後、`git commit -m "refactor: 駒打ち順を明示定数で固定する"` を実行する。
 
@@ -156,15 +156,15 @@ def test_returns_all_drops_in_fixed_order_for_each_side(self):
 - 消費: タスク2のコードとテスト、設計書、実装計画。
 - 生産: レビュー結論、検証結果、対象範囲、確認問題と回答を記録した学習記録・知識メモ。
 
-- [ ] **ステップ1: 独立コードレビューを行う**
+- [x] **ステップ1: 独立コードレビューを行う**
 
   公開順の明示性、`BasicPieceType`からの独立性、玉の除外、先後の全駒種・全打ち先、行き所のない段、局面不変性、二歩・自玉の安全・打ち歩詰め、docstring、不要な公開APIを確認する。CriticalまたはImportantがあれば修正、再検証、再レビューする。
 
-- [ ] **ステップ2: 全検証を実行する**
+- [x] **ステップ2: 全検証を実行する**
 
   `python3 -m unittest discover -s tests -v`、`printf 'move 7 7 7 6\\n' | python3 -m kaname_shogi`、`git diff --check` を実行する。全テストPASS、CLIスモークで後手の自動手・次の入力案内・EOF終了、差分検査の成功を確認する。
 
-- [ ] **ステップ3: 学習記録と知識メモを作成・コミットする**
+- [x] **ステップ3: 学習記録と知識メモを作成する**
 
   学習記録には一次資料との切り分け、確認問題と本人の回答・補足、合意、TDDのRed/Green、Refactor要否、独立レビュー、全検証、main取り込み結果、最後の理解確認を時系列で記録する。知識メモには順序定数の責務、`BasicPieceType`との分離、公開APIの再現性、対象外を記録する。`git commit -m "docs: 第40回の駒打ち順保守改善を記録する"` を使う。
 

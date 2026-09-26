@@ -23,6 +23,17 @@ from .model import (BasicPieceType, Board, Piece, PieceType, Position, Side,
                     Square)
 
 
+_DROP_PIECE_TYPES = (
+    BasicPieceType.ROOK,
+    BasicPieceType.BISHOP,
+    BasicPieceType.GOLD,
+    BasicPieceType.SILVER,
+    BasicPieceType.KNIGHT,
+    BasicPieceType.LANCE,
+    BasicPieceType.PAWN,
+)
+
+
 def move_piece(board: Board, source: Square, destination: Square) -> None:
     """空いている到着マスへ駒を移し、渡された盤面を変更する。
 
@@ -429,9 +440,7 @@ def _legal_moves(position: Position, *, check_uchi_fuzume: bool) -> Tuple[Move, 
                         continue
                     moves.append(BoardMove(source, destination, promote))
 
-    for piece_type in BasicPieceType:
-        if piece_type == BasicPieceType.KING:
-            continue
+    for piece_type in _DROP_PIECE_TYPES:
         for file in range(1, 10):
             for rank in range(1, 10):
                 try:
