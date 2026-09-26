@@ -126,7 +126,7 @@ READMEを人間先手・コンピュータ後手向けへ更新する。`move`�
 
 期待値: 実装済みの契約が記録され、未実施事項を完了扱いしていない。
 
-- [ ] **ステップ4: コミットする**
+- [x] **ステップ4: コミットする**
 
 実行: `git add README.md docs/learning/39-human-vs-computer-cli.md docs/knowledge/32-human-vs-computer-cli.md && git commit -m 'docs: 人間対コンピュータCLIの利用方法を記録'`
 
@@ -153,11 +153,11 @@ main取り込み前には学習記録へ検証・レビュー結果を追記し�
 
 実行: `git add docs/learning/39-human-vs-computer-cli.md docs/02-project-direction.md docs/next-topics.md docs/resume.md && git commit -m 'docs: 第39回の検証結果と次の候補を記録'`
 
-- [ ] **ステップ4: main取り込みの本人承認を求める**
+- [x] **ステップ4: main取り込みの本人承認を求める**
 
 作業ブランチ、コミット、検証結果、独立レビュー、未解決事項を提示する。本人の明示承認前にmainへ取り込まない。
 
-- [ ] **ステップ5: 承認後にmainへ取り込み、再検証する**
+- [x] **ステップ5: 承認後にmainへ取り込み、再検証する**
 
 実行: `git switch main && git merge --no-ff codex/human-vs-computer-cli && python3 -m unittest discover -s tests -v && git status --short --branch`
 
