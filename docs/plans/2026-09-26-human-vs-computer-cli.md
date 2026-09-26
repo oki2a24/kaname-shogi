@@ -98,7 +98,7 @@ def _apply_selected_move(record: GameRecord, move: Move) -> None:
 
 盤面表示・終局判定・`GameRecord`適用の重複、担当判定の散在、docstringとの不一致を確認する。変更した場合は対象テストを再実行する。
 
-- [ ] **ステップ6: コミットする**
+- [x] **ステップ6: コミットする**
 
 実行: `git add kaname_shogi/cli.py tests/test_cli.py && git commit -m 'feat: 人間対コンピュータのCLI進行を追加'`
 
@@ -110,17 +110,17 @@ def _apply_selected_move(record: GameRecord, move: Move) -> None:
 - 作成: `docs/learning/39-human-vs-computer-cli.md`
 - 作成: `docs/knowledge/32-human-vs-computer-cli.md`
 
-- [ ] **ステップ1: 現行案内との差を確認する**
+- [x] **ステップ1: 現行案内との差を確認する**
 
 実行: `rg -n '人間同士|人間対コンピュータ|後手の指し手|GameRecord|EOF|Ctrl-C' README.md`
 
 期待値: READMEが人間同士の説明のままであることを確認する。
 
-- [ ] **ステップ2: 実測済みの事実だけを文書へ記録する**
+- [x] **ステップ2: 実測済みの事実だけを文書へ記録する**
 
 READMEを人間先手・コンピュータ後手向けへ更新する。`move`、`drop`、`resign`、表示順、EOF/Ctrl-C、乱数による弱い手、未実装範囲を説明する。学習記録には確認問題ごとの本人回答と補足、実施済みのRed/Green、Refactor、レビュー、検証だけを追記する。知識メモには担当境界、乱数寿命、`None`と終局の分離、記録範囲を記す。
 
-- [ ] **ステップ3: 文書の正確性を確認する**
+- [x] **ステップ3: 文書の正確性を確認する**
 
 実行: `rg -n '人間対コンピュータ|人間は先手|コンピュータは後手|後手の指し手|勝敗にしない' README.md docs/learning/39-human-vs-computer-cli.md docs/knowledge/32-human-vs-computer-cli.md`
 
