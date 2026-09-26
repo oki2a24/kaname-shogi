@@ -46,7 +46,7 @@
 - 消費: `legal_moves(position) -> tuple[Move, ...]`、`choose_weak_move(moves, rng) -> Move | None`、`GameRecord.apply_move`、`GameRecord.apply_drop`。
 - 生産: `run_game(*, input_fn=input, output_fn=print, rng: Optional[random.Random] = None) -> GameRecord`。
 
-- [ ] **ステップ1: 失敗するテストを追加する**
+- [x] **ステップ1: 失敗するテストを追加する**
 
 `tests/test_cli.py`に、自動手・表示順・固定種の再現性・盤上移動と駒打ちの記録・投了/EOF/Ctrl-C・合法手空一覧の個別テストを追加する。核となるテストは次の形にする。
 
@@ -68,13 +68,13 @@ def test_human_sente_move_is_followed_by_one_computer_gote_move(self):
     self.assertTrue(any(line.startswith("後手の指し手: ") for line in outputs))
 ```
 
-- [ ] **ステップ2: Redを振る舞いとして確認する**
+- [x] **ステップ2: Redを振る舞いとして確認する**
 
 実行: `python3 -m unittest tests.test_cli -v`
 
 期待値: 追加テストは、まだ`run_game`に`rng`引数と自動手分岐がないためFAILする。読み込みエラーだけでなく、期待する進行または出力との差を確認する。
 
-- [ ] **ステップ3: 最小実装を追加する**
+- [x] **ステップ3: 最小実装を追加する**
 
 `cli.py`へ`random`、`Optional`、`BoardMove`、`DropMove`、`Move`、`legal_moves`、`choose_weak_move`を読み込む。`rng`未指定時だけ`run_game`開始時に一個生成する。担当判定を一つの非公開操作に置く。コンピュータ担当では空の合法手一覧を先に処理し、空でなければ一手を表示して適用し、盤面を表示する。
 
@@ -88,13 +88,13 @@ def _apply_selected_move(record: GameRecord, move: Move) -> None:
 
 盤上移動は`move <筋> <段> <筋> <段> [ + ]`、駒打ちは`drop <駒名> <筋> <段>`として`後手の指し手: `の後に適用前表示する。既存の人間入力・例外・再入力経路を維持し、`run_game`のdocstringを更新する。
 
-- [ ] **ステップ4: Greenを確認する**
+- [x] **ステップ4: Greenを確認する**
 
 実行: `python3 -m unittest tests.test_cli -v`
 
 期待値: 既存テストと新規テストがすべてPASSする。
 
-- [ ] **ステップ5: Refactorの要否を確認する**
+- [x] **ステップ5: Refactorの要否を確認する**
 
 盤面表示・終局判定・`GameRecord`適用の重複、担当判定の散在、docstringとの不一致を確認する。変更した場合は対象テストを再実行する。
 

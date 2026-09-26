@@ -1,9 +1,11 @@
 """CLIの指し手解析と対局進行を検証する。"""
 
+import random
 import unittest
 from unittest.mock import patch
 
 from kaname_shogi.game_record import RecordedDrop, RecordedMove
+from kaname_shogi.move import DropMove
 from kaname_shogi import cli
 from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
                                 Position, Side, Square, create_initial_position)
@@ -91,6 +93,116 @@ class GameplayTests(unittest.TestCase):
             board.set_piece(square, Piece(PieceType.PAWN, Side.GOTE))
         return Position(board, Side.SENTE)
 
+    def test_human_sente_move_is_followed_by_one_computer_gote_move(self):
+        """先手の成功手の後に、後手のコンピュータが一手だけ指す。
+
+        後手入力を要求するまま残る誤りと、同じ側が続けて指す誤りを検出する。
+        """
+        inputs = ScriptedInput(["move 7 7 7 6"])
+        outputs = []
+
+        record = cli.run_game(input_fn=inputs, output_fn=outputs.append)
+
+        self.assertEqual(inputs.calls, 2)
+        self.assertEqual(len(record.moves), 2)
+        self.assertEqual(record.moves[0], RecordedMove(Square(7, 7),
+                                                        Square(7, 6), False))
+        self.assertEqual(record.current_position.side_to_move, Side.SENTE)
+        self.assertTrue(any(line.startswith("後手の指し手: ")
+                            for line in outputs))
+
+    def test_fixed_rng_reproduces_computer_move(self):
+        """同じ乱数種の対局は、コンピュータ手と表示を再現する。
+
+        乱数生成器を手ごとに作り直す誤りと、テストから注入できない設計を検出する。
+        """
+        outputs_a = []
+        outputs_b = []
+        record_a = cli.run_game(
+            input_fn=ScriptedInput(["move 7 7 7 6"]),
+            output_fn=outputs_a.append,
+            rng=random.Random(20260926),
+        )
+        record_b = cli.run_game(
+            input_fn=ScriptedInput(["move 7 7 7 6"]),
+            output_fn=outputs_b.append,
+            rng=random.Random(20260926),
+        )
+
+        self.assertEqual(record_a.moves, record_b.moves)
+        self.assertEqual(outputs_a, outputs_b)
+
+    def test_displays_human_board_then_computer_move_then_computer_board(self):
+        """人間手後の盤面、自動手、自動手後の盤面を順番に表示する。
+
+        自動手を盤面更新後に表示する誤りと、次の入力案内を先に出す誤りを検出する。
+        """
+        outputs = []
+        cli.run_game(input_fn=ScriptedInput(["move 7 7 7 6"]),
+                     output_fn=outputs.append,
+                     rng=random.Random(20260926))
+
+        gote_boards = [i for i, line in enumerate(outputs)
+                       if line.startswith("手番：後手")]
+        computer_moves = [i for i, line in enumerate(outputs)
+                          if line.startswith("後手の指し手: ")]
+        sente_boards = [i for i, line in enumerate(outputs)
+                        if line.startswith("手番：先手")]
+        prompts = [i for i, line in enumerate(outputs)
+                   if line.startswith("指し手を入力してください")]
+
+        self.assertEqual(len(gote_boards), 1)
+        self.assertEqual(len(computer_moves), 1)
+        self.assertGreater(computer_moves[0], gote_boards[0])
+        self.assertGreater(sente_boards[-1], computer_moves[0])
+        self.assertGreater(prompts[-1], sente_boards[-1])
+
+    def test_stops_without_winner_when_computer_has_no_legal_move(self):
+        """詰みでない合法手空一覧は、勝敗なしの異常終了として扱う。
+
+        選択器のNoneを投了や勝敗へ変換する誤りを検出する。
+        """
+        inputs = ScriptedInput(["move 7 7 7 6"])
+        outputs = []
+
+        with patch.object(cli, "legal_moves", return_value=()):
+            record = cli.run_game(input_fn=inputs, output_fn=outputs.append,
+                                  rng=random.Random(20260926))
+
+        self.assertEqual(inputs.calls, 1)
+        self.assertEqual(len(record.moves), 1)
+        self.assertIn("コンピュータの合法手がありません。", outputs)
+        self.assertFalse(any("勝ちです。" in output for output in outputs))
+        self.assertFalse(any("投了しました。" in output for output in outputs))
+
+    def test_records_computer_drop_move(self):
+        """コンピュータの駒打ちを表示し、GameRecordへ記録する。
+
+        盤上移動だけを自動手の適用対象にし、駒打ちを落とす誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(7, 7), Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+        position.gote_hand.add(BasicPieceType.PAWN)
+        inputs = ScriptedInput(["move 7 7 7 6"])
+        outputs = []
+
+        with patch.object(cli, "create_initial_position",
+                          return_value=position, create=True), \
+                patch.object(cli, "legal_moves",
+                             return_value=(DropMove(BasicPieceType.PAWN,
+                                                    Square(5, 5)),)):
+            record = cli.run_game(input_fn=inputs, output_fn=outputs.append,
+                                  rng=random.Random(20260926))
+
+        self.assertEqual(record.moves[1],
+                         RecordedDrop(BasicPieceType.PAWN, Square(5, 5)))
+        self.assertIn("後手の指し手: drop 歩 5 5", outputs)
+        self.assertEqual(record.current_position.board.piece_at(Square(5, 5)),
+                         Piece(PieceType.PAWN, Side.GOTE))
+
     def test_reprompts_after_format_and_legality_errors(self):
         """形式エラーと合法性エラーの後も、同じ手番で合法手を受け付ける。"""
         outputs = []
@@ -122,8 +234,9 @@ class GameplayTests(unittest.TestCase):
         self.assertIsNotNone(record, "run_gameが対局記録を返していません")
         if record is None:
             return
-        self.assertEqual(record.moves,
-                         (RecordedDrop(BasicPieceType.PAWN, Square(5, 5)),))
+        self.assertEqual(record.moves[0],
+                         RecordedDrop(BasicPieceType.PAWN, Square(5, 5)))
+        self.assertEqual(len(record.moves), 2)
         self.assertEqual(record.current_position.board.piece_at(Square(5, 5)),
                          Piece(PieceType.PAWN, Side.SENTE))
         self.assertEqual(record.current_position.sente_hand.count(
@@ -135,7 +248,7 @@ class GameplayTests(unittest.TestCase):
         CLI表示だけで履歴を失わず、終了時点の局面と順序どおりの記録を呼び出し側へ
         渡せることを検出する。
         """
-        inputs = ScriptedInput(["move 7 7 7 6", "move 3 3 3 4"])
+        inputs = ScriptedInput(["move 7 7 7 6"])
         outputs = []
 
         record = cli.run_game(input_fn=inputs, output_fn=outputs.append)
@@ -143,10 +256,9 @@ class GameplayTests(unittest.TestCase):
         self.assertIsNotNone(record, "run_gameが対局記録を返していません")
         if record is None:
             return
-        self.assertEqual(record.moves, (
-            RecordedMove(Square(7, 7), Square(7, 6), False),
-            RecordedMove(Square(3, 3), Square(3, 4), False),
-        ))
+        self.assertEqual(record.moves[0],
+                         RecordedMove(Square(7, 7), Square(7, 6), False))
+        self.assertEqual(len(record.moves), 2)
         self.assertEqual(record.current_position.side_to_move, Side.SENTE)
 
     def test_returns_empty_record_when_sente_resigns(self):
@@ -195,8 +307,11 @@ class GameplayTests(unittest.TestCase):
         self.assertIn("先手が投了しました。後手の勝ちです。", outputs)
         self.assertNotIn("入力を終了しました。", outputs)
 
-    def test_stops_when_gote_resigns_after_sente_move(self):
-        """後手が投了すると、後手の投了と先手の勝ちを表示して終了する。"""
+    def test_stops_when_sente_resigns_after_computer_move(self):
+        """コンピュータ手の後に先手が投了すると、後手の勝ちを表示して終了する。
+
+        コンピュータへ投了入力を要求せず、人間の投了だけを受け付けることを検出する。
+        """
         position = create_initial_position()
         inputs = ScriptedInput(["move 7 7 7 6", "resign"])
         outputs = []
@@ -209,10 +324,11 @@ class GameplayTests(unittest.TestCase):
         if record is None:
             return
         self.assertEqual(inputs.calls, 2)
-        self.assertEqual(record.current_position.side_to_move, Side.GOTE)
+        self.assertEqual(record.current_position.side_to_move, Side.SENTE)
         self.assertEqual(record.current_position.board.piece_at(Square(7, 6)),
                          Piece(PieceType.PAWN, Side.SENTE))
-        self.assertIn("後手が投了しました。先手の勝ちです。", outputs)
+        self.assertEqual(len(record.moves), 2)
+        self.assertIn("先手が投了しました。後手の勝ちです。", outputs)
         self.assertNotIn("入力を終了しました。", outputs)
 
     def test_stops_without_input_when_position_is_already_checkmate(self):

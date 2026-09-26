@@ -1,12 +1,14 @@
 """指し手入力の解析と、標準入出力による対局進行を扱う。"""
 
+import random
 from dataclasses import dataclass
-from typing import Callable, Union
+from typing import Callable, Optional, Union
 
 from .display import render_position
 from .game_record import GameRecord
+from .move import BoardMove, DropMove, Move
 from .model import BasicPieceType, Side, Square, create_initial_position
-from .movegen import is_game_over
+from .movegen import choose_weak_move, is_game_over, legal_moves
 
 
 FORMAT_ERROR = "入力形式が正しくありません。"
@@ -32,6 +34,17 @@ class _DropCommand:
 @dataclass(frozen=True)
 class _ResignCommand:
     """投了の入力を、局面を変更しない終局指示として保持する。"""
+
+
+_PIECE_NAMES = {
+    BasicPieceType.PAWN: "歩",
+    BasicPieceType.LANCE: "香",
+    BasicPieceType.KNIGHT: "桂",
+    BasicPieceType.SILVER: "銀",
+    BasicPieceType.GOLD: "金",
+    BasicPieceType.BISHOP: "角",
+    BasicPieceType.ROOK: "飛",
+}
 
 
 def parse_command(text: str) -> Union[_MoveCommand, _DropCommand,
@@ -111,6 +124,53 @@ def _apply_command(record: GameRecord,
     record.apply_drop(command.piece_type, command.destination)
 
 
+def _is_human_turn(side: Side) -> bool:
+    """今回の対局設定で、指定手番を人間が担当するか返す。"""
+    return side == Side.SENTE
+
+
+def _apply_selected_move(record: GameRecord, move: Move) -> None:
+    """合法手データを既存のGameRecord操作へ変換して適用する。"""
+    if isinstance(move, BoardMove):
+        record.apply_move(move.source, move.destination,
+                          promote=move.promote)
+        return
+    if isinstance(move, DropMove):
+        record.apply_drop(move.piece_type, move.destination)
+        return
+    raise TypeError("未知の合法手データです")
+
+
+def _format_selected_move(move: Move) -> str:
+    """コンピュータの合法手を既存CLI形式の文字列へ変換する。"""
+    if isinstance(move, BoardMove):
+        suffix = " +" if move.promote else ""
+        return (f"move {move.source.file} {move.source.rank} "
+                f"{move.destination.file} {move.destination.rank}{suffix}")
+    if isinstance(move, DropMove):
+        return (f"drop {_PIECE_NAMES[move.piece_type]} "
+                f"{move.destination.file} {move.destination.rank}")
+    raise TypeError("未知の合法手データです")
+
+
+def _run_computer_turn(record: GameRecord, rng: random.Random,
+                       output_fn: Callable[[str], None]) -> bool:
+    """後手の合法手を一つ選んで適用し、成功したかを返す。
+
+    合法手が空の場合は選択不能を勝敗や投了へ変換せず、専用メッセージを表示して
+    Falseを返す。選択された手は適用前に表示し、成功後の局面を表示する。
+    """
+    moves = legal_moves(record.current_position)
+    selected = choose_weak_move(moves, rng)
+    if selected is None:
+        output_fn("コンピュータの合法手がありません。")
+        return False
+    output_fn("後手の指し手: " + _format_selected_move(selected))
+    _apply_selected_move(record, selected)
+    output_fn(render_position(record.current_position))
+    return True
+
+
 def _resignation_message(side_to_move: Side) -> str:
     """投了した手番側と、その相手の勝者表示を作る。"""
     loser_name = "先手" if side_to_move == Side.SENTE else "後手"
@@ -126,26 +186,34 @@ def _checkmate_message(side_to_move: Side) -> str:
 
 
 def run_game(*, input_fn: Callable[[], str] = input,
-             output_fn: Callable[[str], None] = print) -> GameRecord:
-    """初期局面から入力を受け、合法手または投了まで対局を進める。
+             output_fn: Callable[[str], None] = print,
+             rng: Optional[random.Random] = None) -> GameRecord:
+    """初期局面から、人間先手とコンピュータ後手の対局を進める。
 
     引数:
-        input_fn: 入力文字列を一つ返す操作。テストでは端末のinputを差し替える。
-        output_fn: 表示文字列を一つ受け取る操作。テストではprintを差し替える。
+        input_fn: 人間の入力文字列を一つ返す操作。テストでは端末のinputを差し替える。
+        output_fn: 盤面・案内・自動手の表示文字列を一つ受け取る操作。
+        rng: コンピュータ手の選択に使う乱数生成器。省略時は対局開始時に一個だけ
+            生成し、その対局の全自動手で使う。テストでは固定種を注入できる。
 
     戻り値:
-        詰み、投了、EOF、Ctrl-Cのいずれかで終了した時点の`GameRecord`。成功した
-        move / dropだけを履歴に含み、投了・EOF・Ctrl-Cは履歴に含めない。
+        詰み、投了、EOF、Ctrl-C、またはコンピュータの合法手空一覧で終了した時点の
+        `GameRecord`。人間・コンピュータ双方の成功したmove / dropだけを履歴に含め、
+        終了イベントは履歴に含めない。
 
     副作用:
-        初期局面から記録を作り、局面表示と入力案内をoutput_fnへ渡す。合法な入力だけが
-        記録の現在局面と履歴を変更し、形式・合法性エラーでは同じ手番で再入力する。
-        `resign` は入力時点の手番を投了側として表示し、記録の局面を変更せずに終了する。
+        初期局面から記録を作り、局面表示、入力案内、自動手の表示をoutput_fnへ渡す。
+        合法な入力と自動手だけが記録の現在局面と履歴を変更し、形式・合法性エラーでは
+        人間の同じ手番で再入力する。`resign` は人間先手の投了として表示し、局面を
+        変更せず終了する。
 
     前提条件:
-        詰みは入力前に優先して確認する。EOF/Ctrl-Cは投了や勝敗に変換しない。
-        標準のinputとprintを差し替え可能にすることで、端末以外でも同じ進行を検証する。
+        各手番の行動前に詰みを優先して確認する。EOF/Ctrl-Cと合法手空一覧は投了や勝敗に
+        変換しない。先手を人間、後手をコンピュータとする担当境界を分け、将来の担当切替
+        をこの進行層へ閉じ込める。標準のinputとprintは差し替え可能である。
     """
+    if rng is None:
+        rng = random.Random()
     record = GameRecord(create_initial_position())
     output_fn(render_position(record.current_position))
     while True:
@@ -153,6 +221,11 @@ def run_game(*, input_fn: Callable[[], str] = input,
         if is_game_over(position):
             output_fn(_checkmate_message(position.side_to_move))
             return record
+
+        if not _is_human_turn(position.side_to_move):
+            if not _run_computer_turn(record, rng, output_fn):
+                return record
+            continue
 
         output_fn("指し手を入力してください（例: move 7 7 7 6）:")
         try:
