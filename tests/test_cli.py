@@ -132,6 +132,30 @@ class GameplayTests(unittest.TestCase):
         self.assertEqual(record_a.moves, record_b.moves)
         self.assertEqual(outputs_a, outputs_b)
 
+    def test_one_rng_is_reused_for_multiple_computer_moves(self):
+        """一局の複数の自動手で同じ乱数生成器を使い続ける。
+
+        自動手ごとに乱数生成器を作り直して同じ初期状態へ戻す誤りを検出する。
+        """
+        class CountingRandom(random.Random):
+            def __init__(self):
+                super().__init__(20260926)
+                self.choice_calls = 0
+
+            def choice(self, sequence):
+                self.choice_calls += 1
+                return super().choice(sequence)
+
+        rng = CountingRandom()
+        inputs = ScriptedInput(["move 7 7 7 6", "move 2 7 2 6"])
+        outputs = []
+
+        record = cli.run_game(input_fn=inputs, output_fn=outputs.append,
+                              rng=rng)
+
+        self.assertEqual(rng.choice_calls, 2)
+        self.assertEqual(len(record.moves), 4)
+
     def test_displays_human_board_then_computer_move_then_computer_board(self):
         """人間手後の盤面、自動手、自動手後の盤面を順番に表示する。
 
