@@ -176,6 +176,6 @@ def test_returns_all_drops_in_fixed_order_for_each_side(self):
 
   `git switch main`、`git merge --no-ff codex/drop-order-maintenance -m "merge: 駒打ち順保守改善を取り込む"` の後、全テスト、CLIスモーク、`git diff --check`をmain上で再実行する。
 
-- [ ] **ステップ6: 最後の理解確認を一問だけ出す**
+- [x] **ステップ6: 最後の理解確認を一問だけ出す**
 
   main取り込みと再検証後だけ、「`BasicPieceType`の定義順と`_DROP_PIECE_TYPES`を分けたことで、固定種の乱数を使う弱いコンピュータの再現性をどう守れるか」を尋ねる。本人の回答と補足を学習記録へ追記してコミットする。
