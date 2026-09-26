@@ -137,13 +137,13 @@ READMEを人間先手・コンピュータ後手向けへ更新する。`move`�
 - 変更: `docs/learning/39-human-vs-computer-cli.md`
 - 変更: `docs/02-project-direction.md`、`docs/next-topics.md`、`docs/resume.md`
 
-- [ ] **ステップ1: 全検証とCLIスモークを実行する**
+- [x] **ステップ1: 全検証とCLIスモークを実行する**
 
 実行: `python3 -m unittest discover -s tests -v`、`printf 'move 7 7 7 6\\n' | python3 -m kaname_shogi`、`git diff --check`
 
 期待値: 全テストがPASSし、CLIは先手入力後に後手の自動手と次の先手入力案内を表示する。
 
-- [ ] **ステップ2: 独立レビューを実施する**
+- [x] **ステップ2: 独立レビューを実施する**
 
 手番交代、乱数の一局単位の寿命、表示順、`None`の誤解釈、`GameRecord`、EOF/Ctrl-C、docstring、既存挙動の回帰を別視点で確認する。Critical・Important・Minorを明示し、CriticalまたはImportantがあれば修正、再検証、再レビューする。結果を学習記録へ追記する。
 
