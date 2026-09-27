@@ -101,6 +101,20 @@ class _ResignCommand:
     """投了の入力を、局面を変更しない終局指示として保持する。"""
 
 
+@dataclass(frozen=True)
+class _SaveCommand:
+    """保存先のパスを、ファイル操作前の入力値として保持する。"""
+
+    path: str
+
+
+@dataclass(frozen=True)
+class _LoadCommand:
+    """読込元のパスを、ファイル操作前の入力値として保持する。"""
+
+    path: str
+
+
 _PIECE_NAMES = {
     BasicPieceType.PAWN: "歩",
     BasicPieceType.LANCE: "香",
@@ -113,27 +127,35 @@ _PIECE_NAMES = {
 
 
 def parse_command(text: str) -> Union[_MoveCommand, _DropCommand,
-                                        _ResignCommand]:
-    """入力文字列を盤上移動または駒打ちの指示へ変換する。
+                                        _ResignCommand, _SaveCommand,
+                                        _LoadCommand]:
+    """入力文字列を対局または保存・読込の指示へ変換する。
 
     引数:
-        text: `move`、`drop`、または `resign` のCLI入力。区切りは半角・全角空白、
-            筋段は半角・全角数字を受け付ける。
+        text: `move`、`drop`、`resign`、`save`、または `load` のCLI入力。区切りは
+            半角・全角空白、筋段は半角・全角数字を受け付ける。保存・読込の
+            パスは空白を含まない一語として扱う。
 
     戻り値:
         盤上移動なら元・先のSquareと成り指定を持つ内部値、駒打ちなら基本駒種と
-        打ち先を持つ内部値、投了なら局面を変更しない投了指示。
+        打ち先を持つ内部値、投了なら局面を変更しない投了指示、保存・読込なら
+        一語のパスを持つ内部値。
 
     例外:
         ValueError: 操作語、引数、成り記号、駒名、または座標が入力形式に合わない場合。
 
     副作用:
-        局面を変更しない。候補内か、手番に合うか、二歩かなどの合法性はここで判定せず、
-        既存のapply_move / apply_dropへ委譲する。文字列を局面処理から分離するための操作である。
+        局面・ファイルを変更しない。候補内か、手番に合うか、二歩かなどの合法性は
+        ここで判定せず、既存のapply_move / apply_dropへ委譲する。保存・読込も実行層へ
+        渡すだけにして、文字列解析を局面・ファイル処理から分離する。
     """
     parts = text.split()
     if parts == ["resign"]:
         return _ResignCommand()
+    if parts[:1] == ["save"] and len(parts) == 2:
+        return _SaveCommand(parts[1])
+    if parts[:1] == ["load"] and len(parts) == 2:
+        return _LoadCommand(parts[1])
     if parts[:1] == ["move"] and len(parts) in (5, 6):
         if len(parts) == 6 and parts[5] != "+":
             raise ValueError(FORMAT_ERROR)

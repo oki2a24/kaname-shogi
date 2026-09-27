@@ -40,7 +40,7 @@
 
 **生産するインターフェース:** `_SaveCommand(path: str)` と `_LoadCommand(path: str)`。いずれもファイル操作をしない不変データ。
 
-- [ ] **ステップ1: 失敗するテストを追加する**
+- [x] **ステップ1: 失敗するテストを追加する**
 
 ```python
 def test_parses_save_and_load_commands(self):
@@ -55,23 +55,23 @@ def test_parses_save_and_load_commands(self):
 
 `"save"`、`"load"`、`"save a b"`、`"load a b"` を入力形式エラーとして拒否するテストも追加する。
 
-- [ ] **ステップ2: Redを確認する**
+- [x] **ステップ2: Redを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli.CommandParsingTests -v`
 
 期待値: コマンド値が未定義、または`save`/`load`が形式エラーとなりFAILする。読み込みエラーだけではないことを確認する。
 
-- [ ] **ステップ3: 最小実装を加える**
+- [x] **ステップ3: 最小実装を加える**
 
 `cli.py`に不変の`_SaveCommand`と`_LoadCommand`を追加し、`parse_command`が`parts == ["save", path]`または`parts == ["load", path]`のときだけ対応するコマンド値を返すようにする。戻り値型注釈・docstringを更新し、ここに`Path`変換、ファイル操作、JSON検証は追加しない。
 
-- [ ] **ステップ4: Greenを確認する**
+- [x] **ステップ4: Greenを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli.CommandParsingTests -v`
 
 期待値: 追加した解析テストを含めてPASSする。
 
-- [ ] **ステップ5: コミットする**
+- [x] **ステップ5: コミットする**
 
 実行: `git add kaname_shogi/cli.py tests/test_cli.py && git commit -m "feat: CLIの保存読込入力を解析する"`
 

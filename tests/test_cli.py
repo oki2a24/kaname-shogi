@@ -32,6 +32,29 @@ class CommandParsingTests(unittest.TestCase):
 
         self.assertIsInstance(command, cli._ResignCommand)
 
+    def test_parses_save_and_load_commands(self):
+        """save/loadの一語パスを、ファイル操作前の指示へ変換する。"""
+        try:
+            save = cli.parse_command("save records/game.json")
+            load = cli.parse_command("load /tmp/game.json")
+        except ValueError as error:
+            self.fail(f"save/load入力が未実装です: {error}")
+
+        save_command = getattr(cli, "_SaveCommand", type(None))
+        load_command = getattr(cli, "_LoadCommand", type(None))
+        self.assertIsInstance(save, save_command)
+        self.assertEqual(save.path, "records/game.json")
+        self.assertIsInstance(load, load_command)
+        self.assertEqual(load.path, "/tmp/game.json")
+
+    def test_rejects_save_and_load_without_one_path(self):
+        """パスなし・空白を含むパスは入力形式エラーとして拒否する。"""
+        for command in ("save", "load", "save a b", "load a b"):
+            with self.subTest(command=command):
+                with self.assertRaisesRegex(
+                        ValueError, "入力形式が正しくありません。"):
+                    cli.parse_command(command)
+
     def test_rejects_invalid_command_format(self):
         """未知の操作語・記号・引数・座標を入力形式エラーとして拒否する。"""
         invalid_commands = (
