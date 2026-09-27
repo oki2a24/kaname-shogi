@@ -132,10 +132,14 @@ Critical 0件。解析層は計画どおりと評価された。Importantとし�
 ## 検証
 
 - `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli.GameplayTests -v`：27件成功（タスク2Green時点）。
-- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli -v`：38件成功（表示アサーション強化後）。
+- `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli -v`：37件成功（表示アサーション強化後）。
 - `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -q`：240件成功。
 - `git diff --check`：出力なし。
 - CLIスモークとmain取り込み後の再検証は、この記録の更新時点では未実施。
+
+## 最終レビュー
+
+main取り込み前の全体レビュー（Base `22a0581`、Head `fbb9e20`）は、Critical 0件、Important 0件、Minor 3件だった。Minorの件数誤記、知識メモの更新日・対象範囲、コンピュータ担当側のdocstringを修正した。実装上のCritical・Importantはなく、修正後にマージ可能と評価された。
 
 ## 未解決事項
 

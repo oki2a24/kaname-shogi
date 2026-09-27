@@ -237,7 +237,7 @@ def _format_selected_move(move: Move) -> str:
 
 def _run_computer_turn(record: GameRecord, rng: random.Random,
                        output_fn: Callable[[str], None]) -> bool:
-    """後手の合法手を一つ選んで適用し、成功したかを返す。
+    """コンピュータ担当側の合法手を一つ選んで適用し、成功したかを返す。
 
     合法手が空の場合は選択不能を勝敗や投了へ変換せず、専用メッセージを表示して
     Falseを返す。選択された手は適用前に表示し、成功後の局面を表示する。

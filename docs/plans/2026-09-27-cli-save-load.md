@@ -131,7 +131,7 @@ def test_reprompts_after_save_file_error_without_changing_record(self):
 
 保存・読込分岐が入力解析・局面適用・終了処理の境界を壊していないか確認する。重複がなければ「不要」と学習記録へ残す。必要なら公開API・表示文言を変えない最小の抽出を行う。実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli -v`。期待値: PASS。
 
-- [ ] **ステップ2: 独立レビューを実施する**
+- [x] **ステップ2: 独立レビューを実施する**
 
 Criticalは「読込失敗で既存記録を破壊しないか」、Importantは「load後の表示・手番・担当が一致するか」「保存・読込・終了を履歴へ混入させないか」、Minorは「docstring、エラー文、テスト説明が方針に合うか」を確認する。CriticalまたはImportantがあれば修正、CLI全テスト、再レビューを行い、最終結論と対応を学習記録へ残す。
 
