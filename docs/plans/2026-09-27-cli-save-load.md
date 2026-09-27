@@ -40,7 +40,7 @@
 
 **生産するインターフェース:** `_SaveCommand(path: str)` と `_LoadCommand(path: str)`。いずれもファイル操作をしない不変データ。
 
-- [ ] **ステップ1: 失敗するテストを追加する**
+- [x] **ステップ1: 失敗するテストを追加する**
 
 ```python
 def test_parses_save_and_load_commands(self):
@@ -55,23 +55,23 @@ def test_parses_save_and_load_commands(self):
 
 `"save"`、`"load"`、`"save a b"`、`"load a b"` を入力形式エラーとして拒否するテストも追加する。
 
-- [ ] **ステップ2: Redを確認する**
+- [x] **ステップ2: Redを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli.CommandParsingTests -v`
 
 期待値: コマンド値が未定義、または`save`/`load`が形式エラーとなりFAILする。読み込みエラーだけではないことを確認する。
 
-- [ ] **ステップ3: 最小実装を加える**
+- [x] **ステップ3: 最小実装を加える**
 
 `cli.py`に不変の`_SaveCommand`と`_LoadCommand`を追加し、`parse_command`が`parts == ["save", path]`または`parts == ["load", path]`のときだけ対応するコマンド値を返すようにする。戻り値型注釈・docstringを更新し、ここに`Path`変換、ファイル操作、JSON検証は追加しない。
 
-- [ ] **ステップ4: Greenを確認する**
+- [x] **ステップ4: Greenを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli.CommandParsingTests -v`
 
 期待値: 追加した解析テストを含めてPASSする。
 
-- [ ] **ステップ5: コミットする**
+- [x] **ステップ5: コミットする**
 
 実行: `git add kaname_shogi/cli.py tests/test_cli.py && git commit -m "feat: CLIの保存読込入力を解析する"`
 
@@ -83,7 +83,7 @@ def test_parses_save_and_load_commands(self):
 
 **生産するインターフェース:** `run_game(...) -> GameRecord` は、`load` 成功時には読込済み記録を返し、その後の成功手をその末尾へ追加する。失敗時には元の記録を返す。
 
-- [ ] **ステップ1: 失敗する対局進行テストを追加する**
+- [x] **ステップ1: 失敗する対局進行テストを追加する**
 
 一時ディレクトリを使い、次の4件を追加する。保存成功後は同じ人間手番で入力を受け直すこと、後手番の記録をloadすると局面表示後にコンピュータが指すこと、load失敗後の`move`だけが元記録へ入ること、親ディレクトリがないsave失敗後も同じ手番で`move`できることを確認する。
 
@@ -103,23 +103,23 @@ def test_reprompts_after_save_file_error_without_changing_record(self):
 
 既存の開始時詰みテストへ`save ignored.json`を与え、入力回数0のまま終局することも確認する。
 
-- [ ] **ステップ2: Redを確認する**
+- [x] **ステップ2: Redを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli.GameplayTests -v`
 
 期待値: 保存・読込分岐がないため追加テストがFAILする。
 
-- [ ] **ステップ3: 最小実装を加える**
+- [x] **ステップ3: 最小実装を加える**
 
 `run_game`の人間入力分岐で指し手適用より先に`_SaveCommand`を`record.save(command.path)`へ、`_LoadCommand`を`record = GameRecord.load(command.path)`へ委譲する。成功表示はそれぞれ「棋譜を保存しました。」「棋譜を読み込みました。」とする。load成功時は`render_position(record.current_position)`を表示して`continue`する。`ValueError`と`OSError`を既存と同じ`エラー：`表示・再入力へ含め、EOF/Ctrl-Cの外側処理を変えない。`run_game`のdocstringを副作用、失敗時不変性、読込後の表示と担当切替まで更新する。
 
-- [ ] **ステップ4: Greenを確認する**
+- [x] **ステップ4: Greenを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli -v`
 
 期待値: 追加・既存のCLIテストがすべてPASSし、保存後の同一手番、読込後の置換・表示・担当切替、失敗時再入力を確認できる。
 
-- [ ] **ステップ5: コミットする**
+- [x] **ステップ5: コミットする**
 
 実行: `git add kaname_shogi/cli.py tests/test_cli.py && git commit -m "feat: CLIで棋譜を保存読込する"`
 
@@ -127,19 +127,19 @@ def test_reprompts_after_save_file_error_without_changing_record(self):
 
 **ファイル:** `README.md`、`docs/knowledge/30-game-record-file-save.md`、`docs/learning/42-cli-save-load.md`、`docs/02-project-direction.md`
 
-- [ ] **ステップ1: Refactorの要否を判断して検証する**
+- [x] **ステップ1: Refactorの要否を判断して検証する**
 
 保存・読込分岐が入力解析・局面適用・終了処理の境界を壊していないか確認する。重複がなければ「不要」と学習記録へ残す。必要なら公開API・表示文言を変えない最小の抽出を行う。実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli -v`。期待値: PASS。
 
-- [ ] **ステップ2: 独立レビューを実施する**
+- [x] **ステップ2: 独立レビューを実施する**
 
 Criticalは「読込失敗で既存記録を破壊しないか」、Importantは「load後の表示・手番・担当が一致するか」「保存・読込・終了を履歴へ混入させないか」、Minorは「docstring、エラー文、テスト説明が方針に合うか」を確認する。CriticalまたはImportantがあれば修正、CLI全テスト、再レビューを行い、最終結論と対応を学習記録へ残す。
 
-- [ ] **ステップ3: 利用文書と学習記録を更新する**
+- [x] **ステップ3: 利用文書と学習記録を更新する**
 
 READMEに入力形式、相対・絶対パス、親ディレクトリ非作成、成功後の進行、失敗時再入力、終了後に不可、JSON形式不変を追記する。知識メモに保存形式は`GameRecord`、文字列入力・表示・再入力・置換はCLIという境界を追記する。学習記録に目的、一次資料、確認問題と回答、承認、TDD、Refactor、レビュー、検証、未解決事項を残す。未回答の理解確認は回答済みにしない。
 
-- [ ] **ステップ4: 全検証とCLIスモークを実行する**
+- [x] **ステップ4: 全検証とCLIスモークを実行する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`、`printf '1\\nsave /private/tmp/kaname-shogi-cli-save-load.json\\nmove 7 7 7 6\\nresign\\n' | PYTHONDONTWRITEBYTECODE=1 python3 -m kaname_shogi`、`git diff --check`。
 
