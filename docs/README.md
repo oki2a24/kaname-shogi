@@ -32,14 +32,12 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | `docs/next-topics.md` | 完了テーマ後の候補と選定結果 | 本人、AI | 次テーマの選定時 | テーマ完了後の理解確認後 | 候補と選定履歴 |
 | ロードマップ | 複数テーマの順序とGREEN条件 | 本人、AI | 長期作業の開始・切替時 | テーマ開始時と完了時 | 現在の進行と完了履歴 |
 
-## 現在進行中の入口
+## 現在の作業入口
 
 - [学習・開発の再開案内](resume.md)
-- [文書ナビゲーションの最小改善 実装計画](plans/2026-09-27-repository-document-navigation.md)
 - [リポジトリ基盤整理ロードマップ](roadmap-repository-foundation.md)
-- [テーマ開始時点の引き継ぎ：文書ナビゲーションの最小改善](handover-repository-foundation-document-navigation.md)
 
-現役テーマの引き継ぎを含む `handover-*.md` は、対応テーマを始めた時点の状態を残す履歴です。現在のブランチ、HEAD、リモートとの差、テスト結果、次の行動は、必ず現在のGit状態、`resume.md`、実装計画で確認します。
+文書ナビゲーションの最小改善は完了し、次テーマは未選定です。`handover-*.md` は、対応テーマを始めた時点の状態を残す履歴です。過去のブランチ、HEAD、リモートとの差、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
 
 ## テーマ・学習回別索引
 
@@ -82,7 +80,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 対局モードの選択（第41回） | [第41回](learning/41-game-mode-selection.md) | [対局形式](knowledge/33-game-mode-selection.md) | [設計仕様](plans/2026-09-27-game-mode-selection-design.md) | [実装計画](plans/2026-09-27-game-mode-selection.md) | [引き継ぎ](handover-game-mode-selection.md) |
 | CLIでの明示的な保存・読込（第42回） | [第42回](learning/42-cli-save-load.md) | [JSONファイル保存](knowledge/30-game-record-file-save.md) | [設計仕様](plans/2026-09-27-cli-save-load-design.md) | [実装計画](plans/2026-09-27-cli-save-load.md) | [引き継ぎ](handover-cli-save-load.md) |
 | 文書構成の棚卸しと入口設計（第43回） | [第43回](learning/43-document-structure-audit.md) | — | [設計仕様](plans/2026-09-27-repository-document-navigation-design.md) | — | [引き継ぎ](handover-repository-foundation-docs-audit.md) |
-| 文書ナビゲーションの最小改善（第44回・main取り込み待ち） | [第44回](learning/44-document-navigation.md) | — | [設計仕様](plans/2026-09-27-repository-document-navigation-design.md) | [実装計画](plans/2026-09-27-repository-document-navigation.md) | [開始時点の引き継ぎ](handover-repository-foundation-document-navigation.md) |
+| 文書ナビゲーションの最小改善（第44回） | [第44回](learning/44-document-navigation.md) | — | [設計仕様](plans/2026-09-27-repository-document-navigation-design.md) | [実装計画](plans/2026-09-27-repository-document-navigation.md) | [開始時点の引き継ぎ](handover-repository-foundation-document-navigation.md) |
 
 ## 例外と履歴の読み方
 
