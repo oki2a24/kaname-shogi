@@ -83,7 +83,7 @@ def test_parses_save_and_load_commands(self):
 
 **生産するインターフェース:** `run_game(...) -> GameRecord` は、`load` 成功時には読込済み記録を返し、その後の成功手をその末尾へ追加する。失敗時には元の記録を返す。
 
-- [ ] **ステップ1: 失敗する対局進行テストを追加する**
+- [x] **ステップ1: 失敗する対局進行テストを追加する**
 
 一時ディレクトリを使い、次の4件を追加する。保存成功後は同じ人間手番で入力を受け直すこと、後手番の記録をloadすると局面表示後にコンピュータが指すこと、load失敗後の`move`だけが元記録へ入ること、親ディレクトリがないsave失敗後も同じ手番で`move`できることを確認する。
 
@@ -103,23 +103,23 @@ def test_reprompts_after_save_file_error_without_changing_record(self):
 
 既存の開始時詰みテストへ`save ignored.json`を与え、入力回数0のまま終局することも確認する。
 
-- [ ] **ステップ2: Redを確認する**
+- [x] **ステップ2: Redを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli.GameplayTests -v`
 
 期待値: 保存・読込分岐がないため追加テストがFAILする。
 
-- [ ] **ステップ3: 最小実装を加える**
+- [x] **ステップ3: 最小実装を加える**
 
 `run_game`の人間入力分岐で指し手適用より先に`_SaveCommand`を`record.save(command.path)`へ、`_LoadCommand`を`record = GameRecord.load(command.path)`へ委譲する。成功表示はそれぞれ「棋譜を保存しました。」「棋譜を読み込みました。」とする。load成功時は`render_position(record.current_position)`を表示して`continue`する。`ValueError`と`OSError`を既存と同じ`エラー：`表示・再入力へ含め、EOF/Ctrl-Cの外側処理を変えない。`run_game`のdocstringを副作用、失敗時不変性、読込後の表示と担当切替まで更新する。
 
-- [ ] **ステップ4: Greenを確認する**
+- [x] **ステップ4: Greenを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli -v`
 
 期待値: 追加・既存のCLIテストがすべてPASSし、保存後の同一手番、読込後の置換・表示・担当切替、失敗時再入力を確認できる。
 
-- [ ] **ステップ5: コミットする**
+- [x] **ステップ5: コミットする**
 
 実行: `git add kaname_shogi/cli.py tests/test_cli.py && git commit -m "feat: CLIで棋譜を保存読込する"`
 

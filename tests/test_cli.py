@@ -1,10 +1,11 @@
 """CLIの指し手解析と対局進行を検証する。"""
 
 import random
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from kaname_shogi.game_record import RecordedDrop, RecordedMove
+from kaname_shogi.game_record import GameRecord, RecordedDrop, RecordedMove
 from kaname_shogi.move import DropMove
 from kaname_shogi import cli
 from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
@@ -382,6 +383,133 @@ class GameplayTests(unittest.TestCase):
                       outputs)
         self.assertEqual(sum("手番：後手" in output for output in outputs), 1)
         self.assertEqual(sum("手番：先手" in output for output in outputs), 2)
+
+    def test_save_keeps_position_and_reprompts_same_human_turn(self):
+        """save成功後は記録を変えず、同じ人間手番で入力を受け直す。"""
+        with TemporaryDirectory() as directory:
+            path = f"{directory}/record.json"
+            inputs = ScriptedInput([
+                f"save {path}",
+                "move 7 7 7 6",
+            ])
+            outputs = []
+
+            try:
+                record = cli.run_game(
+                    mode=cli.GameMode.HUMAN_VS_HUMAN,
+                    input_fn=inputs,
+                    output_fn=outputs.append,
+                )
+            except AttributeError as error:
+                self.fail(f"save/load進行が未実装です: {error}")
+
+            saved = GameRecord.load(path)
+
+        self.assertEqual(saved.moves, ())
+        self.assertEqual(record.moves, (
+            RecordedMove(Square(7, 7), Square(7, 6), False),
+        ))
+        self.assertIn("棋譜を保存しました。", outputs)
+        self.assertEqual(record.current_position.side_to_move, Side.GOTE)
+
+    def test_load_replaces_record_displays_position_and_reprompts_loaded_turn(self):
+        """load成功後は記録を置換して局面を表示し、読込後の手番で進める。"""
+        loaded_record = GameRecord(create_initial_position())
+        loaded_record.apply_move(Square(2, 7), Square(2, 6))
+
+        with TemporaryDirectory() as directory:
+            path = f"{directory}/record.json"
+            loaded_record.save(path)
+            inputs = ScriptedInput([
+                "move 7 7 7 6",
+                f"load {path}",
+                "resign",
+            ])
+            outputs = []
+
+            try:
+                record = cli.run_game(
+                    mode=cli.GameMode.HUMAN_VS_HUMAN,
+                    input_fn=inputs,
+                    output_fn=outputs.append,
+                )
+            except AttributeError as error:
+                self.fail(f"save/load進行が未実装です: {error}")
+
+        self.assertEqual(record.moves, (
+            RecordedMove(Square(2, 7), Square(2, 6), False),
+        ))
+        self.assertIsNone(record.current_position.board.piece_at(
+            Square(7, 6)))
+        self.assertEqual(record.current_position.side_to_move, Side.GOTE)
+        self.assertIn("棋譜を読み込みました。", outputs)
+        loaded_boards = [line for line in outputs
+                         if line.startswith("手番：後手")]
+        self.assertGreaterEqual(len(loaded_boards), 1)
+
+    def test_reprompts_without_replacing_record_after_load_error(self):
+        """load失敗は元の記録を保ち、同じ人間手番で再入力する。"""
+        with TemporaryDirectory() as directory:
+            path = f"{directory}/missing/record.json"
+            inputs = ScriptedInput([
+                "move 7 7 7 6",
+                f"load {path}",
+                "move 3 3 3 4",
+            ])
+            outputs = []
+
+            try:
+                record = cli.run_game(
+                    mode=cli.GameMode.HUMAN_VS_HUMAN,
+                    input_fn=inputs,
+                    output_fn=outputs.append,
+                )
+            except AttributeError as error:
+                self.fail(f"save/load進行が未実装です: {error}")
+
+        self.assertEqual(record.moves, (
+            RecordedMove(Square(7, 7), Square(7, 6), False),
+            RecordedMove(Square(3, 3), Square(3, 4), False),
+        ))
+        self.assertTrue(any(line.startswith("エラー：") for line in outputs))
+
+    def test_reprompts_after_save_file_error_without_changing_record(self):
+        """save失敗は記録を保ち、同じ人間手番で再入力する。"""
+        with TemporaryDirectory() as directory:
+            path = f"{directory}/missing/record.json"
+            inputs = ScriptedInput([
+                "move 7 7 7 6",
+                f"save {path}",
+                "move 3 3 3 4",
+            ])
+            outputs = []
+
+            try:
+                record = cli.run_game(
+                    mode=cli.GameMode.HUMAN_VS_HUMAN,
+                    input_fn=inputs,
+                    output_fn=outputs.append,
+                )
+            except AttributeError as error:
+                self.fail(f"save/load進行が未実装です: {error}")
+
+        self.assertEqual(record.moves, (
+            RecordedMove(Square(7, 7), Square(7, 6), False),
+            RecordedMove(Square(3, 3), Square(3, 4), False),
+        ))
+        self.assertTrue(any(line.startswith("エラー：") for line in outputs))
+
+    def test_does_not_read_save_or_load_after_checkmate(self):
+        """詰み後はsave/loadを含む入力を読まず、終局表示で停止する。"""
+        inputs = ScriptedInput(["save ignored.json"])
+        outputs = []
+
+        with patch.object(cli, "create_initial_position",
+                          side_effect=self._mated_sente_position, create=True):
+            cli.run_game(input_fn=inputs, output_fn=outputs.append)
+
+        self.assertEqual(inputs.calls, 0)
+        self.assertIn("詰みです。後手の勝ちです。", outputs)
 
     def test_applies_drop_command_to_position(self):
         """drop入力を既存の駒打ちへ渡し、持ち駒と盤面を更新する。"""

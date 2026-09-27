@@ -290,10 +290,12 @@ def run_game(*, input_fn: Callable[[], str] = input,
 
     副作用:
         初期局面から記録を作り、局面表示、入力案内、自動手の表示をoutput_fnへ渡す。
-        合法な入力と自動手だけが記録の現在局面と履歴を変更し、形式・合法性エラーでは
-        人間の同じ手番で再入力する。`resign` は人間担当側の投了として表示し、局面を
-        変更せず終了する。人間対人間では両側、人間対コンピュータでは先手だけが
-        入力し、コンピュータ対コンピュータでは両側が自動手を指す。
+        合法な入力と自動手だけが記録の現在局面と履歴を変更し、形式・合法性・保存・
+        読込エラーでは人間の同じ手番で再入力する。`save` は記録を変更せず保存し、
+        `load` は成功したときだけ記録を新しいものへ置き換えて局面を表示する。
+        `resign` は人間担当側の投了として表示し、局面を変更せず終了する。人間対人間
+        では両側、人間対コンピュータでは先手だけが入力し、コンピュータ対コンピュータ
+        では両側が自動手を指す。
 
     前提条件:
         各手番の行動前に詰みを優先して確認する。EOF/Ctrl-Cと合法手空一覧は投了や勝敗に
@@ -319,11 +321,20 @@ def run_game(*, input_fn: Callable[[], str] = input,
             output_fn("指し手を入力してください（例: move 7 7 7 6）:")
             try:
                 command = parse_command(input_fn())
+                if isinstance(command, _SaveCommand):
+                    record.save(command.path)
+                    output_fn("棋譜を保存しました。")
+                    continue
+                if isinstance(command, _LoadCommand):
+                    record = GameRecord.load(command.path)
+                    output_fn("棋譜を読み込みました。")
+                    output_fn(render_position(record.current_position))
+                    continue
                 if isinstance(command, _ResignCommand):
                     output_fn(_resignation_message(position.side_to_move))
                     return record
                 _apply_command(record, command)
-            except ValueError as error:
+            except (ValueError, OSError) as error:
                 output_fn("エラー：" + str(error))
                 continue
             output_fn(render_position(record.current_position))
