@@ -9,6 +9,7 @@ from unittest.mock import patch
 from kaname_shogi.game_record import GameRecord, RecordedDrop, RecordedMove
 from kaname_shogi.move import DropMove
 from kaname_shogi import cli
+from kaname_shogi.display import render_position
 from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
                                 Position, Side, Square, create_initial_position)
 
@@ -444,9 +445,9 @@ class GameplayTests(unittest.TestCase):
             Square(7, 6)))
         self.assertEqual(record.current_position.side_to_move, Side.GOTE)
         self.assertIn("棋譜を読み込みました。", outputs)
-        loaded_boards = [line for line in outputs
-                         if line.startswith("手番：後手")]
-        self.assertGreaterEqual(len(loaded_boards), 1)
+        load_index = outputs.index("棋譜を読み込みました。")
+        self.assertEqual(outputs[load_index + 1],
+                         render_position(loaded_record.current_position))
 
     def test_load_to_computer_turn_plays_and_records_computer_move(self):
         """load後がコンピュータ手番なら自動手を表示して履歴へ追加する。"""
