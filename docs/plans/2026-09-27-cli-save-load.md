@@ -127,7 +127,7 @@ def test_reprompts_after_save_file_error_without_changing_record(self):
 
 **ファイル:** `README.md`、`docs/knowledge/30-game-record-file-save.md`、`docs/learning/42-cli-save-load.md`、`docs/02-project-direction.md`
 
-- [ ] **ステップ1: Refactorの要否を判断して検証する**
+- [x] **ステップ1: Refactorの要否を判断して検証する**
 
 保存・読込分岐が入力解析・局面適用・終了処理の境界を壊していないか確認する。重複がなければ「不要」と学習記録へ残す。必要なら公開API・表示文言を変えない最小の抽出を行う。実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli -v`。期待値: PASS。
 
@@ -135,11 +135,11 @@ def test_reprompts_after_save_file_error_without_changing_record(self):
 
 Criticalは「読込失敗で既存記録を破壊しないか」、Importantは「load後の表示・手番・担当が一致するか」「保存・読込・終了を履歴へ混入させないか」、Minorは「docstring、エラー文、テスト説明が方針に合うか」を確認する。CriticalまたはImportantがあれば修正、CLI全テスト、再レビューを行い、最終結論と対応を学習記録へ残す。
 
-- [ ] **ステップ3: 利用文書と学習記録を更新する**
+- [x] **ステップ3: 利用文書と学習記録を更新する**
 
 READMEに入力形式、相対・絶対パス、親ディレクトリ非作成、成功後の進行、失敗時再入力、終了後に不可、JSON形式不変を追記する。知識メモに保存形式は`GameRecord`、文字列入力・表示・再入力・置換はCLIという境界を追記する。学習記録に目的、一次資料、確認問題と回答、承認、TDD、Refactor、レビュー、検証、未解決事項を残す。未回答の理解確認は回答済みにしない。
 
-- [ ] **ステップ4: 全検証とCLIスモークを実行する**
+- [x] **ステップ4: 全検証とCLIスモークを実行する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v`、`printf '1\\nsave /private/tmp/kaname-shogi-cli-save-load.json\\nmove 7 7 7 6\\nresign\\n' | PYTHONDONTWRITEBYTECODE=1 python3 -m kaname_shogi`、`git diff --check`。
 
