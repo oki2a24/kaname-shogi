@@ -1,6 +1,7 @@
 """CLIの指し手解析と対局進行を検証する。"""
 
 import random
+from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
@@ -447,6 +448,57 @@ class GameplayTests(unittest.TestCase):
                          if line.startswith("手番：後手")]
         self.assertGreaterEqual(len(loaded_boards), 1)
 
+    def test_load_to_computer_turn_plays_and_records_computer_move(self):
+        """load後がコンピュータ手番なら自動手を表示して履歴へ追加する。"""
+        loaded_record = GameRecord(create_initial_position())
+        loaded_record.apply_move(Square(2, 7), Square(2, 6))
+
+        with TemporaryDirectory() as directory:
+            path = f"{directory}/record.json"
+            loaded_record.save(path)
+            inputs = ScriptedInput([
+                f"load {path}",
+                "resign",
+            ])
+            outputs = []
+
+            record = cli.run_game(
+                mode=cli.GameMode.HUMAN_VS_COMPUTER,
+                input_fn=inputs,
+                output_fn=outputs.append,
+                rng=random.Random(20260927),
+            )
+
+        self.assertEqual(record.moves[0],
+                         RecordedMove(Square(2, 7), Square(2, 6), False))
+        self.assertEqual(len(record.moves), 2)
+        self.assertTrue(any(line.startswith("後手の指し手: ")
+                            for line in outputs))
+
+    def test_appends_human_move_after_loaded_record(self):
+        """load後の成功手を、読込済み履歴の末尾へ追加する。"""
+        loaded_record = GameRecord(create_initial_position())
+        loaded_record.apply_move(Square(2, 7), Square(2, 6))
+
+        with TemporaryDirectory() as directory:
+            path = f"{directory}/record.json"
+            loaded_record.save(path)
+            inputs = ScriptedInput([
+                f"load {path}",
+                "move 3 3 3 4",
+            ])
+
+            record = cli.run_game(
+                mode=cli.GameMode.HUMAN_VS_HUMAN,
+                input_fn=inputs,
+                output_fn=lambda _: None,
+            )
+
+        self.assertEqual(record.moves, (
+            RecordedMove(Square(2, 7), Square(2, 6), False),
+            RecordedMove(Square(3, 3), Square(3, 4), False),
+        ))
+
     def test_reprompts_without_replacing_record_after_load_error(self):
         """load失敗は元の記録を保ち、同じ人間手番で再入力する。"""
         with TemporaryDirectory() as directory:
@@ -466,6 +518,30 @@ class GameplayTests(unittest.TestCase):
                 )
             except AttributeError as error:
                 self.fail(f"save/load進行が未実装です: {error}")
+
+        self.assertEqual(record.moves, (
+            RecordedMove(Square(7, 7), Square(7, 6), False),
+            RecordedMove(Square(3, 3), Square(3, 4), False),
+        ))
+        self.assertTrue(any(line.startswith("エラー：") for line in outputs))
+
+    def test_reprompts_without_replacing_record_after_invalid_json(self):
+        """不正JSONのload失敗も元の記録を保ち、同じ手番で再入力する。"""
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "invalid.json"
+            path.write_text("{", encoding="utf-8")
+            inputs = ScriptedInput([
+                "move 7 7 7 6",
+                f"load {path}",
+                "move 3 3 3 4",
+            ])
+            outputs = []
+
+            record = cli.run_game(
+                mode=cli.GameMode.HUMAN_VS_HUMAN,
+                input_fn=inputs,
+                output_fn=outputs.append,
+            )
 
         self.assertEqual(record.moves, (
             RecordedMove(Square(7, 7), Square(7, 6), False),

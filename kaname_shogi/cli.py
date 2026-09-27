@@ -300,7 +300,8 @@ def run_game(*, input_fn: Callable[[], str] = input,
     前提条件:
         各手番の行動前に詰みを優先して確認する。EOF/Ctrl-Cと合法手空一覧は投了や勝敗に
         変換しない。先後交代は局面規則、入力・自動手の担当はmodeという境界を分ける。
-        標準のinputとprintは差し替え可能である。
+        `load` 成功後は読込局面の `side_to_move` と `mode` に従って、次の人間入力または
+        コンピュータ手へ進む。標準のinputとprintは差し替え可能である。
     """
     if rng is None:
         rng = random.Random()
