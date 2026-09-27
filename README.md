@@ -1,376 +1,103 @@
 # kaname-shogi
 
+## プロジェクト概要
+
 `kaname-shogi` は、将棋のルールを学びながら、ゼロから少しずつ育てていく自作の将棋プログラムです。
 
-最初の目標は、コマンドラインで動く、ごく弱くても自分で理解できるプログラムを作ることです。将来的には、探索による強化、USI対応、将棋GUIとの対局へと段階的に進むことを考えています。
+最初の目標は、コマンドラインで動く、ごく弱くても自分で理解できるプログラムを作ることです。強さだけを急がず、将棋とプログラムの両方を理解しながら育てます。息子と将棋を通じて成長を共有できるものにすることも、このプロジェクトの大切な目的です。
 
-強さだけを急ぐのではなく、将棋とプログラムの両方を理解しながら育てます。息子と将棋を通じて成長を共有できるものにすることも、このプロジェクトの大切な目的です。
+## 現在できることと主な未対応事項
 
-## 現在の状態
+平手の初期配置から、次の3形式で対局できます。
 
-初期配置のCLI表示と、未成駒・成駒を含む14種の移動先候補を求める関数、空マスへの移動適用、手番に合う駒だけの局面移動、候補内の相手駒を取って持ち駒へ加える処理、持ち駒を打つ処理を実装しました。盤上の駒種は未成8種と成駒6種の14種を`PieceType`で表し、持ち駒は基本駒種8種の`BasicPieceType`で表します。`Board.copy()`・`Hand.copy()`・`Position.copy()` は可変状態を共有しない複製を返します。CLIは平手の初期配置を表示し、`move 7 7 7 6` のような盤上移動、`drop 歩 5 5` のような駒打ち、`resign` の投了を受け付けます。形式・合法性エラーは理由を表示して同じ手番で再入力し、詰みまたは投了なら勝者を表示して停止します。候補計算は盤面を変更せず、`move_piece(board, source, destination)` は検証成功時に盤面を変更します。`is_in_check(board, side)` は指定側の玉が相手駒の候補に入るかを判定します。`apply_move(position, source, destination, *, promote=False)` は出発駒の所有者、既存候補、成り、駒取りを検証した後、複製局面で試し指しし、自玉が相手の利きに残る場合は `ValueError` で拒否します。`promote=True` は移動元または移動先が敵陣のときだけ成りとして新しい成駒を置き、歩・香・桂が行き所を失う移動では成りを強制します。成駒は固有の移動候補で移動し、駒取りでは基本駒種へ戻して指した側の持ち駒へ加えます。`apply_drop(position, piece_type, destination)` も複製局面で試し打ちし、自玉が相手の利きに残る場合、または持ち歩で相手玉へ解除不能な王手をかける場合は拒否します。持ち駒不足、占有マス、玉の指定、二歩、歩・香・桂を行き所のない段へ打つ操作も `ValueError` で拒否し、局面を変更しません。王手・詰み・打ち歩詰めの検出を扱います。
+1. 人間対人間
+2. 人間対コンピュータ（先手が人間、後手がコンピュータ）
+3. コンピュータ対コンピュータ
 
-第32回で `has_legal_move(position)`、`is_checkmate(position)`、`is_game_over(position)` を追加しました。手番側の全ての盤上移動・成り・駒打ちを複製局面で試し、現在実装済みの規則で一つでも指せる手があるかを判定します。第33回では打ち歩詰めとなる歩打ちを合法手から除外しました。第34回ではCLIの入力解析と対局進行を追加し、第35回では `resign` による投了終局を追加しました。`move` / `drop` / `resign` と成りの `+` は半角で、区切りと筋段は半角・全角の空白・数字を受け付けます（実装はPythonの`str.split()`を使うため、その他のUnicode空白も区切りになります）。詰みは「手番側が王手を受け、合法手がない」場合だけ、`is_game_over` は局面から判定できる詰みだけを返します。CLIは入力前に詰みを優先し、`resign` なら局面を変更せず投了側と勝者を表示します。玉がない部分局面は詰み・終局とも `False` です。千日手、持将棋、入玉、時間、反則勝敗、USI/SFENはまだ扱いません。
+盤上移動、成り・不成、駒取り、持ち駒、駒打ち、二歩、行き所のない駒、王手、自玉を王手にさらす手の禁止、詰み、打ち歩詰め、投了を扱います。コンピュータは現在の合法手から一様ランダムに一手を選ぶ、弱い実装です。
 
-第36回では `GameRecord` が開始局面、成功した盤上移動・駒打ちの履歴、現在局面をメモリ上で保持します。`position_at(move_count)` は開始局面から任意手数を再適用して局面を再現し、公開される局面は独立複製です。CLIの `run_game` は合法手を記録経由で適用し、詰み・投了・EOF・Ctrl-Cの終了時に記録を返します。第37回では `GameRecord.save(path)` と `GameRecord.load(path)` を追加し、開始局面と成功手の履歴を `kaname-shogi-game-record-v1` のJSONへ明示的に保存・読込できるようにしました。第42回ではCLIの人間入力に `save <path>` / `load <path>` を追加しました。現在局面は保存せず、読込時に履歴を再適用して再現します。SFEN、USI、時間記録、自動保存はまだ扱いません。
+対局中の成功手はメモリ上の棋譜へ記録されます。人間の手番では、開始局面と指し手履歴を専用JSON形式へ明示的に保存し、後から読み込んで再開できます。
 
-第38回では `BoardMove`、`DropMove`、`Move` を局面を変更しない一手データとして追加しました。`legal_moves(position)` は、現在実装済みの規則で指せる一手を、盤上移動（不成・成り）から駒打ちへ続く固定順のタプルで返します。試し指し・試し打ちは複製局面へ行うため、元の局面は変わりません。`has_legal_move(position)` はこの一覧の空判定へ委譲します。`choose_weak_move(moves, rng)` は呼び出し側から受け取った `random.Random` で一覧から一様に一手を選び、空一覧なら `None` を返します。
+千日手、持将棋、入玉、時間、反則勝敗、SFEN、USI、評価関数、探索、自動保存はまだ扱いません。コンピュータ対コンピュータには手数上限がなく、詰み、合法手なし、または `Ctrl-C` で停止します。
 
-第39回では `run_game` を人間先手・コンピュータ後手の進行へ変更しました。既存の入力解析と `GameRecord` を使い、人間の成功手後にコンピュータが一手を選んで表示・適用します。`run_game(rng=...)` に一局用の乱数生成器を注入でき、省略時は対局開始時に一個だけ生成します。人間の投了、EOF/Ctrl-C、詰み、コンピュータの合法手空一覧で停止し、成功した盤上移動・駒打ちだけを記録します。人間対人間の切替引数、コンピュータ対コンピュータ、USI・SFEN、評価・探索はまだ扱いません。
-
-第40回では、`legal_moves` の駒打ち順「飛・角・金・銀・桂・香・歩」を `BasicPieceType` の宣言順から切り離し、`movegen.py` の非公開定数で明示しました。これは将棋規則ではなく、固定種の乱数選択・テスト・将来の表示で同じ結果を再現するための公開API契約です。先後ごとの全7駒種・全打ち先、行き所のない段の除外、列挙前後の局面不変性を確認しています。
-
-第42回の最後の理解確認では、`load` が完全に成功した後だけ新しい `GameRecord` へ置き換えることで、不正な読込が既存の局面・手番・履歴を壊さないことを確認しました。
-
-実行・テストともにPython標準ライブラリのみを使用します。外部パッケージのインストールは不要で、`requirements.txt` は作成していません。
-
-## 棋譜をJSONへ保存・読込する
-
-CLIは対局終了時に自動保存しません。人間担当の手番で `save <path>` または `load <path>` を入力すると、既存の `GameRecord.save(path)` / `GameRecord.load(path)` が呼び出されます。パスは空白を含まない一語で、相対パス・絶対パスを指定できます。親ディレクトリは自動作成しません。保存成功後は同じ手番を続け、読込成功後は読込局面を表示して、その手番の担当に進みます。保存・読込エラーは理由を表示して同じ手番で再入力します。JSONには開始局面と成功した `move` / `drop` の履歴だけを保存し、読込時には既存の合法手適用で現在局面を再現します。
-
-```python
-from pathlib import Path
-
-from kaname_shogi.game_record import GameRecord
-from kaname_shogi.model import Square, create_initial_position
-
-record = GameRecord(create_initial_position())
-record.apply_move(Square(7, 7), Square(7, 6))
-record.save(Path("game.json"))
-
-loaded = GameRecord.load(Path("game.json"))
-print(loaded.current_position.board.piece_at(Square(7, 6)))
-```
-
-保存形式はこのプログラム専用のJSONで、列挙値の内部番号ではなく固定文字列を使います。不正な内容や不合法な履歴は `ValueError`、ファイルの不存在や入出力失敗は `OSError` になります。SFEN・USIへの変換やUSI通信は別テーマです。
-
-## 合法手を列挙し、弱い一手を選ぶ
-
-`legal_moves` は現在実装済みの規則を満たす一手だけを、固定順のタプルで返します。`choose_weak_move` は一覧と注入した乱数生成器だけを使うため、テストでは固定種で結果を再現できます。
-
-```python
-import random
-
-from kaname_shogi.model import create_initial_position
-from kaname_shogi.movegen import choose_weak_move, legal_moves
-
-position = create_initial_position()
-moves = legal_moves(position)
-selected = choose_weak_move(moves, random.Random(20260925))
-print(selected)
-```
-
-合法手がないときの `None` は、選択器が一手を返せないことだけを表します。詰み・投了・勝敗の判定や、USIなど外部文字列への変換は別の層で扱います。
+実行とテストにはPython標準ライブラリだけを使います。外部パッケージのインストールは不要です。
 
 ## 実行方法
 
-動作確認環境：macOS、Python 3.9.6。リポジトリ直下で実行します。
+動作確認環境はmacOS、Python 3.9.6です。リポジトリ直下で次を実行します。
 
 ```sh
 python3 -m kaname_shogi
 ```
 
-盤は先手視点で、左から9〜1筋、上から一〜九段です。`+` は先手、`-` は後手、`・` は空マスを表します。日本語を表示できる等幅フォントの端末を想定しています。
+起動後に対局形式を1〜3から選びます。盤は先手視点で、左から9〜1筋、上から一〜九段です。`+` は先手、`-` は後手、`・` は空マスを表します。日本語を表示できる等幅フォントの端末を想定しています。
 
-## CLIで対局形式を選ぶ
+## CLI操作
 
-リポジトリ直下で次のコマンドを実行すると、初期局面から対局を開始できます。
+人間の手番では、次のコマンドを入力できます。
 
-```sh
-python3 -m kaname_shogi
-```
-
-起動時に、1: 人間対人間、2: 人間対コンピュータ、3: コンピュータ対コンピュータを選びます。人間対コンピュータは先手が人間、後手がコンピュータです。人間対人間では両側が入力し、コンピュータ対コンピュータでは両側が自動で指します。先後は形式にかかわらず交互に指します。
-
-コンピュータの手は `先手の指し手: ...` または `後手の指し手: ...` と表示してから適用し、適用後の盤面を表示します。乱数生成器は一局につき一個だけ使います。
+### 盤上の駒を動かす
 
 ```text
 move <出発筋> <出発段> <到着筋> <到着段>
 move <出発筋> <出発段> <到着筋> <到着段> +
 ```
 
-最後の `+` は成りを指定します。例えば、先手の初手は次のように入力します。
+最後の `+` は成りを指定します。例えば、先手の歩を７七から７六へ動かす入力は次のとおりです。
 
 ```text
 move 7 7 7 6
 ```
 
-持ち駒を打つときは、駒名と打ち先を指定します。
+### 持ち駒を打つ
 
 ```text
 drop <歩|香|桂|銀|金|角|飛> <筋> <段>
 ```
 
-例えば、歩を５五へ打つ場合は次のように入力します。
+例えば、歩を５五へ打つ入力は次のとおりです。
 
 ```text
 drop 歩 5 5
 ```
 
-投了するときは、`resign` だけを入力します。
+### 投了する
 
 ```text
 resign
 ```
 
-棋譜を明示的に保存・読込するときは、パスを一語で指定します。
+投了した側の相手を勝者として表示し、局面と棋譜の指し手履歴を変更せずに終了します。コンピュータは投了しません。
+
+### 棋譜を保存・読込する
 
 ```text
 save records/game.json
 load records/game.json
 ```
 
-`save` / `load` は履歴に残らず、読込に成功したときだけ現在の `GameRecord` が置き換わります。保存先の親ディレクトリがない場合、ファイルがない場合、不正なJSONの場合は理由を表示して同じ手番で再入力します。詰み・投了・EOF・Ctrl-Cなどで対局が終了した後は、保存・読込を含む入力を受け付けません。
+パスは空白を含まない一語で、相対パスと絶対パスを指定できます。保存先の親ディレクトリは自動作成しません。保存成功後は同じ手番を続け、読込成功後は読み込んだ局面を表示して、その局面の手番から続けます。
 
-人間担当の側が `resign` を入力すると、相手の勝ちを表示して終了します。コンピュータは投了しません。`resign` は局面と `GameRecord` の指し手履歴を変更しません。
+保存・読込の失敗、入力形式の誤り、不合法手は理由を表示し、局面・手番・履歴を変更せず、同じ人間手番で再入力を求めます。詰み、投了、EOF、`Ctrl-C` などで対局が終了した後は入力を受け付けません。
 
-区切りと筋・段には半角・全角の空白・数字を使えます。形式または合法性に誤りがある場合は理由を表示し、人間担当の側へ同じ手番で再入力を求めます。詰みになると勝者を表示して入力を停止します。詰みでないのにコンピュータの合法手一覧が空なら、勝敗を決めず「コンピュータの合法手がありません。」と表示して終了します。`choose_weak_move` の `None` は選択不能だけを表し、投了や勝敗とは解釈しません。千日手、持将棋、入玉、時間切れなどはまだ扱いません。
-
-人間入力待ちの `Ctrl-D`（EOF）または全形式の `Ctrl-C` は、「入力を終了しました。」と表示して勝敗なしで終了します。コンピュータ対コンピュータは詰み・合法手空一覧・Ctrl-Cだけで停止し、千日手・持将棋・手数上限は扱いません。その時点までの成功手は `GameRecord` に残りますが、終了イベントは履歴に含めません。
+操作語と成りの `+` は半角です。区切りと筋・段には半角・全角の空白・数字を使えます。実装はPythonの `str.split()` を使うため、その他のUnicode空白も区切りになります。
 
 ## テスト
+
+リポジトリ直下で次を実行します。
 
 ```sh
 python3 -m unittest discover -s tests -v
 ```
 
-座標の検証、駒の不変性、盤面と持ち駒の独立性、局面複製、初期配置の全81マス・枚数・手番、CLI表示、入力解析、全角入力、save/loadの保存・読込・置換・失敗時再入力、合法手の再入力、詰み停止、EOF/Ctrl-C、14種の候補の向き・盤外・占有・盤面不変性、王手の全駒種・先後・遮蔽・桂馬・隣接玉・玉なし、局面移動時の所有者照合、駒取り、玉取り拒否、持ち駒の減算、王手放置、自玉の利きへの移動、合い駒、空マスへの駒打ち、二歩、駒打ち失敗時の不変性、合法手の固定順・局面不変性・空一覧、全駒種・全打ち先の駒打ち順、乱数注入による弱い一手選択を確認します。
+テストメソッド名は検索や個別実行に使える英語とし、日本語docstringで確認する振る舞いと検出したい誤りを説明しています。`-v` を付けると、その日本語説明も表示されます。
 
-`-v` を付けると、英語のテストメソッド名に続けて、日本語のdocstringの先頭行が表示されます。テスト名は検索・個別実行に使える英語のまま、確認する振る舞いと検出したい誤りは日本語のdocstringで説明しています。
+## 文書案内
 
-## コードを読むとき
-
-歩の候補をPythonから調べる例です。リポジトリ直下でPythonを起動して実行できます。
-
-```python
-from kaname_shogi.model import Square, create_initial_position
-from kaname_shogi.movegen import pawn_move_candidates
-
-position = create_initial_position()
-print(pawn_move_candidates(position.board, Square(7, 7)))
-# [Square(file=7, rank=6)]
-```
-
-先後は出発マスの歩が持つ所有者から読み取ります。候補なしは `[]`、出発マスが空または歩以外なら `ValueError` です。成りや王手などを検証していないため、戻り値は合法手の確定ではありません。
-
-金は `gold_move_candidates(board, source)` で調べます。先後は盤上の金から読み、盤外・自駒を除いた0〜6候補を固定順で返します。出発点が空または金以外なら `ValueError` です。
-
-```python
-from kaname_shogi.movegen import gold_move_candidates
-
-print(gold_move_candidates(position.board, Square(6, 9)))
-# [Square(file=6, rank=8), Square(file=7, rank=8), Square(file=5, rank=8)]
-```
-
-公開する型・関数・メソッドのdocstringには、引数・戻り値・変更する状態・前提条件と、その設計を選んだ背景を記録します。将来の保守では、仕様を変える際にdocstringも更新してください。判断の詳しい経緯は設計書と学習記録を参照できます。
-
-銀は `silver_move_candidates(board, source)` で調べます。先後は盤上の銀から読み、盤外・自駒を除いた0〜5候補を固定順で返します。出発点が空または銀以外なら `ValueError` です。成銀や成りの選択は扱いません。
-
-```python
-from kaname_shogi.movegen import silver_move_candidates
-
-print(silver_move_candidates(position.board, Square(7, 9)))
-# [Square(file=7, rank=8), Square(file=6, rank=8)]
-```
-
-桂馬は `knight_move_candidates(board, source)` で調べます。knightは桂馬、
-move_candidatesは移動先候補を求める操作です。盤上の桂馬の所有者から前方を決め、
-右前（筋−1）・左前（筋＋1）の順に、段を2つ進んだ盤内のマスを最大2個返します。
-桂馬は途中の駒を飛び越えられます。自駒のある到着先は除外し、相手駒のある到着先は
-含めます。候補なしは `[]`、出発点が空または桂馬以外なら `ValueError` です。
-
-```python
-from kaname_shogi.model import Board, Piece, PieceType, Side, Square
-from kaname_shogi.movegen import knight_move_candidates
-
-board = Board()
-board.set_piece(Square(5, 5), Piece(PieceType.KNIGHT, Side.SENTE))
-print(knight_move_candidates(board, Square(5, 5)))
-# [Square(file=4, rank=3), Square(file=6, rank=3)]
-```
-
-候補計算では盤面を変更せず、`Position.side_to_move`にも制限されません。成桂・成り、
-行き所のない桂の合法性、駒取り、実際の移動、王手、合法手の確定、持ち駒は対象外です。
-
-香は `lance_move_candidates(board, source)` で調べます。lanceは香、move_candidatesは移動先候補を求める操作です。Boardは盤面のデータ、Squareは筋・段を持つマスの値です。盤上の香の所有者から前方を決め、同じ筋の候補を近い順に0〜8個返します。自駒の手前、または最初の相手駒のマスで止まり、駒を飛び越しません。候補なしは `[]`、出発点が空または香以外なら `ValueError` です。盤面は変更せず、成りや合法手の確定は扱いません。
-
-```python
-from kaname_shogi.model import Board, Piece, PieceType, Side, Square
-from kaname_shogi.movegen import lance_move_candidates
-
-board = Board()
-board.set_piece(Square(5, 5), Piece(PieceType.LANCE, Side.SENTE))
-board.set_piece(Square(5, 3), Piece(PieceType.PAWN, Side.GOTE))
-print(lance_move_candidates(board, Square(5, 5)))
-# [Square(file=5, rank=4), Square(file=5, rank=3)]
-```
-
-５三は相手の歩を取る移動の候補ですが、この計算では香は５五、歩は５三に残ります。
-
-飛車は `rook_move_candidates(board, source)` で調べます。rookは飛車、move_candidatesは移動先候補を求める操作です。右・左・前・後ろの順に各方向を近い順で走査し、空マスと最初の相手駒のマスを候補に含めます。自駒のマスとその先は含めません。先後は出発マスの飛車から読み、手番には制限されません。出発点が空または飛車以外なら `ValueError` です。
-
-```python
-from kaname_shogi.movegen import rook_move_candidates
-
-print(rook_move_candidates(board, Square(5, 5)))
-# [Square(file=4, rank=5), Square(file=3, rank=5), ...,
-#  Square(file=5, rank=6), Square(file=5, rank=7), ...]
-```
-
-候補計算では飛車や他の駒を動かしたり取ったりしません。成り、王手、合法手の確定は扱いません。
-
-空いている到着マスへの駒の移動は `move_piece(board, source, destination)` で適用します。出発マスの駒を空にし、到着マスへ同じ駒を置きます。出発マスが空、到着マスが占有、出発と到着が同じ場合は `ValueError` となり、盤面は変更されません。移動方向の検証、駒取り、手番更新、成り、王手、合法手判定は対象外です。
-
-```python
-from kaname_shogi.model import Square
-from kaname_shogi.movegen import move_piece
-
-move_piece(position.board, Square(7, 7), Square(7, 6))
-```
-
-手番も含めて局面を進めるときは、`apply_move(position, source, destination, *, promote=False)` を使います。出発駒の所有者と`position.side_to_move`が一致し、既存の移動先候補に含まれる到着マスへ、成り・駒取りを含む移動を試し指しします。試し指し後に自玉が相手の利きに残る場合、`ValueError`となり、盤面・手番・双方の持ち駒は変更されません。安全なら本物の局面へ一度だけ適用し、手番を交代します。`promote=True` は移動元または移動先が敵陣にある歩・香・桂・銀・角・飛でだけ指定でき、歩・香・桂が行き所を失う移動では強制されます。成駒は固有の候補で移動し、成駒種を保ちます。候補に含まれる相手の玉以外の駒を取る場合、取った駒は基本駒種へ戻して指した側の持ち駒に加えます。玉を取ろうとした場合、所有者と手番が違う場合、候補外、成れない成り指定、強制成りでの不成、空の出発マス、自駒のある到着マス、同一マスも`ValueError`となります。詰みと打ち歩詰めは別の範囲です。
-
-```python
-from kaname_shogi.model import Square, create_initial_position
-from kaname_shogi.movegen import apply_move
-
-position = create_initial_position()
-apply_move(position, Square(7, 7), Square(7, 6), promote=False)
-# position.side_to_move は Side.GOTE
-```
-
-持ち駒を打つときは `apply_drop(position, piece_type, destination)` を使います。`piece_type` は打つ基本駒種というデータ、`destination` は打ち先の筋・段を表す `Square` の値です。成功時は手番側の `Hand` から1枚減り、その側の駒が空マスへ置かれて手番が交代します。玉の指定、0枚の持ち駒、先手・後手いずれかの駒で占有されたマス、二歩、歩・香・桂を行き所のない段へ打つ操作、持ち歩による打ち歩詰めは `ValueError` となり、盤面・手番・双方の持ち駒を変更しません。
-
-```python
-from kaname_shogi.model import BasicPieceType, Square, create_initial_position
-from kaname_shogi.movegen import apply_drop
-
-position = create_initial_position()
-position.sente_hand.add(BasicPieceType.PAWN)
-apply_drop(position, BasicPieceType.PAWN, Square(5, 5))
-# ５五は先手の歩、先手の持ち駒の歩は0枚、手番は後手
-```
-
-打ち歩詰めは持ち歩で解除不能な王手をかける操作だけを拒否します。盤上の歩の移動や歩以外の駒打ちによる詰みは対象外です。駒打ち後に自玉が王手になる手も拒否します。
-
-角は `bishop_move_candidates(board, source)` で調べます。bishopは角、move_candidatesは移動先候補を求める操作です。右前・左前・右後ろ・左後ろの順に各方向を近い順で走査し、空マスと最初の相手駒のマスを候補に含めます。自駒のマスとその先は含めません。先後は出発マスの角から読み、手番には制限されません。出発点が空または角以外なら `ValueError` です。
-
-```python
-from kaname_shogi.movegen import bishop_move_candidates
-
-print(bishop_move_candidates(board, Square(5, 5)))
-# [Square(file=4, rank=4), Square(file=3, rank=3), ...,
-#  Square(file=6, rank=6), Square(file=7, rank=7), ...]
-```
-
-候補計算では角や他の駒を動かしたり取ったりしません。成り、馬の縦横1マス、王手、合法手の確定は扱いません。
-
-## 文書
-
-- [第27回：二歩](docs/learning/27-nifu.md)
-- [二歩：参照メモ](docs/knowledge/20-nifu.md)
-- [二歩の設計](docs/design/15-nifu.md)
-- [二歩の実装計画](docs/plans/2026-09-22-nifu.md)
-
-- [第28回：行き所のない駒](docs/learning/28-no-legal-destination-drops.md)
-- [行き所のない駒：参照メモ](docs/knowledge/21-no-legal-destination-drops.md)
-- [第29回：成り・不成の基礎](docs/learning/29-promotion-and-non-promotion.md)
-- [成り・不成の基礎：参照メモ](docs/knowledge/22-promotion-and-non-promotion.md)
-- [第30回：成駒の移動](docs/learning/30-promoted-piece-movement.md)
-- [成駒の移動：参照メモ](docs/knowledge/23-promoted-piece-movement.md)
-- [第31回：王手と合法手判定](docs/learning/31-check-and-legal-moves.md)
-- [王手と合法手判定：参照メモ](docs/knowledge/24-check-and-legal-moves.md)
-- [王手と合法手判定の設計仕様](docs/plans/2026-09-23-check-and-legal-moves-design.md)
-- [王手と合法手判定の実装計画](docs/plans/2026-09-23-check-and-legal-moves.md)
-- [第38回：弱い自動指し手のための合法手列挙と一手選択](docs/learning/38-weak-move-selection.md)
-- [弱い自動指し手のための合法手列挙と一手選択：参照メモ](docs/knowledge/31-weak-move-selection.md)
-- [第38回の設計仕様](docs/plans/2026-09-25-weak-move-selection-design.md)
-- [第38回の実装計画](docs/plans/2026-09-25-weak-move-selection.md)
-- [第32回：詰み・終局判定](docs/learning/32-checkmate-and-game-end.md)
-- [詰み・終局判定：参照メモ](docs/knowledge/25-checkmate-and-game-end.md)
-- [詰み・終局判定の設計仕様](docs/plans/2026-09-23-checkmate-and-game-end-design.md)
-- [詰み・終局判定の実装計画](docs/plans/2026-09-23-checkmate-and-game-end.md)
-- [第34回：CLIでの指し手入力と対局進行](docs/learning/34-cli-gameplay.md)
-- [CLIでの指し手入力と対局進行：参照メモ](docs/knowledge/27-cli-gameplay.md)
-- [CLIでの指し手入力と対局進行の設計仕様](docs/plans/2026-09-23-cli-gameplay-design.md)
-- [CLIでの指し手入力と対局進行の実装計画](docs/plans/2026-09-23-cli-gameplay.md)
-- [第35回：終局理由の拡張](docs/learning/35-game-end-reasons.md)
-- [終局理由の拡張：参照メモ](docs/knowledge/28-game-end-reasons.md)
-- [終局理由の拡張の設計仕様](docs/plans/2026-09-23-game-end-reasons-design.md)
-- [終局理由の拡張の実装計画](docs/plans/2026-09-23-game-end-reasons.md)
-- [第36回：棋譜・局面の保存](docs/learning/36-game-record-and-position-save.md)
-- [棋譜・局面の保存：参照メモ](docs/knowledge/29-game-record-and-position-save.md)
-- [第37回：棋譜・局面のファイル保存](docs/learning/37-game-record-file-save.md)
-- [棋譜・局面のファイル保存：参照メモ](docs/knowledge/30-game-record-file-save.md)
-- [第37回の設計仕様](docs/plans/2026-09-24-game-record-file-save-design.md)
-- [第37回の実装計画](docs/plans/2026-09-24-game-record-file-save.md)
-- [第42回：CLIでの明示的な保存・読込](docs/learning/42-cli-save-load.md)
-- [第42回の設計仕様](docs/plans/2026-09-27-cli-save-load-design.md)
-- [第42回の実装計画](docs/plans/2026-09-27-cli-save-load.md)
-- [行き所のない駒の設計](docs/plans/2026-09-22-no-legal-destination-drops-design.md)
-- [行き所のない駒の実装計画](docs/plans/2026-09-22-no-legal-destination-drops.md)
-
-- [第26回：持ち駒を打つ基本操作と打ち場所の制限](docs/learning/26-hand-drops.md)
-- [持ち駒を打つ：参照メモ](docs/knowledge/19-hand-drops.md)
-- [持ち駒を打つ操作の設計](docs/design/14-hand-drops.md)
-- [持ち駒を打つ基本操作の実装計画](docs/plans/2026-09-22-hand-drops.md)
-
-- [第25回：駒取りと持ち駒の基礎](docs/learning/25-capture-and-hands.md)
-- [駒取りと持ち駒：参照メモ](docs/knowledge/18-capture-and-hands.md)
-- [駒取りと持ち駒の設計](docs/design/13-capture-and-hands.md)
-- [駒取りと持ち駒の実装計画](docs/plans/2026-09-22-capture-and-hands.md)
-
-- [第24回：移動先候補に合う空マスへだけ移動できること](docs/learning/24-candidate-only-empty-square-move.md)
-- [移動先候補に合う空マスへの移動：参照メモ](docs/knowledge/17-candidate-only-empty-square-move.md)
-- [移動先候補に合う空マスへの移動の設計](docs/design/12-candidate-only-empty-square-move.md)
-- [移動先候補に合う空マスへの移動の実装計画](docs/plans/2026-09-22-candidate-only-empty-square-move.md)
-- [第23回：手番に合う駒だけを移動できること](docs/learning/23-turn-ownership.md)
-- [手番と駒の所有者：参照メモ](docs/knowledge/16-turn-ownership.md)
-- [手番と駒の所有者の設計](docs/design/11-turn-ownership.md)
-- [手番と駒の所有者の実装計画](docs/plans/2026-09-22-turn-ownership.md)
-
-- [第20回：玉の移動先候補](docs/learning/20-king-move-candidates.md)
-- [玉の移動先候補の設計](docs/design/09-king-move-candidates.md)
-- [玉の移動先候補の実装計画](docs/plans/2026-09-20-king-move-candidates.md)
-
-- [学習・開発の再開案内](docs/resume.md)
+- [文書索引：目的・テーマ・学習回から資料を選ぶ](docs/README.md)
 - [プロジェクトの背景](docs/01-project-background.md)
 - [プロジェクトの方向性](docs/02-project-direction.md)
-- [第1回実装の設計](docs/design/01-board-and-initial-position.md)
-- [第4回：実装設計と判断の背景](docs/learning/04-first-implementation-design.md)
-- [第1回実装の設計：参照メモ](docs/knowledge/04-first-implementation-design.md)
-- [第5回：初期配置CLIの実装と検証](docs/learning/05-initial-position-implementation.md)
-- [第6回：歩の移動候補](docs/learning/06-pawn-move-candidates.md)
-- [歩の移動先候補：実装用メモ](docs/knowledge/06-pawn-move-candidates.md)
-- [第2回実装の設計：歩の移動先候補](docs/design/02-pawn-move-candidates.md)
-- [第7回：歩の候補生成の設計と実装](docs/learning/07-pawn-candidates-implementation.md)
-- [第8回：金の移動先候補](docs/learning/08-gold-move-candidates.md)
-- [金の移動先候補：参照メモ](docs/knowledge/08-gold-move-candidates.md)
-
-- [第3回実装の設計：金の移動先候補](docs/design/03-gold-move-candidates.md)
-- [第9回：金の候補生成の設計と実装](docs/learning/09-gold-candidates-implementation.md)
-- [第10回：銀の移動先候補](docs/learning/10-silver-move-candidates.md)
-- [銀の移動先候補：参照メモ](docs/knowledge/10-silver-move-candidates.md)
-- [第4回実装の設計：銀の移動先候補](docs/design/04-silver-move-candidates.md)
-- [第11回：銀の候補生成の設計と実装](docs/learning/11-silver-candidates-implementation.md)
-- [第18回：桂馬の移動先候補](docs/learning/18-knight-move-candidates.md)
-- [桂馬の移動先候補：参照メモ](docs/knowledge/15-knight-move-candidates.md)
-- [第8回実装の設計：桂馬の移動先候補](docs/design/08-knight-move-candidates.md)
-- [第19回：桂馬の候補生成の実装](docs/learning/19-knight-candidates-implementation.md)
-
-- [第12回：香の移動先候補](docs/learning/12-lance-move-candidates.md)
-- [香の移動先候補：参照メモ](docs/knowledge/12-lance-move-candidates.md)
-- [第5回実装の設計：香の移動先候補](docs/design/05-lance-move-candidates.md)
-- [第13回：香の候補生成の設計と実装](docs/learning/13-lance-candidates-implementation.md)
-- [第14回：飛車の移動先候補](docs/learning/14-rook-move-candidates.md)
-- [飛車の移動先候補：参照メモ](docs/knowledge/13-rook-move-candidates.md)
-- [第6回実装の設計：飛車の移動先候補](docs/design/06-rook-move-candidates.md)
-- [第15回：飛車の候補生成の実装](docs/learning/15-rook-candidates-implementation.md)
-- [第16回：角の移動先候補](docs/learning/16-bishop-move-candidates.md)
-- [角の移動先候補：参照メモ](docs/knowledge/14-bishop-move-candidates.md)
-- [第7回実装の設計：角の移動先候補](docs/design/07-bishop-move-candidates.md)
-- [角の移動先候補 実装計画](docs/plans/2026-09-19-bishop-move-candidates.md)
-- [桂馬の移動先候補 実装計画](docs/plans/2026-09-20-knight-move-candidates.md)
+- [学習・開発の再開案内](docs/resume.md)
 
 ## 名前について
 

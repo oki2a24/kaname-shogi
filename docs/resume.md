@@ -1,11 +1,19 @@
 # 学習・開発の再開案内
 
-第43回「文書構成の棚卸しと入口設計」は、文書の役割・読み手・入口・更新契機の棚卸し、改善対象の優先順位、設計仕様の承認、最後の理解確認まで完了した。コード・テスト・README・既存文書の構造は変更していない。
+第44回「文書ナビゲーションの最小改善」を `codex/document-navigation` ブランチで進めている。
+第43回で承認した設計に基づき、実装計画は承認済みである。
 
-次は、基盤整理のテーマ2「文書ナビゲーションの最小改善」を新しいセッションで進める。READMEを人間向けの簡潔な入口にし、`docs/README.md` をテーマ・学習回別の単一索引として新設する設計は承認済みである。詳細なロードマップは [リポジトリ基盤整理ロードマップ](roadmap-repository-foundation.md)、承認済み設計は [文書構成の棚卸しと入口設計](plans/2026-09-27-repository-document-navigation-design.md)、再開手順は [文書ナビゲーション改善の引き継ぎ](handover-repository-foundation-document-navigation.md) を参照する。
+現在までに、`docs/README.md` のテーマ・学習回別索引、簡潔な `README.md`、第44回学習記録を作成した。開始前の全240テスト、相対リンク、文書の網羅性、コード・テストに差分がないことを確認した。初回の独立レビューで、着手前の再開案内を現在情報として扱う矛盾がCritical 1件、導入見出しの不足がMinor 1件として確認されたため、本人の承認を得て本書と索引を修正した。再レビューはCritical・Important・Minorすべて0件で、実装とレビューは完了している。
 
-本人が新しいセッションで下の再開用プロンプトを入力するまで、実装計画、作業ブランチ、README・索引の変更を開始しない。
+作業を再開するときは、次の順で現在状態を確認する。
 
-```text
-kaname-shogiの次テーマ「文書ナビゲーションの最小改善」を始めてください。最初にAGENTS.md、README.md、docs/resume.md、docs/roadmap-repository-foundation.md、docs/plans/2026-09-27-repository-document-navigation-design.md、docs/learning/43-document-structure-audit.md、docs/handover-repository-foundation-document-navigation.mdを読み、git status --short --branchで現在の状態を確認してください。第43回で、READMEを人間向けの第一入口にし、docs/README.mdをテーマ・学習回別の単一索引として新設し、AIが必要な時点で必要な文書だけを読む設計を承認済みです。既存文書の移動・改名、古い内容の是正、コード・テストの変更は今回の対象外です。superpowerssuperpowers:writing-plansを使い、docs/README.mdの作成、READMEの簡潔化、必要最小限の入口リンク、リンク検査、独立レビュー、検証、学習記録を含む実装計画を作成してください。計画を提示して私の明示的な承認を待ち、承認前にREADME、索引、既存文書を変更しないでください。実装は原則としてmain以外の目的が分かる作業ブランチで行い、コミットメッセージは日本語のConventional Commitにしてください。
-```
+1. `git status --short --branch` で実際のブランチと差分を確認する。
+2. `AGENTS.md`、ルートの `README.md`、[文書索引](README.md) を読む。
+3. [承認済み設計](plans/2026-09-27-repository-document-navigation-design.md) と [実装計画](plans/2026-09-27-repository-document-navigation.md) を読み、未完了のチェック項目から再開する。
+4. [リポジトリ基盤整理ロードマップ](roadmap-repository-foundation.md) でテーマ2がmain取り込み待ちであることを確認する。
+
+[テーマ開始時点の引き継ぎ](handover-repository-foundation-document-navigation.md) にあるブランチ、HEAD、リモートとの差、テスト件数、未実施事項は、作成時点の情報である。現在値として使わず、現在のGit状態と実装計画を優先する。
+
+次は、相対リンク、変更範囲、Markdown差分を最終検証し、作業ブランチへコミットする。その後、実装・検証・レビュー・記録を提示して本人の明示的承認を得る。承認までmainへ取り込まない。
+
+テーマ2をmainへ取り込み、取り込み先での検証と最後の理解確認を終えるまで、テーマ3以降へ進まない。
