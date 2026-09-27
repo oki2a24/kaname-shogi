@@ -2,6 +2,7 @@
 
 import random
 from dataclasses import dataclass
+from enum import Enum
 from typing import Callable, Optional, Union
 
 from .display import render_position
@@ -12,6 +13,70 @@ from .movegen import choose_weak_move, is_game_over, legal_moves
 
 
 FORMAT_ERROR = "入力形式が正しくありません。"
+
+
+class GameMode(Enum):
+    """CLIで対局形式を表し、先後の人間担当を照会するデータ。
+
+    値は人間対人間、人間対コンピュータ、コンピュータ対コンピュータを表す。
+    局面や手番を変更せず、現在の先後を人間が入力するかだけを進行層へ返す。
+    将棋規則としての先後交代はPositionが担い、対局形式はそれを書き換えない。
+    """
+
+    HUMAN_VS_HUMAN = "human_vs_human"
+    HUMAN_VS_COMPUTER = "human_vs_computer"
+    COMPUTER_VS_COMPUTER = "computer_vs_computer"
+
+    def is_human_turn(self, side: Side) -> bool:
+        """sideの手番を人間が入力して担当するならTrueを返す。
+
+        引数:
+            side: 担当を調べる先手・後手を表すSide。
+
+        戻り値:
+            人間対人間では両側、人間対コンピュータでは先手だけがTrue。
+            コンピュータ対コンピュータでは両側ともFalse。
+
+        副作用:
+            なし。局面・手番・乱数生成器を変更しない。
+
+        先後が交互に指す規則と、人間・コンピュータの担当設定を分離するため、
+        先後そのものではなく対局形式が担当を決める。
+        """
+        return (self == GameMode.HUMAN_VS_HUMAN
+                or (self == GameMode.HUMAN_VS_COMPUTER
+                    and side == Side.SENTE))
+
+
+def choose_game_mode(*, input_fn: Callable[[], str] = input,
+                     output_fn: Callable[[str], None] = print) -> GameMode:
+    """CLI開始前に対局形式を選び、対応するGameModeを返す。
+
+    引数:
+        input_fn: 形式番号を一つ返す入力操作。EOFとCtrl-Cは呼び出し側へ伝える。
+        output_fn: メニューと形式エラーを受け取る表示操作。
+
+    戻り値:
+        1・2・3に対応するGameMode。無効な入力では返さず、再入力する。
+
+    副作用:
+        局面、棋譜、乱数を変更しない。メニューと形式エラーだけを表示する。
+
+    通常CLIとテストが同じ対局形式を選べるよう、文字列番号から進行設定の値へ
+    変換する責務を、対局ループから分離する。
+    """
+    modes = {
+        "1": GameMode.HUMAN_VS_HUMAN,
+        "2": GameMode.HUMAN_VS_COMPUTER,
+        "3": GameMode.COMPUTER_VS_COMPUTER,
+    }
+    while True:
+        output_fn("対局形式を選んでください（1: 人間対人間、"
+                  "2: 人間対コンピュータ、3: コンピュータ対コンピュータ）:")
+        try:
+            return modes[input_fn().strip()]
+        except KeyError:
+            output_fn("エラー：対局形式を1〜3で選んでください。")
 
 
 @dataclass(frozen=True)
@@ -124,11 +189,6 @@ def _apply_command(record: GameRecord,
     record.apply_drop(command.piece_type, command.destination)
 
 
-def _is_human_turn(side: Side) -> bool:
-    """今回の対局設定で、指定手番を人間が担当するか返す。"""
-    return side == Side.SENTE
-
-
 def _apply_selected_move(record: GameRecord, move: Move) -> None:
     """合法手データを既存のGameRecord操作へ変換して適用する。"""
     if isinstance(move, BoardMove):
@@ -189,14 +249,17 @@ def _checkmate_message(side_to_move: Side) -> str:
 
 def run_game(*, input_fn: Callable[[], str] = input,
              output_fn: Callable[[str], None] = print,
-             rng: Optional[random.Random] = None) -> GameRecord:
-    """初期局面から、人間先手とコンピュータ後手の対局を進める。
+             rng: Optional[random.Random] = None,
+             mode: GameMode = GameMode.HUMAN_VS_COMPUTER) -> GameRecord:
+    """初期局面から、modeが決める担当で対局を進める。
 
     引数:
         input_fn: 人間の入力文字列を一つ返す操作。テストでは端末のinputを差し替える。
         output_fn: 盤面・案内・自動手の表示文字列を一つ受け取る操作。
         rng: コンピュータ手の選択に使う乱数生成器。省略時は対局開始時に一個だけ
             生成し、その対局の全自動手で使う。テストでは固定種を注入できる。
+        mode: 人間・コンピュータの先後担当を表すGameMode。省略時は既存互換の
+            人間先手・コンピュータ後手とする。
 
     戻り値:
         詰み、投了、EOF、Ctrl-C、またはコンピュータの合法手空一覧で終了した時点の
@@ -206,40 +269,42 @@ def run_game(*, input_fn: Callable[[], str] = input,
     副作用:
         初期局面から記録を作り、局面表示、入力案内、自動手の表示をoutput_fnへ渡す。
         合法な入力と自動手だけが記録の現在局面と履歴を変更し、形式・合法性エラーでは
-        人間の同じ手番で再入力する。`resign` は人間先手の投了として表示し、局面を
-        変更せず終了する。
+        人間の同じ手番で再入力する。`resign` は人間担当側の投了として表示し、局面を
+        変更せず終了する。人間対人間では両側、人間対コンピュータでは先手だけが
+        入力し、コンピュータ対コンピュータでは両側が自動手を指す。
 
     前提条件:
         各手番の行動前に詰みを優先して確認する。EOF/Ctrl-Cと合法手空一覧は投了や勝敗に
-        変換しない。先手を人間、後手をコンピュータとする担当境界を分け、将来の担当切替
-        をこの進行層へ閉じ込める。標準のinputとprintは差し替え可能である。
+        変換しない。先後交代は局面規則、入力・自動手の担当はmodeという境界を分ける。
+        標準のinputとprintは差し替え可能である。
     """
     if rng is None:
         rng = random.Random()
     record = GameRecord(create_initial_position())
     output_fn(render_position(record.current_position))
-    while True:
-        position = record.current_position
-        if is_game_over(position):
-            output_fn(_checkmate_message(position.side_to_move))
-            return record
-
-        if not _is_human_turn(position.side_to_move):
-            if not _run_computer_turn(record, rng, output_fn):
+    try:
+        while True:
+            position = record.current_position
+            if is_game_over(position):
+                output_fn(_checkmate_message(position.side_to_move))
                 return record
-            continue
 
-        output_fn("指し手を入力してください（例: move 7 7 7 6）:")
-        try:
-            command = parse_command(input_fn())
-            if isinstance(command, _ResignCommand):
-                output_fn(_resignation_message(position.side_to_move))
-                return record
-            _apply_command(record, command)
-        except (EOFError, KeyboardInterrupt):
-            output_fn("入力を終了しました。")
-            return record
-        except ValueError as error:
-            output_fn("エラー：" + str(error))
-            continue
-        output_fn(render_position(record.current_position))
+            if not mode.is_human_turn(position.side_to_move):
+                if not _run_computer_turn(record, rng, output_fn):
+                    return record
+                continue
+
+            output_fn("指し手を入力してください（例: move 7 7 7 6）:")
+            try:
+                command = parse_command(input_fn())
+                if isinstance(command, _ResignCommand):
+                    output_fn(_resignation_message(position.side_to_move))
+                    return record
+                _apply_command(record, command)
+            except ValueError as error:
+                output_fn("エラー：" + str(error))
+                continue
+            output_fn(render_position(record.current_position))
+    except (EOFError, KeyboardInterrupt):
+        output_fn("入力を終了しました。")
+        return record
