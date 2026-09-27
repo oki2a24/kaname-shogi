@@ -53,6 +53,34 @@ class CommandParsingTests(unittest.TestCase):
                     cli.parse_command(command)
 
 
+class GameModeMenuTests(unittest.TestCase):
+    def test_choose_game_mode_maps_each_number_to_mode(self):
+        """メニューの1・2・3を三つの対局形式へ対応付ける。"""
+        expected = (
+            ("1", "HUMAN_VS_HUMAN"),
+            ("2", "HUMAN_VS_COMPUTER"),
+            ("3", "COMPUTER_VS_COMPUTER"),
+        )
+
+        for value, mode_name in expected:
+            with self.subTest(value=value):
+                self.assertEqual(
+                    cli.choose_game_mode(input_fn=ScriptedInput([value]),
+                                         output_fn=lambda _: None),
+                    getattr(cli.GameMode, mode_name),
+                )
+
+    def test_choose_game_mode_reprompts_after_invalid_choice(self):
+        """無効な番号の後に、人間対コンピュータを選び直せる。"""
+        outputs = []
+
+        mode = cli.choose_game_mode(input_fn=ScriptedInput(["4", "2"]),
+                                    output_fn=outputs.append)
+
+        self.assertEqual(mode, cli.GameMode.HUMAN_VS_COMPUTER)
+        self.assertIn("エラー：対局形式を1〜3で選んでください。", outputs)
+
+
 class ScriptedInput:
     """テスト用に入力列を返し、列が尽きたらEOFを発生させる。"""
 
@@ -93,6 +121,80 @@ class GameplayTests(unittest.TestCase):
             board.set_piece(square, Piece(PieceType.PAWN, Side.GOTE))
         return Position(board, Side.SENTE)
 
+    def test_human_vs_human_reads_both_sides_and_records_both_moves(self):
+        """人間対人間では、先手・後手の成功手を順に記録する。
+
+        後手をコンピュータ扱いして入力を読まない誤りと、EOFを棋譜へ残す誤りを
+        検出する。
+        """
+        inputs = ScriptedInput(["move 7 7 7 6", "move 3 3 3 4"])
+
+        record = cli.run_game(
+            mode=cli.GameMode.HUMAN_VS_HUMAN,
+            input_fn=inputs,
+            output_fn=lambda _: None,
+        )
+
+        self.assertEqual(inputs.calls, 3)
+        self.assertEqual(record.moves, (
+            RecordedMove(Square(7, 7), Square(7, 6), False),
+            RecordedMove(Square(3, 3), Square(3, 4), False),
+        ))
+
+    def test_computer_vs_computer_plays_alternately_until_ctrl_c(self):
+        """コンピュータ対コンピュータは、交互に二手指してCtrl-Cで中断する。
+
+        自動手でCtrl-Cを捕捉できない誤りと、入力を読んだり中断を棋譜へ残したり
+        する誤りを検出する。
+        """
+        class InterruptingRandom(random.Random):
+            def __init__(self):
+                super().__init__(20260927)
+                self.choice_calls = 0
+
+            def choice(self, sequence):
+                self.choice_calls += 1
+                if self.choice_calls == 3:
+                    raise KeyboardInterrupt
+                return super().choice(sequence)
+
+        inputs = ScriptedInput([])
+        outputs = []
+
+        record = cli.run_game(
+            mode=cli.GameMode.COMPUTER_VS_COMPUTER,
+            input_fn=inputs,
+            output_fn=outputs.append,
+            rng=InterruptingRandom(),
+        )
+
+        self.assertEqual(inputs.calls, 0)
+        self.assertEqual(len(record.moves), 2)
+        self.assertEqual(record.current_position.side_to_move, Side.SENTE)
+        self.assertIn("入力を終了しました。", outputs)
+
+    def test_human_vs_human_does_not_consume_rng(self):
+        """人間対人間では注入した乱数生成器を消費しない。"""
+        class FailingRandom(random.Random):
+            def choice(self, sequence):
+                raise AssertionError("人間対人間でchoiceを呼んではいけません")
+
+        cli.run_game(mode=cli.GameMode.HUMAN_VS_HUMAN,
+                     input_fn=ScriptedInput(["move 7 7 7 6", "move 3 3 3 4"]),
+                     output_fn=lambda _: None, rng=FailingRandom())
+
+    def test_computer_vs_computer_stops_without_winner_when_no_legal_move(self):
+        """自動対局の合法手空一覧は入力せず勝者なしで停止する。"""
+        inputs = ScriptedInput([])
+        outputs = []
+        with patch.object(cli, "legal_moves", return_value=()):
+            record = cli.run_game(mode=cli.GameMode.COMPUTER_VS_COMPUTER,
+                                  input_fn=inputs, output_fn=outputs.append)
+
+        self.assertEqual(inputs.calls, 0)
+        self.assertEqual(record.moves, ())
+        self.assertFalse(any("勝ちです。" in line for line in outputs))
+
     def test_human_sente_move_is_followed_by_one_computer_gote_move(self):
         """先手の成功手の後に、後手のコンピュータが一手だけ指す。
 
@@ -131,6 +233,23 @@ class GameplayTests(unittest.TestCase):
 
         self.assertEqual(record_a.moves, record_b.moves)
         self.assertEqual(outputs_a, outputs_b)
+
+    def test_explicit_human_vs_computer_matches_default_mode(self):
+        """明示した人間対コンピュータは既定値と棋譜・表示が同じになる。"""
+        default_outputs = []
+        explicit_outputs = []
+        default_record = cli.run_game(input_fn=ScriptedInput(["move 7 7 7 6"]),
+                                      output_fn=default_outputs.append,
+                                      rng=random.Random(20260927))
+        explicit_record = cli.run_game(
+            mode=cli.GameMode.HUMAN_VS_COMPUTER,
+            input_fn=ScriptedInput(["move 7 7 7 6"]),
+            output_fn=explicit_outputs.append,
+            rng=random.Random(20260927),
+        )
+
+        self.assertEqual(explicit_record.moves, default_record.moves)
+        self.assertEqual(explicit_outputs, default_outputs)
 
     def test_one_rng_is_reused_for_multiple_computer_moves(self):
         """一局の複数の自動手で同じ乱数生成器を使い続ける。

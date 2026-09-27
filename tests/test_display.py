@@ -62,10 +62,11 @@ class DisplayTests(unittest.TestCase):
         self.assertEqual(render_position(position),
                          EXPECTED.replace("手番：先手", "手番：後手", 1))
 
-    def test_cli_starts_game_and_exits_on_eof(self):
-        """CLIは初期配置を表示し、EOFで終了メッセージを出して終了する。
+    def test_cli_exits_from_game_mode_menu_on_eof(self):
+        """CLIは対局形式メニューでEOFなら、対局を始めず終了する。
 
-        実プロセスで起動し、入口の接続・入力終了・不要なエラー出力を確認する。
+        実プロセスで起動し、入口のメニュー・入力終了・対局開始前に盤面を表示しない
+        ことを確認する。
         """
         result = subprocess.run(
             [sys.executable, "-m", "kaname_shogi"],
@@ -75,8 +76,8 @@ class DisplayTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(
             result.stdout,
-            EXPECTED + "\n"
-            "指し手を入力してください（例: move 7 7 7 6）:\n"
+            "対局形式を選んでください（1: 人間対人間、2: 人間対コンピュータ、"
+            "3: コンピュータ対コンピュータ）:\n"
             "入力を終了しました。\n",
         )
         self.assertEqual(result.stderr, "")
