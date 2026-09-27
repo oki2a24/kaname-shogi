@@ -151,11 +151,11 @@ READMEに入力形式、相対・絶対パス、親ディレクトリ非作成�
 
 ### タスク4: main取り込みと最後の理解確認
 
-- [ ] **ステップ1: 取り込み前に本人の承認を得る**
+- [x] **ステップ1: 取り込み前に本人の承認を得る**
 
 `git status --short --branch`、作業ブランチから`main`への差分、全検証、最終レビュー（Critical/Important 0件）を提示する。本人の明示的承認まで取り込まない。
 
-- [ ] **ステップ2: 承認後にmainへ取り込み、mainで再検証する**
+- [x] **ステップ2: 承認後にmainへ取り込み、mainで再検証する**
 
 実行: `git switch main`、`git merge --no-ff <実際の作業ブランチ名> -m "merge: 第42回のCLI保存読込を取り込む"`、`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -q`、`git diff --check`、`git status --short --branch`。
 

@@ -135,7 +135,11 @@ Critical 0件。解析層は計画どおりと評価された。Importantとし�
 - `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli -v`：37件成功（表示アサーション強化後）。
 - `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -q`：240件成功。
 - `git diff --check`：出力なし。
-- CLIスモークとmain取り込み後の再検証は、この記録の更新時点では未実施。
+- CLIスモーク：対局形式1、`save /private/tmp/kaname-shogi-cli-save-load-main.json`、7七歩、投了を実行し、保存成功・局面表示・勝敗表示を確認した。
+
+## main取り込み後の検証
+
+作業ブランチ `codex/cli-save-load` を `main` へ `--no-ff` で取り込み、マージコミットは `e93d6b9` となった。取り込み後の `main` で `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -q` を実行し、240件成功した。取り込み後のCLIスモークと `git diff --check` も成功し、作業ツリーはクリーンである。
 
 ## 最終レビュー
 
