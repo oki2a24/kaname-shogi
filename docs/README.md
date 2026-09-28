@@ -36,9 +36,11 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 - [学習・開発の再開案内](resume.md)
 - [リポジトリ基盤整理ロードマップ](roadmap-repository-foundation.md)
-- [コードとユニットテストの構造レビュー 開始時点の引き継ぎ](handover-code-and-unit-test-structure-review.md)
+- [コードとユニットテストの構造レビュー 設計仕様](plans/2026-09-28-code-and-unit-test-structure-review-design.md)
+- [コードとユニットテストの構造レビュー 実装計画](plans/2026-09-28-code-and-unit-test-structure-review.md)
+- [第46回学習記録](learning/46-code-and-unit-test-structure-review.md)
 
-古い文書記述の是正は完了し、次テーマには「コードとユニットテストの構造レビュー」を選定済みです。新しいセッションで調査と設計から始めるため、コードとテストの構造レビューはまだ開始していません。`handover-*.md` は、対応テーマを始める時点の状態を残す履歴です。過去のブランチ、HEAD、リモートとの差、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
+古い文書記述の是正は完了し、「コードとユニットテストの構造レビュー」を作業ブランチで進めています。設計・実装計画は承認済みで、調査結果を第46回学習記録へ記録し、全240テストと文書検査も成功しました。初回・再レビューの全指摘を反映し、独立再々レビューはCritical・Important・Minorすべて0件です。テーマコミット、main取り込み、取り込み先検証、最後の理解確認は未完了です。`handover-*.md` は、対応テーマを始める時点の状態を残す履歴です。過去のブランチ、HEAD、リモートとの差、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
 
 ## テーマ・学習回別索引
 
@@ -82,6 +84,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | CLIでの明示的な保存・読込（第42回） | [第42回](learning/42-cli-save-load.md) | [JSONファイル保存](knowledge/30-game-record-file-save.md) | [設計仕様](plans/2026-09-27-cli-save-load-design.md) | [実装計画](plans/2026-09-27-cli-save-load.md) | [引き継ぎ](handover-cli-save-load.md) |
 | 文書構成の棚卸しと入口設計（第43回） | [第43回](learning/43-document-structure-audit.md) | — | [設計仕様](plans/2026-09-27-repository-document-navigation-design.md) | — | [引き継ぎ](handover-repository-foundation-docs-audit.md) |
 | 文書ナビゲーションの最小改善（第44回） | [第44回](learning/44-document-navigation.md) | — | [設計仕様](plans/2026-09-27-repository-document-navigation-design.md) | [実装計画](plans/2026-09-27-repository-document-navigation.md) | [開始時点の引き継ぎ](handover-repository-foundation-document-navigation.md) |
+| 古い文書記述の是正（第45回） | [第45回](learning/45-stale-document-correction.md) | — | [設計仕様](plans/2026-09-27-stale-document-correction-design.md) | [実装計画](plans/2026-09-27-stale-document-correction.md) | [開始時点の引き継ぎ](handover-repository-foundation-stale-document-correction.md) |
+| コードとユニットテストの構造レビュー（第46回） | [第46回](learning/46-code-and-unit-test-structure-review.md) | — | [設計仕様](plans/2026-09-28-code-and-unit-test-structure-review-design.md) | [実装計画](plans/2026-09-28-code-and-unit-test-structure-review.md) | [開始時点の引き継ぎ](handover-code-and-unit-test-structure-review.md) |
 
 ## 例外と履歴の読み方
 
