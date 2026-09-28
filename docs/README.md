@@ -36,11 +36,9 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 - [学習・開発の再開案内](resume.md)
 - [リポジトリ基盤整理ロードマップ](roadmap-repository-foundation.md)
-- [コードとユニットテストの構造レビュー 設計仕様](plans/2026-09-28-code-and-unit-test-structure-review-design.md)
-- [コードとユニットテストの構造レビュー 実装計画](plans/2026-09-28-code-and-unit-test-structure-review.md)
-- [第46回学習記録](learning/46-code-and-unit-test-structure-review.md)
+- [CLI実行入口のスモークテスト配置を明確にする 開始時点の引き継ぎ](handover-cli-entrypoint-smoke-test-placement.md)
 
-「コードとユニットテストの構造レビュー」は、調査、記録、全240テスト、文書検査、独立レビュー、main取り込み、取り込み先検証、最後の理解確認まで完了しました。次テーマは未選定です。`handover-*.md` は、対応テーマを始める時点の状態を残す履歴です。過去のブランチ、HEAD、リモートとの差、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
+「コードとユニットテストの構造レビュー」は、最後の理解確認まで完了しました。次は「CLI実行入口のスモークテスト配置を明確にする」、その完了後は「`test_movegen.py` の局面スナップショット補助を一つにする」順番を選定済みです。新しいセッションでは前者だけを開始します。`handover-*.md` は、対応テーマを始める時点の状態を残す履歴です。過去のブランチ、HEAD、リモートとの差、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
 
 ## テーマ・学習回別索引
 
