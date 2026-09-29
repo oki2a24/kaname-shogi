@@ -185,7 +185,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 文書差分も含めて独立レビューを行い、CriticalまたはImportantがあれば修正、再検証、
 再レビューする。
 
-- [ ] **ステップ4: 記録をコミットし、main取り込みの承認を待つ**
+- [x] **ステップ4: 記録をコミットし、main取り込みの承認を待つ**
 
 ```sh
 git add docs
