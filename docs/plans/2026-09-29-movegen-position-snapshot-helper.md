@@ -45,7 +45,7 @@
 - 生産 (Produces): `_position_snapshot(position)`。盤面81マス、先手の基本持ち駒7種、
   後手の基本持ち駒7種、手番をこの順に持つ比較用タプルを返し、`position` を変更しない。
 
-- [ ] **ステップ1: 変更前のGreen基準を記録する**
+- [x] **ステップ1: 変更前のGreen基準を記録する**
 
 実行:
 
@@ -57,7 +57,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 期待値: 前者は158件、後者は現在の全テスト件数がともに成功する。これは既存の
 正常テストを構造整理するGreen-to-Greenの変更前基準であり、故意のRedは作らない。
 
-- [ ] **ステップ2: 共通補助を追加する**
+- [x] **ステップ2: 共通補助を追加する**
 
 `LegalMoveTests` の直前に、次のテスト補助を追加する。
 
@@ -82,7 +82,7 @@ def _position_snapshot(position):
     )
 ```
 
-- [ ] **ステップ3: 5クラスの同形補助と呼び出しを置換する**
+- [x] **ステップ3: 5クラスの同形補助と呼び出しを置換する**
 
 各クラスの `_snapshot` 定義を削除する。各テストにある次の呼び出しを、同じ引数と
 比較タイミングのまま `_position_snapshot(position)` に置換する。
@@ -100,7 +100,7 @@ self.assertEqual(_position_snapshot(position), before)
 局面を作るコード、`movegen` を呼ぶコード、`assertEqual` の右辺、既存テストの
 docstringは変更しない。
 
-- [ ] **ステップ4: 構造と対象外差分を静的に確認する**
+- [x] **ステップ4: 構造と対象外差分を静的に確認する**
 
 実行:
 
@@ -115,7 +115,7 @@ git diff -- tests/test_movegen.py
 局面不変性確認は共通補助を直接呼ぶ。`git diff --check` と本体差分なしの検査は成功し、
 最後の差分では補助の集約以外に期待値やテストメソッドを変えていないことを確認する。
 
-- [ ] **ステップ5: 変更後のGreenを確認する**
+- [x] **ステップ5: 変更後のGreenを確認する**
 
 実行:
 

@@ -331,21 +331,27 @@ class CheckDetectionTests(unittest.TestCase):
         self.assertFalse(movegen.is_in_check(board, Side.GOTE))
 
 
+def _position_snapshot(position):
+    """局面の盤面81マス・先後の基本持ち駒・手番を比較用タプルとして読む。
+
+    盤面、先手の玉を除く基本持ち駒7種、後手の同7種、手番の順に返す。
+    局面は変更しない。
+    """
+    squares = [Square(file, rank)
+               for file in range(1, 10) for rank in range(1, 10)]
+    piece_types = [piece_type for piece_type in BasicPieceType
+                   if piece_type != BasicPieceType.KING]
+    return (
+        tuple(position.board.piece_at(square) for square in squares),
+        tuple(position.sente_hand.count(piece_type)
+              for piece_type in piece_types),
+        tuple(position.gote_hand.count(piece_type)
+              for piece_type in piece_types),
+        position.side_to_move,
+    )
+
+
 class LegalMoveTests(unittest.TestCase):
-    def _snapshot(self, position):
-        """合法性確認前後を比べるため局面の配置・持ち駒・手番を読む。"""
-        squares = [Square(file, rank)
-                   for file in range(1, 10) for rank in range(1, 10)]
-        piece_types = [piece_type for piece_type in BasicPieceType
-                       if piece_type != BasicPieceType.KING]
-        return (
-            tuple(position.board.piece_at(square) for square in squares),
-            tuple(position.sente_hand.count(piece_type)
-                  for piece_type in piece_types),
-            tuple(position.gote_hand.count(piece_type)
-                  for piece_type in piece_types),
-            position.side_to_move,
-        )
 
     def test_rejects_move_that_leaves_own_king_in_check(self):
         """王手を受けている側の無関係な移動を拒否する。
@@ -359,12 +365,12 @@ class LegalMoveTests(unittest.TestCase):
         board.set_piece(Square(4, 7), Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         position = Position(board, Side.SENTE)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         with self.assertRaisesRegex(ValueError, "王手"):
             movegen.apply_move(position, Square(4, 7), Square(4, 6))
 
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
     def test_rejects_king_move_into_opponent_attack(self):
         """玉を相手の金の利きへ動かす手を拒否する。
@@ -376,12 +382,12 @@ class LegalMoveTests(unittest.TestCase):
         board.set_piece(Square(5, 3), Piece(PieceType.GOLD, Side.GOTE))
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         position = Position(board, Side.SENTE)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         with self.assertRaisesRegex(ValueError, "王手"):
             movegen.apply_move(position, Square(5, 5), Square(5, 4))
 
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
     def test_rejects_move_that_unblocks_attack_on_own_king(self):
         """自玉との間を塞ぐ銀を動かして飛車の利きを通す手を拒否する。
@@ -394,12 +400,12 @@ class LegalMoveTests(unittest.TestCase):
         board.set_piece(Square(5, 1), Piece(PieceType.ROOK, Side.GOTE))
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         position = Position(board, Side.SENTE)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         with self.assertRaisesRegex(ValueError, "王手"):
             movegen.apply_move(position, Square(5, 3), Square(4, 4))
 
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
     def test_allows_king_to_escape_from_check(self):
         """玉を相手飛車の利きから安全な隣接マスへ逃がせる。
@@ -465,12 +471,12 @@ class LegalMoveTests(unittest.TestCase):
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         position = Position(board, Side.SENTE)
         position.sente_hand.add(BasicPieceType.GOLD)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         with self.assertRaisesRegex(ValueError, "王手"):
             movegen.apply_drop(position, BasicPieceType.GOLD, Square(5, 4))
 
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
     def test_rejects_drop_that_leaves_own_king_in_check(self):
         """王手を遮らない駒打ちを拒否する。
@@ -483,12 +489,12 @@ class LegalMoveTests(unittest.TestCase):
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         position = Position(board, Side.SENTE)
         position.sente_hand.add(BasicPieceType.GOLD)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         with self.assertRaisesRegex(ValueError, "王手"):
             movegen.apply_drop(position, BasicPieceType.GOLD, Square(4, 4))
 
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
 
 class MovePieceTests(unittest.TestCase):
@@ -2467,21 +2473,6 @@ class LegalMoveListTests(unittest.TestCase):
         self.assertTrue(hasattr(movegen, "legal_moves"),
                         "legal_moves がまだ実装されていません")
 
-    def _snapshot(self, position):
-        """合法手一覧の前後で局面全体を比較する。"""
-        squares = [Square(file, rank)
-                   for file in range(1, 10) for rank in range(1, 10)]
-        piece_types = [piece_type for piece_type in BasicPieceType
-                       if piece_type != BasicPieceType.KING]
-        return (
-            tuple(position.board.piece_at(square) for square in squares),
-            tuple(position.sente_hand.count(piece_type)
-                  for piece_type in piece_types),
-            tuple(position.gote_hand.count(piece_type)
-                  for piece_type in piece_types),
-            position.side_to_move,
-        )
-
     def _position_with_all_drops(self, side):
         """全7駒種を一枚ずつ持つ、駒打ちだけを調べる空盤面を作る。"""
         position = Position(Board(), side)
@@ -2516,13 +2507,13 @@ class LegalMoveListTests(unittest.TestCase):
         board = Board()
         board.set_piece(Square(5, 5), Piece(PieceType.PAWN, Side.SENTE))
         position = Position(board, Side.SENTE)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         self._require_implementation()
         self.assertEqual(
             movegen.legal_moves(position),
             (BoardMove(Square(5, 5), Square(5, 4), False),))
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
     def test_puts_nonpromotion_before_promotion(self):
         """同じ移動で不成を成りより先に固定する。
@@ -2583,12 +2574,12 @@ class LegalMoveListTests(unittest.TestCase):
                              self.BISHOP, self.ROOK))
 
         position = self._position_with_all_drops(Side.SENTE)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
         with patch.object(movegen, "BasicPieceType",
                           ReorderedBasicPieceTypes()):
             self.assertEqual(movegen.legal_moves(position),
                              self._expected_drops(Side.SENTE))
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
     def test_returns_all_drops_in_fixed_order_for_each_side(self):
         """全持ち駒の駒打ちを先後別の固定順で返し、局面を変更しない。
@@ -2599,10 +2590,10 @@ class LegalMoveListTests(unittest.TestCase):
         for side in Side:
             with self.subTest(side=side):
                 position = self._position_with_all_drops(side)
-                before = self._snapshot(position)
+                before = _position_snapshot(position)
                 self.assertEqual(movegen.legal_moves(position),
                                  self._expected_drops(side))
-                self.assertEqual(self._snapshot(position), before)
+                self.assertEqual(_position_snapshot(position), before)
 
     def test_returns_empty_tuple_when_current_rules_reject_every_candidate(self):
         """全候補が自駒で塞がれた局面では空の合法手一覧を返す。
@@ -2622,21 +2613,6 @@ class LegalMoveListTests(unittest.TestCase):
 
 
 class LegalMoveEnumerationTests(unittest.TestCase):
-    def _snapshot(self, position):
-        """合法手の有無を調べる前後で局面全体を比較する。"""
-        squares = [Square(file, rank)
-                   for file in range(1, 10) for rank in range(1, 10)]
-        piece_types = [piece_type for piece_type in BasicPieceType
-                       if piece_type != BasicPieceType.KING]
-        return (
-            tuple(position.board.piece_at(square) for square in squares),
-            tuple(position.sente_hand.count(piece_type)
-                  for piece_type in piece_types),
-            tuple(position.gote_hand.count(piece_type)
-                  for piece_type in piece_types),
-            position.side_to_move,
-        )
-
     def test_finds_legal_board_move_without_changing_position(self):
         """盤上の一手があれば合法手ありと判定し、局面を変更しない。
 
@@ -2647,12 +2623,12 @@ class LegalMoveEnumerationTests(unittest.TestCase):
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         board.set_piece(Square(5, 5), Piece(PieceType.PAWN, Side.SENTE))
         position = Position(board, Side.SENTE)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         self.assertTrue(hasattr(movegen, "has_legal_move"),
                         "has_legal_move がまだ実装されていません")
         self.assertTrue(movegen.has_legal_move(position))
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
     def test_finds_legal_drop_without_changing_position(self):
         """持ち駒を打つ一手があれば合法手ありと判定し、局面を変更しない。
@@ -2667,12 +2643,12 @@ class LegalMoveEnumerationTests(unittest.TestCase):
                                     Piece(PieceType.PAWN, Side.SENTE))
         position = Position(board, Side.SENTE)
         position.sente_hand.add(BasicPieceType.GOLD)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         self.assertTrue(hasattr(movegen, "has_legal_move"),
                         "has_legal_move がまだ実装されていません")
         self.assertTrue(movegen.has_legal_move(position))
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
     def test_returns_false_when_current_rules_reject_every_candidate(self):
         """全候補が自駒で塞がれた局面では合法手なしを返す。
@@ -2685,12 +2661,12 @@ class LegalMoveEnumerationTests(unittest.TestCase):
                 board.set_piece(Square(file, rank),
                                 Piece(PieceType.PAWN, Side.SENTE))
         position = Position(board, Side.SENTE)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         self.assertTrue(hasattr(movegen, "has_legal_move"),
                         "has_legal_move がまだ実装されていません")
         self.assertFalse(movegen.has_legal_move(position))
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
 
 class WeakMoveSelectionTests(unittest.TestCase):
@@ -2753,21 +2729,6 @@ class CheckmateAndGameEndTests(unittest.TestCase):
         self.assertTrue(hasattr(movegen, "is_game_over"),
                         "is_game_over がまだ実装されていません")
 
-    def _snapshot(self, position):
-        """詰み・終局判定の前後で局面全体を比較する。"""
-        squares = [Square(file, rank)
-                   for file in range(1, 10) for rank in range(1, 10)]
-        piece_types = [piece_type for piece_type in BasicPieceType
-                       if piece_type != BasicPieceType.KING]
-        return (
-            tuple(position.board.piece_at(square) for square in squares),
-            tuple(position.sente_hand.count(piece_type)
-                  for piece_type in piece_types),
-            tuple(position.gote_hand.count(piece_type)
-                  for piece_type in piece_types),
-            position.side_to_move,
-        )
-
     def _mated_sente_position(self):
         """先手玉が飛車王手を防げない局面を作る。"""
         board = Board()
@@ -2787,12 +2748,12 @@ class CheckmateAndGameEndTests(unittest.TestCase):
         王手だけで詰みと決めない、または終局判定を詰みへ接続しない誤りを検出する。
         """
         position = self._mated_sente_position()
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         self._assert_public_operations_exist()
         self.assertTrue(movegen.is_checkmate(position))
         self.assertTrue(movegen.is_game_over(position))
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
     def test_returns_false_when_king_can_escape_check(self):
         """玉が安全な逃げ場を持つ王手は詰みと終局にしない。
@@ -2801,12 +2762,12 @@ class CheckmateAndGameEndTests(unittest.TestCase):
         """
         position = self._mated_sente_position()
         position.board.set_piece(Square(4, 9), None)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         self._assert_public_operations_exist()
         self.assertFalse(movegen.is_checkmate(position))
         self.assertFalse(movegen.is_game_over(position))
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
     def test_returns_false_when_king_can_capture_checking_piece(self):
         """安全に王手駒を取れる王手は詰みと終局にしない。
@@ -2823,12 +2784,12 @@ class CheckmateAndGameEndTests(unittest.TestCase):
         board.set_piece(Square(6, 9), Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         position = Position(board, Side.SENTE)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         self._assert_public_operations_exist()
         self.assertFalse(movegen.is_checkmate(position))
         self.assertFalse(movegen.is_game_over(position))
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
     def test_returns_false_when_piece_can_capture_checking_piece(self):
         """盤上の金で王手駒を取れる王手は詰みと終局にしない。
@@ -2847,12 +2808,12 @@ class CheckmateAndGameEndTests(unittest.TestCase):
         board.set_piece(Square(6, 9), Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         position = Position(board, Side.SENTE)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         self._assert_public_operations_exist()
         self.assertFalse(movegen.is_checkmate(position))
         self.assertFalse(movegen.is_game_over(position))
-        self.assertEqual(self._snapshot(position), before)
+        self.assertEqual(_position_snapshot(position), before)
 
     def test_returns_false_when_board_piece_can_interpose(self):
         """盤上の金で飛車王手を遮れる局面は詰みと終局にしない。
@@ -2926,29 +2887,14 @@ class CheckmateAndGameEndTests(unittest.TestCase):
 
         for position in (non_checked, kingless):
             with self.subTest(position=position):
-                before = self._snapshot(position)
+                before = _position_snapshot(position)
                 self._assert_public_operations_exist()
                 self.assertFalse(movegen.is_checkmate(position))
                 self.assertFalse(movegen.is_game_over(position))
-                self.assertEqual(self._snapshot(position), before)
+                self.assertEqual(_position_snapshot(position), before)
 
 
 class UchiFuzumeTests(unittest.TestCase):
-    def _snapshot(self, position):
-        """打ち歩詰め判定の前後で局面全体を比較する。"""
-        squares = [Square(file, rank)
-                   for file in range(1, 10) for rank in range(1, 10)]
-        piece_types = [piece_type for piece_type in BasicPieceType
-                       if piece_type != BasicPieceType.KING]
-        return (
-            tuple(position.board.piece_at(square) for square in squares),
-            tuple(position.sente_hand.count(piece_type)
-                  for piece_type in piece_types),
-            tuple(position.gote_hand.count(piece_type)
-                  for piece_type in piece_types),
-            position.side_to_move,
-        )
-
     def _pawn_drop_mate_position(self, side):
         """sideが相手玉へ歩を打つと詰む、先後両玉を持つ局面を作る。"""
         board = Board()
@@ -2983,13 +2929,13 @@ class UchiFuzumeTests(unittest.TestCase):
                 position = self._pawn_drop_mate_position(side)
                 destination = (Square(5, 2) if side == Side.SENTE
                                else Square(5, 8))
-                before = self._snapshot(position)
+                before = _position_snapshot(position)
 
                 with self.assertRaises(ValueError):
                     movegen.apply_drop(position, BasicPieceType.PAWN,
                                        destination)
 
-                self.assertEqual(self._snapshot(position), before)
+                self.assertEqual(_position_snapshot(position), before)
 
     def test_allows_pawn_drop_when_king_can_capture_the_pawn(self):
         """玉が打った歩を安全に取れる歩打ちは拒否しない。
@@ -3031,11 +2977,11 @@ class UchiFuzumeTests(unittest.TestCase):
         """
         position = self._pawn_drop_mate_position(Side.SENTE)
         position.board.set_piece(Square(4, 1), None)
-        before = self._snapshot(position)
+        before = _position_snapshot(position)
 
         movegen.apply_drop(position, BasicPieceType.PAWN, Square(5, 2))
 
-        self.assertNotEqual(self._snapshot(position), before)
+        self.assertNotEqual(_position_snapshot(position), before)
 
     def test_allows_non_pawn_drop_that_gives_checkmate(self):
         """歩以外の駒打ちによる詰みは打ち歩詰めとして拒否しない。
