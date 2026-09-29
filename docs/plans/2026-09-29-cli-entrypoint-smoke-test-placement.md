@@ -53,7 +53,7 @@
 - 消費 (Consumes): `DisplayTests.test_cli_exits_from_game_mode_menu_on_eof` と `python -m kaname_shogi` の現在の公開動作。
 - 生産 (Produces): 移動後との比較に使う、対象テスト1件の成功結果と全体のテスト数。
 
-- [ ] **ステップ1: 作業ブランチと差分を確認する**
+- [x] **ステップ1: 作業ブランチと差分を確認する**
 
 実行:
 
@@ -65,7 +65,7 @@ git diff --check
 
 期待値: ブランチは `codex/cli-entrypoint-smoke-test-placement`。設計・計画コミット以外に未記録の変更がなく、`git diff --check` は出力なし。
 
-- [ ] **ステップ2: 対象テストを現在の配置で個別実行する**
+- [x] **ステップ2: 対象テストを現在の配置で個別実行する**
 
 実行:
 
@@ -75,7 +75,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_display.DisplayTests.te
 
 期待値: 1件成功し、`Ran 1 test` と `OK` を表示する。2026-09-29の計画作成時にも同じコマンドが1件成功することを確認済み。
 
-- [ ] **ステップ3: 全テストの基準件数を確認する**
+- [x] **ステップ3: 全テストの基準件数を確認する**
 
 実行:
 
@@ -97,7 +97,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 - 消費 (Consumes): Pythonモジュール実行 `python -m kaname_shogi`、標準入力EOF、標準出力、標準エラー、プロセス終了コード。
 - 生産 (Produces): `CliEntrypointSmokeTests.test_cli_exits_from_game_mode_menu_on_eof`。引数はなく、成功時の戻り値は `None`、副作用は子プロセスの起動だけである。
 
-- [ ] **ステップ1: 新しいテストファイルを作成する**
+- [x] **ステップ1: 新しいテストファイルを作成する**
 
 `tests/test_cli_entrypoint.py` を次の内容で作成する。既存メソッドは、クラスのインデント位置を除いてそのまま移す。
 
@@ -132,7 +132,7 @@ class CliEntrypointSmokeTests(unittest.TestCase):
         self.assertEqual(result.stderr, "")
 ```
 
-- [ ] **ステップ2: 表示テストからCLI境界だけを取り除く**
+- [x] **ステップ2: 表示テストからCLI境界だけを取り除く**
 
 `tests/test_display.py` で次を行う。
 
@@ -147,7 +147,7 @@ import unittest
 - `DisplayTests.test_cli_exits_from_game_mode_menu_on_eof` 全体を削除する。
 - `EXPECTED` と残る3テストは変更しない。
 
-- [ ] **ステップ3: 新しい配置の対象テストを個別実行する**
+- [x] **ステップ3: 新しい配置の対象テストを個別実行する**
 
 実行:
 
@@ -157,7 +157,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli_entrypoint.CliEntry
 
 期待値: 1件成功し、移動前と同じ日本語docstring、`Ran 1 test`、`OK` を表示する。
 
-- [ ] **ステップ4: 表示テストだけを実行する**
+- [x] **ステップ4: 表示テストだけを実行する**
 
 実行:
 
@@ -167,7 +167,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_display.DisplayTests -v
 
 期待値: 表示テスト3件が成功し、CLI実行入口テストはこのクラスに現れない。
 
-- [ ] **ステップ5: 移動前後の意味差分を確認する**
+- [x] **ステップ5: 移動前後の意味差分を確認する**
 
 実行:
 
@@ -191,7 +191,7 @@ git diff --exit-code -- kaname_shogi
 - 消費 (Consumes): タスク2のテスト構造差分。
 - 生産 (Produces): 全240件の成功結果、Refactor不要または追加変更の判断、Critical・Important・Minorの独立レビュー結論。
 
-- [ ] **ステップ1: 全テストを実行する**
+- [x] **ステップ1: 全テストを実行する**
 
 実行:
 
@@ -201,7 +201,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 
 期待値: 240件成功し、失敗・エラーがない。`CliEntrypointSmokeTests` の1件と `DisplayTests` の3件が別クラスとして表示される。
 
-- [ ] **ステップ2: Refactorの要否を確認する**
+- [x] **ステップ2: Refactorの要否を確認する**
 
 確認事項:
 
