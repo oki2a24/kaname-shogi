@@ -38,7 +38,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [リポジトリ基盤整理ロードマップ](roadmap-repository-foundation.md)
 - [CLI実行入口のスモークテスト配置を明確にする 開始時点の引き継ぎ](handover-cli-entrypoint-smoke-test-placement.md)
 
-「コードとユニットテストの構造レビュー」は、最後の理解確認まで完了しました。次は「CLI実行入口のスモークテスト配置を明確にする」、その完了後は「`test_movegen.py` の局面スナップショット補助を一つにする」順番を選定済みです。新しいセッションでは前者だけを開始します。`handover-*.md` は、対応テーマを始める時点の状態を残す履歴です。過去のブランチ、HEAD、リモートとの差、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
+「コードとユニットテストの構造レビュー」は完了し、現在は「CLI実行入口のスモークテスト配置を明確にする」を作業ブランチで実施中です。テスト移動、対象・表示・全240件の検証、独立レビューまで完了し、main取り込みと取り込み先検証を待っています。その完了後は「`test_movegen.py` の局面スナップショット補助を一つにする」候補を再評価します。`handover-*.md` は、対応テーマを始める時点の状態を残す履歴です。過去のブランチ、HEAD、リモートとの差、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
 
 ## テーマ・学習回別索引
 
@@ -84,6 +84,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 文書ナビゲーションの最小改善（第44回） | [第44回](learning/44-document-navigation.md) | — | [設計仕様](plans/2026-09-27-repository-document-navigation-design.md) | [実装計画](plans/2026-09-27-repository-document-navigation.md) | [開始時点の引き継ぎ](handover-repository-foundation-document-navigation.md) |
 | 古い文書記述の是正（第45回） | [第45回](learning/45-stale-document-correction.md) | — | [設計仕様](plans/2026-09-27-stale-document-correction-design.md) | [実装計画](plans/2026-09-27-stale-document-correction.md) | [開始時点の引き継ぎ](handover-repository-foundation-stale-document-correction.md) |
 | コードとユニットテストの構造レビュー（第46回） | [第46回](learning/46-code-and-unit-test-structure-review.md) | — | [設計仕様](plans/2026-09-28-code-and-unit-test-structure-review-design.md) | [実装計画](plans/2026-09-28-code-and-unit-test-structure-review.md) | [開始時点の引き継ぎ](handover-code-and-unit-test-structure-review.md) |
+| CLI実行入口のスモークテスト配置を明確にする（第47回） | [第47回](learning/47-cli-entrypoint-smoke-test-placement.md) | — | [設計仕様](plans/2026-09-29-cli-entrypoint-smoke-test-placement-design.md) | [実装計画](plans/2026-09-29-cli-entrypoint-smoke-test-placement.md) | [開始時点の引き継ぎ](handover-cli-entrypoint-smoke-test-placement.md) |
 
 ## 例外と履歴の読み方
 

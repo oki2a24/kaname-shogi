@@ -46,6 +46,8 @@ CLIで弱くても対局でき、明示的な保存・読込もできるとい�
   - GREEN：公開動作を変えず、失敗する回帰テストまたは既存テストで保護し、最小変更、全検証、独立レビュー、main取り込みを完了する。
   - 規律：`test-driven-development`、`requesting-code-review`、`verification-before-completion`。
   - 選定：2026-09-28。まず「CLI実行入口のスモークテスト配置を明確にする」、その完了後に「`test_movegen.py` の局面スナップショット補助を一つにする」順番を本人が選んだ。一回一テーマのため、開始時点では前者だけを扱う。開始手順は [CLI実行入口のスモークテスト配置を明確にする 引き継ぎ](handover-cli-entrypoint-smoke-test-placement.md) を参照する。
+  - 進行：2026-09-29。設計仕様と実装計画の承認後、`codex/cli-entrypoint-smoke-test-placement` で対象テストを専用ファイルへ移した。対象1件、表示3件、全240件、AST比較、`kaname_shogi/` 不変性の検証と、独立レビュー（Critical・Important・Minorすべて0件）まで完了した。詳細は [第47回学習記録](learning/47-cli-entrypoint-smoke-test-placement.md) を参照する。
+  - 未完了：mainへの取り込み、取り込み先検証、最後の理解確認、次テーマ候補の再評価が残っている。これらが完了するまでテーマ4全体を完了扱いしない。
 
 ## 今回は扱わないこと
 
