@@ -38,7 +38,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [リポジトリ基盤整理ロードマップ](roadmap-repository-foundation.md)
 - [`test_movegen.py` の局面スナップショット補助を一つにする 開始時点の引き継ぎ](handover-movegen-position-snapshot-helper.md)
 
-「コードとユニットテストの構造レビュー」と「CLI実行入口のスモークテスト配置を明確にする」は、最後の理解確認まで完了しました。構造整理の残り3件は順番だけを予約し、別テーマ・別承認で一つずつ進めます。次の新しいセッションでは「`test_movegen.py` の局面スナップショット補助を一つにする」だけを開始します。`handover-*.md` は、対応テーマを始める時点の状態を残す履歴です。過去のブランチ、HEAD、リモートとの差、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
+「コードとユニットテストの構造レビュー」と「CLI実行入口のスモークテスト配置を明確にする」は、最後の理解確認まで完了しました。「`test_movegen.py` の局面スナップショット補助を一つにする」は、設計・計画承認、実装、対象158件・全240件の検証、独立レビューまで完了し、main取り込み前です。構造整理の残り2件は順番だけを予約し、別テーマ・別承認で一つずつ進めます。`handover-*.md` は、対応テーマを始める時点の状態を残す履歴です。過去のブランチ、HEAD、リモートとの差、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
 
 ## テーマ・学習回別索引
 
@@ -85,6 +85,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 古い文書記述の是正（第45回） | [第45回](learning/45-stale-document-correction.md) | — | [設計仕様](plans/2026-09-27-stale-document-correction-design.md) | [実装計画](plans/2026-09-27-stale-document-correction.md) | [開始時点の引き継ぎ](handover-repository-foundation-stale-document-correction.md) |
 | コードとユニットテストの構造レビュー（第46回） | [第46回](learning/46-code-and-unit-test-structure-review.md) | — | [設計仕様](plans/2026-09-28-code-and-unit-test-structure-review-design.md) | [実装計画](plans/2026-09-28-code-and-unit-test-structure-review.md) | [開始時点の引き継ぎ](handover-code-and-unit-test-structure-review.md) |
 | CLI実行入口のスモークテスト配置を明確にする（第47回） | [第47回](learning/47-cli-entrypoint-smoke-test-placement.md) | — | [設計仕様](plans/2026-09-29-cli-entrypoint-smoke-test-placement-design.md) | [実装計画](plans/2026-09-29-cli-entrypoint-smoke-test-placement.md) | [開始時点の引き継ぎ](handover-cli-entrypoint-smoke-test-placement.md) |
+| `test_movegen.py` の局面スナップショット補助を一つにする（第48回） | [第48回](learning/48-movegen-position-snapshot-helper.md) | — | [設計仕様](plans/2026-09-29-movegen-position-snapshot-helper-design.md) | [実装計画](plans/2026-09-29-movegen-position-snapshot-helper.md) | [開始時点の引き継ぎ](handover-movegen-position-snapshot-helper.md) |
 
 ## 例外と履歴の読み方
 

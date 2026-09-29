@@ -1,21 +1,20 @@
 # 学習・開発の再開案内
 
-第47回「CLI実行入口のスモークテスト配置を明確にする」は、設計、実装、検証、独立レビュー、main取り込み、取り込み先検証、最後の理解確認まで完了した。
+第47回「CLI実行入口のスモークテスト配置を明確にする」は、設計、実装、検証、独立レビュー、main取り込み、取り込み先検証、最後の理解確認まで完了した。第48回「`test_movegen.py` の局面スナップショット補助を一つにする」は、設計、実装、対象158件・全240件の検証、独立レビューまで完了し、main取り込み前である。
 
-本人は、第46回の構造レビューから残る3件を「構造整理の残り」という順番付きの大きなまとまりとして予約し、実装は別テーマ・別承認で一つずつ進めることを選んだ。次テーマは「`test_movegen.py` の局面スナップショット補助を一つにする」である。その後は「CLIの駒名入出力対応を一つの定義から導く」「CLIコマンド解析の公開境界を設計し直す」の順番を予約したが、新しいセッションでは1件目だけを扱う。
+本人は、第46回の構造レビューから残る3件を「構造整理の残り」という順番付きの大きなまとまりとして予約し、実装は別テーマ・別承認で一つずつ進めることを選んだ。第48回完了後は「CLIの駒名入出力対応を一つの定義から導く」「CLIコマンド解析の公開境界を設計し直す」の順番で扱うが、第48回のmain取り込みと最後の理解確認が終わるまで開始しない。
 
 ## 現在の物理状態
 
 - 作業ディレクトリ：`/Users/oki2a24/kaname-shogi`
-- ブランチ：`main`
-- 現在のHEAD：`729f974 docs: 実装計画の進捗を更新する`
-- 作業ツリー：第47回の完了記録と次テーマ引き継ぎの文書変更が未コミット。次テーマのコード・テスト変更なし
-- リモートとの差：`main...origin/main [ahead 5]`（引き継ぎ準備開始時）
-- 直近の検証：mainで対象1件、表示3件、全240件成功、相対リンク199件の不足なし、`git diff --check`成功
-- 独立レビュー：第47回はCritical・Important・Minorすべて0件、マージ可能
-- 次テーマの未実施事項：設計、共通補助の配置・名前・docstring、作業ブランチ、実装計画、テスト変更、学習記録、独立レビュー
+- ブランチ：`codex/movegen-position-snapshot-helper`
+- 現在のHEAD：`e21b9f1 test: 局面スナップショット補助を一つにする`
+- 作業ツリー：第48回の実施記録と案内文書の更新が未コミット。コード・テストの実装変更はコミット済み
+- 直近の検証：対象158件、全240件、ASTによる共通補助1定義・旧定義0件・5クラス利用、`kaname_shogi/` 差分なし、`git diff --check` 成功
+- 独立レビュー：第48回はCritical・Important・Minorすべて0件、修正なし
+- 残りの作業：学習記録・案内文書のコミット、main取り込み、取り込み先検証、最後の理解確認
 
-上記のGit状態は引き継ぎ準備開始時点の記録である。再開時は必ず `git status --short --branch` と `git log -3 --oneline` で現在値を確認する。
+上記のGit状態はこのテーマの現在記録である。再開時は必ず `git status --short --branch` と `git log -3 --oneline` で現在値を確認する。
 
 ## 次テーマの境界
 
@@ -35,7 +34,7 @@
 4. この `docs/resume.md` と [次テーマの開始時点の引き継ぎ](handover-movegen-position-snapshot-helper.md)
 5. [次テーマの候補と選定履歴](next-topics.md)
 6. [リポジトリ基盤整理ロードマップ](roadmap-repository-foundation.md)
-7. [第46回学習記録](learning/46-code-and-unit-test-structure-review.md) と [第47回学習記録](learning/47-cli-entrypoint-smoke-test-placement.md)
+7. [第46回学習記録](learning/46-code-and-unit-test-structure-review.md)、[第47回学習記録](learning/47-cli-entrypoint-smoke-test-placement.md)、[第48回学習記録](learning/48-movegen-position-snapshot-helper.md)
 8. `tests/test_movegen.py`
 9. `kaname_shogi/model.py`
 
