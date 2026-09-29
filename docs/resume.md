@@ -2,17 +2,17 @@
 
 第47回「CLI実行入口のスモークテスト配置を明確にする」と第48回「`test_movegen.py` の局面スナップショット補助を一つにする」は、設計、実装、検証、独立レビュー、main取り込み、取り込み先検証、最後の理解確認まで完了した。
 
-本人は、第46回の構造レビューから残る3件を「構造整理の残り」という順番付きの大きなまとまりとして予約し、実装は別テーマ・別承認で一つずつ進めることを選んだ。第48回完了後の候補は「CLIの駒名入出力対応を一つの定義から導く」「CLIコマンド解析の公開境界を設計し直す」であり、本人が次テーマを選ぶまで開始しない。
+本人は、第46回の構造レビューから残る3件を「構造整理の残り」という順番付きの大きなまとまりとして予約し、実装は別テーマ・別承認で一つずつ進めることを選んだ。第48回完了後の次テーマとして「CLIの駒名入出力対応を一つの定義から導く」を選定した。その後に「CLIコマンド解析の公開境界を設計し直す」を扱うが、次テーマの完了まで開始しない。
 
 ## 現在の物理状態
 
 - 作業ディレクトリ：`/Users/oki2a24/kaname-shogi`
 - ブランチ：`main`
-- 現在のHEAD：`75e45da docs: 実装計画の完了項目を更新する`
-- 作業ツリー：クリーン
+- 現在のHEAD：`fe7abe0 docs: 第48回の理解確認と次テーマ候補を記録する`
+- 作業ツリー：次テーマの引き継ぎ文書と案内文書の更新が未コミット。コード・テストの変更はない
 - 直近の検証：対象158件、全240件、相対リンク205件、`git diff --check` 成功
 - 独立レビュー：第48回はCritical・Important・Minorすべて0件、修正なし
-- 残りの作業：次テーマの選定。本人が選ぶまで新しい学習・実装は開始しない
+- 残りの作業：次テーマの引き継ぎ文書をコミットし、新セッションで本人が再開用プロンプトを入力するまで新しい学習・実装は開始しない
 
 上記のGit状態は現在記録である。再開時は必ず `git status --short --branch` と `git log -3 --oneline` で現在値を確認する。
 
@@ -31,7 +31,7 @@
 1. `git status --short --branch` と `git log -3 --oneline` の現在結果
 2. `AGENTS.md`
 3. ルートの `README.md` と [文書索引](README.md)
-4. この `docs/resume.md` と [次テーマの開始時点の引き継ぎ](handover-movegen-position-snapshot-helper.md)
+4. この `docs/resume.md` と [次テーマの開始時点の引き継ぎ](handover-cli-piece-name-single-definition.md)
 5. [次テーマの候補と選定履歴](next-topics.md)
 6. [リポジトリ基盤整理ロードマップ](roadmap-repository-foundation.md)
 7. [第46回学習記録](learning/46-code-and-unit-test-structure-review.md)、[第47回学習記録](learning/47-cli-entrypoint-smoke-test-placement.md)、[第48回学習記録](learning/48-movegen-position-snapshot-helper.md)
@@ -41,7 +41,7 @@
 ## 再開用プロンプト
 
 ```text
-kaname-shogiの次テーマ「test_movegen.pyの局面スナップショット補助を一つにする」を始めてください。最初にgit status --short --branchとgit log -3 --onelineで現在の状態を確認し、AGENTS.md、README.md、docs/README.md、docs/resume.md、docs/next-topics.md、docs/handover-movegen-position-snapshot-helper.md、docs/roadmap-repository-foundation.md、docs/learning/46-code-and-unit-test-structure-review.md、docs/learning/47-cli-entrypoint-smoke-test-placement.md、tests/test_movegen.py、kaname_shogi/model.pyを読んでください。対象は、LegalMoveTests、LegalMoveListTests、LegalMoveEnumerationTests、CheckmateAndGameEndTests、UchiFuzumeTestsにある同形の_snapshot 5件について、期待値を本体実装から独立させたまま、局面状態の読み取り方法だけをファイル内で一つにすることです。本体コード、公開動作、比較対象、テスト件数は変更しません。「構造整理の残り」として、その後に「CLIの駒名入出力対応を一つの定義から導く」「CLIコマンド解析の公開境界を設計し直す」の順番を予約していますが、今回は開始しません。superpowerssuperpowers:brainstormingを使い、対象範囲、共通補助の配置・名前・docstring、各クラスの意図を保つ方法、Green-to-Greenでの確認方法、記録形式、検証方法を設計し、一度に一問ずつ確認してください。設計を提示して私の明示的な承認を待ち、承認前にコード・テスト・既存文書を変更しないでください。実装計画を文書化した後も、計画を提示して私の明示的な承認を待ってください。必要な変更は目的が分かる作業ブランチで行い、日本語のConventional Commitにしてください。
+kaname-shogiの次テーマ「CLIの駒名入出力対応を一つの定義から導く」を始めてください。最初にgit status --short --branchとgit log -3 --onelineで現在の状態を確認し、AGENTS.md、README.md、docs/README.md、docs/resume.md、docs/next-topics.md、docs/handover-cli-piece-name-single-definition.md、docs/roadmap-repository-foundation.md、docs/learning/46-code-and-unit-test-structure-review.md、docs/learning/47-cli-entrypoint-smoke-test-placement.md、docs/learning/48-movegen-position-snapshot-helper.md、kaname_shogi/cli.py、kaname_shogi/display.py、kaname_shogi/model.py、tests/test_cli.py、tests/test_display.pyを読んでください。対象は、cli.pyの表示用_PIECE_NAMESと入力解析用の駒名・BasicPieceType対応を一つの定義から導く構造整理です。表示名、入力文法、入力可能な駒、順序、エラー文言、公開動作、テスト件数は変更しません。「構造整理の残り」として、その後に「CLIコマンド解析の公開境界を設計し直す」を予約していますが、今回は開始しません。superpowerssuperpowers:brainstormingを使い、対象範囲、共通定義の表現・配置・名前、表示と入力からの導出方法、既存テストの意図を保つ方法、Green-to-Greenでの確認方法、記録形式、検証方法を設計し、一度に一問ずつ確認してください。設計を提示して私の明示的な承認を待ち、承認前にコード・テスト・既存文書を変更しないでください。実装計画を文書化した後も、計画を提示して私の明示的な承認を待ってください。必要な変更は目的が分かる作業ブランチで行い、日本語のConventional Commitにしてください。
 ```
 
 このプロンプトを人間が新しいセッションへ入力するまで、次テーマの調査・設計・実装を開始しない。
