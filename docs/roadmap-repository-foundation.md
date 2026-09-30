@@ -41,7 +41,7 @@ CLIで弱くても対局でき、明示的な保存・読込もできるとい�
   - 検証：全240テスト成功、相対リンク194件の不足なし、書式検査成功、コード・テスト差分なし。初回・再レビューの全指摘を反映し、独立再々レビューはCritical・Important・Minorすべて0件。mainへのfast-forward取り込みと取り込み先検証も成功した。
   - 完了：2026-09-28。最後の理解確認で、複数ファイルが関わる境界は一対一対応だけでは役割を説明できないことを確認し、本人の回答と補足を第46回学習記録へ記録した。
 
-- [ ] **テーマ4以降：承認済みの小さなリファクタリング**
+- [x] **テーマ4以降：承認済みの小さなリファクタリング**
   - 対象：テーマ3で必要性が確認された箇所だけ。一回につき一つの責務境界、または一つのテスト構造を扱う。
   - GREEN：公開動作を変えず、失敗する回帰テストまたは既存テストで保護し、最小変更、全検証、独立レビュー、main取り込みを完了する。
   - 規律：`test-driven-development`、`requesting-code-review`、`verification-before-completion`。
@@ -56,7 +56,7 @@ CLIで弱くても対局でき、明示的な保存・読込もできるとい�
   - 小テーマ3進行：2026-09-30。設計・計画承認後、`codex/cli-piece-name-single-definition` で `_DROP_PIECE_SPECS` を正本として型→名称と名称→型を導く構造へ整理した。CLI37件、表示3件、全240件のGreen-to-Green、静的確認、独立レビュー（Critical・Important・Minorすべて0件）まで完了し、main取り込み承認待ちである。詳細は[第49回学習記録](learning/49-cli-piece-name-single-definition.md)を参照する。
   - 小テーマ3完了：2026-09-30。本人の承認後にmainへfast-forwardで取り込み、取り込み先で全240件、相対リンク324件、書式検査を再確認した。最後の理解確認と回答記録も完了した。次テーマは本人が選ぶまで開始しない。
   - 次テーマ選定：2026-09-30。本人は「CLIコマンド解析の公開境界を設計し直す」を選んだ。`parse_command` の戻り値と内部コマンド型の公開・内部境界を、入力文法・公開動作・エラー文言・テスト件数を変えずに設計する。新しいセッションで設計から開始する。開始手順は[次テーマの引き継ぎ](handover-cli-command-parsing-public-boundary.md)を参照する。
-  - 小テーマ4進行：2026-09-30。設計・計画承認後、`codex/cli-command-parsing-public-boundary` で5つの解析済みコマンド型を公開名へ移行し、`Command` と10名の `cli.__all__` を追加した。Red、CLI37件・全240件のGreen-to-Green、静的確認、独立レビュー（Critical・Important・Minorすべて0件）、mainへのfast-forward取り込み、取り込み先での全240件・相対リンク218件・書式検査まで完了した。最後の理解確認は未回答である。詳細は[第50回学習記録](learning/50-cli-command-parsing-public-boundary.md)を参照する。
+  - 小テーマ4完了：2026-09-30。設計・計画承認後、`codex/cli-command-parsing-public-boundary` で5つの解析済みコマンド型を公開名へ移行し、`Command` と10名の `cli.__all__` を追加した。Red、CLI37件・全240件のGreen-to-Green、静的確認、独立レビュー（Critical・Important・Minorすべて0件）、mainへのfast-forward取り込み、取り込み先での全240件・相対リンク218件・書式検査、最後の理解確認まで完了した。詳細は[第50回学習記録](learning/50-cli-command-parsing-public-boundary.md)を参照する。
 
 ## 今回は扱わないこと
 
