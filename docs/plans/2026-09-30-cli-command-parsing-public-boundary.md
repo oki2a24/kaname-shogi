@@ -37,6 +37,8 @@
 
 ### タスク1: 公開契約を先にテストで表す
 
+進行状況: 完了
+
 **ファイル:**
 
 - 変更: `tests/test_cli.py:17-79`
@@ -47,7 +49,7 @@
 - 消費 (Consumes): 現行の `cli.parse_command(text: str)`、現行の解析結果属性、`FORMAT_ERROR` の例外文言。
 - 生産 (Produces): `cli.MoveCommand`、`cli.DropCommand`、`cli.ResignCommand`、`cli.SaveCommand`、`cli.LoadCommand`、`cli.Command`、`cli.__all__` という未実装の公開契約を要求する既存37件のCLIテスト。
 
-- [ ] **ステップ1: 既存の解析テストを公開型の期待値へ置き換える**
+- [x] **ステップ1: 既存の解析テストを公開型の期待値へ置き換える**
 
 `test_parses_move_and_drop_with_halfwidth_or_fullwidth_input` に、既存の属性比較を残したまま次を加える。
 
@@ -81,7 +83,7 @@ self.assertEqual(load.path, "/tmp/game.json")
 
 不正形式を確認する既存2件は変更しない。新しい `test_` メソッド、入力例、期待エラー文言は追加・変更しない。
 
-- [ ] **ステップ2: 公開型がまだ存在しない理由でRedになることを確認する**
+- [x] **ステップ2: 公開型がまだ存在しない理由でRedになることを確認する**
 
 実行:
 
@@ -92,6 +94,8 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli.CommandParsingTests
 期待値: `cli.MoveCommand` または `cli.ResignCommand` が未定義である `AttributeError` により失敗する。入力形式やテスト読み込みの失敗をRed完了と扱わず、公開契約が未実装であることが失敗理由であると確認する。
 
 ### タスク2: `cli.py` に唯一の公開コマンド契約を実装する
+
+進行状況: 完了
 
 **ファイル:**
 
@@ -110,7 +114,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli.CommandParsingTests
   - `Command = Union[MoveCommand, DropCommand, ResignCommand, SaveCommand, LoadCommand]`
   - `parse_command(text: str) -> Command`
 
-- [ ] **ステップ1: 公開API一覧をモジュール先頭へ追加する**
+- [x] **ステップ1: 公開API一覧をモジュール先頭へ追加する**
 
 import文の後、`FORMAT_ERROR` の前に次の順序のタプルを置く。
 
@@ -131,7 +135,7 @@ __all__ = (
 
 `FORMAT_ERROR` と先頭が `_` の内部補助は追加しない。`__all__` は実行時の振る舞いを変えるための分岐ではなく、外部から利用してよい名前を列挙するモジュール定数である。
 
-- [ ] **ステップ2: 5データ型を公開名へ一対一に改名し、`Command` を定義する**
+- [x] **ステップ2: 5データ型を公開名へ一対一に改名し、`Command` を定義する**
 
 各 `@dataclass(frozen=True)` の属性・本体を変えず、クラス名だけを次のように変更する。
 
@@ -153,7 +157,7 @@ Command = Union[MoveCommand, DropCommand, ResignCommand, SaveCommand,
 前提条件が該当しないことと、解析済みデータである設計理由を追記する。属性や
 `frozen=True` を変更しない。
 
-- [ ] **ステップ3: 解析器と内部実行経路の型参照を公開名へそろえる**
+- [x] **ステップ3: 解析器と内部実行経路の型参照を公開名へそろえる**
 
 `parse_command` のシグネチャを次に変更し、docstringの戻り値を「5つの公開型のいずれかの
 `Command`」と明記する。
@@ -169,7 +173,7 @@ def parse_command(text: str) -> Command:
 文字列の `split()`、引数数、`+`、座標・駒名の変換、`ValueError(FORMAT_ERROR)`、
 保存・読込・投了・着手の分岐順と処理本体は変更しない。
 
-- [ ] **ステップ4: 解析境界テストがGreenになることを確認する**
+- [x] **ステップ4: 解析境界テストがGreenになることを確認する**
 
 実行:
 
@@ -179,7 +183,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_cli.CommandParsingTests
 
 期待値: 5件成功、失敗0件。公開型、属性、`__all__`、既存の入力形式エラーが同時に確認できる。
 
-- [ ] **ステップ5: この実装単位をコミットする**
+- [x] **ステップ5: この実装単位をコミットする**
 
 ```sh
 git add kaname_shogi/cli.py tests/test_cli.py
@@ -187,6 +191,8 @@ git commit -m "refactor: CLI解析コマンド型を公開する"
 ```
 
 ### タスク3: 振る舞い不変性、構造、レビューを確認して記録する
+
+進行状況: 実行中
 
 **ファイル:**
 
@@ -199,7 +205,7 @@ git commit -m "refactor: CLI解析コマンド型を公開する"
 - 消費 (Consumes): タスク2の10名の `cli.__all__`、5公開型、`Command`、不変の入力・進行・エラー契約。
 - 生産 (Produces): Green-to-Greenの検証記録、Refactor要否、独立レビュー結論、取り込み承認に必要な学習・案内文書。
 
-- [ ] **ステップ1: CLIテストと全テストを実行する**
+- [x] **ステップ1: CLIテストと全テストを実行する**
 
 実行:
 
@@ -210,7 +216,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 
 期待値: 前者37件、後者240件がともに成功し、保存・読込・投了・移動・駒打ちと入力形式エラーの公開動作が不変である。
 
-- [ ] **ステップ2: テスト件数と公開境界を静的に確認する**
+- [x] **ステップ2: テスト件数と公開境界を静的に確認する**
 
 実行:
 
@@ -223,7 +229,7 @@ rg -n '^class _(?:Move|Drop|Resign|Save|Load)Command|_(?:Move|Drop|Resign|Save|L
 期待値: 最初は37、二つ目は240、三つ目は出力なし。さらに短い `ast` を用いた読み取り専用確認で、
 `cli.__all__` が順序どおり10名、5公開型と `Command` が存在することを検査する。
 
-- [ ] **ステップ3: 差分と文書リンクを確認する**
+- [x] **ステップ3: 差分と文書リンクを確認する**
 
 実行:
 
@@ -233,20 +239,20 @@ git diff --check
 
 期待値: 出力なし。更新文書に含まれる相対Markdownリンクは、既存のリンク検査方法で全件解決することを確認する。
 
-- [ ] **ステップ4: Refactor要否を判断する**
+- [x] **ステップ4: Refactor要否を判断する**
 
 `cli.py` を読み直し、公開型、`Command`、`__all__`、解析、進行分岐の責務が一つの小さい
 モジュール内で読み取れるかを確認する。入力文法の拡張、共通基底クラス、辞書形式、別モジュール化、
 第49回の駒名対応の変更は、今回の目的を超えるため追加しない。判断理由を第50回の学習記録へ残す。
 
-- [ ] **ステップ5: 独立コードレビューを実施し、必要なら是正する**
+- [x] **ステップ5: 独立コードレビューを実施し、必要なら是正する**
 
 レビュー対象を実装コミットと設計仕様からの差分に限定し、公開API10名、旧名不在、型・docstring、
 入力・進行・エラー文言不変、テスト件数、不要な対象拡大を確認する。Critical・Important・Minorを
 第50回の学習記録に記録する。CriticalまたはImportantがあれば修正し、ステップ1から再実行して
 独立再レビューする。
 
-- [ ] **ステップ6: 実施記録と案内文書を更新してコミットする**
+- [x] **ステップ6: 実施記録と案内文書を更新してコミットする**
 
 第50回の学習記録には、対象・非対象、実際の変更、Green-to-Green、Refactor要否、独立レビュー、
 検証結果、未解決事項を記す。`docs/README.md`、ロードマップ、次テーマ候補、再開案内は、

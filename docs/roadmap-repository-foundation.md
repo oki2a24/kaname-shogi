@@ -56,6 +56,7 @@ CLIで弱くても対局でき、明示的な保存・読込もできるとい�
   - 小テーマ3進行：2026-09-30。設計・計画承認後、`codex/cli-piece-name-single-definition` で `_DROP_PIECE_SPECS` を正本として型→名称と名称→型を導く構造へ整理した。CLI37件、表示3件、全240件のGreen-to-Green、静的確認、独立レビュー（Critical・Important・Minorすべて0件）まで完了し、main取り込み承認待ちである。詳細は[第49回学習記録](learning/49-cli-piece-name-single-definition.md)を参照する。
   - 小テーマ3完了：2026-09-30。本人の承認後にmainへfast-forwardで取り込み、取り込み先で全240件、相対リンク324件、書式検査を再確認した。最後の理解確認と回答記録も完了した。次テーマは本人が選ぶまで開始しない。
   - 次テーマ選定：2026-09-30。本人は「CLIコマンド解析の公開境界を設計し直す」を選んだ。`parse_command` の戻り値と内部コマンド型の公開・内部境界を、入力文法・公開動作・エラー文言・テスト件数を変えずに設計する。新しいセッションで設計から開始する。開始手順は[次テーマの引き継ぎ](handover-cli-command-parsing-public-boundary.md)を参照する。
+  - 小テーマ4進行：2026-09-30。設計・計画承認後、`codex/cli-command-parsing-public-boundary` で5つの解析済みコマンド型を公開名へ移行し、`Command` と10名の `cli.__all__` を追加した。Red、CLI37件・全240件のGreen-to-Green、静的確認、独立レビュー（Critical・Important・Minorすべて0件）まで完了した。main取り込みは本人の承認待ちである。詳細は[第50回学習記録](learning/50-cli-command-parsing-public-boundary.md)を参照する。
 
 ## 今回は扱わないこと
 
