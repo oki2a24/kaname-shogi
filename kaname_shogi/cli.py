@@ -115,14 +115,20 @@ class _LoadCommand:
     path: str
 
 
-_PIECE_NAMES = {
-    BasicPieceType.PAWN: "歩",
-    BasicPieceType.LANCE: "香",
-    BasicPieceType.KNIGHT: "桂",
-    BasicPieceType.SILVER: "銀",
-    BasicPieceType.GOLD: "金",
-    BasicPieceType.BISHOP: "角",
-    BasicPieceType.ROOK: "飛",
+# 駒打ちで入力・表示する基本駒の型と日本語名を、この順序で対応付ける。
+_DROP_PIECE_SPECS = (
+    (BasicPieceType.PAWN, "歩"),
+    (BasicPieceType.LANCE, "香"),
+    (BasicPieceType.KNIGHT, "桂"),
+    (BasicPieceType.SILVER, "銀"),
+    (BasicPieceType.GOLD, "金"),
+    (BasicPieceType.BISHOP, "角"),
+    (BasicPieceType.ROOK, "飛"),
+)
+
+_PIECE_NAMES = dict(_DROP_PIECE_SPECS)
+_PIECE_TYPES_BY_NAME = {
+    name: piece_type for piece_type, name in _DROP_PIECE_SPECS
 }
 
 
@@ -168,19 +174,10 @@ def parse_command(text: str) -> Union[_MoveCommand, _DropCommand,
         except ValueError as error:
             raise ValueError(FORMAT_ERROR) from error
 
-    piece_types = {
-        "歩": BasicPieceType.PAWN,
-        "香": BasicPieceType.LANCE,
-        "桂": BasicPieceType.KNIGHT,
-        "銀": BasicPieceType.SILVER,
-        "金": BasicPieceType.GOLD,
-        "角": BasicPieceType.BISHOP,
-        "飛": BasicPieceType.ROOK,
-    }
     if parts[:1] == ["drop"] and len(parts) == 4:
         try:
             return _DropCommand(
-                piece_types[parts[1]],
+                _PIECE_TYPES_BY_NAME[parts[1]],
                 Square(int(parts[2]), int(parts[3])),
             )
         except (KeyError, ValueError) as error:
