@@ -21,19 +21,27 @@ class CommandParsingTests(unittest.TestCase):
         promoted = cli.parse_command("move 2 2 2 1 +")
         drop = cli.parse_command("drop　歩　５　５")
 
+        self.assertIsInstance(move, cli.MoveCommand)
         self.assertEqual((move.source, move.destination, move.promote),
                          (Square(7, 7), Square(7, 6), False))
+        self.assertIsInstance(promoted, cli.MoveCommand)
         self.assertEqual((promoted.source, promoted.destination,
                           promoted.promote),
                          (Square(2, 2), Square(2, 1), True))
+        self.assertIsInstance(drop, cli.DropCommand)
         self.assertEqual((drop.piece_type, drop.destination),
                          (BasicPieceType.PAWN, Square(5, 5)))
 
     def test_parses_resign_command(self):
-        """resignを、局面を変更しない投了指示へ変換する。"""
+        """resignを公開投了型へ変換し、CLIの公開APIを明示する。"""
         command = cli.parse_command("resign")
 
-        self.assertIsInstance(command, cli._ResignCommand)
+        self.assertEqual(cli.__all__, (
+            "GameMode", "choose_game_mode", "MoveCommand", "DropCommand",
+            "ResignCommand", "SaveCommand", "LoadCommand", "Command",
+            "parse_command", "run_game",
+        ))
+        self.assertIsInstance(command, cli.ResignCommand)
 
     def test_parses_save_and_load_commands(self):
         """save/loadの一語パスを、ファイル操作前の指示へ変換する。"""
@@ -43,11 +51,9 @@ class CommandParsingTests(unittest.TestCase):
         except ValueError as error:
             self.fail(f"save/load入力が未実装です: {error}")
 
-        save_command = getattr(cli, "_SaveCommand", type(None))
-        load_command = getattr(cli, "_LoadCommand", type(None))
-        self.assertIsInstance(save, save_command)
+        self.assertIsInstance(save, cli.SaveCommand)
         self.assertEqual(save.path, "records/game.json")
-        self.assertIsInstance(load, load_command)
+        self.assertIsInstance(load, cli.LoadCommand)
         self.assertEqual(load.path, "/tmp/game.json")
 
     def test_rejects_save_and_load_without_one_path(self):

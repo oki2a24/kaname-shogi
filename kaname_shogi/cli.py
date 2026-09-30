@@ -12,6 +12,20 @@ from .model import BasicPieceType, Side, Square, create_initial_position
 from .movegen import choose_weak_move, is_game_over, legal_moves
 
 
+__all__ = (
+    "GameMode",
+    "choose_game_mode",
+    "MoveCommand",
+    "DropCommand",
+    "ResignCommand",
+    "SaveCommand",
+    "LoadCommand",
+    "Command",
+    "parse_command",
+    "run_game",
+)
+
+
 FORMAT_ERROR = "入力形式が正しくありません。"
 
 
@@ -80,8 +94,24 @@ def choose_game_mode(*, input_fn: Callable[[], str] = input,
 
 
 @dataclass(frozen=True)
-class _MoveCommand:
-    """盤上移動の入力を、合法性判定前の値として保持する。"""
+class MoveCommand:
+    """解析した盤上移動の指示を、合法性判定前の不変データとして保持する。
+
+    引数:
+        source: 出発マスを表すSquare。
+        destination: 到着マスを表すSquare。
+        promote: 成りを指定するかを表すbool。
+
+    戻り値:
+        なし。この型は値を表し、生成は解析済みのMoveCommandを得るために行う。
+
+    副作用:
+        なし。局面、手番、履歴、ファイルを変更しない。
+
+    前提条件:
+        座標と成り記号の入力形式はparse_commandが検査する。移動候補、手番、王手などの
+        合法性は保持せず後段へ委譲し、解析と着手適用を分離する。
+    """
 
     source: Square
     destination: Square
@@ -89,30 +119,89 @@ class _MoveCommand:
 
 
 @dataclass(frozen=True)
-class _DropCommand:
-    """駒打ちの入力を、合法性判定前の値として保持する。"""
+class DropCommand:
+    """解析した駒打ちの指示を、合法性判定前の不変データとして保持する。
+
+    引数:
+        piece_type: 打つ基本駒種を表すBasicPieceType。
+        destination: 打ち先のマスを表すSquare。
+
+    戻り値:
+        なし。この型は値を表し、生成は解析済みのDropCommandを得るために行う。
+
+    副作用:
+        なし。局面、手番、履歴、ファイルを変更しない。
+
+    前提条件:
+        駒名と座標の入力形式はparse_commandが検査する。持ち駒、二歩、行き所のない駒
+        などの合法性は保持せず後段へ委譲し、解析と駒打ち適用を分離する。
+    """
 
     piece_type: BasicPieceType
     destination: Square
 
 
 @dataclass(frozen=True)
-class _ResignCommand:
-    """投了の入力を、局面を変更しない終局指示として保持する。"""
+class ResignCommand:
+    """解析した投了の指示を、局面を変更しない不変データとして保持する。
+
+    引数・戻り値:
+        なし。この型は属性を持たず、投了という解析済みの指示を表す。
+
+    副作用:
+        なし。局面、手番、履歴、ファイルを変更しない。
+
+    前提条件:
+        入力形式はparse_commandが検査する。勝者表示と対局終了はrun_gameが担い、解析と
+        終局処理を分離する。
+    """
 
 
 @dataclass(frozen=True)
-class _SaveCommand:
-    """保存先のパスを、ファイル操作前の入力値として保持する。"""
+class SaveCommand:
+    """解析した保存先を、ファイル操作前の不変データとして保持する。
+
+    引数:
+        path: 保存先を表す空白を含まない一語の文字列。
+
+    戻り値:
+        なし。この型は値を表し、生成は解析済みのSaveCommandを得るために行う。
+
+    副作用:
+        なし。局面、手番、履歴、ファイルを変更しない。
+
+    前提条件:
+        パスの語数はparse_commandが検査する。実際の保存とその失敗処理はrun_gameと
+        GameRecordが担い、文字列解析とファイル操作を分離する。
+    """
 
     path: str
 
 
 @dataclass(frozen=True)
-class _LoadCommand:
-    """読込元のパスを、ファイル操作前の入力値として保持する。"""
+class LoadCommand:
+    """解析した読込元を、ファイル操作前の不変データとして保持する。
+
+    引数:
+        path: 読込元を表す空白を含まない一語の文字列。
+
+    戻り値:
+        なし。この型は値を表し、生成は解析済みのLoadCommandを得るために行う。
+
+    副作用:
+        なし。局面、手番、履歴、ファイルを変更しない。
+
+    前提条件:
+        パスの語数はparse_commandが検査する。実際の読込とその失敗処理はrun_gameと
+        GameRecordが担い、文字列解析とファイル操作を分離する。
+    """
 
     path: str
+
+
+# Commandは解析済みの5種類の指示のいずれかを表す公開の型別名である。
+Command = Union[MoveCommand, DropCommand, ResignCommand, SaveCommand,
+                LoadCommand]
 
 
 # 駒打ちで入力・表示する基本駒の型と日本語名を、この順序で対応付ける。
@@ -132,9 +221,7 @@ _PIECE_TYPES_BY_NAME = {
 }
 
 
-def parse_command(text: str) -> Union[_MoveCommand, _DropCommand,
-                                        _ResignCommand, _SaveCommand,
-                                        _LoadCommand]:
+def parse_command(text: str) -> Command:
     """入力文字列を対局または保存・読込の指示へ変換する。
 
     引数:
@@ -143,9 +230,9 @@ def parse_command(text: str) -> Union[_MoveCommand, _DropCommand,
             パスは空白を含まない一語として扱う。
 
     戻り値:
-        盤上移動なら元・先のSquareと成り指定を持つ内部値、駒打ちなら基本駒種と
-        打ち先を持つ内部値、投了なら局面を変更しない投了指示、保存・読込なら
-        一語のパスを持つ内部値。
+        盤上移動ならMoveCommand、駒打ちならDropCommand、投了ならResignCommand、
+        保存ならSaveCommand、読込ならLoadCommandのいずれかを表すCommand。各型は
+        外部コードが型名と属性を利用できる公開データである。
 
     例外:
         ValueError: 操作語、引数、成り記号、駒名、または座標が入力形式に合わない場合。
@@ -157,16 +244,16 @@ def parse_command(text: str) -> Union[_MoveCommand, _DropCommand,
     """
     parts = text.split()
     if parts == ["resign"]:
-        return _ResignCommand()
+        return ResignCommand()
     if parts[:1] == ["save"] and len(parts) == 2:
-        return _SaveCommand(parts[1])
+        return SaveCommand(parts[1])
     if parts[:1] == ["load"] and len(parts) == 2:
-        return _LoadCommand(parts[1])
+        return LoadCommand(parts[1])
     if parts[:1] == ["move"] and len(parts) in (5, 6):
         if len(parts) == 6 and parts[5] != "+":
             raise ValueError(FORMAT_ERROR)
         try:
-            return _MoveCommand(
+            return MoveCommand(
                 Square(int(parts[1]), int(parts[2])),
                 Square(int(parts[3]), int(parts[4])),
                 len(parts) == 6,
@@ -176,7 +263,7 @@ def parse_command(text: str) -> Union[_MoveCommand, _DropCommand,
 
     if parts[:1] == ["drop"] and len(parts) == 4:
         try:
-            return _DropCommand(
+            return DropCommand(
                 _PIECE_TYPES_BY_NAME[parts[1]],
                 Square(int(parts[2]), int(parts[3])),
             )
@@ -187,7 +274,7 @@ def parse_command(text: str) -> Union[_MoveCommand, _DropCommand,
 
 
 def _apply_command(record: GameRecord,
-                   command: Union[_MoveCommand, _DropCommand]) -> None:
+                   command: Union[MoveCommand, DropCommand]) -> None:
     """解析済みの指示を対局記録の操作へ一度だけ渡す。
 
     引数:
@@ -201,7 +288,7 @@ def _apply_command(record: GameRecord,
         `GameRecord`へ委譲し、合法性エラー時は記録を変更しない。入力イベントの
         解析と履歴更新を分離し、成功した指し手だけを棋譜へ残すための操作である。
     """
-    if isinstance(command, _MoveCommand):
+    if isinstance(command, MoveCommand):
         record.apply_move(command.source, command.destination,
                           promote=command.promote)
         return
@@ -319,16 +406,16 @@ def run_game(*, input_fn: Callable[[], str] = input,
             output_fn("指し手を入力してください（例: move 7 7 7 6）:")
             try:
                 command = parse_command(input_fn())
-                if isinstance(command, _SaveCommand):
+                if isinstance(command, SaveCommand):
                     record.save(command.path)
                     output_fn("棋譜を保存しました。")
                     continue
-                if isinstance(command, _LoadCommand):
+                if isinstance(command, LoadCommand):
                     record = GameRecord.load(command.path)
                     output_fn("棋譜を読み込みました。")
                     output_fn(render_position(record.current_position))
                     continue
-                if isinstance(command, _ResignCommand):
+                if isinstance(command, ResignCommand):
                     output_fn(_resignation_message(position.side_to_move))
                     return record
                 _apply_command(record, command)
