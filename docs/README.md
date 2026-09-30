@@ -36,9 +36,9 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 - [学習・開発の再開案内](resume.md)
 - [リポジトリ基盤整理ロードマップ](roadmap-repository-foundation.md)
-- [CLIコマンド解析の公開境界を設計し直す 次テーマの引き継ぎ](handover-cli-command-parsing-public-boundary.md)
+- [CLIの `help` 表示 次テーマの引き継ぎ](handover-cli-help-display.md)
 
-「コードとユニットテストの構造レビュー」「CLI実行入口のスモークテスト配置を明確にする」「`test_movegen.py` の局面スナップショット補助を一つにする」「CLIの駒名入出力対応を一つの定義から導く」「CLIコマンド解析の公開境界を設計し直す」は、最後の理解確認まで完了しました。次テーマは本人が選ぶまで開始しません。`handover-*.md` は、対応テーマを始める時点の状態を残す履歴です。過去のブランチ、HEAD、リモートとの差、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
+「コードとユニットテストの構造レビュー」「CLI実行入口のスモークテスト配置を明確にする」「`test_movegen.py` の局面スナップショット補助を一つにする」「CLIの駒名入出力対応を一つの定義から導く」「CLIコマンド解析の公開境界を設計し直す」は、最後の理解確認まで完了しました。次テーマは「CLIの `help` 表示」に選定され、新しいセッションで設計から開始します。`handover-*.md` は、対応テーマを始める時点の状態を残す履歴です。過去のブランチ、HEAD、リモートとの差、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
 
 ## テーマ・学習回別索引
 
@@ -88,6 +88,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | `test_movegen.py` の局面スナップショット補助を一つにする（第48回） | [第48回](learning/48-movegen-position-snapshot-helper.md) | — | [設計仕様](plans/2026-09-29-movegen-position-snapshot-helper-design.md) | [実装計画](plans/2026-09-29-movegen-position-snapshot-helper.md) | [開始時点の引き継ぎ](handover-movegen-position-snapshot-helper.md) |
 | CLIの駒名入出力対応を一つの定義から導く（第49回） | [第49回](learning/49-cli-piece-name-single-definition.md) | — | [設計仕様](plans/2026-09-30-cli-piece-name-single-definition-design.md) | [実装計画](plans/2026-09-30-cli-piece-name-single-definition.md) | [開始時点の引き継ぎ](handover-cli-piece-name-single-definition.md) |
 | CLIコマンド解析の公開境界を設計し直す（第50回） | [第50回](learning/50-cli-command-parsing-public-boundary.md) | — | [設計仕様](plans/2026-09-30-cli-command-parsing-public-boundary-design.md) | [実装計画](plans/2026-09-30-cli-command-parsing-public-boundary.md) | [開始時点の引き継ぎ](handover-cli-command-parsing-public-boundary.md) |
+| CLIの `help` 表示（次テーマ・未開始） | — | — | — | — | [開始時点の引き継ぎ](handover-cli-help-display.md) |
 
 ## 例外と履歴の読み方
 
