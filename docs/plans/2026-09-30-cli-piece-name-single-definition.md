@@ -42,7 +42,7 @@
 - 消費 (Consumes): 現在の `cli._PIECE_NAMES`、`parse_command(text: str)`、`_format_selected_move(move: Move)`。
 - 生産 (Produces): 変更後と比較する対象別・全体の成功件数、テストメソッド数、現在の構造。
 
-- [ ] **ステップ1: 対象テストをGreenとして実行する**
+- [x] **ステップ1: 対象テストをGreenとして実行する**
 
 実行:
 
@@ -53,7 +53,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_display -v
 
 期待値: どちらも `OK`。歩の解析、王の形式エラー、初期局面全文、成駒名、手番表示を含む既存テストが成功する。
 
-- [ ] **ステップ2: 全テストをGreenとして実行し、実測件数を記録する**
+- [x] **ステップ2: 全テストをGreenとして実行し、実測件数を記録する**
 
 実行:
 
@@ -63,7 +63,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 
 期待値: `OK`。実測のテスト総数を第49回学習記録の変更前基準として保存する。過去に記録された240件は参考情報であり、現在の実測値の代用にしない。
 
-- [ ] **ステップ3: テストメソッド数と変更前構造を静的に記録する**
+- [x] **ステップ3: テストメソッド数と変更前構造を静的に記録する**
 
 実行:
 
@@ -87,7 +87,7 @@ git status --short --branch
 - 消費 (Consumes): `BasicPieceType.PAWN` から `BasicPieceType.ROOK`、既存の `_format_selected_move` と `parse_command`。
 - 生産 (Produces): `_DROP_PIECE_SPECS: tuple[tuple[BasicPieceType, str], ...]`、`_PIECE_NAMES: dict[BasicPieceType, str]`、`_PIECE_TYPES_BY_NAME: dict[str, BasicPieceType]`。既存の `parse_command(text: str)` の戻り値・例外は変えない。
 
-- [ ] **ステップ1: 駒打ち用の順序付き正本を追加する**
+- [x] **ステップ1: 駒打ち用の順序付き正本を追加する**
 
 `_LoadCommand` の直後に、現在の順序を明記した次の値を置く。
 
@@ -105,7 +105,7 @@ _DROP_PIECE_SPECS = (
 
 このタプルは、駒打ちで入力・表示する基本駒の表記対応を表すデータであることを、短いコメントまたはdocstring相当の説明で残す。新しい公開APIにはしない。
 
-- [ ] **ステップ2: 二つの派生辞書を共通定義から作る**
+- [x] **ステップ2: 二つの派生辞書を共通定義から作る**
 
 既存の手書き `_PIECE_NAMES` を次へ置き換え、その直後に逆引きを置く。
 
@@ -118,7 +118,7 @@ _PIECE_TYPES_BY_NAME = {
 
 これにより `_format_selected_move` は従来どおり `_PIECE_NAMES[move.piece_type]` を使え、外から見える表示を変更しない。
 
-- [ ] **ステップ3: `parse_command` の駒打ち解析を派生逆引きへ接続する**
+- [x] **ステップ3: `parse_command` の駒打ち解析を派生逆引きへ接続する**
 
 `parse_command` にある手書き `piece_types` 辞書を削除し、既存の駒打ち分岐では次を使う。
 
@@ -131,17 +131,17 @@ return _DropCommand(
 
 `KeyError` と `ValueError` を現在どおり `ValueError(FORMAT_ERROR)` へ変換する `except` 節は変更しない。したがって王や未知の駒名、座標不正時の例外型・文言を保つ。
 
-- [ ] **ステップ4: 構文と差分書式を確認する**
+- [x] **ステップ4: 構文と差分書式を確認する**
 
 実行:
 
 ```sh
-PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile kaname_shogi/cli.py
+python3 -c 'import ast, pathlib; ast.parse(pathlib.Path("kaname_shogi/cli.py").read_text(encoding="utf-8"))'
 git diff --check
 git diff -- kaname_shogi/cli.py
 ```
 
-期待値: 構文エラーと空白エラーがない。差分は正本、二つの派生辞書、逆引き参照への置換だけであり、`display.py`、`model.py`、テストには差分がない。
+期待値: 構文エラーと空白エラーがない。`py_compile` は実行環境のキャッシュ書込み権限で失敗するため、バイトコードを生成しない `ast.parse` で同じ構文解析を確認する。差分は正本、二つの派生辞書、逆引き参照への置換だけであり、`display.py`、`model.py`、テストには差分がない。
 
 - [ ] **ステップ5: 構造整理のコード変更をコミットする**
 
@@ -166,7 +166,7 @@ git commit -m 'refactor: CLI駒名対応を一つの定義から導く'
 - 消費 (Consumes): タスク1の変更前実測値、タスク2の `_DROP_PIECE_SPECS` と派生辞書。
 - 生産 (Produces): 振る舞い・テスト件数・対象外ファイル不変性の検証結果。
 
-- [ ] **ステップ1: 対象テストと全テストを再実行する**
+- [x] **ステップ1: 対象テストと全テストを再実行する**
 
 実行:
 
@@ -178,7 +178,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v
 
 期待値: すべて `OK`。対象テストと全テストの実測件数がタスク1の変更前基準と一致する。
 
-- [ ] **ステップ2: 正本・派生・旧辞書除去を静的に確認する**
+- [x] **ステップ2: 正本・派生・旧辞書除去を静的に確認する**
 
 実行:
 
@@ -204,7 +204,7 @@ git diff --check
 - 消費 (Consumes): タスク3のGreen-to-Greenと静的確認、コード差分、設計仕様、実装計画。
 - 生産 (Produces): Refactor要否、Critical・Important・Minorの独立レビュー結論、実施事実を記した学習記録、main取り込み前にレビュー可能なコミット。
 
-- [ ] **ステップ1: 追加Refactorの要否を判定する**
+- [x] **ステップ1: 追加Refactorの要否を判定する**
 
 確認項目:
 
@@ -216,7 +216,7 @@ git diff --check
 
 期待値: 追加の抽象化、共有モジュール化、盤面表示との統合は不要と判断する。今回の正本はCLI駒打ちの基本駒7種に限られ、別責務を混ぜると対象範囲を越えるためである。
 
-- [ ] **ステップ2: コード差分を対象に独立レビューする**
+- [x] **ステップ2: コード差分を対象に独立レビューする**
 
 実行:
 
@@ -226,11 +226,11 @@ git diff main...HEAD -- kaname_shogi/cli.py
 
 レビューでは、正本の順序、二方向の導出、`KeyError` の形式エラー変換、公開動作不変、対象外ファイル不変、テスト件数不変を確認する。CriticalまたはImportantがあれば最小修正、再検証、再レビューを行う。
 
-- [ ] **ステップ3: 第49回の学習記録と現在案内を実施事実で更新する**
+- [x] **ステップ3: 第49回の学習記録と現在案内を実施事実で更新する**
 
 学習記録には、目的、承認済み設計、`BasicPieceType` がデータである説明、変更前後の実測テスト件数、静的確認、Refactor要否、独立レビュー結論、未解決事項を記録する。案内文書には、実際のブランチ、コミット、承認待ち、完了状態だけを書き、将来の行動を実施済みとして書かない。
 
-- [ ] **ステップ4: 文書と最終状態を検証して記録コミットを作る**
+- [x] **ステップ4: 文書と最終状態を検証して記録コミットを作る**
 
 実行:
 
