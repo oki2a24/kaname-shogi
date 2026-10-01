@@ -3,12 +3,15 @@
 import unittest
 
 from kaname_shogi.display import render_position
-from kaname_shogi.model import (Board, Piece, PieceType, Position, Side,
-                                Square, create_initial_position)
+from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
+                                Position, Side, Square,
+                                create_initial_position)
 
 
 EXPECTED = """手番：先手
 +：先手、-：後手
+
+後手の持ち駒：なし
 
     9   8   7   6   5   4   3   2   1
 一 -香 -桂 -銀 -金 -玉 -金 -銀 -桂 -香
@@ -19,7 +22,9 @@ EXPECTED = """手番：先手
 六  ・  ・  ・  ・  ・  ・  ・  ・  ・
 七 +歩 +歩 +歩 +歩 +歩 +歩 +歩 +歩 +歩
 八  ・ +角  ・  ・  ・  ・  ・ +飛  ・
-九 +香 +桂 +銀 +金 +王 +金 +銀 +桂 +香"""
+九 +香 +桂 +銀 +金 +王 +金 +銀 +桂 +香
+
+先手の持ち駒：なし"""
 
 
 class DisplayTests(unittest.TestCase):
@@ -58,3 +63,68 @@ class DisplayTests(unittest.TestCase):
         position.side_to_move = Side.GOTE
         self.assertEqual(render_position(position),
                          EXPECTED.replace("手番：先手", "手番：後手", 1))
+
+    def test_renders_sente_and_gote_hands_in_fixed_piece_order(self):
+        """先手・後手の持ち駒を固定順と枚数付きで表示する。
+
+        Sideとの対応違い、枚数1の省略、駒種の挿入順への依存を検出する。
+        """
+        position = Position(Board(), Side.SENTE)
+        position.sente_hand.add(BasicPieceType.GOLD)
+        position.sente_hand.add(BasicPieceType.LANCE)
+        position.sente_hand.add(BasicPieceType.ROOK)
+        position.sente_hand.add(BasicPieceType.LANCE)
+        position.sente_hand.add(BasicPieceType.GOLD)
+        position.sente_hand.add(BasicPieceType.PAWN)
+        position.sente_hand.add(BasicPieceType.GOLD)
+        position.gote_hand.add(BasicPieceType.BISHOP)
+        position.gote_hand.add(BasicPieceType.KNIGHT)
+        position.gote_hand.add(BasicPieceType.SILVER)
+        position.gote_hand.add(BasicPieceType.BISHOP)
+        position.gote_hand.add(BasicPieceType.KNIGHT)
+        position.gote_hand.add(BasicPieceType.BISHOP)
+
+        rendered = render_position(position)
+
+        self.assertIn("後手の持ち駒：桂2、銀1、角3", rendered)
+        self.assertIn("先手の持ち駒：歩1、香2、金3、飛1", rendered)
+
+    def test_renders_empty_hands_as_none(self):
+        """双方の持ち駒がない局面には「なし」と表示する。
+
+        0枚を空欄や存在しない駒種として出力する誤りを検出する。
+        """
+        position = Position(Board(), Side.SENTE)
+
+        rendered = render_position(position)
+
+        self.assertIn("後手の持ち駒：なし", rendered)
+        self.assertIn("先手の持ち駒：なし", rendered)
+
+    def test_rendering_hands_does_not_change_position(self):
+        """持ち駒を表示しても局面の持ち駒枚数を変更しない。
+
+        表示処理が枚数の増減や、局面内の可変データへの書き込みを行う誤りを検出する。
+        """
+        position = Position(Board(), Side.SENTE)
+        position.sente_hand.add(BasicPieceType.PAWN)
+        position.gote_hand.add(BasicPieceType.ROOK)
+        piece_types = (
+            BasicPieceType.PAWN, BasicPieceType.LANCE, BasicPieceType.KNIGHT,
+            BasicPieceType.SILVER, BasicPieceType.GOLD, BasicPieceType.BISHOP,
+            BasicPieceType.ROOK,
+        )
+        before = tuple(
+            (position.sente_hand.count(piece_type),
+             position.gote_hand.count(piece_type))
+            for piece_type in piece_types
+        )
+
+        render_position(position)
+
+        after = tuple(
+            (position.sente_hand.count(piece_type),
+             position.gote_hand.count(piece_type))
+            for piece_type in piece_types
+        )
+        self.assertEqual(after, before)
