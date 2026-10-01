@@ -41,8 +41,9 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [持ち駒表示の確定知識](knowledge/34-cli-hand-display.md)
 - [持ち駒表示の設計仕様](plans/2026-10-01-cli-hand-display-design.md)
 - [持ち駒表示の実装計画](plans/2026-10-01-cli-hand-display.md)
+- [選定済み次テーマの引き継ぎ：`_hand_counts` 重複の再評価](handover-movegen-hand-counts-review.md)
 
-第51回「CLIの `help` 表示」と第52回「対局中の持ち駒表示」は最後の理解確認まで完了しました。第52回の実装は `main` に取り込み済みで、取り込み先の全246テストとCLIの手動確認も完了しています。次テーマは未選定です。`handover-*.md` は対応テーマ開始時点の履歴であり、過去のブランチ、HEAD、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
+第51回「CLIの `help` 表示」と第52回「対局中の持ち駒表示」は最後の理解確認まで完了しました。第52回の実装は `main` に取り込み済みで、取り込み先の全246テストとCLIの手動確認も完了しています。次テーマは「`test_movegen.py` の `_hand_counts` 重複を共通化する価値の再評価」に決定し、現在は引き継ぎ準備済み、設計・実装開始前です。[次テーマの引き継ぎ](handover-movegen-hand-counts-review.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
 
 ## テーマ・学習回別索引
 
