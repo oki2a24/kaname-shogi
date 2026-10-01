@@ -15,6 +15,26 @@ from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
 
 
 class CommandParsingTests(unittest.TestCase):
+    def test_parses_help_command(self):
+        """helpを公開コマンド型へ変換し、公開一覧の順序を保つ。
+
+        単独helpの解析、HelpCommandの配置、大文字や余分な引数の形式エラーを確認し、
+        公開境界の漏れや既存API順序の意図しない変更を検出する。
+        """
+        command = cli.parse_command("help")
+
+        self.assertEqual(command, cli.HelpCommand())
+        self.assertEqual(cli.__all__, (
+            "GameMode", "choose_game_mode", "MoveCommand", "DropCommand",
+            "ResignCommand", "SaveCommand", "LoadCommand", "HelpCommand",
+            "Command", "parse_command", "run_game",
+        ))
+        for invalid in ("help now", "HELP"):
+            with self.subTest(command=invalid):
+                with self.assertRaisesRegex(
+                        ValueError, "入力形式が正しくありません。"):
+                    cli.parse_command(invalid)
+
     def test_parses_move_and_drop_with_halfwidth_or_fullwidth_input(self):
         """半角・全角の座標と空白を、移動・駒打ちの指示へ変換する。"""
         move = cli.parse_command("move　７　７　７　６")
@@ -38,8 +58,8 @@ class CommandParsingTests(unittest.TestCase):
 
         self.assertEqual(cli.__all__, (
             "GameMode", "choose_game_mode", "MoveCommand", "DropCommand",
-            "ResignCommand", "SaveCommand", "LoadCommand", "Command",
-            "parse_command", "run_game",
+            "ResignCommand", "SaveCommand", "LoadCommand", "HelpCommand",
+            "Command", "parse_command", "run_game",
         ))
         self.assertIsInstance(command, cli.ResignCommand)
 
@@ -129,6 +149,57 @@ class ScriptedInput:
 
 
 class GameplayTests(unittest.TestCase):
+    def test_help_displays_commands_and_reprompts_same_turn(self):
+        """help表示後は案内を再表示して同じ手番から入力を続ける。
+
+        helpが手番・局面・棋譜を消費せず、案内文や5コマンドの説明を欠かしたり、
+        次の合法手まで入力を進めない誤りを検出する。
+        """
+        inputs = ScriptedInput(["help", "move 7 7 7 6", "resign"])
+        outputs = []
+
+        record = cli.run_game(mode=cli.GameMode.HUMAN_VS_HUMAN,
+                              input_fn=inputs, output_fn=outputs.append)
+
+        help_text = next(output for output in outputs if "move <出発筋>" in output)
+        for expected in (
+                "move <出発筋> <出発段> <到着筋> <到着段> [+]",
+                "drop <歩|香|桂|銀|金|角|飛> <筋> <段>",
+                "resign", "save <path>", "load <path>", "+",
+                "全角数字", "空白を含まない一語", "保存成功後",
+                "読込成功後"):
+            with self.subTest(expected=expected):
+                self.assertIn(expected, help_text)
+        prompt = "指し手を入力してください（例: move 7 7 7 6）:"
+        help_index = outputs.index(help_text)
+        self.assertEqual(outputs[help_index + 1], prompt)
+        self.assertEqual(inputs.calls, 3)
+        self.assertEqual(record.moves,
+                         (RecordedMove(Square(7, 7), Square(7, 6), False),))
+        self.assertEqual(record.current_position.side_to_move, Side.GOTE)
+        self.assertEqual(record.current_position.board.piece_at(Square(7, 6)),
+                         Piece(PieceType.PAWN, Side.SENTE))
+
+    def test_help_preserves_record_when_input_ends(self):
+        """help後のEOFは開始局面と空の棋譜を保って終了する。
+
+        ヘルプ表示を投了や勝敗として記録したり、EOF後に局面を変えたりする誤りを
+        検出する。
+        """
+        inputs = ScriptedInput(["help"])
+        outputs = []
+
+        record = cli.run_game(mode=cli.GameMode.HUMAN_VS_HUMAN,
+                              input_fn=inputs, output_fn=outputs.append)
+
+        self.assertEqual(inputs.calls, 2)
+        self.assertEqual(record.moves, ())
+        self.assertEqual(render_position(record.current_position),
+                         render_position(record.initial_position))
+        self.assertEqual(outputs[-1], "入力を終了しました。")
+        self.assertFalse(any("投了しました。" in output for output in outputs))
+        self.assertFalse(any("勝ちです。" in output for output in outputs))
+
     def _mated_sente_position(self):
         """先手玉が飛車王手を防げない局面を作る。"""
         board = Board()

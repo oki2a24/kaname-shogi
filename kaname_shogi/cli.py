@@ -20,6 +20,7 @@ __all__ = (
     "ResignCommand",
     "SaveCommand",
     "LoadCommand",
+    "HelpCommand",
     "Command",
     "parse_command",
     "run_game",
@@ -27,6 +28,15 @@ __all__ = (
 
 
 FORMAT_ERROR = "入力形式が正しくありません。"
+
+_HELP_TEXT = "\n".join((
+    "move <出発筋> <出発段> <到着筋> <到着段> [+] — 盤上の駒を動かします。+で成ります。",
+    "drop <歩|香|桂|銀|金|角|飛> <筋> <段> — 持ち駒を打ちます。",
+    "resign — 投了して対局を終了します。",
+    "save <path> — 棋譜を保存します。保存成功後は同じ手番を続けます。",
+    "load <path> — 棋譜を読み込みます。読込成功後はその局面から再開します。",
+    "筋・段には全角数字も使えます。パスは空白を含まない一語です。",
+))
 
 
 class GameMode(Enum):
@@ -199,9 +209,26 @@ class LoadCommand:
     path: str
 
 
-# Commandは解析済みの5種類の指示のいずれかを表す公開の型別名である。
+# HelpCommandは解析済みのhelp指示を表す公開データ型である。
+@dataclass(frozen=True)
+class HelpCommand:
+    """解析したヘルプ表示の指示を表す、不変で副作用のない値。
+
+    引数・戻り値:
+        なし。この型は属性を持たず、helpという指示の種類を表す。
+
+    副作用:
+        なし。局面・手番・棋譜を変更せず、実際の表示はrun_gameが担う。
+
+    前提条件:
+        入力形式はparse_commandが検査する。指示の値と表示操作を分けるため、
+        この型の生成そのものはヘルプを表示しない。
+    """
+
+
+# Commandは解析済みの6種類の指示のいずれかを表す公開の型別名である。
 Command = Union[MoveCommand, DropCommand, ResignCommand, SaveCommand,
-                LoadCommand]
+                LoadCommand, HelpCommand]
 
 
 # 駒打ちで入力・表示する基本駒の型と日本語名を、この順序で対応付ける。
@@ -225,14 +252,14 @@ def parse_command(text: str) -> Command:
     """入力文字列を対局または保存・読込の指示へ変換する。
 
     引数:
-        text: `move`、`drop`、`resign`、`save`、または `load` のCLI入力。区切りは
-            半角・全角空白、筋段は半角・全角数字を受け付ける。保存・読込の
-            パスは空白を含まない一語として扱う。
+        text: `move`、`drop`、`resign`、`save`、`load`、または `help` のCLI入力。
+            区切りは半角・全角空白、筋段は半角・全角数字を受け付ける。
+            保存・読込のパスは空白を含まない一語として扱う。
 
     戻り値:
         盤上移動ならMoveCommand、駒打ちならDropCommand、投了ならResignCommand、
-        保存ならSaveCommand、読込ならLoadCommandのいずれかを表すCommand。各型は
-        外部コードが型名と属性を利用できる公開データである。
+        保存ならSaveCommand、読込ならLoadCommand、ヘルプならHelpCommandのいずれかを
+        表すCommand。各型は外部コードが型名と属性を利用できる公開データである。
 
     例外:
         ValueError: 操作語、引数、成り記号、駒名、または座標が入力形式に合わない場合。
@@ -245,6 +272,8 @@ def parse_command(text: str) -> Command:
     parts = text.split()
     if parts == ["resign"]:
         return ResignCommand()
+    if parts == ["help"]:
+        return HelpCommand()
     if parts[:1] == ["save"] and len(parts) == 2:
         return SaveCommand(parts[1])
     if parts[:1] == ["load"] and len(parts) == 2:
@@ -406,6 +435,9 @@ def run_game(*, input_fn: Callable[[], str] = input,
             output_fn("指し手を入力してください（例: move 7 7 7 6）:")
             try:
                 command = parse_command(input_fn())
+                if isinstance(command, HelpCommand):
+                    output_fn(_HELP_TEXT)
+                    continue
                 if isinstance(command, SaveCommand):
                     record.save(command.path)
                     output_fn("棋譜を保存しました。")
