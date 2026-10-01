@@ -37,9 +37,12 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [学習・開発の再開案内](resume.md)
 - [次テーマの候補](next-topics.md)
 - [第51回学習記録](learning/51-cli-help-display.md)
-- [持ち駒表示テーマの開始時点の引き継ぎ](handover-cli-hand-display.md)
+- [第52回学習記録：対局中の持ち駒表示](learning/52-cli-hand-display.md)
+- [持ち駒表示の確定知識](knowledge/34-cli-hand-display.md)
+- [持ち駒表示の設計仕様](plans/2026-10-01-cli-hand-display-design.md)
+- [持ち駒表示の実装計画](plans/2026-10-01-cli-hand-display.md)
 
-第51回「CLIの `help` 表示」は、最後の理解確認まで完了しました。次テーマは「対局中の持ち駒表示」に決まり、新しいセッションで調査・設計から開始します。`handover-*.md` は対応テーマ開始時点の履歴であり、過去のブランチ、HEAD、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
+第51回「CLIの `help` 表示」は最後の理解確認まで完了しました。第52回「対局中の持ち駒表示」は、`codex/cli-hand-display` ブランチで実装・作業ブランチ検証・レビュー・記録を進めています。`main` への取り込み、取り込み先の検証、最後の理解確認は未完了です。`handover-*.md` は対応テーマ開始時点の履歴であり、過去のブランチ、HEAD、テスト結果、次の行動を現在値として使わず、現在のGit状態と `resume.md` で確認します。
 
 ## テーマ・学習回別索引
 
@@ -90,7 +93,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | CLIの駒名入出力対応を一つの定義から導く（第49回） | [第49回](learning/49-cli-piece-name-single-definition.md) | — | [設計仕様](plans/2026-09-30-cli-piece-name-single-definition-design.md) | [実装計画](plans/2026-09-30-cli-piece-name-single-definition.md) | [開始時点の引き継ぎ](handover-cli-piece-name-single-definition.md) |
 | CLIコマンド解析の公開境界を設計し直す（第50回） | [第50回](learning/50-cli-command-parsing-public-boundary.md) | — | [設計仕様](plans/2026-09-30-cli-command-parsing-public-boundary-design.md) | [実装計画](plans/2026-09-30-cli-command-parsing-public-boundary.md) | [開始時点の引き継ぎ](handover-cli-command-parsing-public-boundary.md) |
 | CLIの `help` 表示（第51回） | [第51回](learning/51-cli-help-display.md) | — | [設計仕様](plans/2026-10-01-cli-help-display-design.md) | [実装計画](plans/2026-10-01-cli-help-display.md) | [開始時点の引き継ぎ](handover-cli-help-display.md) |
-| 対局中の持ち駒表示（次テーマ） | — | — | — | — | [開始時点の引き継ぎ](handover-cli-hand-display.md) |
+| 対局中の持ち駒表示（第52回） | [第52回](learning/52-cli-hand-display.md) | [持ち駒表示](knowledge/34-cli-hand-display.md) | [設計仕様](plans/2026-10-01-cli-hand-display-design.md) | [実装計画](plans/2026-10-01-cli-hand-display.md) | [開始時点の引き継ぎ](handover-cli-hand-display.md) |
 
 ## 例外と履歴の読み方
 
