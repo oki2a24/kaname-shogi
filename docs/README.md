@@ -38,12 +38,12 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [次テーマの候補](next-topics.md)
 - [第51回学習記録](learning/51-cli-help-display.md)
 - [第52回学習記録：対局中の持ち駒表示](learning/52-cli-hand-display.md)
+- [第53回学習記録：`_hand_counts` 重複の再評価](learning/53-movegen-hand-counts-review.md)
 - [持ち駒表示の確定知識](knowledge/34-cli-hand-display.md)
 - [持ち駒表示の設計仕様](plans/2026-10-01-cli-hand-display-design.md)
 - [持ち駒表示の実装計画](plans/2026-10-01-cli-hand-display.md)
-- [選定済み次テーマの引き継ぎ：`_hand_counts` 重複の再評価](handover-movegen-hand-counts-review.md)
 
-第51回「CLIの `help` 表示」と第52回「対局中の持ち駒表示」は最後の理解確認まで完了しました。第52回の実装は `main` に取り込み済みで、取り込み先の全246テストとCLIの手動確認も完了しています。次テーマは「`test_movegen.py` の `_hand_counts` 重複を共通化する価値の再評価」に決定し、現在は引き継ぎ準備済み、設計・実装開始前です。[次テーマの引き継ぎ](handover-movegen-hand-counts-review.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
+第51回「CLIの `help` 表示」、第52回「対局中の持ち駒表示」、第53回「`_hand_counts` 重複の再評価」は最後の理解確認まで完了しました。第53回では短い補助を共通化せず残すと判断し、本体コード・テストの変更はありません。独立レビューはCritical・Important・Minorがすべて0件で、コード変更がないためテストは再実行していません。次テーマは未選定です。候補と推薦理由は[次テーマの候補](next-topics.md)、現在の再開手順は[再開案内](resume.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
 
 ## テーマ・学習回別索引
 
@@ -95,6 +95,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | CLIコマンド解析の公開境界を設計し直す（第50回） | [第50回](learning/50-cli-command-parsing-public-boundary.md) | — | [設計仕様](plans/2026-09-30-cli-command-parsing-public-boundary-design.md) | [実装計画](plans/2026-09-30-cli-command-parsing-public-boundary.md) | [開始時点の引き継ぎ](handover-cli-command-parsing-public-boundary.md) |
 | CLIの `help` 表示（第51回） | [第51回](learning/51-cli-help-display.md) | — | [設計仕様](plans/2026-10-01-cli-help-display-design.md) | [実装計画](plans/2026-10-01-cli-help-display.md) | [開始時点の引き継ぎ](handover-cli-help-display.md) |
 | 対局中の持ち駒表示（第52回） | [第52回](learning/52-cli-hand-display.md) | [持ち駒表示](knowledge/34-cli-hand-display.md) | [設計仕様](plans/2026-10-01-cli-hand-display-design.md) | [実装計画](plans/2026-10-01-cli-hand-display.md) | [開始時点の引き継ぎ](handover-cli-hand-display.md) |
+| `test_movegen.py` の `_hand_counts` 重複再評価（第53回） | [第53回](learning/53-movegen-hand-counts-review.md) | — | — | — | [開始時点の引き継ぎ](handover-movegen-hand-counts-review.md) |
 
 ## 例外と履歴の読み方
 
