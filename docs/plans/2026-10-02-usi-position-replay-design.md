@@ -2,7 +2,7 @@
 
 ## 状態
 
-2026-10-02、本人が会話内の設計案全体を承認した。実装計画は別文書として作成し、本人の明示的な承認を得るまでコード・テストを変更しない。
+2026-10-02、本人が設計案全体と別文書の実装計画を承認した。作業ブランチ `codex/usi-position-replay` で実装し、専用7テスト・全体264テストが成功した。Refactorは不要、独立コードレビューはCritical / Important / Minorすべてなし。学習記録・知識メモの確認とコミットは未完了。
 
 ## 目的
 
@@ -89,6 +89,14 @@ ShogiHome実機の通常手複数手の観測記録は、単体テストの成�
 - 学習経緯、本人の回答と補足、実機観測、実際の実装・検証・レビュー結果・未解決事項は `docs/learning/56-usi-position-replay.md` に記録する。
 - 確定した `parse_usi_position` の責務、履歴との関係、エラー境界は `docs/knowledge/usi-position-replay.md` に簡潔に記録する。
 - 学習記録・知識メモは本人が内容を確認してから日本語Conventional Commitで記録する。mainへの取り込みはテーマ完了後に別途確認する。
+
+## 実装結果
+
+2026-10-02に `kaname_shogi.usi_position.parse_usi_position(command: str) -> Position` と `tests/test_usi_position.py` を追加した。文法を検査し、各USI一手トークンを `parse_usi_move` に渡し、`GameRecord` の `apply_move` / `apply_drop` で合法適用した。失敗した手の番号とトークンを含む `ValueError` とし、成功時は履歴を含まない独立 `Position` を返す。既存値型・局面履歴・合法手処理は変更していない。
+
+テストを先に作り、一時的な `None` 返却実装に対して7テストを実行した。結果は振る舞いアサーション9件の失敗と2件の例外未送出で、importエラーではなかった。実装後は専用7テスト、全体264テストが成功した。Refactorは責務重複や不要な分岐がないため不要と判断した。
+
+独立コードレビューの結論は **Critical: なし、Important: なし、Minor: なし**。後続手の失敗診断を追加で守る任意テストの提案はあったが、必須変更とはせず保留した。レビュー後にも専用7テスト、全体264テスト、および `git diff --check` / `git diff --cached --check` が成功した。実装・記録の内容確認およびコミットは未完了で、詳細は[第56回学習記録](../learning/56-usi-position-replay.md)に記す。
 
 ## 参照
 
