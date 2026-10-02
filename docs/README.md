@@ -36,6 +36,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 - [学習・開発の再開案内](resume.md)
 - [次テーマの候補](next-topics.md)
+- [ShogiHomeで対局するためのロードマップ](roadmap-usi-shogihome.md)
+- [次テーマの引き継ぎ：ShogiHomeとUSIの接続範囲確認](handover-usi-shogihome-connection-scope.md)
 - [第51回学習記録](learning/51-cli-help-display.md)
 - [第52回学習記録：対局中の持ち駒表示](learning/52-cli-hand-display.md)
 - [第53回学習記録：`_hand_counts` 重複の再評価](learning/53-movegen-hand-counts-review.md)
@@ -43,7 +45,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [持ち駒表示の設計仕様](plans/2026-10-01-cli-hand-display-design.md)
 - [持ち駒表示の実装計画](plans/2026-10-01-cli-hand-display.md)
 
-第51回「CLIの `help` 表示」、第52回「対局中の持ち駒表示」、第53回「`_hand_counts` 重複の再評価」は最後の理解確認まで完了しました。第53回では短い補助を共通化せず残すと判断し、本体コード・テストの変更はありません。独立レビューはCritical・Important・Minorがすべて0件で、コード変更がないためテストは再実行していません。次テーマは未選定です。候補と推薦理由は[次テーマの候補](next-topics.md)、現在の再開手順は[再開案内](resume.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
+第51回「CLIの `help` 表示」、第52回「対局中の持ち駒表示」、第53回「`_hand_counts` 重複の再評価」は最後の理解確認まで完了しました。次の到達点は、手元のMacでShogiHomeのデスクトップ版から `kaname-shogi` と対局できることです。[承認済みロードマップ](roadmap-usi-shogihome.md)の最初の小テーマ「ShogiHomeとUSIの接続範囲確認」を、新しいセッションで始めます。開始条件は[引き継ぎ](handover-usi-shogihome-connection-scope.md)、現在の再開手順は[再開案内](resume.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
 
 ## テーマ・学習回別索引
 
