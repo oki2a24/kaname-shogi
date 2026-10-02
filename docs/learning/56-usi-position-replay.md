@@ -89,9 +89,12 @@ position startpos moves 7g7f 3c3d 2g2f
 - 戻り値の `Position` に履歴を追加しない。履歴が必要な呼び出し側は入力コマンドまたは別の `GameRecord` を保持する。
 - `position sfen ...`、`position startpos` 単独、空の `moves`、USI入出力ループ、ShogiHome未観測挙動は今回の対象外。
 - 実機で複数手を観測したのは通常手のみ。成り・駒打ち・不正手順のUSI互換性は単体テストによるプロジェクト内検証であり、ShogiHome実機の確認とは区別する。
-- 作業ブランチは `codex/usi-position-replay`。実装・テスト・記録のコミットとmainへの取り込みは未実施で、記録の本人確認後に進める。
+- 実装・テスト・記録を `a273aac` (`feat: USI平手手順から局面を再現する`) にコミットし、本人承認後に `main` へファストフォワードで取り込んだ。この取り込みではmainの直前の状態から第54〜56回の計9コミットが進んだ。取り込み後も全264テストが成功し、リモートへのpushは行っていない。
 
 ## 最後の理解確認
 
-実装・記録のコミット後に、最後の理解確認を一問出す。本人の回答と補足は別記し、本人確認を受けてから記録する。この記録はその回答前の草稿である。
-\n
+**確認問題：** `parse_usi_move` と `parse_usi_position` はそれぞれ何を担当し、盤面上で手が合法かどうかはどこで判定しますか。
+
+**本人の回答：** 「`parse_usi_move` はusi のて全体をパースし、 `parse_usi_position` は`parse_usi_move` 内部で移動もとと移動先のパースを担当する。盤面上で手が合法かどうかはこの段階では検証せず、さらに後で行う」
+
+**アシスタントの補足：** 責務の向きは逆である。`parse_usi_move` はUSIの一手トークン一つを `BoardMove` / `DropMove` に変換する。`parse_usi_position` は `position startpos moves ...` のコマンド全体を解析し、各一手トークンを `parse_usi_move` へ渡してから、`GameRecord.apply_move` / `apply_drop` で一手ずつ合法適用する。したがって、合法性は独立した後工程ではなく、`parse_usi_position` の再生処理中に既存の `GameRecord` が検証する。
