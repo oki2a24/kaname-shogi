@@ -37,18 +37,22 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [学習・開発の再開案内](resume.md)
 - [次テーマの選定履歴](next-topics.md)
 - [ShogiHomeで対局するためのロードマップ](roadmap-usi-shogihome.md)
-- [次テーマの引き継ぎ：USIの平手手順から局面を再現する](handover-usi-position-replay.md)
+- [第56回開始時点の引き継ぎ（開始時の履歴）](handover-usi-position-replay.md)
 - [第51回学習記録](learning/51-cli-help-display.md)
 - [第52回学習記録：対局中の持ち駒表示](learning/52-cli-hand-display.md)
 - [第53回学習記録：`_hand_counts` 重複の再評価](learning/53-movegen-hand-counts-review.md)
 - [第54回学習記録：ShogiHomeとUSIの接続範囲](learning/54-usi-shogihome-connection-scope.md)
 - [第55回学習記録：USI指し手表記と内部の一手の対応](learning/55-usi-move-notation.md)
 - [USI一手表記の確定知識](knowledge/usi-move-notation.md)
+- [第56回学習記録：USIの平手手順から局面を再現する](learning/56-usi-position-replay.md)
+- [USI平手局面再現の確定知識](knowledge/usi-position-replay.md)
+- [第56回の設計仕様](plans/2026-10-02-usi-position-replay-design.md)
+- [第56回の実装計画](plans/2026-10-02-usi-position-replay-implementation-plan.md)
 - [持ち駒表示の確定知識](knowledge/34-cli-hand-display.md)
 - [持ち駒表示の設計仕様](plans/2026-10-01-cli-hand-display-design.md)
 - [持ち駒表示の実装計画](plans/2026-10-01-cli-hand-display.md)
 
-第51回「CLIの `help` 表示」、第52回「対局中の持ち駒表示」、第53回「`_hand_counts` 重複の再評価」は最後の理解確認まで完了しました。第54回ではShogiHome 1.28.1と使い捨てPythonプローブを用いた実機通信を確認しました。第55回ではUSI一手トークンと内部の一手データの相互変換を実装し、最終理解確認への回答と補足まで記録しました。次テーマはロードマップ第3項「USIの平手手順から局面を再現する」です。第54回の証拠は[学習記録](learning/54-usi-shogihome-connection-scope.md)、第55回の仕様と経緯は[学習記録](learning/55-usi-move-notation.md)と[知識メモ](knowledge/usi-move-notation.md)、全体の節目は[ロードマップ](roadmap-usi-shogihome.md)、再開手順は[第56回の引き継ぎ](handover-usi-position-replay.md)と[再開案内](resume.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
+第51回「CLIの `help` 表示」、第52回「対局中の持ち駒表示」、第53回「`_hand_counts` 重複の再評価」は最後の理解確認まで完了しました。第54回ではShogiHome 1.28.1との実機通信を確認し、第55回ではUSI一手変換、第56回では平手USI手順からの局面再現を実装して最終理解確認まで記録しました。ShogiHomeでの実対局はまだで、次テーマは未選定です。詳細は[次テーマ候補](next-topics.md)、[USI接続ロードマップ](roadmap-usi-shogihome.md)、[再開案内](resume.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
 
 ## テーマ・学習回別索引
 
@@ -103,7 +107,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | `test_movegen.py` の `_hand_counts` 重複再評価（第53回） | [第53回](learning/53-movegen-hand-counts-review.md) | — | — | — | [開始時点の引き継ぎ](handover-movegen-hand-counts-review.md) |
 | ShogiHomeとUSIの接続範囲（第54回） | [第54回](learning/54-usi-shogihome-connection-scope.md) | — | — | — | [開始時点の引き継ぎ](handover-usi-shogihome-connection-scope.md) |
 | USI指し手表記と内部の一手の対応（第55回） | [第55回](learning/55-usi-move-notation.md) | [USI一手表記](knowledge/usi-move-notation.md) | [設計仕様](plans/2026-10-02-usi-move-notation-design.md) | [実装計画](plans/2026-10-02-usi-move-notation-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-move-notation.md) |
-| USIの平手手順から局面を再現（第56回、選定済み） | — | — | — | — | [開始前の引き継ぎ](handover-usi-position-replay.md) |
+| USIの平手手順から局面を再現（第56回） | [第56回](learning/56-usi-position-replay.md) | [局面再現](knowledge/usi-position-replay.md) | [設計仕様](plans/2026-10-02-usi-position-replay-design.md) | [実装計画](plans/2026-10-02-usi-position-replay-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-position-replay.md) |
 
 ## 例外と履歴の読み方
 
