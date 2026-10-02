@@ -6,7 +6,7 @@
 
 最初の目標は、コマンドラインで動く、ごく弱くても自分で理解できるプログラムを作ることです。強さだけを急がず、将棋とプログラムの両方を理解しながら育てます。息子と将棋を通じて成長を共有できるものにすることも、このプロジェクトの大切な目的です。
 
-最初の目標は達成しました。第54回ではMac版ShogiHome 1.28.1と使い捨てプローブ間のUSI通信を実機確認し、第55回ではUSI一手表記と内部データの相互変換、第56回では平手の `position startpos moves ...` から局面を再現する機能を実装しました。`kaname-shogi` 自身をUSIエンジンとしてShogiHomeと対局させる段階はこれからです。次テーマは未選定です。経緯は[第54回学習記録](docs/learning/54-usi-shogihome-connection-scope.md)、[第55回学習記録](docs/learning/55-usi-move-notation.md)、[第56回学習記録](docs/learning/56-usi-position-replay.md)、[USI接続ロードマップ](docs/roadmap-usi-shogihome.md)、現在地は[再開案内](docs/resume.md)を参照してください。
+最初の目標は達成しました。第54回ではMac版ShogiHome 1.28.1と使い捨てプローブ間のUSI通信を実機確認し、第55回ではUSI一手表記と内部データの相互変換、第56回では平手の `position startpos moves ...` から局面を再現する機能を実装しました。`kaname-shogi` 自身をUSIエンジンとしてShogiHomeと対局させる段階はこれからです。次テーマは「USIエンジンとして一手を返す」に決まり、新しいセッションの準備中です。対象範囲・表現・検証方法はまだ設計していません。経緯は[第54回学習記録](docs/learning/54-usi-shogihome-connection-scope.md)、[第55回学習記録](docs/learning/55-usi-move-notation.md)、[第56回学習記録](docs/learning/56-usi-position-replay.md)、[USI接続ロードマップ](docs/roadmap-usi-shogihome.md)、現在地は[再開案内](docs/resume.md)を参照してください。
 
 ## 現在できることと主な未対応事項
 
