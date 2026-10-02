@@ -119,3 +119,11 @@ CLIの人間入力に `save <path>` と `load <path>` を追加した。保存�
 CLIの `move` / `drop` の文字入力は、息子が気軽に指すには煩雑だと実際のプレイで分かった。本人は、まず既存GUIを使って早く遊べることを優先し、手元のMacでShogiHomeのデスクトップ版から `kaname-shogi` と対局できることを次の到達点に選んだ。自作ブラウザUIは将来の候補として残す。
 
 本人が承認した[ロードマップ](roadmap-usi-shogihome.md)でUSI接続を小テーマに分け、最初に「ShogiHomeとUSIの接続範囲を確定する」を新しいセッションで扱う。平手のUSI `position startpos moves ...` と実際のShogiHomeの通信を確認し、必要と分かった範囲から設計する。評価・探索はGUI対局の試用後に優先度を見直す。
+
+## 第54回時点の見直し
+
+Mac版ShogiHome 1.28.1に使い捨てのPythonエンジンを登録し、平手で人間が７六歩を指した後に `position startpos moves 7g7f` と時間付き `go` が送られることを確認した。対局開始時には `USI_Hash=32` と `USI_Ponder=true` の `setoption` も届いた。プローブの `bestmove resign` に対してShogiHomeは `gameover lose`、`quit` を送り、対局を終了した。製品コード・テストは変更していない。
+
+この観測により、USI接続の最初の平手範囲では初期化、`setoption` 受信、手順付き平手局面、時間情報を伴う `go`、投了応答、終了通知が必要だと分かった。一方、合法手応答、複数手往復、SFEN、先読み・停止系は未確認である。`kaname-shogi` 自体のShogiHome接続はまだ行っていない。第54回完了時点では次テーマを未選定だったが、その後の選定を以下に記録する。
+
+第54回の完了後、本人は大テーマの第2小テーマ「USIの指し手表記と内部の一手の対応」を次に選んだ。まずUSI表記を既存の中立な一手データへ対応づける範囲を学び、局面再現・USI対局ループは後続テーマとして分ける。開始時点の引き継ぎは[こちら](handover-usi-move-notation.md)。

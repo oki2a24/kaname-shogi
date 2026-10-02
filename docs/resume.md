@@ -1,30 +1,28 @@
 # 学習・開発の再開案内
 
-第53回「`test_movegen.py` の `_hand_counts` 重複の再評価」は、共通化せず残す判断から最後の理解確認まで完了した。本人の回答と補足は[第53回学習記録](learning/53-movegen-hand-counts-review.md)にある。その後、手元のMacでShogiHomeのデスクトップ版から `kaname-shogi` と対局することを次の到達点に選び、[USI接続のロードマップ](roadmap-usi-shogihome.md)を承認した。最初の小テーマは「ShogiHomeとUSIの接続範囲を確定する」で、新しいセッションで実践する。開始時点の経緯は[引き継ぎ](handover-usi-shogihome-connection-scope.md)に記録した。
+第54回「ShogiHomeとUSIの接続範囲を確定する」は、実機観測、最終理解確認、ShogiHome上の後片付けまで行い、関連記録を本人が確認した。本人は次テーマとして第55回「USIの指し手表記と内部の一手の対応」を選び、新しいセッションの準備を依頼した。製品コード・テストは変更していない。
 
 ## 現在の物理状態
 
 - 作業ディレクトリ：`/Users/oki2a24/kaname-shogi`
-- ブランチ：再開時に `git status --short --branch` で確認する
-- 作業ツリー：再開時に `git status --short --branch` で確認する
-- 最新の完了テーマ：`_hand_counts` 重複の再評価（重複を残す）
-- 次の到達点：MacのShogiHomeデスクトップ版からの対局
-- 次の小テーマ：ShogiHomeとUSIの接続範囲を確定する（新しいセッションで開始）
+- ブランチ：`codex/usi-shogihome-connection-scope`
+- 記録対象：第54回学習記録、USI接続ロードマップ、次テーマ選定履歴、第55回引き継ぎ、README、文書索引、プロジェクトの方向性、この再開案内
+- ShogiHome：1.28.1。ユーザーが公式DMGから導入し、起動できることを確認済み。
+- 実機観測：平手、先手人間、後手プローブ。`position startpos moves 7g7f`、時間付き `go`、`bestmove resign`、`gameover lose`、`quit` を確認。
+- ShogiHomeの「KanameShogiProbe」登録を削除し、USI通信ログをオフにして再起動済み。再起動後にエンジン一覧が空、ログ設定がオフであることを確認。
+- `/private/tmp` のプローブとプローブ側ログは削除済み。ShogiHome公式USI通信ログは記録根拠として保持。
+- ユーザーの最終理解確認への回答は受領し、本人の回答とアシスタントの補足を分けて記録済み。
+- 第54回の後片付けは完了済み。文書差分検査では `git diff --check` と8文書の行末・空白・相対リンク検査が通過した。再開時のコミット状態はGitで確認する。
 
 この記録は作成時点の情報である。再開時は必ず `git status --short --branch` と `git log -3 --oneline` で現在値を確認する。
 
 ## 次に行うこと
 
-1. [次テーマの引き継ぎ](handover-usi-shogihome-connection-scope.md)の再開用プロンプトを本人が新しいセッションへ入力する。
-2. 新しいセッションで現在のGit状態と資料を確認し、テーマ1の調査方法を設計対話で決める。
-3. 対象範囲・表現・検証方法と必要な承認が揃ってから、テーマ1の実践を始める。
+1. 本人が[再開用プロンプト](handover-usi-move-notation.md#再開用プロンプト)を新しいセッションへ入力する。新しい学習・実装はそのセッションで開始する。
 
 ## 再開時に読む資料
 
 1. `git status --short --branch` と `git log -3 --oneline` の現在結果
 2. `AGENTS.md`、ルートの `README.md`、[文書索引](README.md)
-3. この `docs/resume.md`、[次テーマの引き継ぎ](handover-usi-shogihome-connection-scope.md)、[USI接続のロードマップ](roadmap-usi-shogihome.md)
-4. 次テーマに関連する現在の確定知識・設計・学習記録
-5. [プロジェクトの方向性](02-project-direction.md) とルート `README.md`
-
-`handover-cli-help-display.md` は第51回を開始した時点の引き継ぎ履歴であり、現在のGit状態や次の行動を示すものではない。
+3. この `docs/resume.md`、[第55回の引き継ぎ](handover-usi-move-notation.md)、[第54回学習記録](learning/54-usi-shogihome-connection-scope.md)、[USI接続ロードマップ](roadmap-usi-shogihome.md)
+4. [次テーマの選定履歴](next-topics.md) と [プロジェクトの方向性](02-project-direction.md)
