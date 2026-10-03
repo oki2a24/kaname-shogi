@@ -113,7 +113,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | ShogiHomeとUSIの接続範囲（第54回） | [第54回](learning/54-usi-shogihome-connection-scope.md) | — | — | — | [開始時点の引き継ぎ](handover-usi-shogihome-connection-scope.md) |
 | USI指し手表記と内部の一手の対応（第55回） | [第55回](learning/55-usi-move-notation.md) | [USI一手表記](knowledge/usi-move-notation.md) | [設計仕様](plans/2026-10-02-usi-move-notation-design.md) | [実装計画](plans/2026-10-02-usi-move-notation-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-move-notation.md) |
 | USIの平手手順から局面を再現（第56回） | [第56回](learning/56-usi-position-replay.md) | [局面再現](knowledge/usi-position-replay.md) | [設計仕様](plans/2026-10-02-usi-position-replay-design.md) | [実装計画](plans/2026-10-02-usi-position-replay-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-position-replay.md) |
-| USIエンジンとして一手を返す（第57回・実装、レビュー、記録承認、ブランチコミット済み） | [第57回](learning/57-usi-engine-response.md) | [USIエンジン応答](knowledge/usi-engine-response.md) | [設計仕様](plans/2026-10-03-usi-engine-response-design.md) | [実装計画](plans/2026-10-03-usi-engine-response-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-engine-response.md) |
+| USIエンジンとして一手を返す（第57回・実装、レビュー、記録承認、main取り込み済み） | [第57回](learning/57-usi-engine-response.md) | [USIエンジン応答](knowledge/usi-engine-response.md) | [設計仕様](plans/2026-10-03-usi-engine-response-design.md) | [実装計画](plans/2026-10-03-usi-engine-response-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-engine-response.md) |
 
 ## 例外と履歴の読み方
 

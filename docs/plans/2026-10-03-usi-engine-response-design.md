@@ -6,7 +6,7 @@
 
 ### 実装状況（2026-10-03）
 
-承認仕様に沿って `kaname_shogi.usi_engine` と注入関数・プロセス境界のテストを追加した。全277テストが成功し、独立レビューはCritical・Important・Minorが各0件だった。学習記録と確定知識は本人承認済みで、成果は作業ブランチにコミット済み。ShogiHomeでの実対局と合法な応答へのShogiHome固有の挙動は確認していない。実施手順と回答の記録は[第57回学習記録](../learning/57-usi-engine-response.md)、手順・検証の詳細は[実装計画](2026-10-03-usi-engine-response-implementation-plan.md)を参照する。
+承認仕様に沿って `kaname_shogi.usi_engine` と注入関数・プロセス境界のテストを追加した。全277テストが成功し、独立レビューはCritical・Important・Minorが各0件だった。学習記録と確定知識は本人承認済みで、成果を作業ブランチへコミットした後、2026-10-03に本人承認を得て `main` へfast-forwardで取り込み、取り込み後の全277テストも成功した。ShogiHomeでの実対局と合法な応答へのShogiHome固有の挙動は確認していない。実施手順と回答の記録は[第57回学習記録](../learning/57-usi-engine-response.md)、手順・検証の詳細は[実装計画](2026-10-03-usi-engine-response-implementation-plan.md)を参照する。
 
 ## 目的
 
