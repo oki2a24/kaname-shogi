@@ -10,7 +10,7 @@
 
 **仕様 (Spec):** [2026-10-03-usi-engine-response-design.md](2026-10-03-usi-engine-response-design.md)
 
-**状態:** 2026-10-03に承認済み仕様を元に作成。本人の計画承認待ち。コード・テスト変更は未着手。
+**状態:** 2026-10-03に仕様と本計画が承認され、実装・レビュー・文書反映後の検証、学習記録・知識メモの本人確認、および作業ブランチへのコミットが完了した。`main` への取り込みと取り込み先検証は未実施。
 
 **グローバル制約 (Global Constraints):**
 - 設計仕様の「対象」に記載された範囲から拡張しない。特に次の契約をそのまま守る。
@@ -56,7 +56,7 @@
 
 ---
 
-### タスク1: 注入可能なUSIコマンド処理を実装する
+### Task 1: 注入可能なUSIコマンド処理を実装する
 
 **ファイル:**
 - 作成: `tests/test_usi_engine.py`
@@ -66,7 +66,7 @@
 - 消費 (Consumes): `parse_usi_position(command: str) -> Position`、`legal_moves(position: Position) -> tuple[Move, ...]`、`choose_weak_move(moves, rng) -> Optional[Move]`、`format_usi_move(move: Move) -> str`。
 - 生産 (Produces): `run_usi_engine(input_fn: Callable[[], str], output_fn: Callable[[str], None], rng: Optional[random.Random] = None) -> None`。入力関数は一行を返し、EOF時は `EOFError` を送出する。出力関数には改行なしの応答一行を渡す。未設定・不正局面、または未対応の既知検索引数は `ValueError` で呼び出し側へ伝える。
 
-- [ ] **ステップ1: 関数境界の振る舞いテストを作る**
+- [x] **ステップ1: 関数境界の振る舞いテストを作る**
 
 `tests/test_usi_engine.py` に `UsiEngineFunctionTests` を作り、入力列から `EOFError` を送出する小さなテスト補助を用意する。各テストメソッド名は英語、日本語docstringは振る舞いと検出する誤りを説明する。
 
@@ -84,7 +84,7 @@
 10. `test_ignores_unknown_go_token` — 有効な局面後の `go mystery` は未知のトークンを無視し、合法な `bestmove` を返すことを確認する。
 11. `test_stops_cleanly_on_quit_and_input_eof` — `quit` またはEOFで応答待ちを続けず正常終了することを確認する。
 
-- [ ] **ステップ2: 振る舞いのRedを確認する**
+- [x] **ステップ2: 振る舞いのRedを確認する**
 
 新モジュールがまだない状態でテストだけを実行し、まずimport失敗になることを確認する。その後、正しい名前・シグネチャで `run_usi_engine` が何もしない最小スタブを置き、同じテストを再実行する。期待する応答・例外アサーションがテスト本体で失敗することを確認する。import失敗だけをRed完了と扱わない。
 
@@ -96,7 +96,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_usi_engine.UsiEngineFun
 
 期待値: スタブに対する期待応答の不一致と、必要な `ValueError` が送出されない失敗が表示される。
 
-- [ ] **ステップ3: `run_usi_engine` を実装する**
+- [x] **ステップ3: `run_usi_engine` を実装する**
 
 `kaname_shogi/usi_engine.py` に上記シグネチャで関数を実装する。関数開始時に省略時の `random.Random` を一つ作り、`usinewgame` をまたいで使う。現在局面は未設定から開始し、`position` で置き換え、`usinewgame` でクリアする。USIコマンドは行単位に処理し、`usi` / `isready` の固定応答、`setoption` / `gameover` / 未知コマンドの無応答、`quit` / EOFの終了を行う。
 
@@ -104,7 +104,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_usi_engine.UsiEngineFun
 
 公開docstringには引数、戻り値、副作用、EOFとValueErrorの境界、既存責務へ委譲する設計理由を日本語で記載する。
 
-- [ ] **ステップ4: 関数テストのGreenを確認する**
+- [x] **ステップ4: 関数テストのGreenを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_usi_engine.UsiEngineFunctionTests -v`
 
@@ -112,7 +112,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_usi_engine.UsiEngineFun
 
 ---
 
-### タスク2: 標準入出力の実行入口とプロセス境界を作る
+### Task 2: 標準入出力の実行入口とプロセス境界を作る
 
 **ファイル:**
 - 変更: `kaname_shogi/usi_engine.py`
@@ -122,7 +122,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_usi_engine.UsiEngineFun
 - 消費 (Consumes): タスク1の `run_usi_engine(input_fn, output_fn, rng=None)`。
 - 生産 (Produces): `main() -> int` と `python -m kaname_shogi.usi_engine` のプロセス入口。正常終了は0、`ValueError` は標準エラー診断と非0終了にする。
 
-- [ ] **ステップ1: 実プロセスのテストを追加する**
+- [x] **ステップ1: 実プロセスのテストを追加する**
 
 `UsiEngineProcessTests` に次を追加する。
 
@@ -131,7 +131,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_usi_engine.UsiEngineFun
 
 対話テストはバイナリpipeを使い、`selectors.DefaultSelector` と `os.read` で到着済みデータをバッファし、改行がそろうまで有限時間待つ。これにより、flushされない応答や改行のない部分出力を、ブロックする `readline()` に頼らず検出する。タイムアウトやアサーション失敗時も `finally` で子プロセスを終了させる。
 
-- [ ] **ステップ2: 実行入口がない状態でプロセスの振る舞いRedを確認する**
+- [x] **ステップ2: 実行入口がない状態でプロセスの振る舞いRedを確認する**
 
 テストはモジュール入口の追加前に実行する。`python -m` がUSI行を出さず正常終了する状態を観測し、期待する応答flushとエラー診断のアサーションが失敗することを確認する。
 
@@ -139,11 +139,11 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_usi_engine.UsiEngineFun
 
 期待値: プロセス起動・import自体は成功するが、ID応答が読めないことと、エラー終了・stderr診断がないことをテスト本体が検出する。
 
-- [ ] **ステップ3: `main` とモジュール起動処理を実装する**
+- [x] **ステップ3: `main` とモジュール起動処理を実装する**
 
 `main()` は標準入力の `readline()` がEOFを返した場合に `EOFError` として伝える入力関数、および応答一行を標準出力へ改行付きで書き `flush=True` で出す出力関数を作り、`run_usi_engine` に渡す。`ValueError` は標準エラーへ分かる診断を出し、1などの非0コードを返す。EOFと `quit` は0で終了する。`if __name__ == "__main__":` から `SystemExit(main())` を呼び出す。既存の `kaname_shogi.__main__` とCLI入口は変更しない。
 
-- [ ] **ステップ4: プロセステストのGreenを確認する**
+- [x] **ステップ4: プロセステストのGreenを確認する**
 
 実行: `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_usi_engine.UsiEngineProcessTests -v`
 
@@ -151,7 +151,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_usi_engine.UsiEngineFun
 
 ---
 
-### タスク3: Refactor判断、独立レビュー、記録と全体検証を行う
+### Task 3: Refactor判断、独立レビュー、記録と全体検証を行う
 
 **ファイル:**
 - 確認・必要時変更: `kaname_shogi/usi_engine.py`、`tests/test_usi_engine.py`
@@ -163,15 +163,19 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_usi_engine.UsiEngineFun
 - 消費 (Consumes): タスク1・2の公開関数、関数テスト、プロセステスト。
 - 生産 (Produces): 承認済み範囲を満たし、独立レビュー・全体検証・学習／知識記録の確認を終えた作業ブランチ。
 
-- [ ] **ステップ1: Refactorの要否を判断する**
+- [x] **ステップ1: Refactorの要否を判断する**
 
 `usi_engine.py` のコマンド分岐、局面・乱数の寿命、標準入出力アダプターと、テストの補助処理の重複や過剰な抽象化を確認する。変更不要なら理由を計画と学習記録に残す。変更する場合は振る舞いを変えず、関数テストとプロセステストを再実行する。
 
-- [ ] **ステップ2: 独立コードレビューを行い、指摘を解消する**
+実績: 処理責務とテスト補助は既に局所的だったため、構造を変えるRefactorは行わなかった。標準ライブラリのimport順だけを整え、専用13テストが成功した。
+
+- [x] **ステップ2: 独立コードレビューを行い、指摘を解消する**
 
 実装者と別のレビュアーが仕様・コード・テスト差分を確認し、Critical / Important / Minorを分類する。CriticalまたはImportantは解消し、同じテスト・全体検証を再実行した後に再レビューする。結果と対応を学習記録へ記す。
 
-- [ ] **ステップ3: 専用テスト、全体テスト、差分を検証する**
+実績: 独立レビューはCritical 0、Important 0、Minor 0。任意の将来テスト案は学習記録へ記し、現在の機能欠陥ではないため追加修正はなかった。レビューで未判定とされた範囲の判断は計画の実行台帳に記録した。
+
+- [x] **ステップ3: 専用テスト、全体テスト、差分を検証する**
 
 実行:
 
@@ -184,15 +188,23 @@ git diff --cached --check
 
 期待値: 専用テストと全テストが成功し、差分検査で空白エラーがない。レビュー後にコードを修正した場合は、これらを再実行する。ShogiHome実対局を確認済みとは記録しない。
 
-- [ ] **ステップ4: 学習記録、確定知識、現在地文書を実績に合わせる**
+実績: 文書反映後に専用13/13件、全277/277件が成功した。`git diff --check` と `git diff --cached --check` も成功し、レビュー後の製品コード変更はなかった。
+
+- [x] **ステップ4: 学習記録、確定知識、現在地文書を実績に合わせる**
 
 学習記録では、本人の各回答とアシスタント補足、USI一次資料と第54回の使い捨てプローブ、第56回の通常手観測、今回自動テストで確認する挙動、ShogiHomeで未確認の挙動を分ける。TDD Red/Greenの実際の出力、Refactor判断、独立レビューのCritical / Important / Minor、検証結果、次回にコマンド型／独立状態APIを再検討する問いを記録する。知識メモには公開契約とエラー・状態境界のみを簡潔に記す。設計書・本計画には完了した手順だけを実績として反映する。
 
 必要な参照更新は `docs/README.md`、`docs/resume.md`、`docs/roadmap-usi-shogihome.md`、`docs/02-project-direction.md`、`README.md` に限定し、第5項の実対局を未実施として保持する。学習記録と知識メモを本人へ提示して内容確認を得る。
 
-- [ ] **ステップ5: 確認済み記録と実装を作業ブランチにコミットする**
+`docs/next-topics.md` は第56回後に本テーマを選定した記録がすでにあり、内容は現在も正しい。新しい候補の選定は最終理解確認後に行うプロジェクト方針のため、今回は変更しない。
+
+実績: 学習記録と知識メモ、README、索引、再開案内、ロードマップ、プロジェクト方向性を実績に合わせた。2026-10-03に本人が学習記録と確定知識を確認し、この内容で承認した。`docs/next-topics.md` は最終理解確認後の候補レビューに合わせて今回は変更していない。
+
+- [x] **ステップ5: 確認済み記録と実装を作業ブランチにコミットする**
 
 学習記録・知識メモの確認後、実装・テスト・計画・必要な索引更新をステージする。`git diff --cached --check` を確認し、日本語Conventional Commitとして `feat: USIエンジンが一手を返す` を作成する。`main` への取り込みは別の本人承認まで行わない。
+
+実績: 承認済みの11ファイルをステージし、`git diff --cached --check` 成功後に `feat: USIエンジンが一手を返す` を作業ブランチへコミットした。`main` への取り込みは未実施。
 
 ---
 

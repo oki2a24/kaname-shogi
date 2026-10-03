@@ -2,7 +2,11 @@
 
 ## 状態
 
-2026-10-03、本人が設計案と仕様書を承認した。続いて本人は、`searchmoves` / `depth` / `nodes` / `mate` を未対応として診断・終了する方針を選んだ。本仕様はその合意を反映し、実装・テスト変更はまだ開始していない。作業ブランチは `codex/usi-engine-response`。
+2026-10-03、本人が設計案と仕様書を承認した。続いて本人は、`searchmoves` / `depth` / `nodes` / `mate` を未対応として診断・終了する方針を選んだ。本仕様はその合意を反映している。作業ブランチは `codex/usi-engine-response`。
+
+### 実装状況（2026-10-03）
+
+承認仕様に沿って `kaname_shogi.usi_engine` と注入関数・プロセス境界のテストを追加した。全277テストが成功し、独立レビューはCritical・Important・Minorが各0件だった。学習記録と確定知識は本人承認済みで、成果は作業ブランチにコミット済み。ShogiHomeでの実対局と合法な応答へのShogiHome固有の挙動は確認していない。実施手順と回答の記録は[第57回学習記録](../learning/57-usi-engine-response.md)、手順・検証の詳細は[実装計画](2026-10-03-usi-engine-response-implementation-plan.md)を参照する。
 
 ## 目的
 
