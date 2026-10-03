@@ -6,7 +6,7 @@
 
 最初の目標は、コマンドラインで動く、ごく弱くても自分で理解できるプログラムを作ることです。強さだけを急がず、将棋とプログラムの両方を理解しながら育てます。息子と将棋を通じて成長を共有できるものにすることも、このプロジェクトの大切な目的です。
 
-最初の目標は達成しました。第54回ではMac版ShogiHome 1.28.1と使い捨てプローブ間のUSI通信を実機確認し、第55回ではUSI一手表記と内部データの相互変換、第56回では平手の `position startpos moves ...` から局面を再現する機能を実装しました。第57回では既存CLIから分離したUSIエンジン入口を作り、指定局面から合法な一手を返す処理を追加しました。関数・プロセステストと独立レビューを作業ブランチで確認しましたが、ShogiHomeでの実対局はロードマップ第5項に残っています。経緯は[第54回学習記録](docs/learning/54-usi-shogihome-connection-scope.md)、[第55回学習記録](docs/learning/55-usi-move-notation.md)、[第56回学習記録](docs/learning/56-usi-position-replay.md)、[第57回学習記録](docs/learning/57-usi-engine-response.md)、[USI接続ロードマップ](docs/roadmap-usi-shogihome.md)、現在地は[再開案内](docs/resume.md)を参照してください。
+最初の目標は達成しました。第54回ではMac版ShogiHome 1.28.1と使い捨てプローブ間のUSI通信を実機確認し、第55回ではUSI一手表記と内部データの相互変換、第56回では平手の `position startpos moves ...` から局面を再現する機能を実装しました。第57回では既存CLIから分離したUSIエンジン入口を作り、指定局面から合法な一手を返す処理を追加し、独立レビューと全277テストの成功を確認して `main` へ取り込みました。次はUSIコマンド型と独立状態APIを導入する必要性を設計上再検討します。ShogiHomeでの実対局はロードマップ第5項に残っています。経緯は[第54回学習記録](docs/learning/54-usi-shogihome-connection-scope.md)、[第55回学習記録](docs/learning/55-usi-move-notation.md)、[第56回学習記録](docs/learning/56-usi-position-replay.md)、[第57回学習記録](docs/learning/57-usi-engine-response.md)、[次テーマの引き継ぎ](docs/handover-usi-command-state-api-review.md)、[USI接続ロードマップ](docs/roadmap-usi-shogihome.md)、現在地は[再開案内](docs/resume.md)を参照してください。
 
 ## 現在できることと主な未対応事項
 
