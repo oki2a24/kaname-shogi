@@ -36,6 +36,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 - [学習・開発の再開案内](resume.md)
 - [次テーマの選定履歴](next-topics.md)
+- [第60回予定テーマ開始時点の引き継ぎ：息子によるShogiHome試用](handover-son-shogihome-trial.md)
 - [ShogiHomeで対局するためのロードマップ](roadmap-usi-shogihome.md)
 - [第59回開始時点の引き継ぎ：ShogiHomeで平手対局する](handover-usi-shogihome-gameplay.md)
 - [第59回学習記録：ShogiHomeで平手対局する（main取り込み・全283テスト・理解確認まで完了）](learning/59-shogihome-even-game.md)
@@ -65,7 +66,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [持ち駒表示の設計仕様](plans/2026-10-01-cli-hand-display-design.md)
 - [持ち駒表示の実装計画](plans/2026-10-01-cli-hand-display.md)
 
-第51〜58回は最後の理解確認まで完了しました。第59回ではShogiHome 1.28.1の平手対局を行い、合法な応手2回と投了による終了を確認しました。2026-10-04に `main` へ取り込み、全283テストと最終理解確認まで完了しました。次テーマは未選定です。確認範囲は[第59回学習記録](learning/59-shogihome-even-game.md)と[知識メモ](knowledge/usi-shogihome-gameplay.md)、次に必要な手順は[再開案内](resume.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
+第51〜58回は最後の理解確認まで完了しました。第59回ではShogiHome 1.28.1の平手対局を行い、合法な応手2回と投了による終了を確認しました。2026-10-04に `main` へ取り込み、全283テストと最終理解確認まで完了しました。第60回予定テーマは「息子によるShogiHome試用」に選定され、現在は新しいセッションへの引き継ぎ準備が完了しています。確認済みの範囲は[第59回学習記録](learning/59-shogihome-even-game.md)と[知識メモ](knowledge/usi-shogihome-gameplay.md)、次に必要な手順は[再開案内](resume.md)と[第60回予定テーマの引き継ぎ](handover-son-shogihome-trial.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
 
 ## テーマ・学習回別索引
 
