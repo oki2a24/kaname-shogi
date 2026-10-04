@@ -38,7 +38,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [次テーマの選定履歴](next-topics.md)
 - [ShogiHomeで対局するためのロードマップ](roadmap-usi-shogihome.md)
 - [第59回開始時点の引き継ぎ：ShogiHomeで平手対局する](handover-usi-shogihome-gameplay.md)
-- [第59回学習記録：ShogiHomeで平手対局する（実機確認済み、取り込み・理解確認待ち）](learning/59-shogihome-even-game.md)
+- [第59回学習記録：ShogiHomeで平手対局する（main取り込み・全283テスト・理解確認まで完了）](learning/59-shogihome-even-game.md)
 - [ShogiHome平手対局の確定知識](knowledge/usi-shogihome-gameplay.md)
 - [第59回の実装計画](plans/2026-10-04-shogihome-gameplay-implementation-plan.md)
 - [第58回学習記録：USIコマンド型・独立状態APIの導入要否](learning/58-usi-command-state-api-review.md)
@@ -65,7 +65,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [持ち駒表示の設計仕様](plans/2026-10-01-cli-hand-display-design.md)
 - [持ち駒表示の実装計画](plans/2026-10-01-cli-hand-display.md)
 
-第51〜58回は最後の理解確認まで完了しました。第59回では作業ブランチ上でShogiHome 1.28.1の平手対局を行い、合法な応手2回と投了による終了を確認しました。元の `main` への取り込みと最終理解確認はこれからです。確認範囲は[第59回学習記録](learning/59-shogihome-even-game.md)と[知識メモ](knowledge/usi-shogihome-gameplay.md)、次に必要な手順は[再開案内](resume.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
+第51〜58回は最後の理解確認まで完了しました。第59回ではShogiHome 1.28.1の平手対局を行い、合法な応手2回と投了による終了を確認しました。2026-10-04に `main` へ取り込み、全283テストと最終理解確認まで完了しました。次テーマは未選定です。確認範囲は[第59回学習記録](learning/59-shogihome-even-game.md)と[知識メモ](knowledge/usi-shogihome-gameplay.md)、次に必要な手順は[再開案内](resume.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
 
 ## テーマ・学習回別索引
 
@@ -123,7 +123,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | USIの平手手順から局面を再現（第56回） | [第56回](learning/56-usi-position-replay.md) | [局面再現](knowledge/usi-position-replay.md) | [設計仕様](plans/2026-10-02-usi-position-replay-design.md) | [実装計画](plans/2026-10-02-usi-position-replay-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-position-replay.md) |
 | USIエンジンとして一手を返す（第57回・実装、レビュー、記録承認、main取り込み済み） | [第57回](learning/57-usi-engine-response.md) | [USIエンジン応答](knowledge/usi-engine-response.md) | [設計仕様](plans/2026-10-03-usi-engine-response-design.md) | [実装計画](plans/2026-10-03-usi-engine-response-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-engine-response.md) |
 | USIコマンド型・独立状態APIの導入要否を再検討（第58回・main取り込み、理解確認、全281テスト完了） | [第58回](learning/58-usi-command-state-api-review.md) | [USIエンジン応答](knowledge/usi-engine-response.md) | [設計仕様](plans/2026-10-04-usi-command-state-api-review-design.md) | [実装計画](plans/2026-10-04-usi-command-state-api-review-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-command-state-api-review.md) |
-| ShogiHomeで平手対局する（第59回・実機確認済み、main取り込み・理解確認待ち） | [第59回](learning/59-shogihome-even-game.md) | [ShogiHome平手対局](knowledge/usi-shogihome-gameplay.md) | — | [実装計画](plans/2026-10-04-shogihome-gameplay-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-shogihome-gameplay.md) |
+| ShogiHomeで平手対局する（第59回・main取り込み、全283テスト、理解確認まで完了） | [第59回](learning/59-shogihome-even-game.md) | [ShogiHome平手対局](knowledge/usi-shogihome-gameplay.md) | — | [実装計画](plans/2026-10-04-shogihome-gameplay-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-shogihome-gameplay.md) |
 
 ## 例外と履歴の読み方
 

@@ -4,9 +4,9 @@
 
 第58回「USIコマンド型・独立状態APIの導入要否を再検討する」は、実装・独立レビュー・学習記録・最終理解確認まで完了した。変更は2026-10-04に `main` へfast-forwardで取り込まれ、取り込み後の全281テストが成功した。USIコマンド行は文字列分岐を維持し、非公開 `_UsiEngineState` は `Position` または未設定の `None` だけを保持する。
 
-第59回「ShogiHomeで平手対局する」は、作業ブランチ `codex/shogihome-gameplay` で実装・検証・ShogiHome 1.28.1での限定対局まで進んだ。人間先手の７六歩に対して `kaname-shogi` が４四歩、人間の２六歩に対して９二飛を返し、ShogiHomeの盤面・棋譜へ反映された。人間の投了後、画面に「対局終了（投了）」が表示され、棋譜にも投了が記録された。全283テストと独立コードレビューの再確認は完了している。
+第59回「ShogiHomeで平手対局する」は、実装・検証・ShogiHome 1.28.1での限定対局まで進み、2026-10-04に `codex/shogihome-gameplay` のコミット `d7046c6` を元の `/Users/oki2a24/kaname-shogi` の `main` へfast-forwardで取り込んだ。人間先手の７六歩に対して `kaname-shogi` が４四歩、人間の２六歩に対して９二飛を返し、ShogiHomeの盤面・棋譜へ反映された。人間の投了後、画面に「対局終了（投了）」が表示され、棋譜にも投了が記録された。取り込み先の全283テストと独立コードレビューの再確認も成功した。
 
-ランチャー、テスト、記録は `/Users/oki2a24/.codex/worktrees/shogihome-gameplay/kaname-shogi` にあり、元の `/Users/oki2a24/kaname-shogi` の `main` にはまだ取り込んでいない。実装計画・第59回学習記録・知識メモを確認した後、本人の承認を得て取り込み、取り込み先で検証する。その後に最後の理解確認を一問行い、回答を記録してから `README.md`、`docs/next-topics.md`、`docs/02-project-direction.md` を見直す。
+第59回の最終理解確認への本人の回答とアシスタントの補足を[学習記録](learning/59-shogihome-even-game.md)へ記録した。README、[次テーマ候補](next-topics.md)、[プロジェクトの方向性](02-project-direction.md)、ロードマップを見直した。次テーマは未選定であり、本人が候補から選ぶまで新しい学習・実装を開始しない。
 
 第59回の根拠と未確認事項は[学習記録](learning/59-shogihome-even-game.md)、限定対局で確かめた事実は[知識メモ](knowledge/usi-shogihome-gameplay.md)、変更・検証の手順は[実装計画](plans/2026-10-04-shogihome-gameplay-implementation-plan.md)を参照する。USI通信ログは有効にしていないため、ShogiHomeが今回実際に送信したコマンド列や時計動作は未確認である。
 
