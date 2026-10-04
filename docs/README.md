@@ -36,7 +36,11 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 - [学習・開発の再開案内](resume.md)
 - [次テーマの選定履歴](next-topics.md)
+- [第62回予定テーマ開始時点の引き継ぎ：ShogiHome接続手順書の作成](handover-shogihome-connection-guide.md)
+- [第61回学習記録：ShogiHome自動投了時のUSI通信確認](learning/61-shogihome-auto-resign-logs.md)
+- [第61回開始時点の引き継ぎ（開始時の履歴）：ShogiHome自動投了時のUSI通信確認](handover-shogihome-auto-resign-logs.md)
 - [第60回予定テーマ開始時点の引き継ぎ：息子によるShogiHome試用](handover-son-shogihome-trial.md)
+- [第60回学習記録：息子によるShogiHome試用（実対局・理解確認まで完了）](learning/60-shogihome-son-trial.md)
 - [ShogiHomeで対局するためのロードマップ](roadmap-usi-shogihome.md)
 - [第59回開始時点の引き継ぎ：ShogiHomeで平手対局する](handover-usi-shogihome-gameplay.md)
 - [第59回学習記録：ShogiHomeで平手対局する（main取り込み・全283テスト・理解確認まで完了）](learning/59-shogihome-even-game.md)
@@ -66,7 +70,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [持ち駒表示の設計仕様](plans/2026-10-01-cli-hand-display-design.md)
 - [持ち駒表示の実装計画](plans/2026-10-01-cli-hand-display.md)
 
-第51〜58回は最後の理解確認まで完了しました。第59回ではShogiHome 1.28.1の平手対局を行い、合法な応手2回と投了による終了を確認しました。2026-10-04に `main` へ取り込み、全283テストと最終理解確認まで完了しました。第60回予定テーマは「息子によるShogiHome試用」に選定され、現在は新しいセッションへの引き継ぎ準備が完了しています。確認済みの範囲は[第59回学習記録](learning/59-shogihome-even-game.md)と[知識メモ](knowledge/usi-shogihome-gameplay.md)、次に必要な手順は[再開案内](resume.md)と[第60回予定テーマの引き継ぎ](handover-son-shogihome-trial.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
+第51〜61回は最後の理解確認まで完了しました。第60回では息子がShogiHome 1.28.1で人間先手として19手を指し、`kaname-shogi` の18応手が棋譜に記録され、エンジン側の番で自動的に「投了」終局しました。第61回では同じ37手局面からUSI通信ログを取り、`bestmove resign` と、その後ShogiHomeが送った `gameover lose` / `quit` を一例確認しました。本人の理解確認回答は[第61回学習記録](learning/61-shogihome-auto-resign-logs.md)に記録しました。次テーマは「ShogiHome接続手順書を作成する」です。開始手順は[第62回予定テーマの引き継ぎ](handover-shogihome-connection-guide.md)、最新の作業状態は[再開案内](resume.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
 
 ## テーマ・学習回別索引
 
@@ -125,6 +129,9 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | USIエンジンとして一手を返す（第57回・実装、レビュー、記録承認、main取り込み済み） | [第57回](learning/57-usi-engine-response.md) | [USIエンジン応答](knowledge/usi-engine-response.md) | [設計仕様](plans/2026-10-03-usi-engine-response-design.md) | [実装計画](plans/2026-10-03-usi-engine-response-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-engine-response.md) |
 | USIコマンド型・独立状態APIの導入要否を再検討（第58回・main取り込み、理解確認、全281テスト完了） | [第58回](learning/58-usi-command-state-api-review.md) | [USIエンジン応答](knowledge/usi-engine-response.md) | [設計仕様](plans/2026-10-04-usi-command-state-api-review-design.md) | [実装計画](plans/2026-10-04-usi-command-state-api-review-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-command-state-api-review.md) |
 | ShogiHomeで平手対局する（第59回・main取り込み、全283テスト、理解確認まで完了） | [第59回](learning/59-shogihome-even-game.md) | [ShogiHome平手対局](knowledge/usi-shogihome-gameplay.md) | — | [実装計画](plans/2026-10-04-shogihome-gameplay-implementation-plan.md) | [開始時点の引き継ぎ](handover-usi-shogihome-gameplay.md) |
+| 息子によるShogiHome試用（第60回・実対局、理解確認まで完了） | [第60回](learning/60-shogihome-son-trial.md) | [ShogiHome平手対局](knowledge/usi-shogihome-gameplay.md) | — | — | [開始時点の引き継ぎ](handover-son-shogihome-trial.md) |
+| ShogiHome自動投了時のUSI通信確認（第61回・実機観察と理解確認まで完了） | [第61回](learning/61-shogihome-auto-resign-logs.md) | [ShogiHome平手対局](knowledge/usi-shogihome-gameplay.md) | — | — | [開始時点の引き継ぎ](handover-shogihome-auto-resign-logs.md) |
+| ShogiHome接続手順書の作成（第62回予定） | — | — | — | — | [開始時点の引き継ぎ](handover-shogihome-connection-guide.md) |
 
 ## 例外と履歴の読み方
 
