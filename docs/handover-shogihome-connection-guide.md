@@ -37,27 +37,12 @@
 ## 🚧 現在の物理的状態 (Physical Anchor)
 
 - **作業ディレクトリ:** `/Users/oki2a24/kaname-shogi`
-- **最終確認Git状態:** `main`、`origin/main` より6コミット先行。HEADは `1429e34 第60回のShogiHome試用を引き継ぐ`。次セッションで必ず `git status --short --branch` と `git log -3 --oneline` を取り直す。
-- **作業ツリー:** 初回状態から存在する未コミットの変更に、今回の第61回記録、確定知識の更新、本引き継ぎ・`docs/resume.md` 等の更新が加わっている。2026-10-04の最後の `git status --short --branch` は以下のとおり。次セッションでは必ず取り直し、現在の出力を正とする。コード・テストに変更はない。
-  ```text
-  ## main...origin/main [ahead 6]
-   M README.md
-   M docs/02-project-direction.md
-   M docs/README.md
-   M docs/knowledge/usi-shogihome-gameplay.md
-   M docs/next-topics.md
-   M docs/resume.md
-   M docs/roadmap-usi-shogihome.md
-  ?? docs/handover-shogihome-auto-resign-logs.md
-  ?? docs/handover-shogihome-connection-guide.md
-  ?? docs/learning/60-shogihome-son-trial.md
-  ?? docs/learning/61-shogihome-auto-resign-logs.md
-  ```
-- **ブランチ制約:** `main` 以外で作業する方針だが、この環境では `.git` 内のrefを書けず、過去にも記録用ブランチ作成ができなかった。未コミットの文書差分を保持し、勝手にリセット・stash・上書きしない。コミットも `.git` の書き込み可否と文書レビュー後に扱う。
+- **最初の文書コミット時点のGit状態:** 作業ブランチは `codex/shogihome-connection-guide`。第61回学習記録、第60回記録、知識メモ、索引・方向性・ロードマップ・README・再開案内・引き継ぎの計11文書を、本人確認後に `4b849ba 第61回の記録とShogiHome接続手順の引き継ぎを追加` でコミットし、その直後に作業ツリーがcleanであることを確認した。ステージ済み差分の `git diff --cached --check` は成功。コード・テスト変更はなく、テストは実行していない。この欄を含むGit状態の記述はコミット後に実際の状態へ合わせて修正した。次セッションでも必ず `git status --short --branch` と `git log -3 --oneline` を取り直す。
+- **ブランチの起点:** 作業ブランチ作成時の `main` HEADは `1429e34 第60回のShogiHome試用を引き継ぐ` で、その時点では `origin/main` より6コミット先行していた。以後 `main` は変更していない。
 - **第61回の記録確認:** USIログ30行の本文一致、結果KIFの主変化38行（37手と投了）および別変化「1 中断」を確認した。第61回はコード・テスト変更がないため、テストは実行していない。
 - **ShogiHomeの最後に確認した状態:** Mac版1.28.1。`kaname-shogi` の登録パスは `/Users/oki2a24/kaname-shogi/kaname-shogi-usi`、Ponder OFF、USIログ設定OFF（OFFへ戻してアプリを再起動した後にも確認）。UI上の現在状態は次セッションで再確認する。
 - **ファイル所在:** 生ログはShogiHomeログフォルダー `/Users/oki2a24/Library/Logs/electron-shogi/usi-20261004_201234.log`。第60回元棋譜、試行用37手KIF、第61回結果KIFは `/private/tmp/` にあり、一時ファイルとして扱う。必要なログ原本は削除しない。
-- **学習記録:** `docs/learning/61-shogihome-auto-resign-logs.md` に本人回答と補足を追記済み。記録内容のユーザー確認・Gitコミットはまだ済んでいない。
+- **学習記録:** `docs/learning/61-shogihome-auto-resign-logs.md` に本人回答と補足を追記し、本人確認後、他の関連文書とともに `4b849ba` へコミット済み。
 
 ## 📝 次の具体的なアクション (Next Steps)
 
@@ -69,8 +54,8 @@
 6. 合意後、再利用手順を作成する。少なくとも、(a) アプリ・登録エンジン・起動可能な正規パス・Ponderの事前確認、(b) 未保存棋譜の保護と対象局面の明示、(c) ローカル対局の開始、(d) ログ取得が目的の場合だけUSIログを有効化して再起動し、原本を開く手順、(e) 監視画面とプロンプトを補助に限定する方法、(f) 対局後のセッション終了確認と設定復帰、(g) 失敗時に手動USIコマンドや推測で状態を変えず停止する条件、を範囲候補として検討する。何を入れるかは相談・承認後に確定する。
 7. 実機操作が追加で必要なら、変更・対局の具体案を先に提示して明示承認を待つ。コード・テスト変更が必要だと判明した場合は独立した実装計画を作り、承認前は変更しない。
 8. 作成後は出典リンク、版差の注記、記録との整合性、文書差分を確認し、結果・未解決事項を学習記録へ記録する。実施していない接続確認や承認を記録しない。
-9. 文書を本人が確認した後にコミットを扱う。第61回記録と既存未コミット文書を混同せず、作業ツリーの差分を保全する。
+9. 第61回記録と第62回への引き継ぎを含む関連11文書は、本人確認後に `4b849ba` でコミット済み。次セッションでは冒頭でGit状態を再確認し、このコミットを起点に第62回の相談を始める。
 
 ## 💬 再開用プロンプト (Resumption Prompt)
 
-> kaname-shogi の次テーマ「ShogiHome接続手順書を作成する」を始めてください。新しいセッションの最初に `/Users/oki2a24/kaname-shogi` で `git status --short --branch` と `git log -3 --oneline` を実行し、現在の未コミット差分を過去の引き継ぎ記載と区別してください。`AGENTS.md`、`README.md`、`docs/README.md`、`docs/resume.md`、`docs/next-topics.md`、`docs/02-project-direction.md`、この引き継ぎ、`docs/learning/61-shogihome-auto-resign-logs.md`、`docs/knowledge/usi-shogihome-gameplay.md`、`docs/knowledge/usi-engine-response.md`、`docs/roadmap-usi-shogihome.md`、`kaname-shogi-usi` を読み、ShogiHome公式のエンジン登録・スクリプト起動・ログ・基本操作の一次資料も再確認してください。ユーザーの目的は、ShogiHomeへの接続を依頼したときアシスタントが迷わず一度で進められる再利用手順書を作ることです。第61回の実例では、登録ランチャー `/Users/oki2a24/kaname-shogi/kaname-shogi-usi`、Ponder OFF、USIログ有効化後の再起動、37手KIFの対象手を明示選択する確認がありました。最初にBrainstormingで未決定の保存場所・手順書の範囲・確認方法を一問ずつ相談し、具体的な手順書案を明示提示して承認を待ってください。承認前に手順書を作成・編集せず、実機設定変更や対局を追加で行う必要がある場合も具体案を示して明示承認を待ってください。今回のUSI通信を他の対局の必須要件と一般化せず、`docs/learning/61-shogihome-auto-resign-logs.md` の本人回答は `bestmove resign` と `gameover lose`、`quit` はその後の別コマンドという補足も維持してください。コード・テスト変更は必要性が分かった場合に別計画と承認を得てから検討してください。`
+> kaname-shogi の次テーマ「ShogiHome接続手順書を作成する」を始めてください。新しいセッションの最初に `/Users/oki2a24/kaname-shogi` で `git status --short --branch` と `git log -3 --oneline` を実行し、現在のブランチ・HEAD・作業ツリーをこの引き継ぎと照合してください。第61回の記録と次テーマへの引き継ぎは `4b849ba` にコミット済みです。`AGENTS.md`、`README.md`、`docs/README.md`、`docs/resume.md`、`docs/next-topics.md`、`docs/02-project-direction.md`、この引き継ぎ、`docs/learning/61-shogihome-auto-resign-logs.md`、`docs/knowledge/usi-shogihome-gameplay.md`、`docs/knowledge/usi-engine-response.md`、`docs/roadmap-usi-shogihome.md`、`kaname-shogi-usi` を読み、ShogiHome公式のエンジン登録・スクリプト起動・ログ・基本操作の一次資料も再確認してください。ユーザーの目的は、ShogiHomeへの接続を依頼したときアシスタントが迷わず一度で進められる再利用手順書を作ることです。第61回の実例では、登録ランチャー `/Users/oki2a24/kaname-shogi/kaname-shogi-usi`、Ponder OFF、USIログ有効化後の再起動、37手KIFの対象手を明示選択する確認がありました。最初にBrainstormingで未決定の保存場所・手順書の範囲・確認方法を一問ずつ相談し、具体的な手順書案を明示提示して承認を待ってください。承認前に手順書を作成・編集せず、実機設定変更や対局を追加で行う必要がある場合も具体案を示して明示承認を待ってください。今回のUSI通信を他の対局の必須要件と一般化せず、`docs/learning/61-shogihome-auto-resign-logs.md` の本人回答は `bestmove resign` と `gameover lose`、`quit` はその後の別コマンドという補足も維持してください。コード・テスト変更は必要性が分かった場合に別計画と承認を得てから検討してください。`
