@@ -6,8 +6,9 @@
 
 ## 局面と一手
 
-- `position` は `position startpos moves <1手以上>` のみ対応し、`parse_usi_position` が再現した最新 `Position` を関数内に保持する。
-- 次の `position` で保持局面を置き換え、`usinewgame` で未設定へ戻す。`usinewgame` をまたいでも一回の実行の乱数生成器は再利用する。
+- `position` は `position startpos moves <1手以上>` のみ対応し、`parse_usi_position` が再現した最新 `Position` を `usi_engine.py` 内の非公開 `_UsiEngineState` が保持する。状態オブジェクトは `Position` または未設定の `None` だけを持つ。
+- 状態オブジェクトの `replace_position` は新しい局面を保持し、`clear_position` は未設定へ戻し、`require_position` は局面を返すか未設定時に `ValueError` を送出する。コマンド解析・棋譜・合法手選択・乱数器は保持しない。
+- 次の `position` で保持局面を置き換え、`usinewgame` で未設定へ戻す。乱数生成器は `run_usi_engine` の実行中に選択処理側で保持し、`usinewgame` をまたいでも再利用する。
 - `go` は `legal_moves(position)` → `choose_weak_move(moves, rng)` → `format_usi_move(move)` の順に既存処理へ委譲し、`bestmove <一手>` を返す。選択手は内部局面へ適用しない。
 - 合法手がない場合は `bestmove resign` を返す。
 
@@ -20,4 +21,8 @@
 - 実行入口は `ValueError` をstderrに診断し、非0で終了する。USI応答だけをstdoutに書き、各行をflushする。
 - `quit` と入力EOFは正常終了する。
 
-このメモは実装済みのローカル契約を示す。ShogiHomeへ登録した実対局や、合法な `bestmove` を受けたShogiHomeの挙動はまだ実証していない。コマンド型や独立状態APIは今回設けず、他のUSIコマンドへ広げるテーマで構造を再検討する。
+## コマンド行の表現
+
+コマンド行は `split()` と既存の文字列分岐で扱う。USIコマンド型や公開状態APIは設けない。非公開状態クラスを独立モジュールやpackage rootから再exportしない。
+
+このメモは実装済みのローカル契約を示す。ShogiHomeへ登録した実対局や、合法な `bestmove` を受けたShogiHomeの挙動はまだ実証していない。追加のコマンドや強いエンジンの選択境界は、具体的な要件ができた時点で別に設計する。

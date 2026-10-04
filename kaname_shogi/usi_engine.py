@@ -4,9 +4,31 @@ import sys
 import random
 from typing import Callable, Optional
 
+from .model import Position
 from .movegen import choose_weak_move, legal_moves
 from .usi_move import format_usi_move
 from .usi_position import parse_usi_position
+
+
+class _UsiEngineState:
+    """最新のPositionまたは未設定を保持する、モジュール内の状態データ。"""
+
+    def __init__(self) -> None:
+        self._position: Optional[Position] = None
+
+    def replace_position(self, position: Position) -> None:
+        """現在局面を受け取ったPositionへ置き換える。複製はしない。"""
+        self._position = position
+
+    def clear_position(self) -> None:
+        """現在局面を未設定へ戻す。手の選択に使う乱数器には触れない。"""
+        self._position = None
+
+    def require_position(self) -> Position:
+        """現在局面を返し、未設定なら従来のgoエラーを送出する。"""
+        if self._position is None:
+            raise ValueError("goの前に有効なpositionを指定してください")
+        return self._position
 
 
 def run_usi_engine(
@@ -26,7 +48,8 @@ def run_usi_engine(
 
     副作用:
         USI応答をoutput_fnへ渡し、使用するrngの状態を進める。局面は関数内に
-        保持し、positionで置き換え、usinewgameで未設定に戻す。
+        作る非公開状態データに保持し、positionで置き換え、usinewgameで未設定に戻す。
+        乱数生成器は局面状態から分け、一回の実行中に全goで共有する。
 
     前提条件:
         入力はUSIコマンド一行であり、positionは既存パーサーが扱う
@@ -39,10 +62,11 @@ def run_usi_engine(
         EOFError: input_fnが入力終了を表すため送出した場合。この関数内では終了として扱う。
 
     局面再現、合法手列挙、弱い一手選択、USI一手表記は既存の各責務へ委譲する。
-    これにより既存CLIや将棋規則を重ねて実装せず、USIコマンドと応答の境界に限定する。
+    局面の寿命と手の選択方法を別々に保ち、既存CLIや将棋規則を重ねて実装せず、
+    USIコマンドと応答の境界に限定する。
     """
     engine_rng = rng if rng is not None else random.Random()
-    position = None
+    state = _UsiEngineState()
     unsupported_go_tokens = {
         "searchmoves", "depth", "nodes", "mate", "infinite", "ponder"
     }
@@ -67,9 +91,9 @@ def run_usi_engine(
         elif command_name == "setoption" or command_name == "gameover":
             continue
         elif command_name == "usinewgame":
-            position = None
+            state.clear_position()
         elif command_name == "position":
-            position = parse_usi_position(command)
+            state.replace_position(parse_usi_position(command))
         elif command_name == "go":
             unsupported = next(
                 (token for token in tokens[1:] if token in unsupported_go_tokens),
@@ -77,9 +101,8 @@ def run_usi_engine(
             )
             if unsupported is not None:
                 raise ValueError(f"未対応のgo引数です: {unsupported}")
-            if position is None:
-                raise ValueError("goの前に有効なpositionを指定してください")
 
+            position = state.require_position()
             moves = legal_moves(position)
             move = choose_weak_move(moves, engine_rng)
             if move is None:

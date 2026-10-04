@@ -68,6 +68,53 @@ class PipeLineReader:
         self.selector.close()
 
 
+class UsiEngineStateTests(unittest.TestCase):
+    """USIエンジンの非公開局面状態オブジェクトを確認する。"""
+
+    def create_state(self):
+        state_type = getattr(usi_engine, "_UsiEngineState", None)
+        self.assertIsNotNone(state_type, "_UsiEngineStateが定義されていません")
+        return state_type()
+
+    def test_requires_position_when_unset(self):
+        """局面未設定の状態から局面を要求するとValueErrorにする。
+
+        初期局面を暗黙に作って、未受信の局面から指す誤りを検出する。
+        """
+        state = self.create_state()
+
+        with self.assertRaises(ValueError):
+            state.require_position()
+
+    def test_replaces_position(self):
+        """局面の置換後は最新のPosition参照を返す。
+
+        古い局面を残したり、局面を不要に複製したりする誤りを検出する。
+        """
+        state = self.create_state()
+        first = parse_usi_position("position startpos moves 7g7f")
+        latest = parse_usi_position("position startpos moves 2g2f")
+
+        state.replace_position(first)
+        self.assertIs(state.require_position(), first)
+
+        state.replace_position(latest)
+        self.assertIs(state.require_position(), latest)
+
+    def test_clears_position(self):
+        """局面を消去した後は未設定として扱う。
+
+        `usinewgame`後に前の局面を参照できる状態へ残す誤りを検出する。
+        """
+        state = self.create_state()
+        state.replace_position(parse_usi_position("position startpos moves 7g7f"))
+
+        state.clear_position()
+
+        with self.assertRaises(ValueError):
+            state.require_position()
+
+
 class UsiEngineFunctionTests(unittest.TestCase):
     def test_answers_usi_and_ready_in_order(self):
         """usiとisreadyへ定義済みの順序で応答する。
@@ -146,6 +193,48 @@ class UsiEngineFunctionTests(unittest.TestCase):
         move = parse_usi_move(response[1])
         position = parse_usi_position(position_command)
         self.assertIn(move, legal_moves(position))
+
+    def test_uses_most_recent_position_before_go(self):
+        """複数のposition後に受けたgoは最後の局面を使う。
+
+        以前のPositionを参照して、古い局面から合法手を選ぶ誤りを検出する。
+        """
+        outputs = []
+        first_command = "position startpos moves 7g7f"
+        latest_command = "position startpos moves 2g2f"
+        parse_position = usi_engine.parse_usi_position
+        parsed_positions = []
+        observed_positions = []
+
+        def record_parse_position(command):
+            position = parse_position(command)
+            parsed_positions.append(position)
+            return position
+
+        def record_legal_moves(position):
+            observed_positions.append(position)
+            return legal_moves(position)
+
+        with patch.object(
+            usi_engine, "parse_usi_position", side_effect=record_parse_position
+        ), patch.object(
+            usi_engine, "legal_moves", side_effect=record_legal_moves
+        ):
+            usi_engine.run_usi_engine(
+                ScriptedInput(
+                    [first_command, latest_command, "go", "quit"]
+                ),
+                outputs.append,
+                random.Random(0),
+            )
+
+        latest_position = parsed_positions[1]
+        self.assertEqual(len(parsed_positions), 2)
+        self.assertEqual(len(observed_positions), 1)
+        self.assertIs(observed_positions[0], latest_position)
+        response = outputs[0].split()
+        self.assertEqual(response[0], "bestmove")
+        self.assertIn(parse_usi_move(response[1]), legal_moves(latest_position))
 
     def test_returns_resign_when_no_legal_moves(self):
         """合法手がないときbestmove resignを返す。
