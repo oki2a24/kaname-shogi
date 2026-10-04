@@ -1,0 +1,8 @@
+#!/usr/bin/python3
+"""ShogiHomeから既存のUSIエンジンを直接起動する。"""
+
+from kaname_shogi.usi_engine import main
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

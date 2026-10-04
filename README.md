@@ -6,7 +6,7 @@
 
 最初の目標は、コマンドラインで動く、ごく弱くても自分で理解できるプログラムを作ることです。強さだけを急がず、将棋とプログラムの両方を理解しながら育てます。息子と将棋を通じて成長を共有できるものにすることも、このプロジェクトの大切な目的です。
 
-最初の目標は達成しました。第54回ではMac版ShogiHome 1.28.1と使い捨てプローブ間のUSI通信を実機確認し、第55回ではUSI一手表記と内部データの相互変換、第56回では平手の `position startpos moves ...` から局面を再現する機能、第57回では指定局面から合法な一手を返すUSIエンジン入口を実装しました。第58回ではコマンド行を文字列分岐のままにし、最新 `Position` だけを持つ非公開状態オブジェクトを導入しました。乱数器は一手選択側に残し、全281テストと独立レビュー2回を確認して `main` に取り込み済みです。次テーマはロードマップ第5項「ShogiHomeで平手対局する」に決まり、新しいセッションの準備中です。経緯は[第54回学習記録](docs/learning/54-usi-shogihome-connection-scope.md)、[第55回学習記録](docs/learning/55-usi-move-notation.md)、[第56回学習記録](docs/learning/56-usi-position-replay.md)、[第57回学習記録](docs/learning/57-usi-engine-response.md)、[第58回学習記録](docs/learning/58-usi-command-state-api-review.md)、[次テーマ候補](docs/next-topics.md)、[第59回の開始時点の引き継ぎ](docs/handover-usi-shogihome-gameplay.md)、[USI接続ロードマップ](docs/roadmap-usi-shogihome.md)、現在地は[再開案内](docs/resume.md)を参照してください。
+最初の目標は達成しました。第54回ではMac版ShogiHome 1.28.1と使い捨てプローブ間のUSI通信を実機確認し、第55回ではUSI一手表記と内部データの相互変換、第56回では平手の `position startpos moves ...` から局面を再現する機能、第57回では指定局面から合法な一手を返すUSIエンジン入口を実装しました。第58回ではコマンド行を文字列分岐のままにし、最新 `Position` だけを持つ非公開状態オブジェクトを導入しました。乱数器は一手選択側に残し、全281テストと独立レビュー2回を確認して `main` に取り込み済みです。第59回は作業ブランチでShogiHome 1.28.1の平手対局を行い、2回の合法応手と投了による終了を確認しました。作業ブランチから `main` への取り込みと、最後の理解確認はこれからです。経緯は[第54回学習記録](docs/learning/54-usi-shogihome-connection-scope.md)、[第55回学習記録](docs/learning/55-usi-move-notation.md)、[第56回学習記録](docs/learning/56-usi-position-replay.md)、[第57回学習記録](docs/learning/57-usi-engine-response.md)、[第58回学習記録](docs/learning/58-usi-command-state-api-review.md)、[第59回学習記録](docs/learning/59-shogihome-even-game.md)、[ShogiHome対局の確定知識](docs/knowledge/usi-shogihome-gameplay.md)、[実装計画](docs/plans/2026-10-04-shogihome-gameplay-implementation-plan.md)、[USI接続ロードマップ](docs/roadmap-usi-shogihome.md)、現在地は[再開案内](docs/resume.md)を参照してください。
 
 ## 現在できることと主な未対応事項
 
@@ -22,9 +22,9 @@
 
 対局中の局面表示では、盤の上に後手、下に先手の持ち駒を表示します。持ち駒がない場合は「なし」、ある場合は駒名と枚数を確認できます。
 
-ライブラリには、USI一手トークンと内部の一手データの相互変換、平手の `position startpos moves ...` からの局面再現、USIコマンドから合法な一手を返す専用エンジン入口があります。`position sfen ...`、時間管理、ShogiHomeでの実対局確認は未対応です。
+ライブラリには、USI一手トークンと内部の一手データの相互変換、平手の `position startpos moves ...` からの局面再現、USIコマンドから合法な一手を返す専用エンジン入口があります。ShogiHome 1.28.1では平手の短い実対局で2回の応手を確認しました。`position sfen ...` と時間管理は未対応で、ShogiHomeとの全機能・全コマンド互換性は確認していません。
 
-千日手、持将棋、入玉、時間管理、反則勝敗、SFEN局面入力、ShogiHomeでの実対局確認、評価関数、探索、自動保存はまだ扱いません。コンピュータ対コンピュータには手数上限がなく、詰み、合法手なし、または `Ctrl-C` で停止します。
+千日手、持将棋、入玉、時間管理、反則勝敗、SFEN局面入力、評価関数、探索、自動保存はまだ扱いません。ShogiHomeとの確認はMac版1.28.1の平手短局のみで、通信ログや時計動作、他のコマンドは未確認です。コンピュータ対コンピュータには手数上限がなく、詰み、合法手なし、または `Ctrl-C` で停止します。
 
 実行とテストにはPython標準ライブラリだけを使います。外部パッケージのインストールは不要です。
 
@@ -44,7 +44,7 @@ USIエンジンを標準入出力で起動する場合は、専用の実行入�
 python3 -m kaname_shogi.usi_engine
 ```
 
-この入口はUSIコマンドを読み、応答を標準出力へ返します。ShogiHomeへの登録と実対局での互換性はロードマップ第5項で確認します。
+この入口はUSIコマンドを読み、応答を標準出力へ返します。ShogiHomeで利用する場合は、リポジトリ直下の `kaname-shogi-usi` を実行ファイルとして登録します。作業ブランチ上のランチャーでShogiHome 1.28.1への登録と、平手で2回の合法応手を返して投了終了することを確認しました。
 
 ## CLI操作
 

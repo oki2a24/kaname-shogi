@@ -2,18 +2,14 @@
 
 ## 現在地
 
-第58回「USIコマンド型・独立状態APIの導入要否を再検討する」は、実装・独立レビュー・学習記録・最終理解確認まで完了した。変更は2026-10-04に `main` へfast-forwardで取り込まれ、取り込み後の全281テストが成功した。USIコマンド行は文字列分岐を維持し、非公開 `_UsiEngineState` は `Position` または未設定の `None` だけを保持する。ShogiHomeでの実対局はロードマップ第5項に残っている。
+第58回「USIコマンド型・独立状態APIの導入要否を再検討する」は、実装・独立レビュー・学習記録・最終理解確認まで完了した。変更は2026-10-04に `main` へfast-forwardで取り込まれ、取り込み後の全281テストが成功した。USIコマンド行は文字列分岐を維持し、非公開 `_UsiEngineState` は `Position` または未設定の `None` だけを保持する。
 
-第58回の内容と本人の回答は[学習記録](learning/58-usi-command-state-api-review.md)、現在のUSI契約は[確定知識](knowledge/usi-engine-response.md)、設計と実績は[設計仕様](plans/2026-10-04-usi-command-state-api-review-design.md)および[実装計画](plans/2026-10-04-usi-command-state-api-review-implementation-plan.md)にある。
+第59回「ShogiHomeで平手対局する」は、作業ブランチ `codex/shogihome-gameplay` で実装・検証・ShogiHome 1.28.1での限定対局まで進んだ。人間先手の７六歩に対して `kaname-shogi` が４四歩、人間の２六歩に対して９二飛を返し、ShogiHomeの盤面・棋譜へ反映された。人間の投了後、画面に「対局終了（投了）」が表示され、棋譜にも投了が記録された。全283テストと独立コードレビューの再確認は完了している。
 
-## 次に行うこと
+ランチャー、テスト、記録は `/Users/oki2a24/.codex/worktrees/shogihome-gameplay/kaname-shogi` にあり、元の `/Users/oki2a24/kaname-shogi` の `main` にはまだ取り込んでいない。実装計画・第59回学習記録・知識メモを確認した後、本人の承認を得て取り込み、取り込み先で検証する。その後に最後の理解確認を一問行い、回答を記録してから `README.md`、`docs/next-topics.md`、`docs/02-project-direction.md` を見直す。
 
-本人は次テーマにロードマップ第5項 **「ShogiHomeで平手対局する」** を選び、新しいセッションの準備を依頼した。選定理由、完了した前提、未確認の実機挙動、再開用プロンプトは[第59回の引き継ぎ](handover-usi-shogihome-gameplay.md)を参照する。人間がそのプロンプトを新しいセッションへ入力するまで、実対局の調査・学習・実装は始めない。
+第59回の根拠と未確認事項は[学習記録](learning/59-shogihome-even-game.md)、限定対局で確かめた事実は[知識メモ](knowledge/usi-shogihome-gameplay.md)、変更・検証の手順は[実装計画](plans/2026-10-04-shogihome-gameplay-implementation-plan.md)を参照する。USI通信ログは有効にしていないため、ShogiHomeが今回実際に送信したコマンド列や時計動作は未確認である。
 
-再開時は最初に `git status --short --branch` と `git log -3 --oneline` を実行し、作成時点の記録と現在のGit状態を区別する。ShogiHome実対局までの到達条件は[USI接続ロードマップ](roadmap-usi-shogihome.md)を参照する。
+## 第59回を始めた際の資料
 
-## 第59回を始めるとき
-
-次の文を新しいセッションへ入力する。内容と開始時の資料は[第59回の引き継ぎ](handover-usi-shogihome-gameplay.md)にある。
-
-> kaname-shogi の次テーマ「ShogiHomeで平手対局する」を始めてください。最初に `git status --short --branch` と `git log -3 --oneline` で現在状態を確認し、`AGENTS.md`、`README.md`、`docs/README.md`、`docs/resume.md`、`docs/next-topics.md`、`docs/02-project-direction.md`、`docs/roadmap-usi-shogihome.md`、`docs/handover-usi-shogihome-gameplay.md`、第54〜58回の学習記録、USI関連の知識メモ・設計仕様・実装計画を読んでください。USI一次資料とShogiHome公式資料を確認し、第54回の使い捨てプローブで観測した一例、第55〜58回のローカル実装、未確認のShogiHome挙動を区別してください。`superpowerssuperpowers:brainstorming` を使い、一次資料と既存コードを確認してから設計を一問ずつ相談してください。実対局の範囲・手順・確認方法を設計案として提示し、明示的な承認を待ってください。コードやテストの変更が必要なら、実装計画を作成して提示し、承認前に変更しないでください。仕様や実機一例から未確認のコマンド要件を推測せず、ShogiHome上で `kaname-shogi` が合法な応手を返す通常の平手対局と終了を確認してください。
+再開時には `git status --short --branch` と `git log -3 --oneline` を確認し、作成時点の引き継ぎと現在の状態を区別した。第59回の再開依頼文は[引き継ぎ](handover-usi-shogihome-gameplay.md)に保存されている。一次資料は[USI原案](https://hgm.nubati.net/usi.html)と[ShogiHome公式資料](https://github.com/sunfish-shogi/shogihome/wiki/%E3%82%A8%E3%83%B3%E3%82%B8%E3%83%B3%E7%99%BB%E9%8C%B2%E6%89%8B%E9%A0%86)を参照する。
