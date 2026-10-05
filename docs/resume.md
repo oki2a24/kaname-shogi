@@ -2,20 +2,27 @@
 
 ## 現在地
 
-第62回「ShogiHome接続手順書とCodexスキルを作成する」は完了した。人間向けの[接続手順書](shogihome-connection-guide.md)と[このリポジトリ専用のCodexスキル](../.agents/skills/shogihome-connection/SKILL.md)を作成し、どちらも学習記録や引き継ぎを運用時の参照先にしない自己完結した文書にした。
+第63回「最弱モードを残す難易度選択の最小設計」は、設計仕様の承認と理解確認まで完了した。本人は次テーマに **「承認済み難易度選択設計を実装する」** を選び、新しいセッションの準備を依頼した。
 
-確認では、手順書・スキルとShogiHome公式資料・現行知識資料を照合し、同じ読み取り専用シナリオで判断を評価した。スキル形式確認、文書リンク確認も完了した。本人の追加承認後、ShogiHome 1.28.1で一局だけ実証し、先手の７六歩に対するエンジンの５二金右と、先手投了後にエンジンが終了した画面を確認した。ログ採取、設定保存変更、テスト棋譜の保存、コード・テスト変更はしていない。実証の範囲と制限は[第62回学習記録](learning/62-shogihome-connection-guide.md)に記録した。
+設計では、CLIとShogiHomeの両方に共通の一手選択境界を設ける。現行の一様ランダムを最弱として残し、未選択時の既定値にする。駒得評価は合法手を一手だけ適用した局面を比べる追加候補で、探索は含めず、同点はランダムとする。設計の判断理由は[第63回学習記録](learning/63-weakest-mode-difficulty-selection.md)、承認済み設計は[設計仕様](plans/2026-10-05-weakest-mode-difficulty-selection-design.md)を参照する。
 
-最終理解確認への本人回答「使いまわさないため」と補足も学習記録に記録済み。本人は次テーマに **「最弱モードを残す難易度選択の最小設計」** を選び、新しいセッションで始めることを希望した。選定理由、現行コード、未決事項、再開用プロンプトは[引き継ぎ](handover-weakest-mode-difficulty-selection.md)に記録する。
+## 次テーマを始める条件
 
-## 現在の作業状態
+次テーマの選択は、具体的な実装範囲・利用者向け表示語・確認方法・実装計画を承認したことを意味しない。新しいセッションでは最初に現在のGit状態を確認し、関連する設計とコードを読んだうえで、これらの点を一問ずつ合意する。設計または実装計画を文書にしたら提示し、本人の明示承認を得るまで製品コード・テストを変更しない。
 
-第62回の手順書・スキル・実証結果はローカル `main` に統合済みで、実証結果はコミット `77eaefb` に含まれる。次テーマの引き継ぎを作成する直前は、`main` のHEADが `0917107`、`origin/main` より11コミット先行、作業ツリーはcleanだった。この引き継ぎと再開案内の更新は続くローカル文書コミットに含める。再開時には `git status --short --branch` と `git log -3 --oneline` を取り直し、記載された基点と現在の状態を照合する。
+ShogiHomeの設定変更、対局、通信ログ採取が必要と判断された場合は、実装テーマで対象と確認方法を明示し、操作前に承認を得る。駒価値、成駒・盤上・持ち駒の採点細則は未決事項なので、必要性と範囲を設計対話で決める。引き継ぎ先と再開用プロンプトは[第64回開始時点の引き継ぎ](handover-weakest-mode-difficulty-selection-implementation.md)に記録した。
 
-## 次テーマを始めるとき
+## Git状態を再確認する
 
-テーマが選ばれたら、現在のGit状態とREADMEを確認し、そのテーマの一次資料と現行実装を読む。ShogiHome接続を依頼された場合は[リポジトリ専用スキル](../.agents/skills/shogihome-connection/SKILL.md)と[人間向け接続手順書](shogihome-connection-guide.md)を確認する。実機操作は依頼範囲、現在の画面、手順書の承認境界に沿って行う。
+前セッション開始時には `main` の `b3515d9` が `origin/main` と一致していた。難易度選択の設計テーマと次テーマ準備で複数の文書を変更したため、過去に記録されたGit状態を現在値とみなさない。新しいセッションの開始時に、必ず次を実行して引き継ぎと照合する。
 
-次に始めるテーマは[最弱モードを残す難易度選択の最小設計](handover-weakest-mode-difficulty-selection.md)。再開用プロンプトを新しいセッションへ入力するまで、その設計を始めない。
+```sh
+git status --short --branch
+git log -3 --oneline
+```
 
-第62回の確認根拠や回答補足を読む場合は[学習記録](learning/62-shogihome-connection-guide.md)を参照する。手順書・スキルの運用に学習記録や過去の引き継ぎは必要ない。
+引き継ぎ準備のコミットと作業ブランチの有無も、実際の出力で確認する。作業ツリーに予期しない変更があれば、上書きせず内容を確認する。
+
+## 次に読むファイル
+
+まず [AGENTS.md](../AGENTS.md)、[README](../README.md)、[文書索引](README.md)、この再開案内、[次テーマ候補](next-topics.md)、[プロジェクト方向性](02-project-direction.md)、[第64回引き継ぎ](handover-weakest-mode-difficulty-selection-implementation.md)を読む。続いて[承認済み設計](plans/2026-10-05-weakest-mode-difficulty-selection-design.md)、[USIエンジン応答の確定知識](knowledge/usi-engine-response.md)、`kaname_shogi/movegen.py`、`kaname_shogi/cli.py`、`kaname_shogi/__main__.py`、`kaname_shogi/usi_engine.py` と関連テストを確認する。

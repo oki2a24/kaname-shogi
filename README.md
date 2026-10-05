@@ -10,6 +10,8 @@
 
 第60回では息子が平手の先手として19手を指し、`kaname-shogi` の18応手がShogiHomeの棋譜に記録されました。第61回はその37手局面を再現し、ShogiHome 1.28.1のUSI通信ログから今回の一例としてエンジンの `bestmove resign` と後続するShogiHomeの `gameover lose`、`quit` を確認しました。この一例を全対局の必須要件とは扱いません。第62回では人間向けの[ShogiHome接続手順書](docs/shogihome-connection-guide.md)と、このリポジトリで発見できる[接続用Codexスキル](.agents/skills/shogihome-connection/SKILL.md)を整え、ShogiHome 1.28.1で通常対局を一局だけ実証しました。先手の７六歩にエンジンが５二金右で応じたこと、投了後にエンジンが終了したことを画面で確認しています。USIログは採取していません。詳細は[第60回学習記録](docs/learning/60-shogihome-son-trial.md)、[第61回学習記録](docs/learning/61-shogihome-auto-resign-logs.md)、[第62回学習記録](docs/learning/62-shogihome-connection-guide.md)、[次テーマ候補](docs/next-topics.md)、[ShogiHome対局の確定知識](docs/knowledge/usi-shogihome-gameplay.md)、[USI接続ロードマップ](docs/roadmap-usi-shogihome.md)、現在地は[再開案内](docs/resume.md)を参照してください。
 
+第63回では、CLIとShogiHomeの両方で難易度を選べる設計を承認しました。現在の一様ランダム選択を最弱として残し、未選択時もそれを既定にします。これは設計のみで、実装はまだ行っていません。本人は次テーマにこの設計の実装を選びましたが、実装の範囲・確認方法・計画は次のセッションで改めて合意・承認します。判断経緯は[第63回学習記録](docs/learning/63-weakest-mode-difficulty-selection.md)、仕様は[難易度選択設計](docs/plans/2026-10-05-weakest-mode-difficulty-selection-design.md)、再開案内は[次テーマの引き継ぎ](docs/handover-weakest-mode-difficulty-selection-implementation.md)を参照してください。
+
 ## 現在できることと主な未対応事項
 
 平手の初期配置から、次の3形式で対局できます。
