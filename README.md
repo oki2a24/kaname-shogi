@@ -10,7 +10,7 @@
 
 第60回では息子が平手の先手として19手を指し、`kaname-shogi` の18応手がShogiHomeの棋譜に記録されました。第61回はその37手局面を再現し、ShogiHome 1.28.1のUSI通信ログから今回の一例としてエンジンの `bestmove resign` と後続するShogiHomeの `gameover lose`、`quit` を確認しました。この一例を全対局の必須要件とは扱いません。第62回では人間向けの[ShogiHome接続手順書](docs/shogihome-connection-guide.md)と、このリポジトリで発見できる[接続用Codexスキル](.agents/skills/shogihome-connection/SKILL.md)を整え、ShogiHome 1.28.1で通常対局を一局だけ実証しました。先手の７六歩にエンジンが５二金右で応じたこと、投了後にエンジンが終了したことを画面で確認しています。USIログは採取していません。詳細は[第60回学習記録](docs/learning/60-shogihome-son-trial.md)、[第61回学習記録](docs/learning/61-shogihome-auto-resign-logs.md)、[第62回学習記録](docs/learning/62-shogihome-connection-guide.md)、[次テーマ候補](docs/next-topics.md)、[ShogiHome対局の確定知識](docs/knowledge/usi-shogihome-gameplay.md)、[USI接続ロードマップ](docs/roadmap-usi-shogihome.md)、現在地は[再開案内](docs/resume.md)を参照してください。
 
-第63回では、CLIとShogiHomeの両方で難易度を選べる設計を承認しました。第64回の作業ブランチでは、その設計に基づき一様ランダムを最弱・既定値として保ちながら、谷川浩司さんの参考値を使う一手後の駒得評価を実装しました。CLIは対局開始前に選び、USIは `Difficulty` optionで指定します。実装・確認記録は[第64回学習記録](docs/learning/64-weakest-mode-difficulty-selection-implementation.md)、仕様は[難易度選択設計](docs/plans/2026-10-05-weakest-mode-difficulty-selection-design.md)、実装計画は[第64回実装計画](docs/plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)を参照してください。この作業ブランチは `main` へ未取り込みで、ShogiHomeの画面からの設定と実対局は未確認です。
+第63回では、CLIとShogiHomeの両方で難易度を選べる設計を承認しました。第64回ではその設計に基づき、一様ランダムを最弱・既定値として保ちながら、谷川浩司さんの参考値を使う一手後の駒得評価を実装しました。CLIは対局開始前に選び、USIは `Difficulty` optionで指定します。2026-10-05に `main` へ取り込み、取り込み先で全305テストが成功しました。ShogiHomeの画面からの設定と実対局は未確認です。実装・確認記録は[第64回学習記録](docs/learning/64-weakest-mode-difficulty-selection-implementation.md)、仕様は[難易度選択設計](docs/plans/2026-10-05-weakest-mode-difficulty-selection-design.md)、実装計画は[第64回実装計画](docs/plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)を参照してください。
 
 ## 現在できることと主な未対応事項
 
@@ -20,15 +20,15 @@
 2. 人間対コンピュータ（先手が人間、後手がコンピュータ）
 3. コンピュータ対コンピュータ
 
-盤上移動、成り・不成、駒取り、持ち駒、駒打ち、二歩、行き所のない駒、王手、自玉を王手にさらす手の禁止、詰み、打ち歩詰め、投了を扱います。第64回実装ブランチのコンピュータは、対局ごとに「最弱（一様ランダム）」か「駒得を考える」を選べます。未指定時は最弱です。駒得方針は各合法手を一手だけ適用した後、盤上と持ち駒の参考点数差を比較し、最高点の手から同点ランダムで選びます。探索はしません。
+盤上移動、成り・不成、駒取り、持ち駒、駒打ち、二歩、行き所のない駒、王手、自玉を王手にさらす手の禁止、詰み、打ち歩詰め、投了を扱います。コンピュータは対局ごとに「最弱（一様ランダム）」か「駒得を考える」を選べます。未指定時は最弱です。駒得方針は各合法手を一手だけ適用した後、盤上と持ち駒の参考点数差を比較し、最高点の手から同点ランダムで選びます。探索はしません。
 
 対局中の成功手はメモリ上の棋譜へ記録されます。人間の手番では、開始局面と指し手履歴を専用JSON形式へ明示的に保存し、後から読み込んで再開できます。
 
 対局中の局面表示では、盤の上に後手、下に先手の持ち駒を表示します。持ち駒がない場合は「なし」、ある場合は駒名と枚数を確認できます。
 
-ライブラリには、USI一手トークンと内部の一手データの相互変換、平手の `position startpos moves ...` からの局面再現、USIコマンドから合法な一手を返す専用エンジン入口があります。実装ブランチでは `Difficulty` comboに `Random` と `Material` を通知し、設定がない場合は `Random` を使います。ShogiHome 1.28.1では第59〜62回に平手対局・観察を行い、息子の対局では18回のエンジン応答、第61回では自動投了時の通信ログ1例、第62回では７六歩への５二金右の応答を画面で確認しました。`position sfen ...` と時間管理は未対応で、今回追加したDifficulty optionについてはShogiHome画面での設定、実対局、通信ログによる確認を行っていません。
+ライブラリには、USI一手トークンと内部の一手データの相互変換、平手の `position startpos moves ...` からの局面再現、USIコマンドから合法な一手を返す専用エンジン入口があります。USIエンジンは `Difficulty` comboに `Random` と `Material` を通知し、設定がない場合は `Random` を使います。ShogiHome 1.28.1では第59〜62回に平手対局・観察を行い、息子の対局では18回のエンジン応答、第61回では自動投了時の通信ログ1例、第62回では７六歩への５二金右の応答を画面で確認しました。`position sfen ...` と時間管理は未対応で、今回追加したDifficulty optionについてはShogiHome画面での設定、実対局、通信ログによる確認を行っていません。
 
-千日手、持将棋、入玉、時間管理、反則勝敗、SFEN局面入力、評価関数、探索、自動保存はまだ扱いません。ShogiHomeとの確認はMac版1.28.1の平手対局です。自動投了時の通信ログは37手局面からの一例だけで、時計動作や他の終局・コマンドの互換性は未確認です。コンピュータ対コンピュータには手数上限がなく、詰み、合法手なし、または `Ctrl-C` で停止します。
+千日手、持将棋、入玉、時間管理、反則勝敗、SFEN局面入力、複数手を読む探索や強さの保証、自動保存はまだ扱いません。駒得方針は一手後だけの評価です。ShogiHomeとの確認はMac版1.28.1の平手対局です。自動投了時の通信ログは37手局面からの一例だけで、Difficulty optionを画面で設定した対局、時計動作や他の終局・コマンドの互換性は未確認です。コンピュータ対コンピュータには手数上限がなく、詰み、合法手なし、または `Ctrl-C` で停止します。
 
 実行とテストにはPython標準ライブラリだけを使います。外部パッケージのインストールは不要です。
 

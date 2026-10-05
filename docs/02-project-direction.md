@@ -183,12 +183,10 @@ ShogiHome 1.28.1へ `kaname-shogi` を登録し、平手で人が先手、エン
 
 この設計で、評価方式は一様ランダムを置き換えるのではなく選択肢として加わる形になった。駒価値や成駒・盤上・持ち駒の採点細則は未決であり、コード・テストは変更していない。本人は次テーマに承認済み難易度選択設計の実装を選び、新しいセッションの準備を依頼した。具体的な範囲・表現・確認方法と実装計画は次のセッションで合意・承認する。
 
-## 第64回の進捗
+## 第64回完了後の見直し
 
-第63回の設計を受け、第64回では谷川浩司さんの参考駒価値と採点方法、CLI表示語、USI option値、実装範囲・確認方法を本人と一問ずつ決め、実装計画の明示承認後に作業ブランチで実装した。選択関連コードとテストに対するRefactor確認、独立レビュー、レビュー指摘の修正と再レビューを終えた。詳細なRed/Greenとレビュー記録は[第64回学習記録](learning/64-weakest-mode-difficulty-selection-implementation.md)と[実装計画](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)にある。
+第63回の設計を受け、第64回では谷川浩司さんの参考駒価値と採点方法、CLI表示語、USI option値、実装範囲・確認方法を本人と一問ずつ決め、実装計画の明示承認後に作業ブランチで実装した。選択関連コードとテストに対するRefactor確認、独立レビュー、レビュー指摘の修正と再レビューを終えた。本人の選択で `main` へfast-forwardし、取り込み先でも全305テストが成功した。詳細は[第64回学習記録](learning/64-weakest-mode-difficulty-selection-implementation.md)と[実装計画](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)にある。
 
-作業ブランチでは一様ランダムを最弱・既定値として維持し、CLIは対局開始前、USIは `Difficulty` comboで方針を選ぶ。一手後の駒得比較は谷川参考値、盤上と持ち駒を同額、玉を除外、取った成駒は基本駒価値、指し手側から見た合計差、最高点の同点ランダムとした。ShogiHome画面での設定・実対局・ログ採取は実施していない。
+一様ランダムを最弱・既定値として維持し、CLIは対局開始前、USIは `Difficulty` comboで方針を選ぶ。一手後の駒得比較は谷川参考値、盤上と持ち駒を同額、玉を除外、取った成駒は基本駒価値、指し手側から見た合計差、最高点の同点ランダムとした。第64回の最終理解確認では、銀一枚の捕獲で差が16点増える理由を本人が説明した。ShogiHome画面での設定・実対局・ログ採取は実施していない。
 
-`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v` の305テストが成功し、`git diff --check` と変更Markdownの相対リンク検査にも問題はなかった。
-
-実装と記録を本人に提示し、記録内容の確認と作業ブランチへのコミットをこれから行う。`main` への取り込みと取り込み先での検証、最終理解確認は未完了である。
+`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v` は作業ブランチとマージ後の `main` で各305テストが成功し、`git diff --check` とMarkdownの相対リンク検査にも問題はなかった。mainへの変更はローカルにあり、リモートへpushしていない。本人は次テーマをまだ選んでいない。
