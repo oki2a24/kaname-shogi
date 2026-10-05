@@ -37,6 +37,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 - [学習・開発の再開案内](resume.md)
 - [次テーマの選定履歴：ShogiHomeでDifficulty設定を確認するテーマを選定済み](next-topics.md)
+- [第65回予定テーマ開始時点の引き継ぎ：ShogiHomeでDifficulty設定を確認する](handover-shogihome-difficulty-verification.md)
 - [第64回実装計画（本人承認済み）](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)
 - [第64回学習記録：承認済み難易度選択設計の実装](learning/64-weakest-mode-difficulty-selection-implementation.md)
 - [最弱手選択と駒得評価の確定知識](knowledge/31-weak-move-selection.md)
