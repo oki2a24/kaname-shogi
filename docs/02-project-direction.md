@@ -175,4 +175,4 @@ ShogiHome 1.28.1へ `kaname-shogi` を登録し、平手で人が先手、エン
 
 人間向けの[ShogiHome接続手順書](shogihome-connection-guide.md)と、このリポジトリで発見できる[接続用Codexスキル](../.agents/skills/shogihome-connection/SKILL.md)を作成し、どちらも学習記録や引き継ぎを運用根拠にしない自己完結した案内にした。文書と公式資料・現行知識の照合に加えて、ShogiHome 1.28.1で一局だけ接続を実証した。先手の７六歩に対する５二金右の応答と、投了後に稼働中エンジンがなくなった画面を確認した。ログ機能、Ponder ON、別バージョン、他局面の通信は確認していない。
 
-第62回の最終理解確認では、現在の実行ファイルの登録先を照合する理由を「使いまわさないため」と回答した。補足を[第62回学習記録](learning/62-shogihome-connection-guide.md)に記録した。次テーマは未選定であり、候補と推薦理由は[次テーマ候補](next-topics.md)に示す。
+第62回の最終理解確認では、現在の実行ファイルの登録先を照合する理由を「使いまわさないため」と回答した。補足を[第62回学習記録](learning/62-shogihome-connection-guide.md)に記録した。次テーマは **「最弱モードを残す難易度選択の最小設計」** に決まった。現行の一様ランダム選択を最弱として維持し、難易度の選択面と追加する方針を設計する。開始条件と未決事項は[引き継ぎ](handover-weakest-mode-difficulty-selection.md)を参照する。
