@@ -1,42 +1,56 @@
-# 弱い自動指し手のための合法手列挙と一手選択：参照メモ
+# 合法手列挙と方針別の一手選択：参照メモ
 
-更新日：2026-09-25
+更新日：2026-10-05
 
-## 中立な一手データ
+## 中立な一手データと合法手一覧
 
 - `BoardMove` は出発 `Square`、到着 `Square`、`promote` を持つ変更不可の盤上移動データ。
 - `DropMove` は `BasicPieceType` と打ち先 `Square` を持つ変更不可の駒打ちデータ。
 - `Move` は上のどちらかを表す型注釈。いずれも局面を変更する操作ではない。
 - 実際の適用は `apply_move` / `apply_drop` が担う。棋譜の `RecordedMove` / `RecordedDrop` とは責務を分ける。
+- `legal_moves(position)` は現在実装済みの規則で適用できる `Move` の固定順タプルを返し、元の局面を変更しない。
 
-定義：[kaname_shogi/move.py](../../kaname_shogi/move.py)
+列挙順は強さの優先順位ではなく、再現できる一覧を作るために固定している。`has_legal_move(position)` は一覧が空かどうかを使って判定する。
 
-## 合法手一覧
+## 最弱の一様ランダム
 
-`legal_moves(position)` は、現在実装済みの規則で適用できる `Move` の `tuple` を返す。局面は変更しない。成り、二歩、行き所のない駒、自玉の安全、打ち歩詰めは既存の局面適用を複製局面へ試して判定する。
+`choose_weak_move(moves, rng)` は渡された合法手を再検証せず、注入された `random.Random` から一手を一様に選ぶ。空タプルなら `None` を返す。これは終局・投了・勝敗を表さない。
 
-列挙順は固定で、強さの優先順位ではない。
+`MoveSelectionPolicy.RANDOM` と `choose_move(position, moves, policy, rng)` は、最弱方針を既存の `choose_weak_move` へ委譲する。未指定時の既定値もRANDOMであり、従来の選択動作を保つ。
 
-1. 盤上移動
-2. 出発マスは1一から9九
-3. 各駒の既存候補順
-4. 不成、成り
-5. 駒打ち
-6. 駒種は飛・角・金・銀・桂・香・歩
-7. 各打ち先は1一から9九
+## 駒得を考える方針
 
-`has_legal_move(position)` は `bool(legal_moves(position))` で判定する。打ち歩詰め確認中の内部再帰回避は非公開列挙器の設定で維持する。
+`material_balance(position, perspective)` は指定側の盤上と持ち駒を合算し、相手側の合計を引いた値を返す。盤上は成駒を含む現在の駒種、持ち駒は基本駒種で数える。玉将は盤上の点数に含めない。
 
-## 弱い一手選択
+| 駒 | 盤上の値 | 成駒 | 成駒の値 | 持ち駒の値 |
+| --- | ---: | --- | ---: | ---: |
+| 歩 | 1 | と金 | 12 | 1 |
+| 香 | 5 | 成香 | 10 | 5 |
+| 桂 | 6 | 成桂 | 10 | 6 |
+| 銀 | 8 | 成銀 | 9 | 8 |
+| 金 | 9 | — | — | 9 |
+| 角 | 13 | 馬 | 15 | 13 |
+| 飛 | 15 | 竜 | 17 | 15 |
+| 玉・王 | 点数に含めない | — | — | 持ち駒にできない |
 
-`choose_weak_move(moves, rng)` は、`legal_moves` が返した一覧を再検証せず、注入された `random.Random` で一様に一手を選ぶ。空タプルなら `None` を返す。`None` は「選べる一手がない」という選択器の結果であり、詰み・投了・勝敗・USIの `bestmove resign` を表さない。
+数値は[北海道大学講義資料 p.6「参考：将棋の駒の価値（谷川浩司）」](https://ocw.hokudai.ac.jp/wp-content/uploads/2016/01/IntelligentInformationProcessing-2005-Note-06.pdf)の参考値を教材用に採用した。通常の将棋の勝敗は詰みを中心とした規則で決まり、この値の合計を競うものではない。[日本将棋連盟の対局規則](https://www.shogi.or.jp/match/taikyoku_rules/)と、入玉・持将棋の成立後に使う規則上の点数計算を説明する[日本将棋連盟FAQ](https://www.shogi.or.jp/faq/rules/)とは区別する。
 
-## 対象外と申し送り
+`choose_move(..., MoveSelectionPolicy.MATERIAL, ...)` は渡された各合法手を独立した複製局面へ一手だけ適用し、元の `side_to_move` から見た適用直後の `material_balance` を比べる。最高値の手だけを候補にし、同点は注入乱数器で選ぶ。相手の応手やその先の読みは含まず、局面と合法手一覧を変更しない。成駒を取った場合、既存の適用処理が基本駒種の持ち駒へ戻す。
 
-- CLIの人間対コンピュータ進行
-- USI・SFEN・標準入出力通信と外部文字列変換
-- 評価、探索、定跡、強さ調整
-- `GameRecord` の棋譜型との変換
+これは探索付きの評価関数や棋力保証ではなく、駒得の変化を比較する一手の教材用ヒューリスティックである。
+
+## 利用面
+
+- CLIは対局形式を選んだ後、コンピュータが参加する場合に方針を尋ねる。空入力は「最弱（一様ランダム）」、もう一方は「駒得を考える」。選択は一局中固定する。
+- USIは `Difficulty` comboを通知し、`Random` / `Material` を受け付ける。詳細とUSI状態の寿命は[USIエンジン応答](usi-engine-response.md)を参照する。
+- ShogiHome画面でのこの設定や実対局は、この実装テーマでは確認していない。
+
+## 対象外
+
+- 深さを増やす探索、定跡、棋力保証、段級位の指定
 - 千日手、持将棋、入玉、時間切れ、反則勝敗
+- `GameRecord` の棋譜型と選択処理の変換
 
-一次資料：[日本将棋連盟「対局規則」](https://www.shogi.or.jp/match/taikyoku_rules/)、[日本将棋連盟「反則について」](https://www.shogi.or.jp/knowledge/shogi/05.php)
+定義：[kaname_shogi/move.py](../../kaname_shogi/move.py)、[kaname_shogi/movegen.py](../../kaname_shogi/movegen.py)
+
+一次資料：[日本将棋連盟「対局規則」](https://www.shogi.or.jp/match/taikyoku_rules/)、[日本将棋連盟「FAQ（持将棋・入玉の点数計算）」](https://www.shogi.or.jp/faq/rules/)

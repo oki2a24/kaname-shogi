@@ -11,7 +11,7 @@ import unittest
 from unittest.mock import patch
 
 from kaname_shogi import usi_engine
-from kaname_shogi.movegen import legal_moves
+from kaname_shogi.movegen import MoveSelectionPolicy, legal_moves
 from kaname_shogi.usi_move import parse_usi_move
 from kaname_shogi.usi_position import parse_usi_position
 
@@ -116,10 +116,26 @@ class UsiEngineStateTests(unittest.TestCase):
 
 
 class UsiEngineFunctionTests(unittest.TestCase):
-    def test_answers_usi_and_ready_in_order(self):
-        """usiとisreadyへ定義済みの順序で応答する。
+    def _run_with_policy_spy(self, commands):
+        """一手選択境界に届く局面・方針を記録してUSIコマンドを実行する。"""
+        calls = []
+        outputs = []
 
-        応答の欠落や順序違いがGUIとの初期化を止めることを検出する。
+        def choose(position, moves, policy, rng):
+            calls.append((position, moves, policy, rng))
+            return moves[0] if moves else None
+
+        with patch.object(usi_engine, "choose_move", create=True,
+                          side_effect=choose):
+            usi_engine.run_usi_engine(
+                ScriptedInput(commands), outputs.append, random.Random(0))
+        return calls, outputs
+
+    def test_answers_usi_with_difficulty_combo_before_usiok(self):
+        """usiへDifficulty comboをusiokより先に通知する。
+
+        optionを通知し忘れたり、usiokの後へ出してGUI側の設定機会を失う誤りを
+        検出する。
         """
         outputs = []
 
@@ -132,6 +148,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             [
                 "id name kaname-shogi",
                 "id author kaname-shogi project",
+                "option name Difficulty type combo default Random var Random var Material",
                 "usiok",
                 "readyok",
             ],
@@ -162,9 +179,105 @@ class UsiEngineFunctionTests(unittest.TestCase):
             [
                 "id name kaname-shogi",
                 "id author kaname-shogi project",
+                "option name Difficulty type combo default Random var Random var Material",
                 "usiok",
             ],
         )
+
+    def test_uses_random_policy_when_difficulty_is_unset(self):
+        """setoptionなしの最初のgoは既定のRANDOMを使う。
+
+        設定未指定時に新しい駒得方針を使ったり、選択方針を共有境界へ渡さない誤りを
+        検出する。
+        """
+        calls, outputs = self._run_with_policy_spy([
+            "position startpos moves 7g7f", "go", "quit",
+        ])
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][2], MoveSelectionPolicy.RANDOM)
+        self.assertTrue(outputs[0].startswith("bestmove "))
+
+    def test_applies_valid_difficulty_setting_at_first_go(self):
+        """最初のgoはそれより前の有効なMaterial設定を使う。
+
+        USIが既知の設定を読み飛ばしたり、設定前に選択した既定値を使い続ける誤りを
+        検出する。
+        """
+        calls, _ = self._run_with_policy_spy([
+            "setoption name Difficulty value Material",
+            "position startpos moves 7g7f", "go", "quit",
+        ])
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL)
+
+    def test_accepts_difficulty_option_case_insensitively(self):
+        """Difficulty名とRandom/Material値の大文字小文字を区別しない。
+
+        USI仕様がcase-insensitiveと定める既知optionを表記揺れだけで読み飛ばす誤りを
+        検出する。
+        """
+        calls, _ = self._run_with_policy_spy([
+            "setoption name difficulty value mAtErIaL",
+            "position startpos moves 7g7f", "go", "quit",
+        ])
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL)
+
+    def test_ignores_invalid_and_unknown_options(self):
+        """未知名を無視し、不正Difficulty値では最後の有効値を保つ。
+
+        未知optionで状態を壊したり、未設定の不正値を受け入れたりする誤りを検出する。
+        """
+        calls, _ = self._run_with_policy_spy([
+            "setoption name Difficulty value Material",
+            "setoption name USI_Hash value 32",
+            "setoption name Difficulty value Strong",
+            "position startpos moves 7g7f", "go", "quit",
+        ])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL)
+
+        calls, _ = self._run_with_policy_spy([
+            "setoption name Difficulty value Strong",
+            "position startpos moves 7g7f", "go", "quit",
+        ])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][2], MoveSelectionPolicy.RANDOM)
+
+    def test_defers_midgame_difficulty_change_until_next_game(self):
+        """最初のgoで固定した方針は局中変更で変わらず次局で切り替わる。
+
+        二回目のgoへ変更値を早期適用したり、usinewgame後も古い固定値を残す誤りを
+        検出する。
+        """
+        calls, _ = self._run_with_policy_spy([
+            "position startpos moves 7g7f", "go",
+            "setoption name Difficulty value Material",
+            "position startpos moves 2g2f", "go",
+            "usinewgame", "position startpos moves 7g7f", "go", "quit",
+        ])
+
+        self.assertEqual([call[2] for call in calls], [
+            MoveSelectionPolicy.RANDOM,
+            MoveSelectionPolicy.RANDOM,
+            MoveSelectionPolicy.MATERIAL,
+        ])
+
+    def test_usinewgame_preserves_configured_difficulty(self):
+        """usinewgameは局面を消しても設定済み方針を次局へ保つ。
+
+        新局開始時にDifficultyまで既定値へ消去して、利用者の設定を失う誤りを検出する。
+        """
+        calls, _ = self._run_with_policy_spy([
+            "setoption name Difficulty value Material",
+            "usinewgame", "position startpos moves 2g2f", "go", "quit",
+        ])
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL)
 
     def test_returns_legal_bestmove_from_replayed_position(self):
         """再現した局面の合法手からUSI形式の一手を返す。
@@ -443,6 +556,10 @@ class UsiEngineProcessTests(unittest.TestCase):
             self.send_line(process, "usi")
             self.assertEqual(reader.read_line(), "id name kaname-shogi")
             self.assertEqual(reader.read_line(), "id author kaname-shogi project")
+            self.assertEqual(
+                reader.read_line(),
+                "option name Difficulty type combo default Random var Random var Material",
+            )
             self.assertEqual(reader.read_line(), "usiok")
 
             self.send_line(process, "isready")

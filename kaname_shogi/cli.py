@@ -9,12 +9,14 @@ from .display import render_position
 from .game_record import GameRecord
 from .move import BoardMove, DropMove, Move
 from .model import BasicPieceType, Side, Square, create_initial_position
-from .movegen import choose_weak_move, is_game_over, legal_moves
+from .movegen import (MoveSelectionPolicy, choose_move, is_game_over,
+                      legal_moves)
 
 
 __all__ = (
     "GameMode",
     "choose_game_mode",
+    "choose_move_selection_policy",
     "MoveCommand",
     "DropCommand",
     "ResignCommand",
@@ -101,6 +103,41 @@ def choose_game_mode(*, input_fn: Callable[[], str] = input,
             return modes[input_fn().strip()]
         except KeyError:
             output_fn("エラー：対局形式を1〜3で選んでください。")
+
+
+def choose_move_selection_policy(
+        input_fn: Callable[[], str] = input,
+        output_fn: Callable[[str], None] = print) -> MoveSelectionPolicy:
+    """コンピュータの一手選択方針を対局開始前に選ぶ。
+
+    引数:
+        input_fn: 方針番号または空入力を一つ返す入力操作。
+        output_fn: 選択肢と入力エラーを表示する操作。
+
+    戻り値:
+        1なら既存一様ランダムのRANDOM、2なら一手後の駒得比較のMATERIAL。
+        空入力はRANDOMを返す。不正入力では返さず再入力する。
+
+    副作用:
+        局面、棋譜、乱数を変更せず、メニューとエラーだけを表示する。
+
+    難易度を強さの保証ではなく一手選択方針として示す。現行の一様ランダムを
+    最弱の既定値として保ち、入力を対局進行から分離する。
+    """
+    policies = {
+        "1": MoveSelectionPolicy.RANDOM,
+        "2": MoveSelectionPolicy.MATERIAL,
+    }
+    while True:
+        output_fn("一手選択方針を選んでください（1: 最弱（一様ランダム）、"
+                  "2: 駒得を考える、空入力: 最弱）:")
+        choice = input_fn().strip()
+        if choice == "":
+            return MoveSelectionPolicy.RANDOM
+        try:
+            return policies[choice]
+        except KeyError:
+            output_fn("エラー：一手選択方針を1〜2で選んでください。")
 
 
 @dataclass(frozen=True)
@@ -349,14 +386,16 @@ def _format_selected_move(move: Move) -> str:
 
 
 def _run_computer_turn(record: GameRecord, rng: random.Random,
-                       output_fn: Callable[[str], None]) -> bool:
+                       output_fn: Callable[[str], None],
+                       move_selection_policy: MoveSelectionPolicy) -> bool:
     """コンピュータ担当側の合法手を一つ選んで適用し、成功したかを返す。
 
     合法手が空の場合は選択不能を勝敗や投了へ変換せず、専用メッセージを表示して
     Falseを返す。選択された手は適用前に表示し、成功後の局面を表示する。
     """
     moves = legal_moves(record.current_position)
-    selected = choose_weak_move(moves, rng)
+    selected = choose_move(record.current_position, moves,
+                           move_selection_policy, rng)
     if selected is None:
         output_fn("コンピュータの合法手がありません。")
         return False
@@ -385,7 +424,9 @@ def _checkmate_message(side_to_move: Side) -> str:
 def run_game(*, input_fn: Callable[[], str] = input,
              output_fn: Callable[[str], None] = print,
              rng: Optional[random.Random] = None,
-             mode: GameMode = GameMode.HUMAN_VS_COMPUTER) -> GameRecord:
+             mode: GameMode = GameMode.HUMAN_VS_COMPUTER,
+             move_selection_policy: MoveSelectionPolicy =
+             MoveSelectionPolicy.RANDOM) -> GameRecord:
     """初期局面から、modeが決める担当で対局を進める。
 
     引数:
@@ -395,6 +436,8 @@ def run_game(*, input_fn: Callable[[], str] = input,
             生成し、その対局の全自動手で使う。テストでは固定種を注入できる。
         mode: 人間・コンピュータの先後担当を表すGameMode。省略時は既存互換の
             人間先手・コンピュータ後手とする。
+        move_selection_policy: コンピュータが一手を選ぶ方針。一局中固定する。省略時は
+            現行と同じ一様ランダムのRANDOMとする。
 
     戻り値:
         詰み、投了、EOF、Ctrl-C、またはコンピュータの合法手空一覧で終了した時点の
@@ -428,7 +471,8 @@ def run_game(*, input_fn: Callable[[], str] = input,
                 return record
 
             if not mode.is_human_turn(position.side_to_move):
-                if not _run_computer_turn(record, rng, output_fn):
+                if not _run_computer_turn(record, rng, output_fn,
+                                          move_selection_policy):
                     return record
                 continue
 

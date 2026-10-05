@@ -11,11 +11,11 @@ LAUNCHER = PROJECT_ROOT / "kaname-shogi-usi"
 
 
 class UsiEngineLauncherTests(unittest.TestCase):
-    def test_launcher_starts_usi_engine(self):
-        """実行ファイルを直接起動するとUSI初期化へ応答する。
+    def test_launcher_advertises_difficulty_combo(self):
+        """実行ファイルのusi応答でDifficulty comboをusiok前に通知する。
 
-        ShogiHomeに登録する実行ファイルから標準入出力で既存エンジンを起動できることを確認し、
-        起動不能やUSI初期応答の欠落を検出する。
+        ShogiHomeに登録する起動境界でoption応答が欠落したり、順序がずれる誤りを
+        検出する。
         """
         self.assertTrue(LAUNCHER.is_file(), "USIエンジンの実行ファイルがありません")
         self.assertTrue(os.access(LAUNCHER, os.X_OK), "USIエンジンの実行権限がありません")
@@ -36,6 +36,7 @@ class UsiEngineLauncherTests(unittest.TestCase):
             result.stdout,
             "id name kaname-shogi\n"
             "id author kaname-shogi project\n"
+            "option name Difficulty type combo default Random var Random var Material\n"
             "usiok\n",
         )
         self.assertEqual(result.stderr, "")

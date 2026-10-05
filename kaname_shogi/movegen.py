@@ -16,11 +16,47 @@ docs/design/14-hand-drops.md。
 """
 
 import random
+from enum import Enum, auto
 from typing import Callable, Optional, Tuple
 
 from .move import BoardMove, DropMove, Move
 from .model import (BasicPieceType, Board, Piece, PieceType, Position, Side,
                     Square)
+
+
+class MoveSelectionPolicy(Enum):
+    """一手を選ぶ方針を表す値。強さの保証や探索深さは表さない。"""
+
+    RANDOM = auto()
+    MATERIAL = auto()
+
+
+# 谷川浩司さんの参考値。成駒を含め、盤上にある駒種ごとの値を記録する。
+# https://ocw.hokudai.ac.jp/wp-content/uploads/2016/01/IntelligentInformationProcessing-2005-Note-06.pdf
+_TANIGAWA_PIECE_VALUES = {
+    PieceType.PAWN: 1,          # 歩
+    PieceType.PRO_PAWN: 12,     # と金
+    PieceType.LANCE: 5,         # 香
+    PieceType.PRO_LANCE: 10,    # 成香
+    PieceType.KNIGHT: 6,        # 桂
+    PieceType.PRO_KNIGHT: 10,   # 成桂
+    PieceType.SILVER: 8,        # 銀
+    PieceType.PRO_SILVER: 9,    # 成銀
+    PieceType.GOLD: 9,          # 金
+    PieceType.BISHOP: 13,       # 角
+    PieceType.HORSE: 15,        # 馬
+    PieceType.ROOK: 15,         # 飛
+    PieceType.DRAGON: 17,       # 竜
+}
+_TANIGAWA_HAND_VALUES = {
+    BasicPieceType.PAWN: 1,     # 歩
+    BasicPieceType.LANCE: 5,    # 香
+    BasicPieceType.KNIGHT: 6,   # 桂
+    BasicPieceType.SILVER: 8,   # 銀
+    BasicPieceType.GOLD: 9,     # 金
+    BasicPieceType.BISHOP: 13,  # 角
+    BasicPieceType.ROOK: 15,    # 飛
+}
 
 
 _DROP_PIECE_TYPES = (
@@ -510,6 +546,92 @@ def choose_weak_move(moves: Tuple[Move, ...],
     if not moves:
         return None
     return rng.choice(moves)
+
+
+def material_balance(position: Position, perspective: Side) -> int:
+    """盤上と持ち駒の参考点を合算し、指定側から見た駒得差を返す。
+
+    引数:
+        position: 評価する盤面・手番・先後の持ち駒を持つ局面。変更しない。
+        perspective: 得点を正として見る先手または後手。
+
+    戻り値:
+        指定側の非玉駒の合計から相手側の非玉駒の合計を引いた整数。盤上は成駒を
+        その駒種の値で数え、持ち駒は基本駒種の値で数える。
+
+    副作用:
+        局面と持ち駒を変更しない。
+
+    前提条件:
+        Positionの盤面・持ち駒が表す現在状態を評価する。谷川浩司さんの参考値を
+        教材用の局面比較に使う。これは通常対局の勝敗規則でも、持将棋・入玉時の
+        規則上の点数計算でもない。
+    """
+    totals = {Side.SENTE: 0, Side.GOTE: 0}
+    for file in range(1, 10):
+        for rank in range(1, 10):
+            piece = position.board.piece_at(Square(file, rank))
+            if piece is not None:
+                totals[piece.side] += _TANIGAWA_PIECE_VALUES.get(
+                    piece.piece_type, 0)
+
+    for side, hand in ((Side.SENTE, position.sente_hand),
+                       (Side.GOTE, position.gote_hand)):
+        totals[side] += sum(
+            hand.count(piece_type) * value
+            for piece_type, value in _TANIGAWA_HAND_VALUES.items())
+
+    opponent = _opponent_side(perspective)
+    return totals[perspective] - totals[opponent]
+
+
+def choose_move(position: Position, moves: Tuple[Move, ...],
+                policy: MoveSelectionPolicy,
+                rng: random.Random) -> Optional[Move]:
+    """方針に従い、渡された合法手から一手を選ぶ。
+
+    引数:
+        position: 合法手の元になった局面。候補評価では変更しない。
+        moves: その局面の合法手を表す変更不可タプル。
+        policy: 既存一様ランダムまたは一手後の駒得評価を表す値。
+        rng: 乱数選択を呼び出し側で再現可能にする生成器。
+
+    戻り値:
+        空のmovesならNone。RANDOMなら既存選択器の一手、MATERIALなら元の手番から
+        見た一手後の駒得差が最大の手。同点ではその手の中から乱数で選ぶ。
+
+    副作用:
+        positionとmovesを変更しない。抽選時だけrngの状態を進める。
+
+    前提条件:
+        movesはpositionの合法手を渡す。MATERIALは各候補をPosition.copy()へ一度
+        適用して局面点を計算し、相手の応手を含む探索をしない。既存選択との互換性
+        を保つためRANDOMはchoose_weak_moveへ委譲する。
+    """
+    if not moves:
+        return None
+    if policy == MoveSelectionPolicy.RANDOM:
+        return choose_weak_move(moves, rng)
+    if policy != MoveSelectionPolicy.MATERIAL:
+        raise ValueError("未知の一手選択方針です")
+
+    perspective = position.side_to_move
+    scored_moves = []
+    for move in moves:
+        trial = position.copy()
+        if isinstance(move, BoardMove):
+            apply_move(trial, move.source, move.destination,
+                       promote=move.promote)
+        elif isinstance(move, DropMove):
+            apply_drop(trial, move.piece_type, move.destination)
+        else:
+            raise TypeError("対応していない一手の型です")
+        scored_moves.append((move, material_balance(trial, perspective)))
+
+    best_score = max(score for _, score in scored_moves)
+    best_moves = tuple(move for move, score in scored_moves
+                       if score == best_score)
+    return rng.choice(best_moves)
 
 
 def has_legal_move(position: Position) -> bool:

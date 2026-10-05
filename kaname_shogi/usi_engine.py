@@ -5,9 +5,15 @@ import random
 from typing import Callable, Optional
 
 from .model import Position
-from .movegen import choose_weak_move, legal_moves
+from .movegen import MoveSelectionPolicy, choose_move, legal_moves
 from .usi_move import format_usi_move
 from .usi_position import parse_usi_position
+
+
+_USI_DIFFICULTY_VALUES = {
+    "random": MoveSelectionPolicy.RANDOM,
+    "material": MoveSelectionPolicy.MATERIAL,
+}
 
 
 class _UsiEngineState:
@@ -49,7 +55,9 @@ def run_usi_engine(
     副作用:
         USI応答をoutput_fnへ渡し、使用するrngの状態を進める。局面は関数内に
         作る非公開状態データに保持し、positionで置き換え、usinewgameで未設定に戻す。
-        乱数生成器は局面状態から分け、一回の実行中に全goで共有する。
+        一手選択方針の設定も局面状態から分け、一回の実行中に保持する。最初のgoで
+        その局の方針を固定し、usinewgame後の次局から新しい設定を適用する。
+        乱数生成器は局面・設定状態から分け、一回の実行中に全goで共有する。
 
     前提条件:
         入力はUSIコマンド一行であり、positionは既存パーサーが扱う
@@ -61,12 +69,14 @@ def run_usi_engine(
             searchmoves / depth / nodes / mate / infinite / ponderを含む場合。
         EOFError: input_fnが入力終了を表すため送出した場合。この関数内では終了として扱う。
 
-    局面再現、合法手列挙、弱い一手選択、USI一手表記は既存の各責務へ委譲する。
-    局面の寿命と手の選択方法を別々に保ち、既存CLIや将棋規則を重ねて実装せず、
-    USIコマンドと応答の境界に限定する。
+    局面再現、合法手列挙、方針別の一手選択、USI一手表記は既存の各責務へ委譲する。
+    局面の寿命と手の選択設定・局内固定を別々に保ち、既存CLIや将棋規則を重ねて
+    実装せず、USIコマンドと応答の境界に限定する。
     """
     engine_rng = rng if rng is not None else random.Random()
     state = _UsiEngineState()
+    configured_policy = MoveSelectionPolicy.RANDOM
+    game_policy: Optional[MoveSelectionPolicy] = None
     unsupported_go_tokens = {
         "searchmoves", "depth", "nodes", "mate", "infinite", "ponder"
     }
@@ -85,13 +95,23 @@ def run_usi_engine(
         if command_name == "usi":
             output_fn("id name kaname-shogi")
             output_fn("id author kaname-shogi project")
+            output_fn("option name Difficulty type combo default Random "
+                      "var Random var Material")
             output_fn("usiok")
         elif command_name == "isready":
             output_fn("readyok")
-        elif command_name == "setoption" or command_name == "gameover":
+        elif command_name == "setoption":
+            if (len(tokens) == 5
+                    and tuple(token.casefold() for token in tokens[1:4])
+                    == ("name", "difficulty", "value")):
+                value = tokens[4].casefold()
+                if value in _USI_DIFFICULTY_VALUES:
+                    configured_policy = _USI_DIFFICULTY_VALUES[value]
+        elif command_name == "gameover":
             continue
         elif command_name == "usinewgame":
             state.clear_position()
+            game_policy = None
         elif command_name == "position":
             state.replace_position(parse_usi_position(command))
         elif command_name == "go":
@@ -103,8 +123,10 @@ def run_usi_engine(
                 raise ValueError(f"未対応のgo引数です: {unsupported}")
 
             position = state.require_position()
+            if game_policy is None:
+                game_policy = configured_policy
             moves = legal_moves(position)
-            move = choose_weak_move(moves, engine_rng)
+            move = choose_move(position, moves, game_policy, engine_rng)
             if move is None:
                 output_fn("bestmove resign")
             else:

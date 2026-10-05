@@ -2721,6 +2721,259 @@ class WeakMoveSelectionTests(unittest.TestCase):
         self.assertEqual(moves, before)
 
 
+class MaterialEvaluationTests(unittest.TestCase):
+    def _require_api(self):
+        """難易度選択APIが未実装なら明示的な振る舞い失敗にする。"""
+        for name in ("MoveSelectionPolicy", "material_balance", "choose_move"):
+            self.assertIsNotNone(getattr(movegen, name, None),
+                                 name + " がまだ実装されていません")
+        return movegen.MoveSelectionPolicy
+
+    def _silver_capture_position(self):
+        """銀を取る手と駒得を変えない合法手のある小さな局面を作る。"""
+        board = Board()
+        board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(1, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(5, 5), Piece(PieceType.SILVER, Side.SENTE))
+        board.set_piece(Square(5, 4), Piece(PieceType.SILVER, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        capture = BoardMove(Square(5, 5), Square(5, 4), False)
+        quiet = BoardMove(Square(5, 5), Square(4, 4), False)
+        return position, capture, quiet
+
+    def _snapshot(self, position):
+        """可変な盤面・手番・先後の全持ち駒を比較用タプルにする。"""
+        squares = [Square(file, rank) for file in range(1, 10)
+                   for rank in range(1, 10)]
+        hand_types = tuple(piece_type for piece_type in BasicPieceType
+                           if piece_type != BasicPieceType.KING)
+        return (
+            tuple(position.board.piece_at(square) for square in squares),
+            position.side_to_move,
+            tuple(position.sente_hand.count(piece_type)
+                  for piece_type in hand_types),
+            tuple(position.gote_hand.count(piece_type)
+                  for piece_type in hand_types),
+        )
+
+    def test_material_balance_counts_tanigawa_values_on_board_and_in_hands(self):
+        """盤上と持ち駒を谷川参考値で合算し、玉を数えない。
+
+        成駒の値を基本駒へ戻して数える誤り、玉を加算する誤り、先後視点の符号を
+        逆にする誤りを検出する。
+        """
+        self._require_api()
+        position = Position(Board(), Side.SENTE)
+        position.board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
+        position.board.set_piece(Square(1, 1), Piece(PieceType.KING, Side.GOTE))
+        squares = [Square(file, rank) for file in range(1, 10)
+                   for rank in range(1, 10)
+                   if Square(file, rank) not in (Square(9, 9), Square(1, 1))]
+        board_values = {
+            PieceType.ROOK: 15,
+            PieceType.BISHOP: 13,
+            PieceType.GOLD: 9,
+            PieceType.SILVER: 8,
+            PieceType.KNIGHT: 6,
+            PieceType.LANCE: 5,
+            PieceType.PAWN: 1,
+            PieceType.PRO_PAWN: 12,
+            PieceType.PRO_LANCE: 10,
+            PieceType.PRO_KNIGHT: 10,
+            PieceType.PRO_SILVER: 9,
+            PieceType.HORSE: 15,
+            PieceType.DRAGON: 17,
+        }
+        self.assertEqual(sum(board_values.values()), 130)
+        for square, piece_type in zip(squares, board_values):
+            position.board.set_piece(square, Piece(piece_type, Side.SENTE))
+        for piece_type in BasicPieceType:
+            if piece_type != BasicPieceType.KING:
+                position.sente_hand.add(piece_type)
+
+        self.assertEqual(movegen.material_balance(position, Side.SENTE), 187)
+        self.assertEqual(movegen.material_balance(position, Side.GOTE), -187)
+
+        king_only = Position(Board(), Side.SENTE)
+        king_only.board.set_piece(
+            Square(5, 5), Piece(PieceType.KING, Side.SENTE))
+        self.assertEqual(movegen.material_balance(king_only, Side.SENTE), 0)
+        self.assertEqual(movegen.material_balance(king_only, Side.GOTE), 0)
+
+    def test_material_policy_prefers_highest_post_move_balance(self):
+        """駒を取る一手を選び、銀の移動で差が16点増える。
+
+        銀の8点を相手から自分の持ち駒へ移すため、取った側の差が16点増える事実を
+        確認し、相手の応手を評価したり銀の点数を二重計上する誤りを検出する。
+        """
+        policy = self._require_api()
+        position, capture, quiet = self._silver_capture_position()
+        before = movegen.material_balance(position, Side.SENTE)
+
+        selected = movegen.choose_move(
+            position, (quiet, capture), policy.MATERIAL,
+            random.Random(20261005))
+        scored_position = position.copy()
+        movegen.apply_move(scored_position, capture.source,
+                           capture.destination, promote=capture.promote)
+        after = movegen.material_balance(scored_position, Side.SENTE)
+
+        self.assertEqual(selected, capture)
+        self.assertEqual(after - before, 16)
+
+    def test_material_policy_uses_side_to_move_as_perspective(self):
+        """後手番の候補は後手側の駒得を正として選ぶ。
+
+        評価視点を常に先手に固定し、相手の駒を取らない候補を選ぶ誤りを検出する。
+        """
+        policy = self._require_api()
+        board = Board()
+        board.set_piece(Square(1, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(5, 5), Piece(PieceType.GOLD, Side.GOTE))
+        board.set_piece(Square(5, 6), Piece(PieceType.SILVER, Side.SENTE))
+        position = Position(board, Side.GOTE)
+        capture = BoardMove(Square(5, 5), Square(5, 6), False)
+        quiet = BoardMove(Square(5, 5), Square(4, 6), False)
+        before = movegen.material_balance(position, Side.GOTE)
+
+        selected = movegen.choose_move(
+            position, (quiet, capture), policy.MATERIAL,
+            random.Random(20261005))
+        scored_position = position.copy()
+        movegen.apply_move(scored_position, capture.source,
+                           capture.destination, promote=capture.promote)
+
+        self.assertEqual(selected, capture)
+        self.assertEqual(movegen.material_balance(scored_position, Side.GOTE)
+                         - before, 16)
+
+    def test_material_policy_values_captured_promoted_piece_as_basic_in_hand(self):
+        """取った竜は飛車の持ち駒15点に戻り、相対差が32点増える。
+
+        竜のまま持ち駒に数える誤りと、飛車の盤上評価15点および竜17点の差分を
+        取り逃がす誤りを検出する。
+        """
+        self._require_api()
+        board = Board()
+        board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(1, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.SENTE))
+        board.set_piece(Square(5, 4), Piece(PieceType.DRAGON, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        before = movegen.material_balance(position, Side.SENTE)
+        scored_position = position.copy()
+        movegen.apply_move(scored_position, Square(5, 5), Square(5, 4))
+
+        self.assertEqual(scored_position.sente_hand.count(BasicPieceType.ROOK), 1)
+        self.assertEqual(movegen.material_balance(scored_position, Side.SENTE)
+                         - before, 32)
+
+    def test_material_policy_uses_only_supplied_one_ply_moves(self):
+        """評価は渡された移動・打ちの各候補を一度だけ適用する。
+
+        候補を再生成したり、一手後の応手を探索したり、片方の手種だけを評価する
+        誤りを検出する。
+        """
+        policy = self._require_api()
+        board = Board()
+        board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(1, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(5, 5), Piece(PieceType.GOLD, Side.SENTE))
+        position = Position(board, Side.SENTE)
+        position.sente_hand.add(BasicPieceType.PAWN)
+        moves = (
+            BoardMove(Square(5, 5), Square(5, 4), False),
+            DropMove(BasicPieceType.PAWN, Square(7, 7)),
+        )
+        with patch.object(movegen, "legal_moves", wraps=movegen.legal_moves) as legal_moves:
+            with patch.object(movegen, "apply_move", wraps=movegen.apply_move) as apply_move:
+                with patch.object(movegen, "apply_drop", wraps=movegen.apply_drop) as apply_drop:
+                    selected = movegen.choose_move(
+                        position, moves, policy.MATERIAL,
+                        random.Random(20261005))
+
+        self.assertIn(selected, moves)
+        legal_moves.assert_not_called()
+        apply_move.assert_called_once()
+        apply_drop.assert_called_once()
+
+    def test_material_policy_uses_injected_rng_for_equal_best_moves(self):
+        """最高評価が同じ合法手だけを注入乱数器へ渡して抽選する。
+
+        同点時に先頭の手を固定選択したり、最高点でない候補も抽選へ含めたりする
+        誤りを検出する。
+        """
+        policy = self._require_api()
+        board = Board()
+        board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(1, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(5, 5), Piece(PieceType.GOLD, Side.SENTE))
+        board.set_piece(Square(5, 4), Piece(PieceType.SILVER, Side.GOTE))
+        board.set_piece(Square(4, 5), Piece(PieceType.SILVER, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        best_moves = (
+            BoardMove(Square(5, 5), Square(5, 4), False),
+            BoardMove(Square(5, 5), Square(4, 5), False),
+        )
+        lower_scoring_move = BoardMove(Square(5, 5), Square(5, 6), False)
+        candidates = best_moves + (lower_scoring_move,)
+        rng = random.Random(20261005)
+        with patch.object(rng, "choice", side_effect=lambda moves: moves[-1]) as choice:
+            selected = movegen.choose_move(position, candidates,
+                                           policy.MATERIAL, rng)
+
+        choice.assert_called_once_with(best_moves)
+        self.assertEqual(selected, best_moves[-1])
+
+    def test_choose_move_returns_none_for_no_moves(self):
+        """どちらの方針も候補なしならNoneを返し、抽選しない。
+
+        空の手一覧を乱数器へ渡して例外にしたり、候補のない方針でも一手を作る
+        誤りを検出する。
+        """
+        policy = self._require_api()
+        for choice_policy in (policy.RANDOM, policy.MATERIAL):
+            rng = random.Random(20261005)
+            with patch.object(rng, "choice", wraps=rng.choice) as choice:
+                selected = movegen.choose_move(
+                    Position(Board(), Side.SENTE), (), choice_policy, rng)
+            with self.subTest(policy=choice_policy):
+                self.assertIsNone(selected)
+                choice.assert_not_called()
+
+    def test_choose_move_preserves_position_when_scoring_moves(self):
+        """複数候補の採点後も盤面・手番・双方の持ち駒を保持する。
+
+        実局面へ候補を試し指しして、次のコンピュータ手や対局側の状態を壊す
+        誤りを検出する。
+        """
+        policy = self._require_api()
+        position, capture, quiet = self._silver_capture_position()
+        before = self._snapshot(position)
+
+        movegen.choose_move(position, (capture, quiet), policy.MATERIAL,
+                            random.Random(20261005))
+
+        self.assertEqual(self._snapshot(position), before)
+
+    def test_random_policy_keeps_uniform_selector(self):
+        """RANDOMは既存の一様ランダム選択と同じ結果を返す。
+
+        既存選択の分布・乱数の使い方を別実装で変えて、最弱を置き換える誤りを
+        検出する。
+        """
+        policy = self._require_api()
+        position, capture, quiet = self._silver_capture_position()
+        moves = (capture, quiet)
+
+        expected = movegen.choose_weak_move(moves, random.Random(20261005))
+        selected = movegen.choose_move(position, moves, policy.RANDOM,
+                                       random.Random(20261005))
+
+        self.assertEqual(selected, expected)
+
+
 class CheckmateAndGameEndTests(unittest.TestCase):
     def _assert_public_operations_exist(self):
         """詰み・終局の公開操作が未実装なら、明示的なテスト失敗にする。"""
