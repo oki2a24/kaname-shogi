@@ -8,7 +8,7 @@
 
 最初の目標は達成しました。第54回ではMac版ShogiHome 1.28.1と使い捨てプローブ間のUSI通信を実機確認し、第55〜58回ではUSI一手表記、局面再現、合法な一手応答、コマンド状態を実装・検討しました。全281テストと独立レビュー2回を確認して `main` に取り込み済みです。第59回はShogiHome 1.28.1で通常応手2回と人間の投了による終了を確認し、2026-10-04に `main` へ取り込んで全283テストが成功しました。
 
-第60回では息子が平手の先手として19手を指し、`kaname-shogi` の18応手がShogiHomeの棋譜に記録されました。エンジン側の番で自動的に投了終局し、息子からは角の頭を狙った局面で少し良くなったという自発的な感想がありました。第61回はその37手局面を再現し、ShogiHome 1.28.1のUSI通信ログから、今回の一例としてエンジンの `bestmove resign` と後続するShogiHomeの `gameover lose`、`quit` を確認しました。この一例を全対局の必須要件とは扱いません。本人は次テーマに「ShogiHome接続手順書を作成する」を選びました。[第60回学習記録](docs/learning/60-shogihome-son-trial.md)、[第61回学習記録](docs/learning/61-shogihome-auto-resign-logs.md)、[第62回予定テーマの引き継ぎ](docs/handover-shogihome-connection-guide.md)、[次テーマ候補](docs/next-topics.md)、[ShogiHome対局の確定知識](docs/knowledge/usi-shogihome-gameplay.md)、[USI接続ロードマップ](docs/roadmap-usi-shogihome.md)、現在地は[再開案内](docs/resume.md)を参照してください。
+第60回では息子が平手の先手として19手を指し、`kaname-shogi` の18応手がShogiHomeの棋譜に記録されました。第61回はその37手局面を再現し、ShogiHome 1.28.1のUSI通信ログから今回の一例としてエンジンの `bestmove resign` と後続するShogiHomeの `gameover lose`、`quit` を確認しました。この一例を全対局の必須要件とは扱いません。第62回では人間向けの[ShogiHome接続手順書](docs/shogihome-connection-guide.md)と、このリポジトリで発見できる[接続用Codexスキル](.agents/skills/shogihome-connection/SKILL.md)を整え、ShogiHome 1.28.1で通常対局を一局だけ実証しました。先手の７六歩にエンジンが５二金右で応じたこと、投了後にエンジンが終了したことを画面で確認しています。USIログは採取していません。詳細は[第60回学習記録](docs/learning/60-shogihome-son-trial.md)、[第61回学習記録](docs/learning/61-shogihome-auto-resign-logs.md)、[第62回学習記録](docs/learning/62-shogihome-connection-guide.md)、[次テーマ候補](docs/next-topics.md)、[ShogiHome対局の確定知識](docs/knowledge/usi-shogihome-gameplay.md)、[USI接続ロードマップ](docs/roadmap-usi-shogihome.md)、現在地は[再開案内](docs/resume.md)を参照してください。
 
 ## 現在できることと主な未対応事項
 
@@ -24,7 +24,7 @@
 
 対局中の局面表示では、盤の上に後手、下に先手の持ち駒を表示します。持ち駒がない場合は「なし」、ある場合は駒名と枚数を確認できます。
 
-ライブラリには、USI一手トークンと内部の一手データの相互変換、平手の `position startpos moves ...` からの局面再現、USIコマンドから合法な一手を返す専用エンジン入口があります。ShogiHome 1.28.1では第59〜61回に平手対局・観察を行い、息子の対局では18回のエンジン応答、第61回では自動投了時の通信ログ1例を確認しました。`position sfen ...` と時間管理は未対応で、通信ログによる他の局面・終局・全コマンド互換性は確認していません。
+ライブラリには、USI一手トークンと内部の一手データの相互変換、平手の `position startpos moves ...` からの局面再現、USIコマンドから合法な一手を返す専用エンジン入口があります。ShogiHome 1.28.1では第59〜62回に平手対局・観察を行い、息子の対局では18回のエンジン応答、第61回では自動投了時の通信ログ1例、第62回では７六歩への５二金右の応答を画面で確認しました。`position sfen ...` と時間管理は未対応で、通信ログによる他の局面・終局・全コマンド互換性は確認していません。
 
 千日手、持将棋、入玉、時間管理、反則勝敗、SFEN局面入力、評価関数、探索、自動保存はまだ扱いません。ShogiHomeとの確認はMac版1.28.1の平手対局です。自動投了時の通信ログは37手局面からの一例だけで、時計動作や他の終局・コマンドの互換性は未確認です。コンピュータ対コンピュータには手数上限がなく、詰み、合法手なし、または `Ctrl-C` で停止します。
 
