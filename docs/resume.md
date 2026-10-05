@@ -15,7 +15,7 @@ ShogiHome画面からDifficultyを指定した実対局とUSIログ採取はま�
 - [第64回学習記録](learning/64-weakest-mode-difficulty-selection-implementation.md)：最終理解確認の本人回答と補足を記録。
 - [第64回の実装計画](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)：TDD、Refactor、独立レビュー、取り込み先検証の実績。
 - [承認済み設計](plans/2026-10-05-weakest-mode-difficulty-selection-design.md)、[一手選択の知識](knowledge/31-weak-move-selection.md)、[USI応答の知識](knowledge/usi-engine-response.md)。
-- 次テーマ候補は[選定履歴](next-topics.md)にまとめた。本人が候補を選ぶまで、新たな学習・実装は始めない。
+- 本人が次テーマに「ShogiHomeでDifficulty設定を確認する」を選んだ。対象・方法の合意と実機操作の別途承認はこれから。現在のShogiHome画面は開いていない。[選定履歴と確認候補](next-topics.md)を参照する。
 
 ## 再開時に行うこと
 
