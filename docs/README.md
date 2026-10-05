@@ -8,6 +8,7 @@
 ## 目的別の読み方
 
 - 現在できることと使い方を知る：ルートの [README](../README.md)
+- ShogiHomeへの接続・対局手順を知る：[ShogiHome接続手順書](shogihome-connection-guide.md)
 - 作業を再開する：[AGENTS.md](../AGENTS.md)、ルートの [README](../README.md)、[再開案内](resume.md)、現在の実装計画、現在のGit状態。引き継ぎはテーマ開始時点の背景として読む
 - 現在の確定仕様を調べる：下のテーマ別索引から対応する知識メモ
 - 判断理由や学習の経緯を調べる：対応する学習記録

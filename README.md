@@ -119,6 +119,7 @@ python3 -m unittest discover -s tests -v
 ## 文書案内
 
 - [文書索引：目的・テーマ・学習回から資料を選ぶ](docs/README.md)
+- [ShogiHomeへの接続手順：通常対局・KIF再開・USIログ](docs/shogihome-connection-guide.md)
 - [プロジェクトの背景](docs/01-project-background.md)
 - [プロジェクトの方向性](docs/02-project-direction.md)
 - [学習・開発の再開案内](docs/resume.md)
