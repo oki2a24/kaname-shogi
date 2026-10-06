@@ -190,3 +190,9 @@ ShogiHome 1.28.1へ `kaname-shogi` を登録し、平手で人が先手、エン
 一様ランダムを最弱・既定値として維持し、CLIは対局開始前、USIは `Difficulty` comboで方針を選ぶ。一手後の駒得比較は谷川参考値、盤上と持ち駒を同額、玉を除外、取った成駒は基本駒価値、指し手側から見た合計差、最高点の同点ランダムとした。第64回の最終理解確認では、銀一枚の捕獲で差が16点増える理由を本人が説明した。ShogiHome画面での設定・実対局・ログ採取は実施していない。
 
 `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v` は作業ブランチとマージ後の `main` で各305テストが成功し、`git diff --check` とMarkdownの相対リンク検査にも問題はなかった。mainへの変更はローカルにあり、リモートへpushしていない。本人は次テーマに「ShogiHomeでDifficulty設定を確認する」を選んだ。画面・設定・対局の確認対象と方法は未合意であり、実機操作の前に別途承認を得る。
+
+## 第65回完了後の見直し
+
+ShogiHome 1.28.1の設定画面で `Random` / `Material` の選択肢を確認し、Material設定がUSIログに送られることを確認した。Randomは画面で選択されていたが、エンジンの既定値でもあるため明示的な `setoption` 送信は未確認である。対局では指し手を進めなかったため、Materialが実際に選ぶ手への影響も未確認のままにした。USIログとDifficultyを開始時の状態へ戻し、稼働セッションがないことを確かめた。コード・テストの変更はない。詳細は[第65回学習記録](learning/65-shogihome-difficulty-verification.md)に記録した。
+
+本人は次テーマに **「ShogiHomeでMaterialの着手への影響を確認する」** を選び、新しいセッションの準備を依頼した。設定画面とMaterialのUSI送信までは確認できたが、Materialが実際に選ぶ手への影響は未確認のためである。本人はRandom・Materialの両方で終局まで進み、正常に終了できることも確かめたいと希望している。この希望を含む具体的な局面・対局手順・終了条件・棋譜・ログの扱いは、次セッションで一問ずつ設計し、合意済みとは扱わない。選定と再開手順は[次テーマ候補](next-topics.md)と[第66回予定テーマの引き継ぎ](handover-shogihome-material-move-effect.md)に記録する。

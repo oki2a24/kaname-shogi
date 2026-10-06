@@ -35,9 +35,11 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
+- [第65回学習記録：ShogiHomeでDifficulty設定を確認する（実機観察・理解確認完了）](learning/65-shogihome-difficulty-verification.md)
 - [学習・開発の再開案内](resume.md)
-- [次テーマの選定履歴：ShogiHomeでDifficulty設定を確認するテーマを選定済み](next-topics.md)
-- [第65回予定テーマ開始時点の引き継ぎ：ShogiHomeでDifficulty設定を確認する](handover-shogihome-difficulty-verification.md)
+- [次テーマ候補と選定履歴：第66回予定テーマ選定済み](next-topics.md)
+- [第66回予定テーマの引き継ぎ：ShogiHomeでMaterialの着手への影響を確認する](handover-shogihome-material-move-effect.md)
+- [第65回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでDifficulty設定を確認する](handover-shogihome-difficulty-verification.md)
 - [第64回実装計画（本人承認済み）](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)
 - [第64回学習記録：承認済み難易度選択設計の実装](learning/64-weakest-mode-difficulty-selection-implementation.md)
 - [最弱手選択と駒得評価の確定知識](knowledge/31-weak-move-selection.md)
@@ -80,7 +82,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [持ち駒表示の設計仕様](plans/2026-10-01-cli-hand-display-design.md)
 - [持ち駒表示の実装計画](plans/2026-10-01-cli-hand-display.md)
 
-第51〜64回は最後の理解確認まで完了しました。第60回では息子がShogiHome 1.28.1で人間先手として19手を指し、`kaname-shogi` の18応手が棋譜に記録され、エンジン側の番で自動的に「投了」終局しました。第61回では同じ37手局面からUSI通信ログを取り、`bestmove resign` と、その後ShogiHomeが送った `gameover lose` / `quit` を一例確認しました。第62回では接続手順書とリポジトリ専用スキルを作り、一局だけ実証しました。第63回では難易度選択設計を承認し、理解確認まで完了しました。第64回では難易度選択を実装し、独立レビュー、全305テスト、`main` 取り込み後の検証、最終理解確認まで完了しました。第64回の[学習記録](learning/64-weakest-mode-difficulty-selection-implementation.md)、[承認済み設計](plans/2026-10-05-weakest-mode-difficulty-selection-design.md)、[実装計画](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)、現在地は[再開案内](resume.md)を参照してください。ShogiHomeでDifficultyを指定した実対局は未実施です。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
+第51〜65回は最後の理解確認まで完了しました。第60回では息子がShogiHome 1.28.1で人間先手として19手を指し、`kaname-shogi` の18応手が棋譜に記録され、エンジン側の番で自動的に「投了」終局しました。第61回では同じ37手局面からUSI通信ログを取り、`bestmove resign` と、その後ShogiHomeが送った `gameover lose` / `quit` を一例確認しました。第62回では接続手順書とリポジトリ専用スキルを作り、一局だけ実証しました。第63回では難易度選択設計を承認し、理解確認まで完了しました。第64回では難易度選択を実装し、独立レビュー、全305テスト、`main` 取り込み後の検証、最終理解確認まで完了しました。第65回ではShogiHome 1.28.1のDifficulty選択画面とMaterialのUSI送信を確認しました。Randomの明示送信とMaterial時の着手への影響は未確認です。次テーマは「ShogiHomeでMaterialの着手への影響を確認する」に決まりました。両設定で終局まで正常終了を確かめたいという希望を含む設計は未合意です。第65回の[学習記録](learning/65-shogihome-difficulty-verification.md)、[第64回の承認済み設計](plans/2026-10-05-weakest-mode-difficulty-selection-design.md)、[実装計画](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)、現在地は[再開案内](resume.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
 
 ## テーマ・学習回別索引
 
@@ -144,6 +146,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | ShogiHome接続手順書の作成（第62回・実証、理解確認まで完了） | [第62回](learning/62-shogihome-connection-guide.md) | [ShogiHome接続手順書](shogihome-connection-guide.md)、[専用Codexスキル](../.agents/skills/shogihome-connection/SKILL.md) | — | — | [開始時点の引き継ぎ](handover-shogihome-connection-guide.md) |
 | 最弱モードを残す難易度選択の最小設計（第63回・設計と理解確認完了） | [第63回](learning/63-weakest-mode-difficulty-selection.md) | [USIエンジン応答](knowledge/usi-engine-response.md) | [本人承認済み設計仕様](plans/2026-10-05-weakest-mode-difficulty-selection-design.md) | — | [開始時点の引き継ぎ](handover-weakest-mode-difficulty-selection.md) |
 | 最弱モードを残す難易度選択の実装（第64回・レビュー、main取り込み、全305テスト、理解確認まで完了） | [第64回](learning/64-weakest-mode-difficulty-selection-implementation.md) | [一手選択](knowledge/31-weak-move-selection.md)、[USI応答](knowledge/usi-engine-response.md) | [承認済み設計仕様](plans/2026-10-05-weakest-mode-difficulty-selection-design.md) | [実装計画](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md) | [開始時点の引き継ぎ](handover-weakest-mode-difficulty-selection-implementation.md) |
+| ShogiHomeでDifficulty設定を確認（第65回・実機観察、理解確認完了） | [第65回](learning/65-shogihome-difficulty-verification.md) | — | — | — | [開始時点の引き継ぎ](handover-shogihome-difficulty-verification.md) |
 
 ## 例外と履歴の読み方
 
