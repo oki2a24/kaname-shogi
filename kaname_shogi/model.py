@@ -189,6 +189,29 @@ class Hand:
         piece_type = self._validate_piece_type(piece_type)
         self._counts[piece_type] = self.count(piece_type) + 1
 
+    def add_many(self, piece_type: BasicPieceType, count: int) -> None:
+        """指定した枚数を一括で加え、持ち駒を変更する。
+
+        引数:
+            piece_type: 加える玉以外の基本駒種。
+            count: 加える枚数。1以上の整数。
+
+        戻り値:
+            なし（None）。成功時は指定した駒種の枚数だけをcount増やす。
+
+        例外:
+            ValueError: 玉や基本駒種以外を指定した場合、またはcountが1以上の
+                整数でない場合。失敗時は枚数を変更しない。
+
+        既存枚数へcountを一度加算し、枚数分の反復を避ける。SFENのように
+        合法性ではなくモデルでの表現可能性を確認する入力でも、非常に大きな
+        枚数で呼び出し処理を長時間止めず、Handの検証境界を保つ。
+        """
+        piece_type = self._validate_piece_type(piece_type)
+        if type(count) is not int or count < 1:
+            raise ValueError("持ち駒の枚数は1以上の整数で指定してください")
+        self._counts[piece_type] = self.count(piece_type) + count
+
     def remove(self, piece_type: BasicPieceType) -> None:
         """piece_typeを1枚減らし、持ち駒を変更する。
 

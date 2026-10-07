@@ -180,6 +180,8 @@ def _parse_board(board_text: str) -> Board:
                     raise ValueError("SFEN盤面の成り記号の後に駒がありません")
                 token = row[index]
 
+            if token not in "KRBGSNLPkrbgsnlp":
+                raise ValueError(f"SFEN盤面に不明な駒記号があります: {token}")
             symbol = token.upper()
             if symbol not in _UNPROMOTED_PIECES:
                 raise ValueError(f"SFEN盤面に不明な駒記号があります: {token}")
@@ -229,6 +231,8 @@ def _parse_hands(hand_text: str) -> tuple[Hand, Hand]:
             raise ValueError("SFEN持ち駒の枚数の後に駒記号がありません")
 
         token = hand_text[index]
+        if token not in "RBGSNLPrbgsnlp":
+            raise ValueError(f"SFEN持ち駒に不明または表現できない駒があります: {token}")
         symbol = token.upper()
         hand_piece = dict(_HAND_PIECES).get(symbol)
         if hand_piece is None:
@@ -241,8 +245,7 @@ def _parse_hands(hand_text: str) -> tuple[Hand, Hand]:
             raise ValueError("SFEN持ち駒の枚数は1以上で指定してください")
 
         hand = sente_hand if token.isupper() else gote_hand
-        for _ in range(count):
-            hand.add(hand_piece)
+        hand.add_many(hand_piece, count)
         index += 1
     return sente_hand, gote_hand
 

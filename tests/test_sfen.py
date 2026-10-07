@@ -2,9 +2,10 @@
 
 import importlib.util
 import unittest
+from unittest.mock import patch
 
 from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
-                                Position, Side, Square,
+                                Hand, Position, Side, Square,
                                 create_initial_position)
 from kaname_shogi.sfen import SfenPosition, format_sfen, parse_sfen
 
@@ -119,9 +120,11 @@ class SfenConversionTests(unittest.TestCase):
             ("9/9 b - 1", "盤面"),
             ("8/9/9/9/9/9/9/9/9 b - 1", "盤面"),
             ("X8/9/9/9/9/9/9/9/9 b - 1", "盤面"),
+            ("ſ8/9/9/9/9/9/9/9/9 b - 1", "駒記号"),
             ("3+K5/9/9/9/9/9/9/9/9 b - 1", "盤面"),
             (f"{empty_board} x - 1", "手番"),
             (f"{empty_board} b K 1", "持ち駒"),
+            (f"{empty_board} b ſ 1", "駒"),
             (f"{empty_board} b 0P 1", "持ち駒"),
             (f"{empty_board} b - x", "手数"),
             (f"{empty_board} b - 0", "手数"),
@@ -130,6 +133,23 @@ class SfenConversionTests(unittest.TestCase):
             with self.subTest(sfen=sfen):
                 with self.assertRaisesRegex(ValueError, reason):
                     parse_sfen(sfen)
+
+    def test_parses_and_formats_large_hand_count_without_per_piece_add(self):
+        """巨大な持ち駒枚数も一括で読み書きする。
+
+        入力枚数に比例してHand.addを繰り返し、USI処理を止める誤りをガード付きで検出する。
+        """
+        sfen = "9/9/9/9/9/9/9/9/9 b 1000000000000P 1"
+
+        with patch.object(Hand, "add",
+                          side_effect=AssertionError("1枚ずつの追加は禁止")):
+            result = parse_sfen(sfen)
+
+        self.assertEqual(
+            result.position.sente_hand.count(BasicPieceType.PAWN),
+            1_000_000_000_000,
+        )
+        self.assertEqual(format_sfen(result), sfen)
 
     def test_formatting_does_not_mutate_position(self):
         """SFEN書出しは局面や持ち駒の枚数を変更しない。

@@ -191,6 +191,36 @@ class HandTests(unittest.TestCase):
         self.assertEqual(hand.count(BasicPieceType.PAWN), 1)
         self.assertEqual(hand.count(BasicPieceType.ROOK), 0)
 
+    def test_add_many_adds_requested_count(self):
+        """持ち駒へ指定した大きな枚数を一括加算する。
+
+        枚数分の反復追加に依存したり、別の駒種まで同じ枚数を加える誤りを検出する。
+        """
+        hand = model.Hand()
+
+        hand.add_many(BasicPieceType.PAWN, 1_000_000_000_000)
+
+        self.assertEqual(hand.count(BasicPieceType.PAWN), 1_000_000_000_000)
+        self.assertEqual(hand.count(BasicPieceType.ROOK), 0)
+
+    def test_add_many_rejects_invalid_values_without_mutation(self):
+        """一括加算の不正枚数・駒種を拒否し、持ち駒を変更しない。
+
+        0枚や真偽値を通したり、玉・盤上駒を加算して失敗後に状態を残す誤りを検出する。
+        """
+        hand = model.Hand()
+        for count in (0, -1, True, 1.5, "2"):
+            with self.subTest(count=count):
+                with self.assertRaises(ValueError):
+                    hand.add_many(BasicPieceType.PAWN, count)
+                self.assertEqual(hand.count(BasicPieceType.PAWN), 0)
+
+        for piece_type in (BasicPieceType.KING, PieceType.PAWN):
+            with self.subTest(piece_type=piece_type):
+                with self.assertRaises(ValueError):
+                    hand.add_many(piece_type, 2)
+                self.assertEqual(hand.count(BasicPieceType.PAWN), 0)
+
     def test_king_is_rejected_without_changing_hand(self):
         """玉は持ち駒に加えられず、失敗後も枚数を変えない。
 

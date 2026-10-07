@@ -200,6 +200,38 @@ class UsiPositionTests(unittest.TestCase):
 
         self.assertIn("7g7e", str(context.exception))
 
+    def test_rejects_unparseable_move_token_from_sfen(self):
+        """SFEN起点の不正な手表記を手数・トークン・原因とともに拒否する。
+
+        startposだけでなくSFENからの再生でも、誤った手の位置と解析理由を
+        呼び出し側が特定できることを確認する。
+        """
+        with self.assertRaises(ValueError) as context:
+            parse_usi_position(
+                "position sfen 9/9/9/9/9/9/9/9/9 b - 23 moves invalid"
+            )
+
+        message = str(context.exception)
+        self.assertIn("第1手", message)
+        self.assertIn("invalid", message)
+        self.assertIn("USI", message)
+
+    def test_rejects_illegal_move_from_sfen(self):
+        """SFEN起点の不合法手を手数・トークン・原因とともに拒否する。
+
+        形式が正しい手でもSFEN局面から適用できないことを、問題の手順と
+        盤上適用の理由を残して報告することを確認する。
+        """
+        with self.assertRaises(ValueError) as context:
+            parse_usi_position(
+                "position sfen 9/9/9/9/9/9/9/9/9 b - 23 moves 1a1b"
+            )
+
+        message = str(context.exception)
+        self.assertIn("第1手", message)
+        self.assertIn("1a1b", message)
+        self.assertTrue("駒" in message or "移動" in message)
+
 
 if __name__ == "__main__":
     unittest.main()
