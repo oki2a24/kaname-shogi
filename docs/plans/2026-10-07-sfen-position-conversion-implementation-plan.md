@@ -2,7 +2,7 @@
 
 > **AIエージェントへの指示:** REQUIRED-SUB-SKILL: 実装計画が本人承認された後に、選ばれた方法に応じて `executing-plans` または `subagent-driven-development` を使用する。承認前は実装・テスト変更・テスト実行を始めない。各ステップには追跡用チェックボックスを使う。
 
-**状態:** 設計仕様・本実装計画は2026-10-07に本人承認済み。コードレビューで見つかった大量の持ち駒枚数処理に対応するため、本人承認のもと `Hand.add_many` を追加するよう計画を更新した。作業ブランチで実装・テスト・レビュー・記録を行う。`main` への統合は別の明示承認を待つ。
+**状態:** 設計仕様・本実装計画は2026-10-07に本人承認済み。レビュー指摘への対応を含む実装、関連テスト、独立レビューを作業ブランチで完了した。本人の別途承認後、`feature/sfen-position-conversion` を `main` へfast-forward統合し、統合時の `main` HEAD `8421492` で全326テストが成功した。最終理解確認と回答記録も完了した。現在は理解確認後の現在地更新を本人に提示して確認を待っている。
 
 **目標:** `Position` とSFENの相互変換、SFENからのUSI局面設定、SFEN手数の保持を追加し、既存の局面モデルとJSON棋譜形式を保つ。
 
@@ -213,30 +213,34 @@ git diff --check
 
 学習記録と知識メモを提示し、本人の内容確認を得る。確認後、残る関連文書を含む差分をステージし、`git diff --cached --check` と `git status --short --branch` を確認して `docs: 第67回SFEN局面変換を記録する` で作業ブランチへコミットする。未承認の `main` 統合やpushは行わない。
 
-## Task 4: 統合の明示承認後にmainで検証し、最終理解確認を行う
+## Task 4: 明示承認後にmainへ統合・検証し、最終理解確認を行う
 
 **ファイル:**
-- 統合後に更新: `docs/learning/67-sfen-position-conversion.md`、`README.md`、`docs/02-project-direction.md`、`docs/next-topics.md`、`docs/roadmap-usi-shogihome.md`、必要な文書索引
+- 統合後に更新: `docs/learning/67-sfen-position-conversion.md`、`README.md`、`docs/02-project-direction.md`、`docs/next-topics.md`、`docs/roadmap-usi-shogihome.md`、`docs/README.md`、`docs/resume.md`
 
 **インターフェース (Interfaces):**
 - 消費: Task 3でレビュー・テスト・記録を終えた作業ブランチと本人の統合判断。
 - 生産: 本人承認による統合、統合先での全体テスト、回答済み最終理解確認と次候補の案内。
 
-- [ ] **ステップ1: 統合選択を本人に提示して待つ**
+- [x] **ステップ1: 統合選択を本人に提示して待つ**
 
-実装ブランチの差分、レビュー結果、テスト結果、記録を提示し、ローカル `main` へのfast-forward統合を行うか本人に確認する。実装計画の承認を統合承認と見なさない。
+実装ブランチの差分、レビュー結果、テスト結果、記録を提示した。本人はローカル `main` へのfast-forward統合を明示承認した。実装計画の承認とは別に統合判断を確認した。
 
-- [ ] **ステップ2: 統合が明示承認された場合だけmainへ反映する**
+- [x] **ステップ2: 統合が明示承認された場合だけmainへ反映する**
 
-`main` の最新状態と作業ツリーを確認し、fast-forward可能なら統合する。競合やfast-forward不可なら停止して相談する。統合後に全体テストを実行する。統合を選ばない場合は作業ブランチに残し、取り込み先検証とテーマ完了扱いをしない。
+本人が統合を明示承認した。`main` と作業ツリーを確認しfast-forward可能だったため統合した。統合時の `main` HEAD は `8421492`。統合後に `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v` を実行し、全326テストが成功した。
 
-- [ ] **ステップ3: 最終理解確認を一問だけ出す**
+- [x] **ステップ3: 最終理解確認を一問だけ出す**
 
-統合先の全体検証後に、SFENスナップショットと `Position` / JSON棋譜の責務境界、または手数付き `SfenPosition` の意味を確認する一問を出して回答を待つ。回答前に次の学習・実装へ進まない。
+統合先の全体検証後に一問だけ尋ね、本人は「責任を分離を維持するため」と回答した。回答と補足は学習記録へ記録した。
 
 - [ ] **ステップ4: 回答後に学習記録と現在地を更新する**
 
-本人の回答とアシスタント補足を分けて学習記録に追記し、本人の記録確認を得てから、`README.md`、`docs/02-project-direction.md`、`docs/next-topics.md`、`docs/roadmap-usi-shogihome.md`、`docs/README.md` の現在地と候補を見直す。次テーマの実装は本人が選ぶまで始めない。
+本人の回答とアシスタント補足を分けて学習記録に追記し、`README.md`、`docs/02-project-direction.md`、`docs/next-topics.md`、`docs/roadmap-usi-shogihome.md`、`docs/README.md`、`docs/resume.md` の現在地と候補を更新した。本人の内容確認を待っている。次テーマは未選定で、本人が選ぶまで新しい学習・実装を始めない。
+
+- [ ] **ステップ5: 内容確認後に現在地の記録をコミットする**
+
+本人の確認後、計画と関連文書の差分を確認し、`git diff --check` を行ってから `main` に文書コミットする。pushは行わない。
 
 ## 実行方法の提案
 

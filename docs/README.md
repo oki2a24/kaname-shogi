@@ -35,15 +35,15 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-- [第67回の実装計画（実装・レビュー・全326テスト・記録確認完了、main統合待ち）](plans/2026-10-07-sfen-position-conversion-implementation-plan.md)
+- [第67回の実装計画（実装・レビュー・全326テスト・main統合・理解確認完了）](plans/2026-10-07-sfen-position-conversion-implementation-plan.md)
 - [第67回の設計仕様](plans/2026-10-07-sfen-position-conversion-design.md)
-- [第67回の学習記録（記録確認済み、main統合待ち）](learning/67-sfen-position-conversion.md)
+- [第67回の学習記録（実装・main統合・全326テスト・理解確認完了）](learning/67-sfen-position-conversion.md)
 - [SFEN局面表記の確定知識](knowledge/sfen-position-notation.md)
 - [第66回学習記録：ShogiHomeでMaterialの着手への影響を確認する（実機観察・理解確認完了）](learning/66-shogihome-material-move-effect.md)
-- [第67回予定テーマの引き継ぎ：SFEN局面変換](handover-sfen-position-conversion.md)
+- [第67回開始時点の引き継ぎ（履歴）：SFEN局面変換](handover-sfen-position-conversion.md)
 - [第65回学習記録：ShogiHomeでDifficulty設定を確認する（実機観察・理解確認完了）](learning/65-shogihome-difficulty-verification.md)
 - [学習・開発の再開案内](resume.md)
-- [次テーマ候補と選定履歴：第67回にSFEN局面変換を選定済み](next-topics.md)
+- [次テーマ候補と選定履歴：第67回完了、次テーマ未選定](next-topics.md)
 - [第66回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでMaterialの着手への影響を確認する](handover-shogihome-material-move-effect.md)
 - [第65回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでDifficulty設定を確認する](handover-shogihome-difficulty-verification.md)
 - [第64回実装計画（本人承認済み）](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)
@@ -88,7 +88,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [持ち駒表示の設計仕様](plans/2026-10-01-cli-hand-display-design.md)
 - [持ち駒表示の実装計画](plans/2026-10-01-cli-hand-display.md)
 
-第51〜66回は最後の理解確認まで完了しました。第60回では息子がShogiHome 1.28.1で人間先手として19手を指し、`kaname-shogi` の18応手が棋譜に記録され、エンジン側の番で自動的に「投了」終局しました。第61回では同じ37手局面からUSI通信ログを取り、`bestmove resign` と、その後ShogiHomeが送った `gameover lose` / `quit` を一例確認しました。第62回では接続手順書とリポジトリ専用スキルを作り、一局だけ実証しました。第63回では難易度選択設計を承認し、理解確認まで完了しました。第64回では難易度選択を実装し、独立レビュー、全305テスト、`main` 取り込み後の検証、最終理解確認まで完了しました。第65回ではShogiHomeのDifficulty画面とMaterialのUSI送信、第66回ではRandom/Material両方のUSI設定と実際の初手を確認しました。同じ7手局面でRandomは☖９四歩、Materialは☖８八角成を選び、この局面ではMaterialが駒得を選んだと観察しました。一局ずつの観察であり、他局面への一般化はしていません。両局は切れ負けでしたが、正常終局は今回の主題ではなく、再試行しません。第67回は「SFEN局面変換」を選定し、設計を承認して作業ブランチ上で実装しました。独立レビュー、全326テスト、学習記録・知識メモの内容確認とコミットまで完了し、`main` 統合と最終理解確認は未実施です。ShogiHome実機互換性は未確認です。第66回の[学習記録](learning/66-shogihome-material-move-effect.md)、[第67回予定テーマの引き継ぎ](handover-sfen-position-conversion.md)、[第67回の設計仕様](plans/2026-10-07-sfen-position-conversion-design.md)、[第67回の実装計画](plans/2026-10-07-sfen-position-conversion-implementation-plan.md)、[次テーマ候補](next-topics.md)、[再開案内](resume.md)、[第64回の承認済み設計](plans/2026-10-05-weakest-mode-difficulty-selection-design.md)、[実装計画](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
+第51〜66回の学習記録は最後の理解確認まで完了しています。第60〜62回ではShogiHomeでの試用、通信観察、接続手順の整備を行いました。第63〜64回では難易度選択を設計・実装し、全305テストとmain取り込み後の検証を完了しました。第65〜66回ではShogiHomeのDifficulty設定と、Random / Materialの一局面での着手を観察しました。第67回「SFEN局面変換」では、SFEN読込・書出しとUSI `position sfen` を実装し、独立レビュー、全326テスト、main統合後の検証、最終理解確認まで完了しました。
+SFENのShogiHome実機互換性は未確認です。次テーマは未選定で、候補と推薦理由は[次テーマ候補](next-topics.md)、現在の再開手順は[再開案内](resume.md)にあります。各回の詳しい観察・設計・回答はテーマ別索引から参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
 
 ## テーマ・学習回別索引
 
@@ -154,7 +155,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 最弱モードを残す難易度選択の実装（第64回・レビュー、main取り込み、全305テスト、理解確認まで完了） | [第64回](learning/64-weakest-mode-difficulty-selection-implementation.md) | [一手選択](knowledge/31-weak-move-selection.md)、[USI応答](knowledge/usi-engine-response.md) | [承認済み設計仕様](plans/2026-10-05-weakest-mode-difficulty-selection-design.md) | [実装計画](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md) | [開始時点の引き継ぎ](handover-weakest-mode-difficulty-selection-implementation.md) |
 | ShogiHomeでDifficulty設定を確認（第65回・実機観察、理解確認完了） | [第65回](learning/65-shogihome-difficulty-verification.md) | — | — | — | [開始時点の引き継ぎ](handover-shogihome-difficulty-verification.md) |
 | ShogiHomeでMaterialの着手への影響を確認（第66回・実機観察、理解確認完了） | [第66回](learning/66-shogihome-material-move-effect.md) | — | — | — | [開始時点の引き継ぎ](handover-shogihome-material-move-effect.md) |
-| SFEN局面変換（第67回・作業ブランチ実装、レビュー、全326テスト、記録確認済み。main統合待ち） | [第67回](learning/67-sfen-position-conversion.md) | [SFEN局面表記](knowledge/sfen-position-notation.md) | [設計仕様](plans/2026-10-07-sfen-position-conversion-design.md) | [実装計画](plans/2026-10-07-sfen-position-conversion-implementation-plan.md) | [開始時点の引き継ぎ](handover-sfen-position-conversion.md) |
+| SFEN局面変換（第67回・main統合、全326テスト、理解確認まで完了。ShogiHome実機確認は未実施） | [第67回](learning/67-sfen-position-conversion.md) | [SFEN局面表記](knowledge/sfen-position-notation.md) | [設計仕様](plans/2026-10-07-sfen-position-conversion-design.md) | [実装計画](plans/2026-10-07-sfen-position-conversion-implementation-plan.md) | [開始時点の引き継ぎ](handover-sfen-position-conversion.md) |
 
 ## 例外と履歴の読み方
 
