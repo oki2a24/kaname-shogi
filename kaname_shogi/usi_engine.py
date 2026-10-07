@@ -60,9 +60,11 @@ def run_usi_engine(
         乱数生成器は局面・設定状態から分け、一回の実行中に全goで共有する。
 
     前提条件:
-        入力はUSIコマンド一行であり、positionは既存パーサーが扱う
-        `position startpos moves <1手以上>` 形式である。通常のgoは直ちに一手を
-        返し、時計値を使わない。乱数生成器は一回の実行内で全goに共有する。
+        入力はUSIコマンド一行であり、positionは
+        `position startpos moves <1手以上>`、`position sfen <SFEN>`、または
+        `position sfen <SFEN> moves <1手以上>` 形式である。SFEN手数はUSI境界で
+        読み取り、検索状態にはPositionだけを渡す。通常のgoは直ちに一手を返し、
+        時計値を使わない。乱数生成器は一回の実行内で全goに共有する。
 
     例外:
         ValueError: go時に局面が未設定、positionが既存パーサーに拒否された、または
@@ -113,7 +115,7 @@ def run_usi_engine(
             state.clear_position()
             game_policy = None
         elif command_name == "position":
-            state.replace_position(parse_usi_position(command))
+            state.replace_position(parse_usi_position(command).position)
         elif command_name == "go":
             unsupported = next(
                 (token for token in tokens[1:] if token in unsupported_go_tokens),

@@ -92,8 +92,8 @@ class UsiEngineStateTests(unittest.TestCase):
         古い局面を残したり、局面を不要に複製したりする誤りを検出する。
         """
         state = self.create_state()
-        first = parse_usi_position("position startpos moves 7g7f")
-        latest = parse_usi_position("position startpos moves 2g2f")
+        first = parse_usi_position("position startpos moves 7g7f").position
+        latest = parse_usi_position("position startpos moves 2g2f").position
 
         state.replace_position(first)
         self.assertIs(state.require_position(), first)
@@ -107,7 +107,9 @@ class UsiEngineStateTests(unittest.TestCase):
         `usinewgame`後に前の局面を参照できる状態へ残す誤りを検出する。
         """
         state = self.create_state()
-        state.replace_position(parse_usi_position("position startpos moves 7g7f"))
+        state.replace_position(
+            parse_usi_position("position startpos moves 7g7f").position
+        )
 
         state.clear_position()
 
@@ -304,7 +306,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         response = outputs[0].split()
         self.assertEqual(len(response), 2)
         move = parse_usi_move(response[1])
-        position = parse_usi_position(position_command)
+        position = parse_usi_position(position_command).position
         self.assertIn(move, legal_moves(position))
 
     def test_uses_most_recent_position_before_go(self):
@@ -320,9 +322,9 @@ class UsiEngineFunctionTests(unittest.TestCase):
         observed_positions = []
 
         def record_parse_position(command):
-            position = parse_position(command)
-            parsed_positions.append(position)
-            return position
+            result = parse_position(command)
+            parsed_positions.append(result)
+            return result
 
         def record_legal_moves(position):
             observed_positions.append(position)
@@ -341,7 +343,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
                 random.Random(0),
             )
 
-        latest_position = parsed_positions[1]
+        latest_position = parsed_positions[1].position
         self.assertEqual(len(parsed_positions), 2)
         self.assertEqual(len(observed_positions), 1)
         self.assertIs(observed_positions[0], latest_position)
@@ -489,7 +491,9 @@ class UsiEngineFunctionTests(unittest.TestCase):
         self.assertEqual(len(response), 2)
         self.assertIn(
             parse_usi_move(response[1]),
-            legal_moves(parse_usi_position("position startpos moves 7g7f")),
+            legal_moves(
+                parse_usi_position("position startpos moves 7g7f").position
+            ),
         )
 
     def test_stops_cleanly_on_quit_and_input_eof(self):
@@ -575,7 +579,8 @@ class UsiEngineProcessTests(unittest.TestCase):
             self.assertEqual(len(response), 2)
             move = parse_usi_move(response[1])
             self.assertIn(
-                move, legal_moves(parse_usi_position(position_command))
+                move,
+                legal_moves(parse_usi_position(position_command).position),
             )
 
             self.send_line(process, "quit")
@@ -583,6 +588,65 @@ class UsiEngineProcessTests(unittest.TestCase):
             self.assertEqual(process.wait(timeout=2.0), 0)
             self.assertEqual(reader.read_remaining_after_exit(), b"")
             self.assertEqual(process.stderr.read(), b"")
+        finally:
+            self.stop_process(process)
+            self.close_stdin(process)
+            reader.close()
+            process.stdout.close()
+            process.stderr.close()
+
+    def test_entrypoint_accepts_sfen_position(self):
+        """SFEN単独局面を受け、合法なbestmoveを終了前に返す。
+
+        SFEN対応の局面結果をPositionとして扱えず、検索応答を失う誤りを検出する。
+        """
+        process = self.start_engine()
+        reader = PipeLineReader(process.stdout)
+        position_command = (
+            "position sfen lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/"
+            "1B5R1/LNSGKGSNL b - 17"
+        )
+        try:
+            self.send_line(process, position_command)
+            self.send_line(process, "go btime 591199 wtime 600000 byoyomi 30000")
+            self.send_line(process, "quit")
+            self.close_stdin(process)
+            return_code = process.wait(timeout=2.0)
+            output = reader.read_remaining_after_exit().decode("utf-8")
+
+            self.assertEqual(return_code, 0)
+            responses = output.splitlines()
+            self.assertEqual(len(responses), 1)
+            response = responses[0].split()
+            self.assertEqual(response[0], "bestmove")
+            self.assertEqual(len(response), 2)
+            move = parse_usi_move(response[1])
+            position = parse_usi_position(position_command).position
+            self.assertIn(move, legal_moves(position))
+            self.assertEqual(process.stderr.read(), b"")
+        finally:
+            self.stop_process(process)
+            self.close_stdin(process)
+            reader.close()
+            process.stdout.close()
+            process.stderr.close()
+
+    def test_entrypoint_reports_invalid_sfen_position_on_stderr(self):
+        """不正なSFENはstdoutに混ぜずstderrへ診断して終了する。
+
+        壊れたSFENを検索処理へ渡したり、診断文をUSI応答として返す誤りを検出する。
+        """
+        process = self.start_engine()
+        reader = PipeLineReader(process.stdout)
+        try:
+            self.send_line(process, "position sfen 9/8 b - 1")
+            self.close_stdin(process)
+            return_code = process.wait(timeout=2.0)
+
+            self.assertNotEqual(return_code, 0)
+            self.assertEqual(reader.read_remaining_after_exit(), b"")
+            diagnostic = process.stderr.read().decode("utf-8")
+            self.assertIn("SFEN", diagnostic)
         finally:
             self.stop_process(process)
             self.close_stdin(process)
