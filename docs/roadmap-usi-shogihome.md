@@ -64,4 +64,4 @@
 
 第67回「SFEN局面変換」は、USI原案を基準に設計・実装し、SFEN読込・書出しと `position sfen` の処理を追加した。ローカル `main` へfast-forward統合し、全326テストと最終理解確認まで完了した。これはロードマップ第5項のShogiHome実機対局とは別の、任意局面の受け渡しを扱う技術テーマである。
 
-ShogiHome画面へのSFEN貼り付けと、SFEN局面から実エンジンが応答する実機確認はまだ行っていない。ShogiHomeとの最低限の互換性目標を実機で確かめる場合は、次テーマとして範囲と手順を決める。ShogiHome操作には[接続手順書](shogihome-connection-guide.md)とリポジトリ専用スキルを適用し、具体的な操作を提示して明示承認を得てから進める。完了記録は[第67回学習記録](learning/67-sfen-position-conversion.md)、候補と推薦理由は[次テーマ候補](next-topics.md)を参照する。
+ShogiHome画面へのSFEN貼り付けと、SFEN局面から実エンジンが応答する実機確認はまだ行っていない。本人は第68回予定テーマとして「ShogiHome画面へのSFEN貼り付け確認」を選んだ。次セッションで画面・入力例・期待表示・停止条件を決め、ShogiHome操作には[接続手順書](shogihome-connection-guide.md)とリポジトリ専用スキルを適用する。具体的な操作を提示して明示承認を得るまで実機操作は行わない。エンジン接続・対局・通信ログは今回の選定範囲に含めない。完了記録は[第67回学習記録](learning/67-sfen-position-conversion.md)、選定と再開用プロンプトは[第68回予定テーマの引き継ぎ](handover-shogihome-sfen-paste.md)、候補と推薦理由は[次テーマ候補](next-topics.md)を参照する。
