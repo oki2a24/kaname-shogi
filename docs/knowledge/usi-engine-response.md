@@ -1,6 +1,6 @@
 # USIエンジンの一手応答
 
-更新日：2026-10-05
+更新日：2026-10-07
 
 ## 境界
 
@@ -38,4 +38,4 @@ option name Difficulty type combo default Random var Random var Material
 
 コマンド行は `split()` と既存の文字列分岐で扱う。USIコマンド型や公開状態APIは設けない。非公開状態クラスを独立モジュールやpackage rootから再exportしない。
 
-第59〜62回にShogiHome 1.28.1で平手対局・観察を行った記録は[ShogiHome対局の知識メモ](usi-shogihome-gameplay.md)を参照する。このDifficulty optionをShogiHomeの設定画面で変更して行った実対局や通信ログの確認は未実施であり、USI関数テストと起動プロセスの確認とは区別する。
+第59〜62回にShogiHome 1.28.1で平手対局・観察を行った記録は[ShogiHome対局の知識メモ](usi-shogihome-gameplay.md)を参照する。第65回はDifficulty選択画面とMaterial設定のUSI送信を確認し、第66回は同じ7手局面でRandomの☖９四歩、Materialの☖８八角成を実機観察し、両方の設定と着手をUSIログで確認した。これは一局面・各設定一局の実例であり、他局面に対する一般性は示さない。詳細は[第66回学習記録](../learning/66-shogihome-material-move-effect.md)を参照する。
