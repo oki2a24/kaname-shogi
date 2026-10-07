@@ -41,10 +41,10 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [SFEN局面表記の確定知識](knowledge/sfen-position-notation.md)
 - [第66回学習記録：ShogiHomeでMaterialの着手への影響を確認する（実機観察・理解確認完了）](learning/66-shogihome-material-move-effect.md)
 - [第67回開始時点の引き継ぎ（履歴）：SFEN局面変換](handover-sfen-position-conversion.md)
-- [第68回予定テーマの引き継ぎ：ShogiHome画面へのSFEN貼り付け確認](handover-shogihome-sfen-paste.md)
+- [第68回開始時点の引き継ぎと実施結果：ShogiHome画面へのSFEN貼り付け確認](handover-shogihome-sfen-paste.md)
 - [第65回学習記録：ShogiHomeでDifficulty設定を確認する（実機観察・理解確認完了）](learning/65-shogihome-difficulty-verification.md)
 - [学習・開発の再開案内](resume.md)
-- [次テーマ候補と選定履歴：第67回完了、第68回予定テーマを選定済み](next-topics.md)
+- [次テーマ候補と選定履歴：第68回完了、次テーマ未選定](next-topics.md)
 - [第66回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでMaterialの着手への影響を確認する](handover-shogihome-material-move-effect.md)
 - [第65回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでDifficulty設定を確認する](handover-shogihome-difficulty-verification.md)
 - [第64回実装計画（本人承認済み）](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)
@@ -90,7 +90,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [持ち駒表示の実装計画](plans/2026-10-01-cli-hand-display.md)
 
 第51〜66回の学習記録は最後の理解確認まで完了しています。第60〜62回ではShogiHomeでの試用、通信観察、接続手順の整備を行いました。第63〜64回では難易度選択を設計・実装し、全305テストとmain取り込み後の検証を完了しました。第65〜66回ではShogiHomeのDifficulty設定と、Random / Materialの一局面での着手を観察しました。第67回「SFEN局面変換」では、SFEN読込・書出しとUSI `position sfen` を実装し、独立レビュー、全326テスト、main統合後の検証、最終理解確認まで完了しました。
-SFENのShogiHome実機互換性は未確認です。第68回予定テーマは「ShogiHome画面へのSFEN貼り付け確認」で、選定理由と候補一覧は[次テーマ候補](next-topics.md)、現在の再開手順は[再開案内](resume.md)にあります。各回の詳しい観察・設計・回答はテーマ別索引から参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
+第68回ではShogiHome 1.28.1の画面に4欄SFENと手数欄を省いた3欄SFENを貼り付け、どちらも期待した局面を表示することを確認しました。これはGUI貼り付けの確認であり、ShogiHomeから `kaname-shogi` へのUSI `position sfen` の送信・応答は未確認です。詳細は[第68回学習記録](learning/68-shogihome-sfen-paste.md)、次の候補は[次テーマ候補](next-topics.md)、現在の再開手順は[再開案内](resume.md)を参照してください。`handover-*.md` は各テーマ開始時点の履歴であり、現在のGit状態は `resume.md` と再開時のGit確認で確かめます。
 
 ## テーマ・学習回別索引
 
@@ -157,7 +157,7 @@ SFENのShogiHome実機互換性は未確認です。第68回予定テーマは�
 | ShogiHomeでDifficulty設定を確認（第65回・実機観察、理解確認完了） | [第65回](learning/65-shogihome-difficulty-verification.md) | — | — | — | [開始時点の引き継ぎ](handover-shogihome-difficulty-verification.md) |
 | ShogiHomeでMaterialの着手への影響を確認（第66回・実機観察、理解確認完了） | [第66回](learning/66-shogihome-material-move-effect.md) | — | — | — | [開始時点の引き継ぎ](handover-shogihome-material-move-effect.md) |
 | SFEN局面変換（第67回・main統合、全326テスト、理解確認まで完了。ShogiHome実機確認は未実施） | [第67回](learning/67-sfen-position-conversion.md) | [SFEN局面表記](knowledge/sfen-position-notation.md) | [設計仕様](plans/2026-10-07-sfen-position-conversion-design.md) | [実装計画](plans/2026-10-07-sfen-position-conversion-implementation-plan.md) | [開始時点の引き継ぎ](handover-sfen-position-conversion.md) |
-| ShogiHome画面へのSFEN貼り付け確認（第68回予定・範囲設計と実機確認は未着手） | — | [SFEN局面表記](knowledge/sfen-position-notation.md) | — | — | [開始前の引き継ぎ](handover-shogihome-sfen-paste.md) |
+| ShogiHome画面へのSFEN貼り付け確認（第68回・実機確認、理解確認完了） | [第68回](learning/68-shogihome-sfen-paste.md) | [SFEN局面表記](knowledge/sfen-position-notation.md) | — | — | [開始時点の引き継ぎと実施結果](handover-shogihome-sfen-paste.md) |
 
 ## 例外と履歴の読み方
 
