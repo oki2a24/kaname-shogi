@@ -35,6 +35,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
+- [第71回学習記録：ShogiHome専用スキルの現行化（更新・判断評価・独立レビュー済み、内容確認・コミット・main統合・理解確認待ち）](learning/71-shogihome-connection-skill-update.md)
+
 - [第67回の実装計画（実装・レビュー・全326テスト・main統合・理解確認完了）](plans/2026-10-07-sfen-position-conversion-implementation-plan.md)
 - [第67回の設計仕様](plans/2026-10-07-sfen-position-conversion-design.md)
 - [第67回の学習記録（実装・main統合・全326テスト・理解確認完了）](learning/67-sfen-position-conversion.md)
@@ -99,6 +101,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 第68回ではShogiHome 1.28.1の画面に4欄SFENと手数欄を省いた3欄SFENを貼り付け、どちらも期待した局面を表示することを確認しました。第69回では同じ4欄SFENを時計あり（持ち時間10分・秒読み30秒）の一局でエンジンへ渡し、USIログの `position sfen` と `bestmove 9a9b`、棋譜上の後手の一手を確認しました。持ち時間・秒読みが両方0の設定はShogiHomeに拒否されたため、時計ありへ変更しています。本人の理解確認回答も記録済みです。次テーマに「SFEN手数欄が `4` から `1` になった理由を調べる」（第70回予定）を選びました。詳細は[第69回学習記録](learning/69-shogihome-sfen-engine.md)、[第70回引き継ぎ](handover-shogihome-sfen-move-number.md)、再発時に使う注意は[ShogiHome観察メモ](../.antigravity/observations/shogihome-sfen-clock.md)を参照してください。`handover-*.md` はテーマ開始時点の履歴であり、現在の状態は `resume.md` と再開時のGit確認で確かめます。
 
 ## テーマ・学習回別索引
+
+第71回は本人が新セッションへプロンプトを入力して開始し、具体案への明示承認後に専用スキルを更新した。判断課題の評価と独立レビュー（Critical・Important・Minor各0件）は済み、記録内容確認・コミット・main統合・最終理解確認を待っている。以下の第70回末尾の選定説明は開始前の履歴である。現在の再開手順は[再開案内](resume.md)、今回の承認・変更・検証・限界は[第71回学習記録](learning/71-shogihome-connection-skill-update.md)を参照する。
 
 第70回は既存ログ・現行コード・ShogiHome 1.28.1と固定依存の公式ソースを読み取り専用で調査した。入力の手数4は局面読込時に保持されず、USI生成時に開始局面のSFENへ1を付ける経路が第69回の実測と一致した。盤面が平手初期配置へ戻る意味ではない。理解確認の最初の回答・補足・再回答は[第70回学習記録](learning/70-shogihome-sfen-move-number.md)に記録した。本人による内容確認後、`9110acb` にコミットした。次テーマは「ShogiHome専用スキルを現行化する」（第71回予定）に決まり、[引き継ぎ](handover-shogihome-connection-skill-update.md)を用意した。本人が新セッションへプロンプトを入力するまで着手しない。
 
@@ -168,6 +172,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | ShogiHome画面へのSFEN貼り付け確認（第68回・実機確認、理解確認完了） | [第68回](learning/68-shogihome-sfen-paste.md) | [SFEN局面表記](knowledge/sfen-position-notation.md) | — | — | [開始時点の引き継ぎと実施結果](handover-shogihome-sfen-paste.md) |
 | ShogiHomeからkaname-shogiへSFEN局面を渡す（第69回・実機で一例確認、理解確認完了） | [第69回](learning/69-shogihome-sfen-engine.md) | [SFEN局面表記](knowledge/sfen-position-notation.md)、[ShogiHome対局](knowledge/usi-shogihome-gameplay.md) | — | — | [開始時点の引き継ぎ・実施後追記](handover-shogihome-sfen-engine.md) |
 | SFEN手数欄が4から1になった理由（第70回・調査・理解確認・記録内容確認済み） | [第70回](learning/70-shogihome-sfen-move-number.md) | [SFEN局面表記](knowledge/sfen-position-notation.md) | — | — | [開始時点の引き継ぎ](handover-shogihome-sfen-move-number.md) |
+| ShogiHome専用スキルの現行化（第71回・更新・判断評価・独立レビュー済み、内容確認・統合・理解確認待ち） | [第71回](learning/71-shogihome-connection-skill-update.md) | [専用スキル](../.agents/skills/shogihome-connection/SKILL.md)、[接続手順書](shogihome-connection-guide.md) | — | — | [開始時点の引き継ぎ](handover-shogihome-connection-skill-update.md) |
 
 ## 例外と履歴の読み方
 
