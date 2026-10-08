@@ -4,8 +4,8 @@
 
 第72回「ルートREADMEの古いSFEN説明を直す」を開始した。本人はチャットでREADMEの限定更新と、学習記録・索引・再開案内の更新を「良い」と明示承認した。独立した計画書は作成していない。
 
-- 作業場所：`/Users/oki2a24/kaname-shogi`。作業ブランチ `codex/readme-sfen-update`、開始HEAD `ff7e9ac`。別worktreeなし、pushなし。
-- README更新・文書検証・独立レビューは完了した（Critical・Important・Minor各0件）。記録は[第72回学習記録](learning/72-readme-sfen-update.md)。コミットとmain取り込みは未実施、内容提示と承認待ち。
+- 作業場所：`/Users/oki2a24/kaname-shogi`。現在はmain。開始HEADは `ff7e9ac`、更新コミット `960079f` を作業ブランチ `codex/readme-sfen-update` からfast-forward統合済み。別worktreeなし、pushなし。
+- README更新・文書検証・独立レビューは完了した（Critical・Important・Minor各0件）。記録は[第72回学習記録](learning/72-readme-sfen-update.md)。本人承認後、2026-10-09にコミット・main取り込み・取り込み先文書検証まで完了した。最終理解確認への回答待ち。
 - 現行SFEN対応とstartpos単独未対応を区別する。一局面の実測は全互換性を示さず、手数4から1への変化は平手初期配置への復帰ではない。
 - ShogiHomeの現在状態は未確認。実機操作・起動・対局・追加ログ・設定・棋譜保存や破棄・再起動・コードやテスト変更は今回の範囲外。OFF保存と反映を区別し、反映前に起動しない。0＋0を無制限と扱わず、時計の具体値は別途合意し、10分＋30秒を既定値にしない。
 
