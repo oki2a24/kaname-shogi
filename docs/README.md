@@ -16,7 +16,7 @@
 
 AIは最初からすべての学習記録、設計書、実装計画、引き継ぎを読みません。テーマ別索引から現在の確定知識と設計を選び、判断理由が必要になったときだけ学習記録や過去の引き継ぎへ進みます。過去の文書にあるGit状態、テスト件数、次の行動は、その時点の記録であって現在値ではありません。
 
-[第72回予定テーマの引き継ぎ：ルートREADMEの古いSFEN説明を直す](handover-readme-sfen-update.md)
+[第73回予定テーマの引き継ぎ：現行知識・ロードマップの古い手数差説明を直す](handover-sfen-move-number-docs-update.md)
 
 ## 文書種別の役割
 
@@ -37,7 +37,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-- [第72回学習記録：ルートREADMEのSFEN説明更新（main統合・文書検証・独立レビュー済み、理解確認待ち）](learning/72-readme-sfen-update.md)
+- [第72回学習記録：ルートREADMEのSFEN説明更新（main統合・文書検証・独立レビュー・理解確認完了）](learning/72-readme-sfen-update.md)
 
 - [第71回学習記録：ShogiHome専用スキルの現行化（main統合・文書検証・理解確認回答済み、理解確認完了）](learning/71-shogihome-connection-skill-update.md)
 
