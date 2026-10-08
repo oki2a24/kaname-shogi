@@ -45,11 +45,12 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [第69回開始時点の引き継ぎと実施後記録：ShogiHomeからkaname-shogiへSFEN局面を渡す](handover-shogihome-sfen-engine.md)
 - [第69回の学習記録：ShogiHomeからのSFEN送信・時計あり一手応答](learning/69-shogihome-sfen-engine.md)
 - [第70回学習記録：SFEN手数欄が `4` から `1` になった理由（調査・理解確認・記録内容確認済み）](learning/70-shogihome-sfen-move-number.md)
+- [第71回予定テーマの引き継ぎ：ShogiHome専用スキルを現行化する](handover-shogihome-connection-skill-update.md)
 - [第70回開始時点の引き継ぎ（履歴）：SFEN手数欄が `4` から `1` になった理由を調べる](handover-shogihome-sfen-move-number.md)
 - [再発しやすいShogiHomeの時計・SFEN・ログ設定の注意](../.antigravity/observations/shogihome-sfen-clock.md)
 - [第65回学習記録：ShogiHomeでDifficulty設定を確認する（実機観察・理解確認完了）](learning/65-shogihome-difficulty-verification.md)
 - [学習・開発の再開案内](resume.md)
-- [次テーマ候補と選定履歴（第69回完了後の候補）](next-topics.md)
+- [次テーマ候補と選定履歴：第70回完了、第71回予定テーマ選定済み](next-topics.md)
 - [第66回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでMaterialの着手への影響を確認する](handover-shogihome-material-move-effect.md)
 - [第65回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでDifficulty設定を確認する](handover-shogihome-difficulty-verification.md)
 - [第64回実装計画（本人承認済み）](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)
@@ -99,7 +100,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## テーマ・学習回別索引
 
-第70回は既存ログ・現行コード・ShogiHome 1.28.1と固定依存の公式ソースを読み取り専用で調査した。入力の手数4は局面読込時に保持されず、USI生成時に開始局面のSFENへ1を付ける経路が第69回の実測と一致した。盤面が平手初期配置へ戻る意味ではない。理解確認の最初の回答・補足・再回答は[第70回学習記録](learning/70-shogihome-sfen-move-number.md)に記録した。本人による記録内容の確認とコミット承認を終えた。次テーマは未選定である。
+第70回は既存ログ・現行コード・ShogiHome 1.28.1と固定依存の公式ソースを読み取り専用で調査した。入力の手数4は局面読込時に保持されず、USI生成時に開始局面のSFENへ1を付ける経路が第69回の実測と一致した。盤面が平手初期配置へ戻る意味ではない。理解確認の最初の回答・補足・再回答は[第70回学習記録](learning/70-shogihome-sfen-move-number.md)に記録した。本人による内容確認後、`9110acb` にコミットした。次テーマは「ShogiHome専用スキルを現行化する」（第71回予定）に決まり、[引き継ぎ](handover-shogihome-connection-skill-update.md)を用意した。本人が新セッションへプロンプトを入力するまで着手しない。
 
 リンクがない文書種別は `—` と表示します。複数の学習回で一つの実装テーマを扱った場合は、同じ行にまとめています。
 
