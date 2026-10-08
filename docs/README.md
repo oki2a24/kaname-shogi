@@ -37,6 +37,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
+- [第73回学習記録：現行知識・ロードマップの手数差説明更新（文書検証・独立レビュー済み、コミット・main取り込み承認待ち）](learning/73-sfen-move-number-docs-update.md)
+
 - [第72回学習記録：ルートREADMEのSFEN説明更新（main統合・文書検証・独立レビュー・理解確認完了）](learning/72-readme-sfen-update.md)
 
 - [第71回学習記録：ShogiHome専用スキルの現行化（main統合・文書検証・理解確認回答済み、理解確認完了）](learning/71-shogihome-connection-skill-update.md)
@@ -56,7 +58,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [再発しやすいShogiHomeの時計・SFEN・ログ設定の注意](../.antigravity/observations/shogihome-sfen-clock.md)
 - [第65回学習記録：ShogiHomeでDifficulty設定を確認する（実機観察・理解確認完了）](learning/65-shogihome-difficulty-verification.md)
 - [学習・開発の再開案内](resume.md)
-- [次テーマ候補と選定履歴：第71回完了、第72回予定テーマ選定済み](next-topics.md)
+- [次テーマ候補と選定履歴：第72回完了、第73回テーマ選定済み](next-topics.md)
 - [第66回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでMaterialの着手への影響を確認する](handover-shogihome-material-move-effect.md)
 - [第65回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでDifficulty設定を確認する](handover-shogihome-difficulty-verification.md)
 - [第64回実装計画（本人承認済み）](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)
