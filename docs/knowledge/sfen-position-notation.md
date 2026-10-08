@@ -37,6 +37,19 @@ SFENの持ち駒数は合法性検査の対象ではない。`add_many` によ�
 - エンジン状態が保持するのは引き続き `Position` だけであり、SFEN手数はUSI入力時の結果データに留める。
 - SFENは一局面のスナップショットであり、履歴を持つ `GameRecord` や `kaname-shogi-game-record-v1` JSON棋譜とは別形式である。JSONの保存形式は変更しない。
 
+## ShogiHome 1.28.1のSFEN貼り付けと手数の境界
+
+第70回に公式ソースと第69回の既存ログを照合した。ShogiHome 1.28.1の[固定依存](https://github.com/sunfish-shogi/shogihome/blob/24960d39d0557e0109cb48e608d5e62a6cd48dd7/package-lock.json#L16416)はtsshogi 2.3.4である。
+
+- [ShogiHomeのSFEN読込](https://github.com/sunfish-shogi/shogihome/blob/24960d39d0557e0109cb48e608d5e62a6cd48dd7/src/renderer/record/manager.ts#L229)は、`Position.newBySFEN`（局面データを生成する操作）の結果を `new Record(position)`（新しい棋譜データの生成）へ渡す。
+- tsshogiの[局面読込](https://github.com/sunfish-shogi/tsshogi/blob/bec83166c011eb662ee963f04ddb3fe2eb584c99/src/position.ts#L605)は盤面・手番・持ち駒を保存し、入力の手数欄は検証するが保持しない。
+- [棋譜生成](https://github.com/sunfish-shogi/tsshogi/blob/bec83166c011eb662ee963f04ddb3fe2eb584c99/src/record.ts#L436)は読み込んだ局面を開始局面とし、開始ノードの棋譜内手数を0にする。SFENの手数から過去の指し手履歴を生成するわけではない。
+- [局面のSFEN生成](https://github.com/sunfish-shogi/tsshogi/blob/bec83166c011eb662ee963f04ddb3fe2eb584c99/src/position.ts#L586)の `sfen` は `getSFEN(1)` を呼ぶ。[棋譜のUSI生成](https://github.com/sunfish-shogi/tsshogi/blob/bec83166c011eb662ee963f04ddb3fe2eb584c99/src/record.ts#L1099)は開始局面の `sfen` を使用するため、手数欄は1になる。現在局面用の `Record.sfen` が棋譜内手数+1を指定する処理とは区別する。
+
+この経路は、第69回で3手後の4欄SFEN `... w - 4` を貼り付けた後、ShogiHomeが `position sfen ... w - 1` を送った実測と一致する。盤面・手番・持ち駒が保たれたまま、入力手数は保持されない。新しい棋譜の「開始局面」は平手の初期配置を意味しない。
+
+これは当該公式版の実装経路と一例のログの照合であり、作者の設計意図、当時の実行中アプリ内部状態、他版・他形式の手数保持は未確認である。kaname-shogiが受信後に探索状態へ `Position` だけを渡す処理とは別の境界である。調査の出典・本人回答・限界は[第70回学習記録](../learning/70-shogihome-sfen-move-number.md)を参照する。
+
 ## 関連資料
 
 - [USI局面の再生](usi-position-replay.md)

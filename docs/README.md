@@ -44,11 +44,12 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [第68回開始時点の引き継ぎと実施結果：ShogiHome画面へのSFEN貼り付け確認](handover-shogihome-sfen-paste.md)
 - [第69回開始時点の引き継ぎと実施後記録：ShogiHomeからkaname-shogiへSFEN局面を渡す](handover-shogihome-sfen-engine.md)
 - [第69回の学習記録：ShogiHomeからのSFEN送信・時計あり一手応答](learning/69-shogihome-sfen-engine.md)
-- [第70回予定テーマの引き継ぎ：SFEN手数欄が `4` から `1` になった理由を調べる](handover-shogihome-sfen-move-number.md)
+- [第70回学習記録：SFEN手数欄が `4` から `1` になった理由（調査・理解確認・記録内容確認済み）](learning/70-shogihome-sfen-move-number.md)
+- [第70回開始時点の引き継ぎ（履歴）：SFEN手数欄が `4` から `1` になった理由を調べる](handover-shogihome-sfen-move-number.md)
 - [再発しやすいShogiHomeの時計・SFEN・ログ設定の注意](../.antigravity/observations/shogihome-sfen-clock.md)
 - [第65回学習記録：ShogiHomeでDifficulty設定を確認する（実機観察・理解確認完了）](learning/65-shogihome-difficulty-verification.md)
 - [学習・開発の再開案内](resume.md)
-- [次テーマ候補と選定履歴：第69回完了、第70回予定テーマ選定済み](next-topics.md)
+- [次テーマ候補と選定履歴（第69回完了後の候補）](next-topics.md)
 - [第66回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでMaterialの着手への影響を確認する](handover-shogihome-material-move-effect.md)
 - [第65回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでDifficulty設定を確認する](handover-shogihome-difficulty-verification.md)
 - [第64回実装計画（本人承認済み）](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)
@@ -97,6 +98,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 第68回ではShogiHome 1.28.1の画面に4欄SFENと手数欄を省いた3欄SFENを貼り付け、どちらも期待した局面を表示することを確認しました。第69回では同じ4欄SFENを時計あり（持ち時間10分・秒読み30秒）の一局でエンジンへ渡し、USIログの `position sfen` と `bestmove 9a9b`、棋譜上の後手の一手を確認しました。持ち時間・秒読みが両方0の設定はShogiHomeに拒否されたため、時計ありへ変更しています。本人の理解確認回答も記録済みです。次テーマに「SFEN手数欄が `4` から `1` になった理由を調べる」（第70回予定）を選びました。詳細は[第69回学習記録](learning/69-shogihome-sfen-engine.md)、[第70回引き継ぎ](handover-shogihome-sfen-move-number.md)、再発時に使う注意は[ShogiHome観察メモ](../.antigravity/observations/shogihome-sfen-clock.md)を参照してください。`handover-*.md` はテーマ開始時点の履歴であり、現在の状態は `resume.md` と再開時のGit確認で確かめます。
 
 ## テーマ・学習回別索引
+
+第70回は既存ログ・現行コード・ShogiHome 1.28.1と固定依存の公式ソースを読み取り専用で調査した。入力の手数4は局面読込時に保持されず、USI生成時に開始局面のSFENへ1を付ける経路が第69回の実測と一致した。盤面が平手初期配置へ戻る意味ではない。理解確認の最初の回答・補足・再回答は[第70回学習記録](learning/70-shogihome-sfen-move-number.md)に記録した。本人による記録内容の確認とコミット承認を終えた。次テーマは未選定である。
 
 リンクがない文書種別は `—` と表示します。複数の学習回で一つの実装テーマを扱った場合は、同じ行にまとめています。
 
@@ -163,6 +166,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | SFEN局面変換（第67回・main統合、全326テスト、理解確認まで完了。ShogiHome実機確認は未実施） | [第67回](learning/67-sfen-position-conversion.md) | [SFEN局面表記](knowledge/sfen-position-notation.md) | [設計仕様](plans/2026-10-07-sfen-position-conversion-design.md) | [実装計画](plans/2026-10-07-sfen-position-conversion-implementation-plan.md) | [開始時点の引き継ぎ](handover-sfen-position-conversion.md) |
 | ShogiHome画面へのSFEN貼り付け確認（第68回・実機確認、理解確認完了） | [第68回](learning/68-shogihome-sfen-paste.md) | [SFEN局面表記](knowledge/sfen-position-notation.md) | — | — | [開始時点の引き継ぎと実施結果](handover-shogihome-sfen-paste.md) |
 | ShogiHomeからkaname-shogiへSFEN局面を渡す（第69回・実機で一例確認、理解確認完了） | [第69回](learning/69-shogihome-sfen-engine.md) | [SFEN局面表記](knowledge/sfen-position-notation.md)、[ShogiHome対局](knowledge/usi-shogihome-gameplay.md) | — | — | [開始時点の引き継ぎ・実施後追記](handover-shogihome-sfen-engine.md) |
+| SFEN手数欄が4から1になった理由（第70回・調査・理解確認・記録内容確認済み） | [第70回](learning/70-shogihome-sfen-move-number.md) | [SFEN局面表記](knowledge/sfen-position-notation.md) | — | — | [開始時点の引き継ぎ](handover-shogihome-sfen-move-number.md) |
 
 ## 例外と履歴の読み方
 
