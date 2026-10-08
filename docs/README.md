@@ -37,6 +37,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
+- [第72回学習記録：ルートREADMEのSFEN説明更新（文書検証・独立レビュー済み、内容確認待ち）](learning/72-readme-sfen-update.md)
+
 - [第71回学習記録：ShogiHome専用スキルの現行化（main統合・文書検証・理解確認回答済み、理解確認完了）](learning/71-shogihome-connection-skill-update.md)
 
 - [第67回の実装計画（実装・レビュー・全326テスト・main統合・理解確認完了）](plans/2026-10-07-sfen-position-conversion-implementation-plan.md)
