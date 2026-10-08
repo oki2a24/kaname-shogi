@@ -16,7 +16,9 @@
 
 AIは最初からすべての学習記録、設計書、実装計画、引き継ぎを読みません。テーマ別索引から現在の確定知識と設計を選び、判断理由が必要になったときだけ学習記録や過去の引き継ぎへ進みます。過去の文書にあるGit状態、テスト件数、次の行動は、その時点の記録であって現在値ではありません。
 
-[第73回予定テーマの引き継ぎ：現行知識・ロードマップの古い手数差説明を直す](handover-sfen-move-number-docs-update.md)
+[第74回予定テーマの引き継ぎ：接続手順書の時計条件を現行化する](handover-shogihome-clock-guide-update.md)
+
+[第73回開始時点の引き継ぎ（履歴）：現行知識・ロードマップの古い手数差説明を直す](handover-sfen-move-number-docs-update.md)
 
 ## 文書種別の役割
 
@@ -58,7 +60,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [再発しやすいShogiHomeの時計・SFEN・ログ設定の注意](../.antigravity/observations/shogihome-sfen-clock.md)
 - [第65回学習記録：ShogiHomeでDifficulty設定を確認する（実機観察・理解確認完了）](learning/65-shogihome-difficulty-verification.md)
 - [学習・開発の再開案内](resume.md)
-- [次テーマ候補と選定履歴：第72回完了、第73回テーマ選定済み](next-topics.md)
+- [次テーマ候補と選定履歴：第73回完了、第74回予定テーマ選定済み](next-topics.md)
 - [第66回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでMaterialの着手への影響を確認する](handover-shogihome-material-move-effect.md)
 - [第65回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでDifficulty設定を確認する](handover-shogihome-difficulty-verification.md)
 - [第64回実装計画（本人承認済み）](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)
