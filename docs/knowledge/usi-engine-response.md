@@ -1,6 +1,6 @@
 # USIエンジンの一手応答
 
-更新日：2026-10-07
+更新日：2026-10-08
 
 ## 境界
 
@@ -8,7 +8,7 @@
 
 ## 局面と一手
 
-- `position` は `position startpos moves <1手以上>` のみ対応し、`parse_usi_position` が再現した最新 `Position` を非公開 `_UsiEngineState` が保持する。状態オブジェクトは `Position` または未設定の `None` だけを持つ。
+- `position` は `position startpos moves <1手以上>`、`position sfen <SFEN>`、`position sfen <SFEN> moves <指し手...>` に対応する。`parse_usi_position` が再現した最新 `Position` を非公開 `_UsiEngineState` が保持する。状態オブジェクトは `Position` または未設定の `None` だけを持つ。
 - `replace_position` は局面を置き換え、`clear_position` は未設定へ戻し、`require_position` は局面を返すか未設定時に `ValueError` を送出する。設定値、棋譜、合法手選択、乱数器はこの状態オブジェクトへ入れない。
 - `legal_moves(position)` が合法手を列挙し、共通の `choose_move(position, moves, policy, rng)` が方針別に一手を選び、`format_usi_move` が表記する。選択した手はUSIエンジン内のPositionへ適用しない。
 - 合法手がない場合は `bestmove resign` を返す。
@@ -39,3 +39,5 @@ option name Difficulty type combo default Random var Random var Material
 コマンド行は `split()` と既存の文字列分岐で扱う。USIコマンド型や公開状態APIは設けない。非公開状態クラスを独立モジュールやpackage rootから再exportしない。
 
 第59〜62回にShogiHome 1.28.1で平手対局・観察を行った記録は[ShogiHome対局の知識メモ](usi-shogihome-gameplay.md)を参照する。第65回はDifficulty選択画面とMaterial設定のUSI送信を確認し、第66回は同じ7手局面でRandomの☖９四歩、Materialの☖８八角成を実機観察し、両方の設定と着手をUSIログで確認した。これは一局面・各設定一局の実例であり、他局面に対する一般性は示さない。詳細は[第66回学習記録](../learning/66-shogihome-material-move-effect.md)を参照する。
+
+第67回で追加した `position sfen` のコード対応は、第69回にShogiHome 1.28.1からの実通信でも確認した。4欄SFENを画面へ貼り付けた後、時計あり（持ち時間10分・秒読み30秒）の一局で `position sfen ...`、時間付き `go`、`bestmove 9a9b` がログに記録され、盤面にも後手の合法手が反映された。画面貼り付けだけでは通信確認にならない。ShogiHomeは持ち時間と秒読みが両方0の設定を「持ち時間と秒読みが両方とも0です」と拒否したため、時計なし対局はこの版・画面では開始できなかった。実測の範囲と後片付けの制約は[第69回学習記録](../learning/69-shogihome-sfen-engine.md)を参照する。
