@@ -37,7 +37,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-- [第73回学習記録：現行知識・ロードマップの手数差説明更新（main統合・文書検証・独立レビュー済み、最終理解確認待ち）](learning/73-sfen-move-number-docs-update.md)
+- [第73回学習記録：現行知識・ロードマップの手数差説明更新（main統合・文書検証・独立レビュー・最終理解確認完了）](learning/73-sfen-move-number-docs-update.md)
 
 - [第72回学習記録：ルートREADMEのSFEN説明更新（main統合・文書検証・独立レビュー・理解確認完了）](learning/72-readme-sfen-update.md)
 
