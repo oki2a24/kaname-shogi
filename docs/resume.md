@@ -4,8 +4,8 @@
 
 第74回「接続手順書の時計条件を現行化する」を開始。本人は手順書・対局知識・第74回学習記録・文書索引・本書の5文書更新と文書検証・独立レビューの具体案を「承認する」と明示承認した。独立した計画書は作成していない。
 
-- 作業場所：`/Users/oki2a24/kaname-shogi`、作業ブランチ `codex/shogihome-clock-guide-update`、開始HEAD `aa13364`。開始時mainはorigin/mainより1コミット先行、作業ツリークリーン。別worktreeなし。
-- 時計条件の更新・文書検証・独立レビュー（Critical・Important・Minor各0件）を終えた。詳細は[第74回学習記録](learning/74-shogihome-clock-guide-update.md)を参照する。コミット・main取り込みは成果物提示後の承認待ち。pushは含めない。
+- 作業場所：`/Users/oki2a24/kaname-shogi`、現在はmain。作業ブランチ `codex/shogihome-clock-guide-update` から `e550c93` をfast-forward統合済み。開始HEAD `aa13364`。開始時mainはorigin/mainより1コミット先行、作業ツリークリーン。別worktreeなし。
+- 時計条件の更新・文書検証・独立レビュー（Critical・Important・Minor各0件）を終えた。詳細は[第74回学習記録](learning/74-shogihome-clock-guide-update.md)を参照する。本人承認後、コミット・main取り込み・取り込み先文書検証まで完了。相対リンク374件の参照先・見出し問題0件、差分検査成功。最終理解確認の回答待ち。pushはしていない。
 - 文書保守のみ。実機操作・起動・対局・追加ログ・設定・棋譜保存や破棄・再起動・コードやテスト変更は行わない。現在のアプリ状態は未確認。SFEN・KIF運用範囲は広げない。
 
 以下は第74回開始前の準備履歴であり、現在のGit状態や進捗の代用にしない。
