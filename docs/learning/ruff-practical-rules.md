@@ -83,6 +83,10 @@ Refactor不要。型表記の限定変更であり、責務や将棋処理の変
 
 本人に「現設定を維持し、実際の不具合・繰り返すレビュー指摘・用途変更を再検討の条件とする。Ruff更新時は診断と整形差分を確認する。README・AGENTS・知識メモに記録する」という具体案を提示し、「良い」と承認を得た。
 
-作業開始HEAD `1f0e001`、元の作業場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/ruff-maintenance-policy`。前回の回答追記3文書を保持した。設定・Pythonコード・テストは変更せず、実装計画書は作らない限定的な文書更新として実施した。Refactor不要。文書6件のみの差分と相対リンクの参照先存在、`git diff --check`、Ruff両検査の成功を確認した。文書のみの変更なので全体テストは再実行していない。独立レビューはCritical 0件・Important 0件・Minor 1件。MinorはRuff更新後の仮想環境への再導入手順の明記であり、`python3 scripts/setup_dev.py` 再実行と版・フック確認を追記して対応した。レビュアーもリンク・見出し参照、候補診断数、現設定lint、差分検査を確認した。今回の記録確認・コミット・main統合は未完了。
+作業開始HEAD `1f0e001`、元の作業場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/ruff-maintenance-policy`。前回の回答追記3文書を保持した。設定・Pythonコード・テストは変更せず、実装計画書は作らない限定的な文書更新として実施した。Refactor不要。文書6件のみの差分と相対リンクの参照先存在、`git diff --check`、Ruff両検査の成功を確認した。文書のみの変更なので全体テストは再実行していない。独立レビューはCritical 0件・Important 0件・Minor 1件。MinorはRuff更新後の仮想環境への再導入手順の明記であり、`python3 scripts/setup_dev.py` 再実行と版・フック確認を追記して対応した。レビュアーもリンク・見出し参照、候補診断数、現設定lint、差分検査を確認した。本人の「良い」による記録確認・コミット・統合承認後、`02d1e3e` をコミット前フック合格後に作成し、元の作業ディレクトリのmainへfast-forward統合した。main上で文書6件の参照先存在、差分検査、Ruff整形検査（28ファイル）・lintの成功を確認した。文書のみの変更であり全体テストの再実行は省略した。pushなし。
+
+運用方針の最後の確認問題：今後Ruffルールの追加を再検討するのは、どのようなときか？
+
+本人の回答：未回答。回答と補足は回答後に追記する。
 
 出典：[公式設定指針](https://docs.astral.sh/ruff/linter/#rule-selection)、[SIM117](https://docs.astral.sh/ruff/rules/multiple-with-statements/)、[PLR2004](https://docs.astral.sh/ruff/rules/magic-value-comparison/)、[PLR0912](https://docs.astral.sh/ruff/rules/too-many-branches/)、[PLW1510](https://docs.astral.sh/ruff/rules/subprocess-run-without-check/)、[公式FAQ](https://docs.astral.sh/ruff/faq/#how-does-ruffs-linter-compare-to-pylint)、[バージョニング](https://docs.astral.sh/ruff/versioning/)。
