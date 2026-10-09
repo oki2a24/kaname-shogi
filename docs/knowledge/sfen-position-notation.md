@@ -50,6 +50,18 @@ SFENの持ち駒数は合法性検査の対象ではない。`add_many` によ�
 
 これは当該公式版の実装経路と一例のログの照合であり、作者の設計意図、当時の実行中アプリ内部状態、他版・他形式の手数保持は未確認である。kaname-shogiが受信後に探索状態へ `Position` だけを渡す処理とは別の境界である。調査の出典・本人回答・限界は[第70回学習記録](../learning/70-shogihome-sfen-move-number.md)を参照する。
 
+## ShogiHomeのSFEN付き指し手履歴：確認した一例
+
+2026-10-09、第75回にMac版ShogiHome 1.28.1で、平手から７六歩・３四歩まで進んだ盤面のSFEN `lnsgkgsnl/1r5b1/pppppp1pp/6p2/9/2P6/PP1PPPPPP/1B5R1/LNSGKGSNL b - 3` を新規棋譜として読み込み、先手が２六歩を追加した。ログの送信は次のとおりだった。
+
+```text
+position sfen lnsgkgsnl/1r5b1/pppppp1pp/6p2/9/2P6/PP1PPPPPP/1B5R1/LNSGKGSNL b - 1 moves 2g2f
+```
+
+入力手数3を保持しない局面読込と、開始局面へ手数1を付けるUSI生成を区別する。開始局面は２手後の盤面のままであり、`moves` はそこからの追加手だけだった。既存 `parse_usi_position`（局面コマンドを解析する操作）で受信行を再現し、平手から３手進めた盤面・手番・双方持ち駒との一致と、結果のSFEN手数2を確認した。`bestmove 6a5b` はその局面の合法手で、画面・棋譜には５二金右として反映された。
+
+これは一局面・一追加手・一応答の確認であり、他版・全局面・成りや駒打ちを含む他履歴・KIF再開の拡張を保証しない。証拠と限界は[第75回学習記録](../learning/75-shogihome-sfen-moves-verification.md)、操作条件は[接続手順書](../shogihome-connection-guide.md#sfen局面から確認する)を参照する。
+
 ## 関連資料
 
 - [USI局面の再生](usi-position-replay.md)
