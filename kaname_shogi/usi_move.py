@@ -5,7 +5,6 @@ import re
 from .model import BasicPieceType, Square
 from .move import BoardMove, DropMove, Move
 
-
 _BOARD_MOVE_PATTERN = re.compile(r"([1-9][a-i])([1-9][a-i])(\+?)")
 _DROP_MOVE_PATTERN = re.compile(r"([A-Z])\*([1-9][a-i])")
 _USI_PIECE_TYPES = {

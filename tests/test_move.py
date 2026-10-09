@@ -1,7 +1,7 @@
 """中立な指し手データの値と不変性を検証する。"""
 
-from dataclasses import FrozenInstanceError
 import unittest
+from dataclasses import FrozenInstanceError
 
 from kaname_shogi.model import BasicPieceType, Square
 

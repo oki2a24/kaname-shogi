@@ -10,7 +10,6 @@ from typing import Union
 from .model import BasicPieceType, Board, Hand, Piece, PieceType, Position, Side, Square
 from .movegen import apply_drop, apply_move
 
-
 _HAND_PIECE_TYPES = (
     BasicPieceType.PAWN,
     BasicPieceType.LANCE,

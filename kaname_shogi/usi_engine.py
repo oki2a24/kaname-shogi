@@ -1,14 +1,13 @@
 """USIプロトコルで一手を返すエンジン境界。"""
 
-import sys
 import random
+import sys
 from typing import Callable, Optional
 
 from .model import Position
 from .movegen import MoveSelectionPolicy, choose_move, legal_moves
 from .usi_move import format_usi_move
 from .usi_position import parse_usi_position
-
 
 _USI_DIFFICULTY_VALUES = {
     "random": MoveSelectionPolicy.RANDOM,

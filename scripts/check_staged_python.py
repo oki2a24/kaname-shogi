@@ -1,9 +1,9 @@
 """Gitインデックス内のPythonコードを、作業版を変えずに検査する。"""
 
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
 
 def main(root=None):

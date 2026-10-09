@@ -1,11 +1,11 @@
 """ステージ内容の品質検査を、外部パッケージなしで確認する。"""
 
 import os
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 
 from scripts import check_staged_python
 

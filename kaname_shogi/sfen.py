@@ -4,7 +4,6 @@ from dataclasses import dataclass
 
 from .model import BasicPieceType, Board, Hand, Piece, PieceType, Position, Side, Square
 
-
 _UNPROMOTED_PIECES = {
     "K": PieceType.KING,
     "R": PieceType.ROOK,

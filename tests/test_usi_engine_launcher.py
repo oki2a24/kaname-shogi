@@ -1,10 +1,9 @@
 """ShogiHome用USIエンジン起動ファイルの実プロセス境界を確認する。"""
 
 import os
-from pathlib import Path
 import subprocess
 import unittest
-
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER = PROJECT_ROOT / "kaname-shogi-usi"

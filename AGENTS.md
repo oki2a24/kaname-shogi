@@ -18,7 +18,7 @@
 
 - 別PC・新しいcloneでは、READMEの開発環境セットアップに従い `python3 scripts/setup_dev.py` を実行する。`.venv` とローカルGit設定はcloneで引き継がれない。グローバルインストールやグローバルGit設定変更は行わない。既存フックとの競合は無断で上書きしない。
 - 開発再開時は `.venv/bin/ruff --version` が `requirements-dev.txt` の固定版と一致すること、`git config --local --get core.hooksPath` が `.githooks` であることを確認する。不足・不一致はREADMEの手順でセットアップを再実行し、失敗を未解決のままコミットしない。
-- Python変更時は `.venv/bin/ruff format .`、`.venv/bin/ruff check .`、差分確認、変更に見合うテスト、ステージ、コミットの順に進める。通常のコミットではステージ済み内容の整形・基本検査が成功する必要がある。`--no-verify` やフック設定の一時解除で検査を回避しない。フックは単体テスト・独立レビューの代替ではない。
+- Python変更時は、importを追加・変更した場合に `.venv/bin/ruff check --select I --fix .` で整理してから、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、差分確認、変更に見合うテスト、ステージ、コミットの順に進める。通常のコミットではステージ済み内容の整形・基本検査が成功する必要がある。`--no-verify` やフック設定の一時解除で検査を回避しない。フックは単体テスト・独立レビューの代替ではない。
 
 - ShogiHomeへの接続・対局操作を行う場合は、`.agents/skills/shogihome-connection/SKILL.md` と `docs/shogihome-connection-guide.md` を確認し、現在の画面と手順書の停止条件に従う。
 - 関連するルールを学んだ後に、その範囲だけを最小実装する。

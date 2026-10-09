@@ -1,9 +1,9 @@
 """対局記録の履歴と更新を検証する。"""
 
 import json
+import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import unittest
 
 from kaname_shogi.model import (
     BasicPieceType,

@@ -14,7 +14,6 @@ from kaname_shogi.model import (
     create_initial_position,
 )
 
-
 EXPECTED = """手番：先手
 +：先手、-：後手
 

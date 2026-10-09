@@ -41,6 +41,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
+- [Ruff Iルール追加：import順序の統一](learning/ruff-import-order.md)
+
 - [Python品質検査の現行知識](knowledge/python-quality-checks.md)、[Ruff Bルール追加：既定引数に関する誤りの検査](learning/ruff-bugbear-rules.md)
 
 - [開発環境整備：プロジェクト内Ruff・別PCセットアップ・コミット前検査](learning/ruff-local-quality-gate.md)、[設計・実装計画](plans/2026-10-09-ruff-local-quality-gate.md)

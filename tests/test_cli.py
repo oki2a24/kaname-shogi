@@ -1,15 +1,14 @@
 """CLIの指し手解析と対局進行を検証する。"""
 
 import random
+import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-import unittest
 from unittest.mock import patch
 
-from kaname_shogi.game_record import GameRecord, RecordedDrop, RecordedMove
-from kaname_shogi.move import BoardMove, DropMove
 from kaname_shogi import cli
 from kaname_shogi.display import render_position
+from kaname_shogi.game_record import GameRecord, RecordedDrop, RecordedMove
 from kaname_shogi.model import (
     BasicPieceType,
     Board,
@@ -20,6 +19,7 @@ from kaname_shogi.model import (
     Square,
     create_initial_position,
 )
+from kaname_shogi.move import BoardMove, DropMove
 from kaname_shogi.movegen import MoveSelectionPolicy
 
 

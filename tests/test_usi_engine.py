@@ -2,12 +2,12 @@
 
 import os
 import random
-from pathlib import Path
 import selectors
 import subprocess
 import sys
 import time
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from kaname_shogi import usi_engine

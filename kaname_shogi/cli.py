@@ -7,10 +7,9 @@ from typing import Callable, Optional, Union
 
 from .display import render_position
 from .game_record import GameRecord
-from .move import BoardMove, DropMove, Move
 from .model import BasicPieceType, Side, Square, create_initial_position
+from .move import BoardMove, DropMove, Move
 from .movegen import MoveSelectionPolicy, choose_move, is_game_over, legal_moves
-
 
 __all__ = (
     "GameMode",

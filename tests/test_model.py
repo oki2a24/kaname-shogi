@@ -1,7 +1,7 @@
 """筋段の取り違え、不正座標、盤面の共有を検出する。"""
 
-from dataclasses import FrozenInstanceError
 import unittest
+from dataclasses import FrozenInstanceError
 
 from kaname_shogi import model
 from kaname_shogi.model import (
@@ -12,8 +12,8 @@ from kaname_shogi.model import (
     Position,
     Side,
     Square,
+    create_initial_position,
 )
-from kaname_shogi.model import create_initial_position
 
 
 class SquareTests(unittest.TestCase):

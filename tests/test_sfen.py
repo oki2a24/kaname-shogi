@@ -7,16 +7,15 @@ from unittest.mock import patch
 from kaname_shogi.model import (
     BasicPieceType,
     Board,
+    Hand,
     Piece,
     PieceType,
-    Hand,
     Position,
     Side,
     Square,
     create_initial_position,
 )
 from kaname_shogi.sfen import SfenPosition, format_sfen, parse_sfen
-
 
 HAND_PIECE_TYPES = (
     BasicPieceType.ROOK,

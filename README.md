@@ -144,6 +144,7 @@ python3 -m unittest discover -s tests -v
 ### 日常の整形・検査とコミット
 
 ```sh
+.venv/bin/ruff check --select I --fix .
 .venv/bin/ruff format .
 .venv/bin/ruff check .
 git diff
@@ -151,7 +152,7 @@ python3 -m unittest discover -s tests -v
 # 内容を確認して対象をgit addし、git commitする
 ```
 
-Ruffの対象はPythonファイルです。行長88・Python 3.9を対象とし、リンターは `E4,E7,E9,F,B` を有効にしています。`B` はflake8-bugbear由来の、既定引数のリスト共有など気付きにくい誤りを検査するルール群です。型検査や将棋ルールの正しさの保証ではありません。B追加の理由と検証は[学習記録](docs/learning/ruff-bugbear-rules.md)を参照してください。
+Ruffの対象はPythonファイルです。行長88・Python 3.9を対象とし、リンターは `E4,E7,E9,F,B,I` を有効にしています。`B` はflake8-bugbear由来の、既定引数のリスト共有など気付きにくい誤りを検査するルール群です。型検査や将棋ルールの正しさの保証ではありません。B追加の理由と検証は[Bの学習記録](docs/learning/ruff-bugbear-rules.md)、import順序を統一するIの追加は[Iの学習記録](docs/learning/ruff-import-order.md)を参照してください。importの自動整理は整形の前に実行し、差分を確認します。
 
 通常の `git commit` では、**ステージした全Pythonファイルと設定**を一時領域へ複写し、整形とリンターの両検査を実行します。未ステージの変更と未追跡ファイルは検査に混ぜません。失敗するとコミットが止まるので、修正・差分確認・再ステージしてから再試行してください。フックは自動修正や再ステージ、パッケージ取得を行いません。Pythonファイルや設定のシンボリックリンクは拒否します。Gitの `--no-verify` で回避する運用は採用しません。
 

@@ -19,8 +19,8 @@ import random
 from enum import Enum, auto
 from typing import Callable, Optional, Tuple
 
-from .move import BoardMove, DropMove, Move
 from .model import BasicPieceType, Board, Piece, PieceType, Position, Side, Square
+from .move import BoardMove, DropMove, Move
 
 
 class MoveSelectionPolicy(Enum):

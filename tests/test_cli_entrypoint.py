@@ -1,9 +1,9 @@
 """CLI実行入口の実プロセス境界を限定的なスモークテストで確認する。"""
 
-from pathlib import Path
 import subprocess
 import sys
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from kaname_shogi import __main__ as entrypoint

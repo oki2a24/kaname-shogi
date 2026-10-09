@@ -5,7 +5,6 @@ import unittest
 from unittest.mock import patch
 
 from kaname_shogi import movegen
-from kaname_shogi.move import BoardMove, DropMove
 from kaname_shogi.model import (
     BasicPieceType,
     Board,
@@ -15,12 +14,13 @@ from kaname_shogi.model import (
     Side,
     Square,
 )
+from kaname_shogi.move import BoardMove, DropMove
 from kaname_shogi.movegen import (
     bishop_move_candidates,
     gold_move_candidates,
-    lance_move_candidates,
     king_move_candidates,
     knight_move_candidates,
+    lance_move_candidates,
     pawn_move_candidates,
     rook_move_candidates,
     silver_move_candidates,

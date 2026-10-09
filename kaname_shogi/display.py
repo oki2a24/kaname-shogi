@@ -6,7 +6,6 @@
 
 from .model import BasicPieceType, Hand, PieceType, Position, Side, Square
 
-
 _HAND_PIECE_SPECS = (
     (BasicPieceType.PAWN, "歩"),
     (BasicPieceType.LANCE, "香"),
