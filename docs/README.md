@@ -39,7 +39,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-- [第74回学習記録：接続手順書の時計条件更新](learning/74-shogihome-clock-guide-update.md)
+- [第74回学習記録：接続手順書の時計条件更新（main統合・文書検証・独立レビュー・最終理解確認完了）](learning/74-shogihome-clock-guide-update.md)
 
 - [第73回学習記録：現行知識・ロードマップの手数差説明更新（main統合・文書検証・独立レビュー・最終理解確認完了）](learning/73-sfen-move-number-docs-update.md)
 
