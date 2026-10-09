@@ -16,7 +16,9 @@
 
 AIは最初からすべての学習記録、設計書、実装計画、引き継ぎを読みません。テーマ別索引から現在の確定知識と設計を選び、判断理由が必要になったときだけ学習記録や過去の引き継ぎへ進みます。過去の文書にあるGit状態、テスト件数、次の行動は、その時点の記録であって現在値ではありません。
 
-[第74回予定テーマの引き継ぎ：接続手順書の時計条件を現行化する](handover-shogihome-clock-guide-update.md)
+[第75回予定テーマの引き継ぎ：SFEN付き指し手履歴の確認](handover-shogihome-sfen-moves-verification.md)
+
+[第74回開始時点の引き継ぎ（履歴）：接続手順書の時計条件を現行化する](handover-shogihome-clock-guide-update.md)
 
 [第73回開始時点の引き継ぎ（履歴）：現行知識・ロードマップの古い手数差説明を直す](handover-sfen-move-number-docs-update.md)
 
