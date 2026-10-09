@@ -134,7 +134,7 @@ class GameRecord:
             output.write("\n")
 
     @classmethod
-    def load(cls, path: Union[str, Path]) -> "GameRecord":
+    def load(cls, path: Union[str, Path]) -> GameRecord:
         """専用JSONを検証して、新しい対局記録として読み込む。
 
         引数:

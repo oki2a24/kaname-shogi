@@ -5,4 +5,7 @@ line-length = 88
 include = ["*.py"]
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "B", "I"]
+select = ["E4", "E7", "E9", "F", "B", "I", "UP", "PIE", "RUF024", "RUF026", "RUF100"]
+
+[tool.ruff.lint.pyupgrade]
+keep-runtime-typing = true

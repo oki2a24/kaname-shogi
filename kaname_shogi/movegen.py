@@ -17,7 +17,7 @@ docs/design/14-hand-drops.md。
 
 import random
 from enum import Enum, auto
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional
 
 from .model import BasicPieceType, Board, Piece, PieceType, Position, Side, Square
 from .move import BoardMove, DropMove, Move
@@ -482,7 +482,7 @@ def apply_drop(
     _apply_drop(position, piece_type, destination, check_uchi_fuzume=True)
 
 
-def _legal_moves(position: Position, *, check_uchi_fuzume: bool) -> Tuple[Move, ...]:
+def _legal_moves(position: Position, *, check_uchi_fuzume: bool) -> tuple[Move, ...]:
     """指定方針で、手番側の合法手を固定順に列挙する非公開操作。"""
     moves = []
     for file in range(1, 10):
@@ -526,7 +526,7 @@ def _has_legal_move(position: Position, *, check_uchi_fuzume: bool) -> bool:
     return bool(_legal_moves(position, check_uchi_fuzume=check_uchi_fuzume))
 
 
-def legal_moves(position: Position) -> Tuple[Move, ...]:
+def legal_moves(position: Position) -> tuple[Move, ...]:
     """手番側の全合法手を、固定順の変更不可タプルで返す。
 
     引数:
@@ -551,7 +551,7 @@ def legal_moves(position: Position) -> Tuple[Move, ...]:
     return _legal_moves(position, check_uchi_fuzume=True)
 
 
-def choose_weak_move(moves: Tuple[Move, ...], rng: random.Random) -> Optional[Move]:
+def choose_weak_move(moves: tuple[Move, ...], rng: random.Random) -> Optional[Move]:
     """合法手一覧から、指定された乱数生成器で一手を選ぶ。
 
     引数:
@@ -616,7 +616,7 @@ def material_balance(position: Position, perspective: Side) -> int:
 
 def choose_move(
     position: Position,
-    moves: Tuple[Move, ...],
+    moves: tuple[Move, ...],
     policy: MoveSelectionPolicy,
     rng: random.Random,
 ) -> Optional[Move]:
