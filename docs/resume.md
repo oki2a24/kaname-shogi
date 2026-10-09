@@ -2,7 +2,7 @@
 
 ## 現在地
 
-本人の「良い」による具体案承認後、`codex/ruff-practical-rules` でUP・PIE・RUF024・RUF026・RUF100を追加した。Python 3.9対応を保ち、型表記を2ファイルで整理した。前テーマIの回答追記3文書は保持した。詳細と現在の検証・レビュー状態は[追加検査の記録](learning/ruff-practical-rules.md)を参照する。以下のmain状態は今回の追加検査前の履歴。
+本人の「良い」による具体案承認後、`codex/ruff-practical-rules` でUP・PIE・RUF024・RUF026・RUF100を追加した。Python 3.9対応を保ち、型表記を2ファイルで整理した。前テーマIの回答追記3文書も含め、本人の「良い」による記録確認・統合承認後に `ab62a64` をmainへ取り込み、main上でRuff両検査・全340テストが成功した。現在main。追加検査の最後の理解確認への回答待ち。pushなし。詳細と現在の検証・レビュー状態は[追加検査の記録](learning/ruff-practical-rules.md)を参照する。以下のmain状態は今回の追加検査前の履歴。
 
 本人はI追加の具体案に「yoi」と承認した。`codex/ruff-import-order` でIを追加し、21ファイルのimportを整理した。Ruff両検査・全340テスト・実コミット検証・独立レビュー（全分類0件）まで成功。本人の「yes」による記録確認・統合承認後、`aa46932` をmainへfast-forwardで取り込み、main上でもRuff両検査・全340テストが成功した。現在main。最後の理解確認は本人が「import整理、リンターが先」と回答し、正解の確認と補足まで完了した。回答追記は内容確認・コミット前。pushなし。[I追加の記録](learning/ruff-import-order.md)を参照する。以下のB完了・main状態はI追加前の履歴である。
 
