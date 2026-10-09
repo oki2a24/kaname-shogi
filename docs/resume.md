@@ -2,22 +2,17 @@
 
 ## 現在地
 
-2026-10-10更新。テーマは「評価・探索の章へ進む前の文書整理」。本人は入口5文書の整理案を「良い」と承認し、今後の更新ガイドとAGENTS.mdへの参照追加も「良い」と承認した。文書整理・更新ガイド追加・文書検証・独立レビューとMinor対応まで完了。本人は「良い」と記録確認・コミット・main取り込みを承認済み。`bbc2619` を通常フック合格後に作成し、引き継ぎ準備 `86e6794` とともにmainへfast-forward統合した。取り込み先のリンク888件・履歴本文一致・差分・Ruff両検査は成功。最後の理解確認は未回答。
+2026-10-10更新。文書整理はmain統合・取り込み先検証・最後の理解確認まで完了。本人は次テーマ「一手駒得評価の次段階を設計する」を選び、新セッション準備を依頼した。今回は準備のみ。次テーマの具体案・学習・設計・実装は未開始。
 
-- 作業場所：`/Users/oki2a24/kaname-shogi`。現在はmain。整理ブランチは `codex/documentation-chapter`、整理開始HEAD `86e6794`、整理コミット `bbc2619`。今回は別worktreeを作成していない。既存worktreeの有無はGitで確認する。
-- 元の作業ディレクトリのmainへ取り込み済み。pushなし。最新HEADと作業ツリーは再開時に実測する。
-- 次の作業：最後の理解確認を一問出して本人の回答を待つ。回答と補足を記録し、内容確認後に保存してから次テーマを確認する。
-- 評価・探索の学習・設計・実装、コード・テスト・Ruff設定変更、ShogiHome操作は今回の範囲外。
+- 作業場所：`/Users/oki2a24/kaname-shogi`。準備ブランチ `codex/evaluation-next-stage-handoff`、準備開始HEAD `6d3f7e4`。今回の新規worktree・main取り込み・pushなし。最新状態はGitで確認する。
+- 今回の保存対象には前テーマの本人回答「置き換える」と補足・完了更新も含む。[整理記録](learning/documentation-chapter.md)を参照する。
+- 次の行動：本人が[引き継ぎの再開用プロンプト](handover-evaluation-next-stage.md#再開用プロンプト)全文を新しいセッションへ入力する。その後Gitと資料を読み取り専用で確認し、具体案を提示する。
+- 探索方式・深さ・評価項目・実装範囲、章番号・学習回番号は未確定。選定を具体案や実装の承認に流用しない。
 
 ## 次に読む資料
 
-1. `git status --short --branch` と `git log -3 --oneline` で現物を確認する。
-2. [AGENTS.md](../AGENTS.md)、[ルートREADME](../README.md)、[更新ガイド](documentation-guide.md)。
-3. [今回の整理記録](learning/documentation-chapter.md)、[次テーマ候補](next-topics.md)、必要な資料は[文書索引](README.md)から選ぶ。
-4. [今回の開始時引き継ぎ](handover-documentation-chapter.md)は開始時の背景として読む。そこにある承認待ちは現在の承認状態の代用にしない。
+[次テーマ引き継ぎ](handover-evaluation-next-stage.md)、[AGENTS.md](../AGENTS.md)、[README](../README.md)、[更新ガイド](documentation-guide.md)、[候補](next-topics.md)、[方向性](02-project-direction.md)、[一手選択の現行知識](knowledge/31-weak-move-selection.md)。その他は引き継ぎと[索引](README.md)から選ぶ。
 
-## 完了済みの土台と履歴
+## 前テーマの完了と履歴
 
-第75回までの接続整備とRuffの導入・拡張・運用方針・理解確認は完了。現行運用は[Python品質検査](knowledge/python-quality-checks.md)、経緯と本人回答は[追加検査・運用方針の記録](learning/ruff-practical-rules.md)。過去の成功を今回の検証結果として扱わない。
-
-整理前の再開案内は[履歴](resume-history.md)に保存した。現在地へ過去の状態や古い再開用プロンプトを積み重ねない。
+文書整理 `bbc2619` と統合・検証記録 `6d3f7e4` は元のmainへ取り込み済み。リンク888件・履歴3本文一致・差分・Ruff整形28ファイルとlintが成功。文書のみで全体テストは再実行していない。最後の回答と補足は[整理記録](learning/documentation-chapter.md)。今回の準備の検証とGit状態は[引き継ぎ](handover-evaluation-next-stage.md)を参照する。
