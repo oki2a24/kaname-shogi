@@ -2,6 +2,8 @@
 
 ## 現在地
 
+2026-10-09、本人の選定・計画承認に基づき、第76回の強化設計とは別にRuff開発環境整備を実施中。作業場所は同じ `/Users/oki2a24/kaname-shogi`、作業ブランチは `codex/ruff-local-quality-gate`。別worktreeなし。実装・検証・独立レビュー・記録確認の状態は[開発環境整備記録](learning/ruff-local-quality-gate.md)を参照する。mainへの統合・pushは未実施で、過去の「現在はmain」を現在の作業状態に流用しない。
+
 第75回は、本人が再開プロンプトと具体案・棋譜保全・ログ変更を承認した後、一局面の実機確認・復帰・文書整理・文書検証・独立レビュー（Critical・Important・Minor各0件）を終えた。本人承認後、コミット・main取り込み・取り込み先文書検証まで完了し、最終理解確認まで完了した。次は既存合意の第76回「一手駒得評価の次段階を設計する」を推薦し、本人の意思確認待ち。
 
 - 作業場所：`/Users/oki2a24/kaname-shogi`。現在はmain。開始HEAD `385b68f`、文書更新コミット `9072088` を `codex/shogihome-sfen-moves-verification` からfast-forward統合済み。別worktreeなし、pushなし。

@@ -41,6 +41,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
+- [開発環境整備：プロジェクト内Ruff・別PCセットアップ・コミット前検査](learning/ruff-local-quality-gate.md)、[設計・実装計画](plans/2026-10-09-ruff-local-quality-gate.md)
+
 - [第75回学習記録：SFEN付き指し手履歴の一局面確認・SFEN開始とKIF再開の案内整理](learning/75-shogihome-sfen-moves-verification.md)
 
 - [第74回学習記録：接続手順書の時計条件更新（main統合・文書検証・独立レビュー・最終理解確認完了）](learning/74-shogihome-clock-guide-update.md)

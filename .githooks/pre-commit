@@ -1,0 +1,9 @@
+#!/bin/sh
+# このcheckoutの仮想環境を使い、コミット予定のPythonコードだけを検査する。
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+if [ ! -x .venv/bin/python ]; then
+    echo '開発環境がありません。python3 scripts/setup_dev.py を実行してください。' >&2
+    exit 1
+fi
+exec .venv/bin/python scripts/check_staged_python.py

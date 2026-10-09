@@ -34,7 +34,7 @@
 
 千日手、持将棋、入玉、時間管理、反則勝敗、複数手を読む探索や強さの保証、自動保存はまだ扱いません。駒得方針は一手後だけの評価です。ShogiHomeとの確認はMac版1.28.1の平手対局と、SFEN局面での一手応答の一例です。第75回では２手後SFENから２六歩を追加し、SFEN付き指し手履歴の送信と５二金右の合法応答を一局面で確認しました（[第75回学習記録](docs/learning/75-shogihome-sfen-moves-verification.md)）。他版・全局面・他の指し手履歴の実機互換性は未確認です。自動投了時の通信ログは37手局面からの一例です。Materialが駒を取る手を選ぶ実例は一つ確認しましたが、他局面でも駒得を選ぶ一般性、長い探索の有無、時計動作や他の終局・コマンドの互換性は未確認です。コンピュータ対コンピュータには手数上限がなく、詰み、合法手なし、または `Ctrl-C` で停止します。
 
-実行とテストにはPython標準ライブラリだけを使います。外部パッケージのインストールは不要です。
+実行と単体テストにはPython標準ライブラリだけを使います。開発時の整形・静的検査には、プロジェクト内の仮想環境へRuffを導入します。
 
 ## 実行方法
 
@@ -121,6 +121,63 @@ python3 -m unittest discover -s tests -v
 ```
 
 テストメソッド名は検索や個別実行に使える英語とし、日本語docstringで確認する振る舞いと検出したい誤りを説明しています。`-v` を付けると、その日本語説明も表示されます。
+
+## 別PCでの開発環境セットアップ
+
+Python 3.9以上（`venv`・`pip`を利用可能な環境）、Git、初回パッケージ取得用のインターネット接続が必要です。セットアップはmacOS/Linux向けです。実測環境はmacOS・Python 3.9.6で、LinuxとWindowsネイティブは未実測です。Windowsと別Git worktreeへの導入は今回の対応範囲に含みません。
+
+```sh
+python3 --version
+git --version
+git clone https://github.com/oki2a24/kaname-shogi.git
+cd kaname-shogi
+python3 scripts/setup_dev.py
+.venv/bin/ruff format --check .
+.venv/bin/ruff check .
+python3 -m unittest discover -s tests -v
+```
+
+すでにcloneしている場合は、そのリポジトリへ移動してセットアップコマンドから実行します。スクリプトは `.venv` の作成、`requirements-dev.txt` に固定したRuffの導入、バージョン確認、`git config --local core.hooksPath .githooks` を行います。グローバルのPython環境やGit設定は変更しません。既存フックとの競合は上書きせず停止します。依存関係の取得に失敗した場合も、フックを新たに有効化しません。
+
+`.venv` とローカルGit設定はcloneで引き継がれません。PCごと・cloneごとに実行してください。`.venv` を別PCへコピーせず、同じ手順で作成します。セットアップは再実行可能で、依存関係の固定版が更新されたときも再実行します。
+
+### 日常の整形・検査とコミット
+
+```sh
+.venv/bin/ruff format .
+.venv/bin/ruff check .
+git diff
+python3 -m unittest discover -s tests -v
+# 内容を確認して対象をgit addし、git commitする
+```
+
+Ruffの対象はPythonファイルです。行長88・Python 3.9を対象とし、リンターは `E4,E7,E9,F` だけを有効にしています。基本的な誤りを確認する設定であり、型検査や将棋ルールの正しさの保証ではありません。
+
+通常の `git commit` では、**ステージした全Pythonファイルと設定**を一時領域へ複写し、整形とリンターの両検査を実行します。未ステージの変更と未追跡ファイルは検査に混ぜません。失敗するとコミットが止まるので、修正・差分確認・再ステージしてから再試行してください。フックは自動修正や再ステージ、パッケージ取得を行いません。Pythonファイルや設定のシンボリックリンクは拒否します。Gitの `--no-verify` で回避する運用は採用しません。
+
+フック設定と固定版の確認：
+
+```sh
+git config --local --get core.hooksPath
+.venv/bin/ruff --version
+```
+
+期待値は `.githooks` と `ruff 0.16.10` です。フックの検査は単体テスト・レビューの代わりにはなりません。
+
+### 手動構築と環境の再作成
+
+スクリプトが行う主要な操作は次のとおりです。既存フックがある場合は、統合方法を決めてから設定してください。
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/ruff --version
+git config --local core.hooksPath .githooks
+```
+
+Python更新やディレクトリ移動で `.venv` が動かなくなった場合は、使用中の仮想環境を終了し、`.venv` を削除せず別名へ退避してセットアップを再実行してください。退避先は既存の名前と重複させないでください。スクリプトは壊れた環境や既存ファイルを自動削除しません。Linuxで `venv`・`pip` がない場合は、利用するPython配布元の手順で用意してから再実行してください。
+
+設計理由・検証・レビューは[開発環境整備の記録](docs/learning/ruff-local-quality-gate.md)、実装計画は[Ruff導入計画](docs/plans/2026-10-09-ruff-local-quality-gate.md)を参照してください。
 
 ## 文書案内
 
