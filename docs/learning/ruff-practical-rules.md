@@ -87,6 +87,10 @@ Refactor不要。型表記の限定変更であり、責務や将棋処理の変
 
 運用方針の最後の確認問題：今後Ruffルールの追加を再検討するのは、どのようなときか？
 
-本人の回答：未回答。回答と補足は回答後に追記する。
+本人の回答：「実際の不具合・繰り返すレビュー指摘・用途変更があったとき」
+
+アシスタントの補足：正解。この3つをきっかけに、検出したい誤りに対応するルールを個別に検討する。追加前には現コードへの影響、誤検出、Python 3.9と日本語への影響を確認する。ルール数を増やすこと自体は目的にしない。
+
+今回の回答追記は本人の内容確認・コミット前。README・次テーマ候補・プロジェクトの方向性を再確認した。小さい順に「一局面で一手駒得評価の限界を学ぶ」「一手駒得評価の次段階を設計する」「自作ブラウザUIを設計する」を保持し、既存の第76回に当たる2番目を推薦する。現在の評価の限界から、次に学ぶ範囲を小さく決められるためである。本人が選ぶまで新しいテーマは開始しない。
 
 出典：[公式設定指針](https://docs.astral.sh/ruff/linter/#rule-selection)、[SIM117](https://docs.astral.sh/ruff/rules/multiple-with-statements/)、[PLR2004](https://docs.astral.sh/ruff/rules/magic-value-comparison/)、[PLR0912](https://docs.astral.sh/ruff/rules/too-many-branches/)、[PLW1510](https://docs.astral.sh/ruff/rules/subprocess-run-without-check/)、[公式FAQ](https://docs.astral.sh/ruff/faq/#how-does-ruffs-linter-compare-to-pylint)、[バージョニング](https://docs.astral.sh/ruff/versioning/)。

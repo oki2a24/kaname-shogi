@@ -41,6 +41,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
+- [次テーマへの引き継ぎ：評価・探索の章へ進む前の文書整理](handover-documentation-chapter.md)（選定・準備のみ。整理は新セッションの具体案承認後）
+
 - [Ruff Iルール追加：import順序の統一](learning/ruff-import-order.md)
 
 - [Python品質検査の現行知識](knowledge/python-quality-checks.md)、[Ruff Bルール追加：既定引数に関する誤りの検査](learning/ruff-bugbear-rules.md)
