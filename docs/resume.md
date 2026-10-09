@@ -2,9 +2,9 @@
 
 ## 現在地
 
-第75回は、本人が再開プロンプトと具体案・棋譜保全・ログ変更を承認した後、一局面の実機確認・復帰・文書整理・文書検証・独立レビュー（Critical・Important・Minor各0件）を終えた。コミット・main取り込みの本人承認待ち。
+第75回は、本人が再開プロンプトと具体案・棋譜保全・ログ変更を承認した後、一局面の実機確認・復帰・文書整理・文書検証・独立レビュー（Critical・Important・Minor各0件）を終えた。本人承認後、コミット・main取り込み・取り込み先文書検証まで完了し、最終理解確認の回答待ち。
 
-- 作業場所：`/Users/oki2a24/kaname-shogi`。ブランチ `codex/shogihome-sfen-moves-verification`、開始HEAD `385b68f`、別worktreeなし。main未統合、コミット・統合は成果物提示後の本人承認待ち。pushなし。
+- 作業場所：`/Users/oki2a24/kaname-shogi`。現在はmain。開始HEAD `385b68f`、文書更新コミット `9072088` を `codex/shogihome-sfen-moves-verification` からfast-forward統合済み。別worktreeなし、pushなし。
 - ShogiHome 1.28.1：２手後SFENに２六歩を追加し、`position sfen ... b - 1 moves 2g2f`・時間付き `go`・`bestmove 6a5b` と画面・棋譜の５二金右を確認した。既存処理で局面再現と応答の合法性を照合。双方5分＋60秒は今回の合意値。
 - 既存棋譜と結果棋譜は承認済みのデスクトップの別名へ保全した。ログを三種OFFに戻し、再起動後の設定とUSIセッション0を確認した。最後の画面は平手の空の新規棋譜。過去の未保存・復帰保留を現在状態へ流用しない。
 - 検証・独立レビュー・理解確認の実施状態は[第75回学習記録](learning/75-shogihome-sfen-moves-verification.md)を確認する。コード・テストは変更しない。第75回を接続整備の最後とし、その後第76回で強化を設計する既存合意を保持する。
