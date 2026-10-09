@@ -16,12 +16,6 @@
 
 AIは最初からすべての学習記録、設計書、実装計画、引き継ぎを読みません。テーマ別索引から現在の確定知識と設計を選び、判断理由が必要になったときだけ学習記録や過去の引き継ぎへ進みます。過去の文書にあるGit状態、テスト件数、次の行動は、その時点の記録であって現在値ではありません。
 
-[第75回予定テーマの引き継ぎ：SFEN付き指し手履歴の確認](handover-shogihome-sfen-moves-verification.md)
-
-[第74回開始時点の引き継ぎ（履歴）：接続手順書の時計条件を現行化する](handover-shogihome-clock-guide-update.md)
-
-[第73回開始時点の引き継ぎ（履歴）：現行知識・ロードマップの古い手数差説明を直す](handover-sfen-move-number-docs-update.md)
-
 ## 文書種別の役割
 
 | 文書 | 主な役割 | 主な読み手 | 読むタイミング | 更新契機 | 情報の性質 |
@@ -36,99 +30,25 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | `docs/plans/` の実装計画 | 承認済み設計を実行する手順と検証方法 | 実装担当 | 実装開始前と実装中 | 計画作成時、実際との差異が生じたとき | 実行手順と実施記録 |
 | `docs/design/` | 初期段階の設計 | 経緯を調べる人、AI | 初期実装の判断を調べるとき | 原則として更新しない | 初期設計の履歴 |
 | `docs/02-project-direction.md` | 長期的な方向と節目の判断 | 本人、AI | 次テーマの選定時 | 大きな到達点や方向変更時 | 長期方針と判断履歴 |
-| `docs/next-topics.md` | 完了テーマ後の候補と選定結果 | 本人、AI | 次テーマの選定時 | テーマ完了後の理解確認後 | 候補と選定履歴 |
+| `docs/next-topics.md` | 完了テーマ後の候補と選定結果 | 本人、AI | 次テーマの選定時 | テーマ完了後の理解確認後 | 現在の候補と履歴への参照 |
 | ロードマップ | 複数テーマの順序とGREEN条件 | 本人、AI | 長期作業の開始・切替時 | テーマ開始時と完了時 | 現在の進行と完了履歴 |
 
 ## 現在の作業入口
 
-- [次テーマへの引き継ぎ：評価・探索の章へ進む前の文書整理](handover-documentation-chapter.md)（選定・準備のみ。整理は新セッションの具体案承認後）
+[再開案内](resume.md)で承認・作業状態と次に読む資料を確認する。現在のテーマは評価・探索前の文書整理。細かな進捗はこの索引に重複させない。
 
-- [Ruff Iルール追加：import順序の統一](learning/ruff-import-order.md)
+## よく参照する現行資料
 
-- [Python品質検査の現行知識](knowledge/python-quality-checks.md)、[Ruff Bルール追加：既定引数に関する誤りの検査](learning/ruff-bugbear-rules.md)
-
-- [開発環境整備：プロジェクト内Ruff・別PCセットアップ・コミット前検査](learning/ruff-local-quality-gate.md)、[設計・実装計画](plans/2026-10-09-ruff-local-quality-gate.md)
-
-- [第75回学習記録：SFEN付き指し手履歴の一局面確認・SFEN開始とKIF再開の案内整理](learning/75-shogihome-sfen-moves-verification.md)
-
-- [第74回学習記録：接続手順書の時計条件更新（main統合・文書検証・独立レビュー・最終理解確認完了）](learning/74-shogihome-clock-guide-update.md)
-
-- [第73回学習記録：現行知識・ロードマップの手数差説明更新（main統合・文書検証・独立レビュー・最終理解確認完了）](learning/73-sfen-move-number-docs-update.md)
-
-- [第72回学習記録：ルートREADMEのSFEN説明更新（main統合・文書検証・独立レビュー・理解確認完了）](learning/72-readme-sfen-update.md)
-
-- [第71回学習記録：ShogiHome専用スキルの現行化（main統合・文書検証・理解確認回答済み、理解確認完了）](learning/71-shogihome-connection-skill-update.md)
-
-- [第67回の実装計画（実装・レビュー・全326テスト・main統合・理解確認完了）](plans/2026-10-07-sfen-position-conversion-implementation-plan.md)
-- [第67回の設計仕様](plans/2026-10-07-sfen-position-conversion-design.md)
-- [第67回の学習記録（実装・main統合・全326テスト・理解確認完了）](learning/67-sfen-position-conversion.md)
-- [SFEN局面表記の確定知識](knowledge/sfen-position-notation.md)
-- [第66回学習記録：ShogiHomeでMaterialの着手への影響を確認する（実機観察・理解確認完了）](learning/66-shogihome-material-move-effect.md)
-- [第67回開始時点の引き継ぎ（履歴）：SFEN局面変換](handover-sfen-position-conversion.md)
-- [第68回開始時点の引き継ぎと実施結果：ShogiHome画面へのSFEN貼り付け確認](handover-shogihome-sfen-paste.md)
-- [第69回開始時点の引き継ぎと実施後記録：ShogiHomeからkaname-shogiへSFEN局面を渡す](handover-shogihome-sfen-engine.md)
-- [第69回の学習記録：ShogiHomeからのSFEN送信・時計あり一手応答](learning/69-shogihome-sfen-engine.md)
-- [第70回学習記録：SFEN手数欄が `4` から `1` になった理由（調査・理解確認・記録内容確認済み）](learning/70-shogihome-sfen-move-number.md)
-- [第71回予定テーマの引き継ぎ：ShogiHome専用スキルを現行化する](handover-shogihome-connection-skill-update.md)
-- [第70回開始時点の引き継ぎ（履歴）：SFEN手数欄が `4` から `1` になった理由を調べる](handover-shogihome-sfen-move-number.md)
-- [再発しやすいShogiHomeの時計・SFEN・ログ設定の注意](../.antigravity/observations/shogihome-sfen-clock.md)
-- [第65回学習記録：ShogiHomeでDifficulty設定を確認する（実機観察・理解確認完了）](learning/65-shogihome-difficulty-verification.md)
-- [学習・開発の再開案内](resume.md)
-- [次テーマ候補と選定履歴：第73回完了、第74回予定テーマ選定済み](next-topics.md)
-- [第66回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでMaterialの着手への影響を確認する](handover-shogihome-material-move-effect.md)
-- [第65回開始時点の引き継ぎ（開始時の履歴）：ShogiHomeでDifficulty設定を確認する](handover-shogihome-difficulty-verification.md)
-- [第64回実装計画（本人承認済み）](plans/2026-10-05-weakest-mode-difficulty-selection-implementation-plan.md)
-- [第64回学習記録：承認済み難易度選択設計の実装](learning/64-weakest-mode-difficulty-selection-implementation.md)
-- [最弱手選択と駒得評価の確定知識](knowledge/31-weak-move-selection.md)
-- [USI Difficulty optionの確定知識](knowledge/usi-engine-response.md)
-- [第64回学習記録：難易度選択の実装・main取り込み・理解確認まで完了](learning/64-weakest-mode-difficulty-selection-implementation.md)
-- [第63回学習記録：最弱モードを残す難易度選択の最小設計（設計・理解確認完了）](learning/63-weakest-mode-difficulty-selection.md)
-- [第64回開始時点の引き継ぎ（開始時の履歴）](handover-weakest-mode-difficulty-selection-implementation.md)
-- [第63回の設計仕様（本人承認済み）](plans/2026-10-05-weakest-mode-difficulty-selection-design.md)
-- [次テーマ開始時点の引き継ぎ：最弱モードを残す難易度選択の最小設計](handover-weakest-mode-difficulty-selection.md)
-- [第61回学習記録：ShogiHome自動投了時のUSI通信確認](learning/61-shogihome-auto-resign-logs.md)
-- [第61回開始時点の引き継ぎ（開始時の履歴）：ShogiHome自動投了時のUSI通信確認](handover-shogihome-auto-resign-logs.md)
-- [第60回予定テーマ開始時点の引き継ぎ：息子によるShogiHome試用](handover-son-shogihome-trial.md)
-- [第60回学習記録：息子によるShogiHome試用（実対局・理解確認まで完了）](learning/60-shogihome-son-trial.md)
-- [ShogiHomeで対局するためのロードマップ](roadmap-usi-shogihome.md)
-- [第59回開始時点の引き継ぎ：ShogiHomeで平手対局する](handover-usi-shogihome-gameplay.md)
-- [第59回学習記録：ShogiHomeで平手対局する（main取り込み・全283テスト・理解確認まで完了）](learning/59-shogihome-even-game.md)
-- [ShogiHome平手対局の確定知識](knowledge/usi-shogihome-gameplay.md)
-- [第59回の実装計画](plans/2026-10-04-shogihome-gameplay-implementation-plan.md)
-- [第58回学習記録：USIコマンド型・独立状態APIの導入要否](learning/58-usi-command-state-api-review.md)
-- [第58回の設計仕様](plans/2026-10-04-usi-command-state-api-review-design.md)
-- [第58回の実装計画](plans/2026-10-04-usi-command-state-api-review-implementation-plan.md)
-- [第57回学習記録：USIエンジンとして一手を返す](learning/57-usi-engine-response.md)
-- [USIエンジン応答の確定知識](knowledge/usi-engine-response.md)
-- [第57回の設計仕様](plans/2026-10-03-usi-engine-response-design.md)
-- [第57回の実装計画](plans/2026-10-03-usi-engine-response-implementation-plan.md)
-- [第57回開始時点の引き継ぎ](handover-usi-engine-response.md)
-- [第58回開始時点の引き継ぎ：USIコマンド型・独立状態APIの導入要否](handover-usi-command-state-api-review.md)
-- [第56回開始時点の引き継ぎ（開始時の履歴）](handover-usi-position-replay.md)
-- [第51回学習記録](learning/51-cli-help-display.md)
-- [第52回学習記録：対局中の持ち駒表示](learning/52-cli-hand-display.md)
-- [第53回学習記録：`_hand_counts` 重複の再評価](learning/53-movegen-hand-counts-review.md)
-- [第54回学習記録：ShogiHomeとUSIの接続範囲](learning/54-usi-shogihome-connection-scope.md)
-- [第55回学習記録：USI指し手表記と内部の一手の対応](learning/55-usi-move-notation.md)
-- [USI一手表記の確定知識](knowledge/usi-move-notation.md)
-- [第56回学習記録：USIの平手手順から局面を再現する](learning/56-usi-position-replay.md)
-- [USI平手局面再現の確定知識](knowledge/usi-position-replay.md)
-- [第56回の設計仕様](plans/2026-10-02-usi-position-replay-design.md)
-- [第56回の実装計画](plans/2026-10-02-usi-position-replay-implementation-plan.md)
-- [持ち駒表示の確定知識](knowledge/34-cli-hand-display.md)
-- [持ち駒表示の設計仕様](plans/2026-10-01-cli-hand-display-design.md)
-- [持ち駒表示の実装計画](plans/2026-10-01-cli-hand-display.md)
-
-第51〜66回の学習記録は最後の理解確認まで完了しています。第60〜62回ではShogiHomeでの試用、通信観察、接続手順の整備を行いました。第63〜64回では難易度選択を設計・実装し、全305テストとmain取り込み後の検証を完了しました。第65〜66回ではShogiHomeのDifficulty設定と、Random / Materialの一局面での着手を観察しました。第67回「SFEN局面変換」では、SFEN読込・書出しとUSI `position sfen` を実装し、独立レビュー、全326テスト、main統合後の検証、最終理解確認まで完了しました。
-第68回ではShogiHome 1.28.1の画面に4欄SFENと手数欄を省いた3欄SFENを貼り付け、どちらも期待した局面を表示することを確認しました。第69回では同じ4欄SFENを時計あり（持ち時間10分・秒読み30秒）の一局でエンジンへ渡し、USIログの `position sfen` と `bestmove 9a9b`、棋譜上の後手の一手を確認しました。持ち時間・秒読みが両方0の設定はShogiHomeに拒否されたため、時計ありへ変更しています。本人の理解確認回答も記録済みです。次テーマに「SFEN手数欄が `4` から `1` になった理由を調べる」（第70回予定）を選びました。詳細は[第69回学習記録](learning/69-shogihome-sfen-engine.md)、[第70回引き継ぎ](handover-shogihome-sfen-move-number.md)、再発時に使う注意は[ShogiHome観察メモ](../.antigravity/observations/shogihome-sfen-clock.md)を参照してください。`handover-*.md` はテーマ開始時点の履歴であり、現在の状態は `resume.md` と再開時のGit確認で確かめます。
+- [一手選択と駒得評価](knowledge/31-weak-move-selection.md)、[難易度選択の設計](plans/2026-10-05-weakest-mode-difficulty-selection-design.md)
+- [USI応答](knowledge/usi-engine-response.md)、[SFEN](knowledge/sfen-position-notation.md)
+- [ShogiHome接続手順書](shogihome-connection-guide.md)、[接続用スキル](../.agents/skills/shogihome-connection/SKILL.md)
+- [Python品質検査](knowledge/python-quality-checks.md)
+- [方向性](02-project-direction.md)、[次テーマ候補](next-topics.md)
+- [文書更新ガイド](documentation-guide.md)
 
 ## テーマ・学習回別索引
 
-第71回は本人が新セッションへプロンプトを入力して開始し、具体案への明示承認後に専用スキルを更新した。判断課題の評価と独立レビュー（Critical・Important・Minor各0件）は済み、本人の内容確認・承認後、`491596b` をmainへ取り込み、取り込み先の文書検証まで済んだ。最終理解確認への回答と補足も記録した。本人は第72回予定テーマ「ルートREADMEの古いSFEN説明を直す」を選び、新セッション準備を依頼した。以下の第70回末尾の選定説明は開始前の履歴である。現在の再開手順は[再開案内](resume.md)、今回の承認・変更・検証・限界は[第71回学習記録](learning/71-shogihome-connection-skill-update.md)を参照する。
-
-第70回は既存ログ・現行コード・ShogiHome 1.28.1と固定依存の公式ソースを読み取り専用で調査した。入力の手数4は局面読込時に保持されず、USI生成時に開始局面のSFENへ1を付ける経路が第69回の実測と一致した。盤面が平手初期配置へ戻る意味ではない。理解確認の最初の回答・補足・再回答は[第70回学習記録](learning/70-shogihome-sfen-move-number.md)に記録した。本人による内容確認後、`9110acb` にコミットした。次テーマは「ShogiHome専用スキルを現行化する」（第71回予定）に決まり、[引き継ぎ](handover-shogihome-connection-skill-update.md)を用意した。本人が新セッションへプロンプトを入力するまで着手しない。
-
-リンクがない文書種別は `—` と表示します。複数の学習回で一つの実装テーマを扱った場合は、同じ行にまとめています。
+リンクがない文書種別は `—`。各行の実施状態はそのテーマ当時の記録であり、現在の作業状態は再開案内で確認する。
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
@@ -195,6 +115,15 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | ShogiHomeからkaname-shogiへSFEN局面を渡す（第69回・実機で一例確認、理解確認完了） | [第69回](learning/69-shogihome-sfen-engine.md) | [SFEN局面表記](knowledge/sfen-position-notation.md)、[ShogiHome対局](knowledge/usi-shogihome-gameplay.md) | — | — | [開始時点の引き継ぎ・実施後追記](handover-shogihome-sfen-engine.md) |
 | SFEN手数欄が4から1になった理由（第70回・調査・理解確認・記録内容確認済み） | [第70回](learning/70-shogihome-sfen-move-number.md) | [SFEN局面表記](knowledge/sfen-position-notation.md) | — | — | [開始時点の引き継ぎ](handover-shogihome-sfen-move-number.md) |
 | ShogiHome専用スキルの現行化（第71回・main統合・文書検証・理解確認回答済み、理解確認完了） | [第71回](learning/71-shogihome-connection-skill-update.md) | [専用スキル](../.agents/skills/shogihome-connection/SKILL.md)、[接続手順書](shogihome-connection-guide.md) | — | — | [開始時点の引き継ぎ](handover-shogihome-connection-skill-update.md) |
+| READMEのSFEN説明更新（第72回） | [第72回](learning/72-readme-sfen-update.md) | — | — | — | [開始時引き継ぎ](handover-readme-sfen-update.md) |
+| 現行知識・ロードマップの更新（第73回） | [第73回](learning/73-sfen-move-number-docs-update.md) | — | — | — | [開始時引き継ぎ](handover-sfen-move-number-docs-update.md) |
+| 接続手順の時計条件更新（第74回） | [第74回](learning/74-shogihome-clock-guide-update.md) | — | — | — | [開始時引き継ぎ](handover-shogihome-clock-guide-update.md) |
+| SFEN付き履歴の一局面確認（第75回） | [第75回](learning/75-shogihome-sfen-moves-verification.md) | — | — | — | [開始時引き継ぎ](handover-shogihome-sfen-moves-verification.md) |
+| Ruff導入 | [記録](learning/ruff-local-quality-gate.md) | [品質検査](knowledge/python-quality-checks.md) | — | — | — |
+| Ruff B追加 | [記録](learning/ruff-bugbear-rules.md) | [品質検査](knowledge/python-quality-checks.md) | — | — | — |
+| Ruff I追加 | [記録](learning/ruff-import-order.md) | [品質検査](knowledge/python-quality-checks.md) | — | — | — |
+| Ruff追加検査・運用方針 | [記録](learning/ruff-practical-rules.md) | [品質検査](knowledge/python-quality-checks.md) | — | — | — |
+| 評価・探索前の文書整理 | [記録](learning/documentation-chapter.md) | [更新ガイド](documentation-guide.md) | — | — | [開始時引き継ぎ](handover-documentation-chapter.md) |
 
 ## 例外と履歴の読み方
 
@@ -203,10 +132,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - `docs/superpowers/plans/2026-09-13-initial-position.md` は初期配置実装時の計画履歴です。
 - 引き継ぎに記録されたブランチ、HEAD、テスト件数、次の行動は作成時点の情報です。現在値は `git status --short --branch` と現役の再開案内で確認します。
 
-## 更新規則
+## 更新規則と入口の履歴
 
-- 各テーマの完了時に、該当するテーマ行とリンクを更新します。
-- 進行中の細かな状態と次の一手は `resume.md` と現在の実装計画に置き、この索引へ重複させません。次テーマを新しいセッションへ引き継ぐときだけ、再開用プロンプトを `resume.md` と新しい引き継ぎの両方へ記録します。
-- 新しい文書種別を作る前に、既存の単一索引から到達できない理由があるかを確認します。
+更新時は[文書更新ガイド](documentation-guide.md)に従う。再開用プロンプトの本文は対応する引き継ぎに置き、再開案内からその節へリンクする。
 
-- [Ruff追加検査の選定・検証](learning/ruff-practical-rules.md)
+整理前の入口文書は[再開案内の履歴](resume-history.md)、[候補・選定履歴](next-topics-history.md)、[方向性の履歴](project-direction-history.md)に保存している。
