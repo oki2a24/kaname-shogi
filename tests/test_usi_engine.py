@@ -127,10 +127,10 @@ class UsiEngineFunctionTests(unittest.TestCase):
             calls.append((position, moves, policy, rng))
             return moves[0] if moves else None
 
-        with patch.object(usi_engine, "choose_move", create=True,
-                          side_effect=choose):
+        with patch.object(usi_engine, "choose_move", create=True, side_effect=choose):
             usi_engine.run_usi_engine(
-                ScriptedInput(commands), outputs.append, random.Random(0))
+                ScriptedInput(commands), outputs.append, random.Random(0)
+            )
         return calls, outputs
 
     def test_answers_usi_with_difficulty_combo_before_usiok(self):
@@ -192,9 +192,13 @@ class UsiEngineFunctionTests(unittest.TestCase):
         設定未指定時に新しい駒得方針を使ったり、選択方針を共有境界へ渡さない誤りを
         検出する。
         """
-        calls, outputs = self._run_with_policy_spy([
-            "position startpos moves 7g7f", "go", "quit",
-        ])
+        calls, outputs = self._run_with_policy_spy(
+            [
+                "position startpos moves 7g7f",
+                "go",
+                "quit",
+            ]
+        )
 
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0][2], MoveSelectionPolicy.RANDOM)
@@ -206,10 +210,14 @@ class UsiEngineFunctionTests(unittest.TestCase):
         USIが既知の設定を読み飛ばしたり、設定前に選択した既定値を使い続ける誤りを
         検出する。
         """
-        calls, _ = self._run_with_policy_spy([
-            "setoption name Difficulty value Material",
-            "position startpos moves 7g7f", "go", "quit",
-        ])
+        calls, _ = self._run_with_policy_spy(
+            [
+                "setoption name Difficulty value Material",
+                "position startpos moves 7g7f",
+                "go",
+                "quit",
+            ]
+        )
 
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL)
@@ -220,10 +228,14 @@ class UsiEngineFunctionTests(unittest.TestCase):
         USI仕様がcase-insensitiveと定める既知optionを表記揺れだけで読み飛ばす誤りを
         検出する。
         """
-        calls, _ = self._run_with_policy_spy([
-            "setoption name difficulty value mAtErIaL",
-            "position startpos moves 7g7f", "go", "quit",
-        ])
+        calls, _ = self._run_with_policy_spy(
+            [
+                "setoption name difficulty value mAtErIaL",
+                "position startpos moves 7g7f",
+                "go",
+                "quit",
+            ]
+        )
 
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL)
@@ -233,19 +245,27 @@ class UsiEngineFunctionTests(unittest.TestCase):
 
         未知optionで状態を壊したり、未設定の不正値を受け入れたりする誤りを検出する。
         """
-        calls, _ = self._run_with_policy_spy([
-            "setoption name Difficulty value Material",
-            "setoption name USI_Hash value 32",
-            "setoption name Difficulty value Strong",
-            "position startpos moves 7g7f", "go", "quit",
-        ])
+        calls, _ = self._run_with_policy_spy(
+            [
+                "setoption name Difficulty value Material",
+                "setoption name USI_Hash value 32",
+                "setoption name Difficulty value Strong",
+                "position startpos moves 7g7f",
+                "go",
+                "quit",
+            ]
+        )
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL)
 
-        calls, _ = self._run_with_policy_spy([
-            "setoption name Difficulty value Strong",
-            "position startpos moves 7g7f", "go", "quit",
-        ])
+        calls, _ = self._run_with_policy_spy(
+            [
+                "setoption name Difficulty value Strong",
+                "position startpos moves 7g7f",
+                "go",
+                "quit",
+            ]
+        )
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0][2], MoveSelectionPolicy.RANDOM)
 
@@ -255,28 +275,43 @@ class UsiEngineFunctionTests(unittest.TestCase):
         二回目のgoへ変更値を早期適用したり、usinewgame後も古い固定値を残す誤りを
         検出する。
         """
-        calls, _ = self._run_with_policy_spy([
-            "position startpos moves 7g7f", "go",
-            "setoption name Difficulty value Material",
-            "position startpos moves 2g2f", "go",
-            "usinewgame", "position startpos moves 7g7f", "go", "quit",
-        ])
+        calls, _ = self._run_with_policy_spy(
+            [
+                "position startpos moves 7g7f",
+                "go",
+                "setoption name Difficulty value Material",
+                "position startpos moves 2g2f",
+                "go",
+                "usinewgame",
+                "position startpos moves 7g7f",
+                "go",
+                "quit",
+            ]
+        )
 
-        self.assertEqual([call[2] for call in calls], [
-            MoveSelectionPolicy.RANDOM,
-            MoveSelectionPolicy.RANDOM,
-            MoveSelectionPolicy.MATERIAL,
-        ])
+        self.assertEqual(
+            [call[2] for call in calls],
+            [
+                MoveSelectionPolicy.RANDOM,
+                MoveSelectionPolicy.RANDOM,
+                MoveSelectionPolicy.MATERIAL,
+            ],
+        )
 
     def test_usinewgame_preserves_configured_difficulty(self):
         """usinewgameは局面を消しても設定済み方針を次局へ保つ。
 
         新局開始時にDifficultyまで既定値へ消去して、利用者の設定を失う誤りを検出する。
         """
-        calls, _ = self._run_with_policy_spy([
-            "setoption name Difficulty value Material",
-            "usinewgame", "position startpos moves 2g2f", "go", "quit",
-        ])
+        calls, _ = self._run_with_policy_spy(
+            [
+                "setoption name Difficulty value Material",
+                "usinewgame",
+                "position startpos moves 2g2f",
+                "go",
+                "quit",
+            ]
+        )
 
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL)
@@ -330,15 +365,14 @@ class UsiEngineFunctionTests(unittest.TestCase):
             observed_positions.append(position)
             return legal_moves(position)
 
-        with patch.object(
-            usi_engine, "parse_usi_position", side_effect=record_parse_position
-        ), patch.object(
-            usi_engine, "legal_moves", side_effect=record_legal_moves
+        with (
+            patch.object(
+                usi_engine, "parse_usi_position", side_effect=record_parse_position
+            ),
+            patch.object(usi_engine, "legal_moves", side_effect=record_legal_moves),
         ):
             usi_engine.run_usi_engine(
-                ScriptedInput(
-                    [first_command, latest_command, "go", "quit"]
-                ),
+                ScriptedInput([first_command, latest_command, "go", "quit"]),
                 outputs.append,
                 random.Random(0),
             )
@@ -372,6 +406,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
 
         usinewgameごとに生成器を作り直すと乱数列の寿命が変わることを検出する。
         """
+
         class RecordingRng:
             def __init__(self):
                 self.used = []
@@ -463,9 +498,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             with self.subTest(go_command=go_command):
                 with self.assertRaises(ValueError):
                     usi_engine.run_usi_engine(
-                        ScriptedInput(
-                            ["position startpos moves 7g7f", go_command]
-                        ),
+                        ScriptedInput(["position startpos moves 7g7f", go_command]),
                         lambda response: None,
                         random.Random(0),
                     )
@@ -478,9 +511,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         outputs = []
 
         usi_engine.run_usi_engine(
-            ScriptedInput(
-                ["position startpos moves 7g7f", "go mystery", "quit"]
-            ),
+            ScriptedInput(["position startpos moves 7g7f", "go mystery", "quit"]),
             outputs.append,
             random.Random(0),
         )
@@ -491,9 +522,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         self.assertEqual(len(response), 2)
         self.assertIn(
             parse_usi_move(response[1]),
-            legal_moves(
-                parse_usi_position("position startpos moves 7g7f").position
-            ),
+            legal_moves(parse_usi_position("position startpos moves 7g7f").position),
         )
 
     def test_stops_cleanly_on_quit_and_input_eof(self):
@@ -571,9 +600,7 @@ class UsiEngineProcessTests(unittest.TestCase):
 
             position_command = "position startpos moves 7g7f"
             self.send_line(process, position_command)
-            self.send_line(
-                process, "go btime 591199 wtime 600000 byoyomi 30000"
-            )
+            self.send_line(process, "go btime 591199 wtime 600000 byoyomi 30000")
             response = reader.read_line().split()
             self.assertEqual(response[0], "bestmove")
             self.assertEqual(len(response), 2)

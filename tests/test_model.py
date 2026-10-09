@@ -4,8 +4,15 @@ from dataclasses import FrozenInstanceError
 import unittest
 
 from kaname_shogi import model
-from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
-                                Position, Side, Square)
+from kaname_shogi.model import (
+    BasicPieceType,
+    Board,
+    Piece,
+    PieceType,
+    Position,
+    Side,
+    Square,
+)
 from kaname_shogi.model import create_initial_position
 
 
@@ -15,8 +22,13 @@ class SquareTests(unittest.TestCase):
 
         筋段の逆転や開始位置のずれを、手計算した添字で検出する。
         """
-        for file, rank, expected in [(1, 1, 0), (1, 9, 8), (9, 1, 72),
-                                     (9, 9, 80), (7, 6, 59)]:
+        for file, rank, expected in [
+            (1, 1, 0),
+            (1, 9, 8),
+            (9, 1, 72),
+            (9, 9, 80),
+            (7, 6, 59),
+        ]:
             with self.subTest(file=file, rank=rank):
                 self.assertEqual(Square(file, rank).to_index(), expected)
 
@@ -25,8 +37,11 @@ class SquareTests(unittest.TestCase):
 
         特定の座標だけが重なる誤りや、保存範囲を外れる変換を検出する。
         """
-        indices = [Square(file, rank).to_index()
-                   for file in range(1, 10) for rank in range(1, 10)]
+        indices = [
+            Square(file, rank).to_index()
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
         self.assertEqual(sorted(indices), list(range(81)))
 
     def test_invalid_coordinates_are_rejected(self):
@@ -111,8 +126,9 @@ class BoardTests(unittest.TestCase):
             with self.subTest(name=name):
                 with self.assertRaises(FrozenInstanceError):
                     setattr(piece, name, value)
-        self.assertEqual(board.piece_at(Square(7, 6)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            board.piece_at(Square(7, 6)), Piece(PieceType.PAWN, Side.SENTE)
+        )
 
 
 class HandTests(unittest.TestCase):
@@ -121,8 +137,14 @@ class HandTests(unittest.TestCase):
 
         成駒を未成駒と別の盤上状態として保持できない誤りを検出する。
         """
-        for name in ["PRO_PAWN", "PRO_LANCE", "PRO_KNIGHT", "PRO_SILVER",
-                     "HORSE", "DRAGON"]:
+        for name in [
+            "PRO_PAWN",
+            "PRO_LANCE",
+            "PRO_KNIGHT",
+            "PRO_SILVER",
+            "HORSE",
+            "DRAGON",
+        ]:
             with self.subTest(name=name):
                 self.assertIn(name, model.PieceType.__members__)
 
@@ -154,7 +176,9 @@ class HandTests(unittest.TestCase):
         for piece_type in model.PieceType:
             if piece_type.name in model.BasicPieceType.__members__:
                 with self.subTest(piece_type=piece_type):
-                    self.assertFalse(model.Piece(piece_type, model.Side.SENTE).is_promoted)
+                    self.assertFalse(
+                        model.Piece(piece_type, model.Side.SENTE).is_promoted
+                    )
 
     def test_hand_rejects_board_piece_type_without_changing_counts(self):
         """持ち駒は盤上駒種を受け取らず、枚数を変更しない。
@@ -275,8 +299,9 @@ class PositionHandTests(unittest.TestCase):
         """
         first = model.Position(Board(), Side.SENTE)
         second = model.Position(Board(), Side.SENTE)
-        self.assertTrue(hasattr(first, "sente_hand"),
-                        "Position.sente_hand がまだ実装されていません")
+        self.assertTrue(
+            hasattr(first, "sente_hand"), "Position.sente_hand がまだ実装されていません"
+        )
         first.sente_hand.add(BasicPieceType.PAWN)
         first.gote_hand.add(BasicPieceType.ROOK)
         self.assertEqual(first.sente_hand.count(BasicPieceType.PAWN), 1)
@@ -353,13 +378,26 @@ class InitialPositionTests(unittest.TestCase):
         # 生成処理と独立した期待表。一〜九段、各行は９筋〜１筋。
         # テスト内だけの略号であり、SFENの読み込み処理ではない。
         rows = (
-            "lnsgkgsnl", ".r.....b.", "ppppppppp",
-            ".........", ".........", ".........",
-            "PPPPPPPPP", ".B.....R.", "LNSGKGSNL",
+            "lnsgkgsnl",
+            ".r.....b.",
+            "ppppppppp",
+            ".........",
+            ".........",
+            ".........",
+            "PPPPPPPPP",
+            ".B.....R.",
+            "LNSGKGSNL",
         )
-        kinds = dict(k=PieceType.KING, r=PieceType.ROOK, b=PieceType.BISHOP,
-                     g=PieceType.GOLD, s=PieceType.SILVER, n=PieceType.KNIGHT,
-                     l=PieceType.LANCE, p=PieceType.PAWN)
+        kinds = dict(
+            k=PieceType.KING,
+            r=PieceType.ROOK,
+            b=PieceType.BISHOP,
+            g=PieceType.GOLD,
+            s=PieceType.SILVER,
+            n=PieceType.KNIGHT,
+            l=PieceType.LANCE,
+            p=PieceType.PAWN,
+        )
         position = create_initial_position()
         for rank, row in enumerate(rows, start=1):
             for file, symbol in zip(range(9, 0, -1), row):
@@ -368,8 +406,9 @@ class InitialPositionTests(unittest.TestCase):
                     side = Side.SENTE if symbol.isupper() else Side.GOTE
                     expected = Piece(kinds[symbol.lower()], side)
                 with self.subTest(file=file, rank=rank):
-                    self.assertEqual(position.board.piece_at(Square(file, rank)),
-                                     expected)
+                    self.assertEqual(
+                        position.board.piece_at(Square(file, rank)), expected
+                    )
 
     def test_piece_counts_and_first_turn(self):
         """初期局面は各側20枚・歩9枚・玉1枚で先手番である。
@@ -377,12 +416,16 @@ class InitialPositionTests(unittest.TestCase):
         全マス比較に加え、学習した枚数と開始時の手番を明示的に確認する。
         """
         position = create_initial_position()
-        pieces = [position.board.piece_at(Square(file, rank))
-                  for file in range(1, 10) for rank in range(1, 10)]
+        pieces = [
+            position.board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
         self.assertEqual(sum(piece is not None for piece in pieces), 40)
         for side in Side:
-            owned = [piece for piece in pieces
-                     if piece is not None and piece.side == side]
+            owned = [
+                piece for piece in pieces if piece is not None and piece.side == side
+            ]
             self.assertEqual(len(owned), 20)
             self.assertEqual(sum(p.piece_type == PieceType.PAWN for p in owned), 9)
             self.assertEqual(sum(p.piece_type == PieceType.KING for p in owned), 1)
@@ -396,6 +439,7 @@ class InitialPositionTests(unittest.TestCase):
         first, second = create_initial_position(), create_initial_position()
         first.board.set_piece(Square(7, 7), None)
         first.side_to_move = Side.GOTE
-        self.assertEqual(second.board.piece_at(Square(7, 7)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            second.board.piece_at(Square(7, 7)), Piece(PieceType.PAWN, Side.SENTE)
+        )
         self.assertEqual(second.side_to_move, Side.SENTE)

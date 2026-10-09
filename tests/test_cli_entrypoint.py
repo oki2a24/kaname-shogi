@@ -23,12 +23,16 @@ class CliEntrypointTests(unittest.TestCase):
 
         for mode in GameMode:
             with self.subTest(mode=mode):
-                with patch.object(entrypoint, "choose_game_mode",
-                                  return_value=mode), \
-                        patch.object(entrypoint, "choose_move_selection_policy",
-                                     create=True,
-                                     return_value=MoveSelectionPolicy.MATERIAL) as choose_policy, \
-                        patch.object(entrypoint, "run_game") as run_game:
+                with (
+                    patch.object(entrypoint, "choose_game_mode", return_value=mode),
+                    patch.object(
+                        entrypoint,
+                        "choose_move_selection_policy",
+                        create=True,
+                        return_value=MoveSelectionPolicy.MATERIAL,
+                    ) as choose_policy,
+                    patch.object(entrypoint, "run_game") as run_game,
+                ):
                     result = main()
 
                 self.assertEqual(result, 0)
@@ -38,8 +42,8 @@ class CliEntrypointTests(unittest.TestCase):
                 else:
                     choose_policy.assert_called_once_with()
                     run_game.assert_called_once_with(
-                        mode=mode,
-                        move_selection_policy=MoveSelectionPolicy.MATERIAL)
+                        mode=mode, move_selection_policy=MoveSelectionPolicy.MATERIAL
+                    )
 
 
 class CliEntrypointSmokeTests(unittest.TestCase):
@@ -52,7 +56,11 @@ class CliEntrypointSmokeTests(unittest.TestCase):
         result = subprocess.run(
             [sys.executable, "-m", "kaname_shogi"],
             cwd=Path(__file__).resolve().parents[1],
-            input="", capture_output=True, text=True, encoding="utf-8", check=False,
+            input="",
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(
@@ -72,8 +80,11 @@ class CliEntrypointSmokeTests(unittest.TestCase):
         result = subprocess.run(
             [sys.executable, "-m", "kaname_shogi"],
             cwd=Path(__file__).resolve().parents[1],
-            input="2\n\nresign\n", capture_output=True, text=True,
-            encoding="utf-8", check=False,
+            input="2\n\nresign\n",
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)

@@ -20,8 +20,7 @@ from enum import Enum, auto
 from typing import Callable, Optional, Tuple
 
 from .move import BoardMove, DropMove, Move
-from .model import (BasicPieceType, Board, Piece, PieceType, Position, Side,
-                    Square)
+from .model import BasicPieceType, Board, Piece, PieceType, Position, Side, Square
 
 
 class MoveSelectionPolicy(Enum):
@@ -34,28 +33,28 @@ class MoveSelectionPolicy(Enum):
 # 谷川浩司さんの参考値。成駒を含め、盤上にある駒種ごとの値を記録する。
 # https://ocw.hokudai.ac.jp/wp-content/uploads/2016/01/IntelligentInformationProcessing-2005-Note-06.pdf
 _TANIGAWA_PIECE_VALUES = {
-    PieceType.PAWN: 1,          # 歩
-    PieceType.PRO_PAWN: 12,     # と金
-    PieceType.LANCE: 5,         # 香
-    PieceType.PRO_LANCE: 10,    # 成香
-    PieceType.KNIGHT: 6,        # 桂
-    PieceType.PRO_KNIGHT: 10,   # 成桂
-    PieceType.SILVER: 8,        # 銀
-    PieceType.PRO_SILVER: 9,    # 成銀
-    PieceType.GOLD: 9,          # 金
-    PieceType.BISHOP: 13,       # 角
-    PieceType.HORSE: 15,        # 馬
-    PieceType.ROOK: 15,         # 飛
-    PieceType.DRAGON: 17,       # 竜
+    PieceType.PAWN: 1,  # 歩
+    PieceType.PRO_PAWN: 12,  # と金
+    PieceType.LANCE: 5,  # 香
+    PieceType.PRO_LANCE: 10,  # 成香
+    PieceType.KNIGHT: 6,  # 桂
+    PieceType.PRO_KNIGHT: 10,  # 成桂
+    PieceType.SILVER: 8,  # 銀
+    PieceType.PRO_SILVER: 9,  # 成銀
+    PieceType.GOLD: 9,  # 金
+    PieceType.BISHOP: 13,  # 角
+    PieceType.HORSE: 15,  # 馬
+    PieceType.ROOK: 15,  # 飛
+    PieceType.DRAGON: 17,  # 竜
 }
 _TANIGAWA_HAND_VALUES = {
-    BasicPieceType.PAWN: 1,     # 歩
-    BasicPieceType.LANCE: 5,    # 香
-    BasicPieceType.KNIGHT: 6,   # 桂
-    BasicPieceType.SILVER: 8,   # 銀
-    BasicPieceType.GOLD: 9,     # 金
+    BasicPieceType.PAWN: 1,  # 歩
+    BasicPieceType.LANCE: 5,  # 香
+    BasicPieceType.KNIGHT: 6,  # 桂
+    BasicPieceType.SILVER: 8,  # 銀
+    BasicPieceType.GOLD: 9,  # 金
     BasicPieceType.BISHOP: 13,  # 角
-    BasicPieceType.ROOK: 15,    # 飛
+    BasicPieceType.ROOK: 15,  # 飛
 }
 
 
@@ -200,8 +199,9 @@ def _can_promote(piece: Piece, source: Square, destination: Square) -> bool:
     """駒と移動元・移動先から、成りを選択できるか判定する。"""
     if piece.is_promoted or piece.piece_type in (PieceType.KING, PieceType.GOLD):
         return False
-    return (_is_enemy_camp(piece.side, source.rank)
-            or _is_enemy_camp(piece.side, destination.rank))
+    return _is_enemy_camp(piece.side, source.rank) or _is_enemy_camp(
+        piece.side, destination.rank
+    )
 
 
 def _must_promote(piece: Piece, destination: Square) -> bool:
@@ -215,8 +215,9 @@ def _must_promote(piece: Piece, destination: Square) -> bool:
     return False
 
 
-def _apply_move_unchecked(position: Position, source: Square,
-                          destination: Square, *, promote: bool = False) -> None:
+def _apply_move_unchecked(
+    position: Position, source: Square, destination: Square, *, promote: bool = False
+) -> None:
     """自玉の安全確認を除く移動規則を局面へ適用する非公開操作。
 
     引数:
@@ -248,8 +249,9 @@ def _apply_move_unchecked(position: Position, source: Square,
     piece = position.board.piece_at(source)
     if piece is not None and piece.side != position.side_to_move:
         raise ValueError("手番と出発駒の所有者が一致しません")
-    if (piece is not None
-            and destination not in _move_candidates_for_piece(position.board, source)):
+    if piece is not None and destination not in _move_candidates_for_piece(
+        position.board, source
+    ):
         raise ValueError("到着マスは出発駒の移動先候補に含まれません")
     if piece is not None:
         if promote and not _can_promote(piece, source, destination):
@@ -257,8 +259,11 @@ def _apply_move_unchecked(position: Position, source: Square,
         if not promote and _must_promote(piece, destination):
             raise ValueError("この移動では成りが必要です")
 
-    moving_piece = (Piece(_promoted_piece_type(piece.piece_type), piece.side)
-                    if piece is not None and promote else piece)
+    moving_piece = (
+        Piece(_promoted_piece_type(piece.piece_type), piece.side)
+        if piece is not None and promote
+        else piece
+    )
 
     if piece is None:
         move_piece(position.board, source, destination)
@@ -273,8 +278,11 @@ def _apply_move_unchecked(position: Position, source: Square,
         else:
             if target_piece.piece_type == PieceType.KING:
                 raise ValueError("玉は取れません")
-            hand = (position.sente_hand if position.side_to_move == Side.SENTE
-                    else position.gote_hand)
+            hand = (
+                position.sente_hand
+                if position.side_to_move == Side.SENTE
+                else position.gote_hand
+            )
             hand.add(target_piece.base_piece_type)
             position.board.set_piece(source, None)
             position.board.set_piece(destination, moving_piece)
@@ -284,8 +292,9 @@ def _apply_move_unchecked(position: Position, source: Square,
         position.side_to_move = Side.SENTE
 
 
-def _apply_if_king_safe(position: Position,
-                        apply_unchecked: Callable[[Position], None]) -> None:
+def _apply_if_king_safe(
+    position: Position, apply_unchecked: Callable[[Position], None]
+) -> None:
     """複製局面で試し指しし、自玉が安全なら本物へ同じ操作を適用する。"""
     side = position.side_to_move
     trial = position.copy()
@@ -295,8 +304,9 @@ def _apply_if_king_safe(position: Position,
     apply_unchecked(position)
 
 
-def apply_move(position: Position, source: Square, destination: Square,
-               *, promote: bool = False) -> None:
+def apply_move(
+    position: Position, source: Square, destination: Square, *, promote: bool = False
+) -> None:
     """候補内の移動を試し指しし、自玉が安全な場合だけ局面へ適用する。
 
     引数:
@@ -321,7 +331,9 @@ def apply_move(position: Position, source: Square, destination: Square,
     _apply_if_king_safe(
         position,
         lambda trial: _apply_move_unchecked(
-            trial, source, destination, promote=promote))
+            trial, source, destination, promote=promote
+        ),
+    )
 
 
 def _has_unpromoted_pawn_on_file(board: Board, side: Side, file: int) -> bool:
@@ -346,8 +358,9 @@ def _has_unpromoted_pawn_on_file(board: Board, side: Side, file: int) -> bool:
     return False
 
 
-def _has_no_legal_destination(piece_type: BasicPieceType, side: Side,
-                              rank: int) -> bool:
+def _has_no_legal_destination(
+    piece_type: BasicPieceType, side: Side, rank: int
+) -> bool:
     """piece_typeをsideがrank段へ打ったとき行き所がなければTrueを返す。
 
     引数:
@@ -371,8 +384,9 @@ def _has_no_legal_destination(piece_type: BasicPieceType, side: Side,
     return False
 
 
-def _apply_drop_unchecked(position: Position, piece_type: BasicPieceType,
-                          destination: Square) -> None:
+def _apply_drop_unchecked(
+    position: Position, piece_type: BasicPieceType, destination: Square
+) -> None:
     """自玉の安全確認を除く駒打ち規則を局面へ適用する非公開操作。
 
     引数:
@@ -398,43 +412,53 @@ def _apply_drop_unchecked(position: Position, piece_type: BasicPieceType,
         raise ValueError("玉は打てません")
     if position.board.piece_at(destination) is not None:
         raise ValueError("到着マスは空にしてください")
-    if (piece_type == BasicPieceType.PAWN
-            and _has_unpromoted_pawn_on_file(position.board,
-                                             position.side_to_move,
-                                             destination.file)):
+    if piece_type == BasicPieceType.PAWN and _has_unpromoted_pawn_on_file(
+        position.board, position.side_to_move, destination.file
+    ):
         raise ValueError("同じ筋に歩があるため二歩です")
-    if _has_no_legal_destination(piece_type, position.side_to_move,
-                                 destination.rank):
+    if _has_no_legal_destination(piece_type, position.side_to_move, destination.rank):
         raise ValueError("行き所のない段へは打てません")
 
-    hand = (position.sente_hand if position.side_to_move == Side.SENTE
-            else position.gote_hand)
+    hand = (
+        position.sente_hand
+        if position.side_to_move == Side.SENTE
+        else position.gote_hand
+    )
     hand.remove(piece_type)
     position.board.set_piece(
-        destination,
-        Piece(PieceType[piece_type.name], position.side_to_move))
+        destination, Piece(PieceType[piece_type.name], position.side_to_move)
+    )
     if position.side_to_move == Side.SENTE:
         position.side_to_move = Side.GOTE
     else:
         position.side_to_move = Side.SENTE
 
 
-def _apply_drop(position: Position, piece_type: BasicPieceType,
-                destination: Square, *, check_uchi_fuzume: bool) -> None:
+def _apply_drop(
+    position: Position,
+    piece_type: BasicPieceType,
+    destination: Square,
+    *,
+    check_uchi_fuzume: bool,
+) -> None:
     """駒打ちを適用し、必要なら打ち歩詰めを拒否する非公開操作。"""
     side = position.side_to_move
     trial = position.copy()
     _apply_drop_unchecked(trial, piece_type, destination)
     if is_in_check(trial.board, side):
         raise ValueError("自玉が王手になる手は指せません")
-    if (check_uchi_fuzume and piece_type == BasicPieceType.PAWN
-            and _is_checkmate(trial, check_uchi_fuzume=False)):
+    if (
+        check_uchi_fuzume
+        and piece_type == BasicPieceType.PAWN
+        and _is_checkmate(trial, check_uchi_fuzume=False)
+    ):
         raise ValueError("打ち歩詰めはできません")
     _apply_drop_unchecked(position, piece_type, destination)
 
 
-def apply_drop(position: Position, piece_type: BasicPieceType,
-               destination: Square) -> None:
+def apply_drop(
+    position: Position, piece_type: BasicPieceType, destination: Square
+) -> None:
     """持ち駒を試し打ちし、自玉が安全な場合だけ局面へ適用する。
 
     引数:
@@ -470,8 +494,9 @@ def _legal_moves(position: Position, *, check_uchi_fuzume: bool) -> Tuple[Move, 
             for destination in _move_candidates_for_piece(position.board, source):
                 for promote in (False, True):
                     try:
-                        apply_move(position.copy(), source, destination,
-                                   promote=promote)
+                        apply_move(
+                            position.copy(), source, destination, promote=promote
+                        )
                     except ValueError:
                         continue
                     moves.append(BoardMove(source, destination, promote))
@@ -480,9 +505,12 @@ def _legal_moves(position: Position, *, check_uchi_fuzume: bool) -> Tuple[Move, 
         for file in range(1, 10):
             for rank in range(1, 10):
                 try:
-                    _apply_drop(position.copy(), piece_type,
-                                Square(file, rank),
-                                check_uchi_fuzume=check_uchi_fuzume)
+                    _apply_drop(
+                        position.copy(),
+                        piece_type,
+                        Square(file, rank),
+                        check_uchi_fuzume=check_uchi_fuzume,
+                    )
                 except ValueError:
                     continue
                 moves.append(DropMove(piece_type, Square(file, rank)))
@@ -523,8 +551,7 @@ def legal_moves(position: Position) -> Tuple[Move, ...]:
     return _legal_moves(position, check_uchi_fuzume=True)
 
 
-def choose_weak_move(moves: Tuple[Move, ...],
-                     rng: random.Random) -> Optional[Move]:
+def choose_weak_move(moves: Tuple[Move, ...], rng: random.Random) -> Optional[Move]:
     """合法手一覧から、指定された乱数生成器で一手を選ぶ。
 
     引数:
@@ -572,22 +599,27 @@ def material_balance(position: Position, perspective: Side) -> int:
         for rank in range(1, 10):
             piece = position.board.piece_at(Square(file, rank))
             if piece is not None:
-                totals[piece.side] += _TANIGAWA_PIECE_VALUES.get(
-                    piece.piece_type, 0)
+                totals[piece.side] += _TANIGAWA_PIECE_VALUES.get(piece.piece_type, 0)
 
-    for side, hand in ((Side.SENTE, position.sente_hand),
-                       (Side.GOTE, position.gote_hand)):
+    for side, hand in (
+        (Side.SENTE, position.sente_hand),
+        (Side.GOTE, position.gote_hand),
+    ):
         totals[side] += sum(
             hand.count(piece_type) * value
-            for piece_type, value in _TANIGAWA_HAND_VALUES.items())
+            for piece_type, value in _TANIGAWA_HAND_VALUES.items()
+        )
 
     opponent = _opponent_side(perspective)
     return totals[perspective] - totals[opponent]
 
 
-def choose_move(position: Position, moves: Tuple[Move, ...],
-                policy: MoveSelectionPolicy,
-                rng: random.Random) -> Optional[Move]:
+def choose_move(
+    position: Position,
+    moves: Tuple[Move, ...],
+    policy: MoveSelectionPolicy,
+    rng: random.Random,
+) -> Optional[Move]:
     """方針に従い、渡された合法手から一手を選ぶ。
 
     引数:
@@ -620,8 +652,7 @@ def choose_move(position: Position, moves: Tuple[Move, ...],
     for move in moves:
         trial = position.copy()
         if isinstance(move, BoardMove):
-            apply_move(trial, move.source, move.destination,
-                       promote=move.promote)
+            apply_move(trial, move.source, move.destination, promote=move.promote)
         elif isinstance(move, DropMove):
             apply_drop(trial, move.piece_type, move.destination)
         else:
@@ -629,8 +660,7 @@ def choose_move(position: Position, moves: Tuple[Move, ...],
         scored_moves.append((move, material_balance(trial, perspective)))
 
     best_score = max(score for _, score in scored_moves)
-    best_moves = tuple(move for move, score in scored_moves
-                       if score == best_score)
+    best_moves = tuple(move for move, score in scored_moves if score == best_score)
     return rng.choice(best_moves)
 
 
@@ -660,9 +690,9 @@ def _is_checkmate(position: Position, *, check_uchi_fuzume: bool) -> bool:
     side = position.side_to_move
     if _find_king_square(position.board, side) is None:
         return False
-    return (is_in_check(position.board, side)
-            and not _has_legal_move(position,
-                                    check_uchi_fuzume=check_uchi_fuzume))
+    return is_in_check(position.board, side) and not _has_legal_move(
+        position, check_uchi_fuzume=check_uchi_fuzume
+    )
 
 
 def is_checkmate(position: Position) -> bool:
@@ -726,8 +756,7 @@ def king_move_candidates(board: Board, source: Square) -> list[Square]:
     piece = board.piece_at(source)
     if piece is None or piece.piece_type != PieceType.KING:
         raise ValueError("出発マスには玉を指定してください")
-    offsets = ((0, -1), (-1, -1), (-1, 0), (-1, 1),
-               (0, 1), (1, 1), (1, 0), (1, -1))
+    offsets = ((0, -1), (-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1))
     candidates = []
     for file_delta, rank_delta in offsets:
         target_file = source.file + file_delta
@@ -955,8 +984,7 @@ def silver_move_candidates(board: Board, source: Square) -> list[Square]:
     if piece is None or piece.piece_type != PieceType.SILVER:
         raise ValueError("出発マスには銀を指定してください")
     forward = -1 if piece.side == Side.SENTE else 1
-    offsets = ((0, forward), (1, forward), (-1, forward),
-               (1, -forward), (-1, -forward))
+    offsets = ((0, forward), (1, forward), (-1, forward), (1, -forward), (-1, -forward))
     candidates = []
     for df, dr in offsets:
         next_file, next_rank = source.file + df, source.rank + dr
@@ -999,8 +1027,14 @@ def gold_move_candidates(board: Board, source: Square) -> list[Square]:
     if piece is None or piece.piece_type != PieceType.GOLD:
         raise ValueError("出発マスには金を指定してください")
     forward = -1 if piece.side == Side.SENTE else 1
-    offsets = ((0, forward), (1, forward), (-1, forward),
-               (1, 0), (-1, 0), (0, -forward))
+    offsets = (
+        (0, forward),
+        (1, forward),
+        (-1, forward),
+        (1, 0),
+        (-1, 0),
+        (0, -forward),
+    )
     candidates = []
     for df, dr in offsets:
         next_file, next_rank = source.file + df, source.rank + dr
@@ -1018,8 +1052,14 @@ def _gold_like_move_candidates(board: Board, source: Square) -> list[Square]:
     """金と同じ6方向を、駒種検証済みの成駒について調べる非公開操作。"""
     piece = board.piece_at(source)
     forward = -1 if piece.side == Side.SENTE else 1
-    offsets = ((0, forward), (1, forward), (-1, forward),
-               (1, 0), (-1, 0), (0, -forward))
+    offsets = (
+        (0, forward),
+        (1, forward),
+        (-1, forward),
+        (1, 0),
+        (-1, 0),
+        (0, -forward),
+    )
     candidates = []
     for df, dr in offsets:
         next_file, next_rank = source.file + df, source.rank + dr
@@ -1033,9 +1073,9 @@ def _gold_like_move_candidates(board: Board, source: Square) -> list[Square]:
     return candidates
 
 
-def _promoted_minor_candidates(board: Board, source: Square,
-                               piece_type: PieceType,
-                               name: str) -> list[Square]:
+def _promoted_minor_candidates(
+    board: Board, source: Square, piece_type: PieceType, name: str
+) -> list[Square]:
     """指定した金相当の成駒だけを受け付け、候補を返す非公開操作。"""
     piece = board.piece_at(source)
     if piece is None or piece.piece_type != piece_type:
@@ -1108,8 +1148,7 @@ def horse_move_candidates(board: Board, source: Square) -> list[Square]:
     if piece is None or piece.piece_type != PieceType.HORSE:
         raise ValueError("出発マスには馬を指定してください")
     forward = -1 if piece.side == Side.SENTE else 1
-    directions = ((-1, forward), (1, forward), (-1, -forward),
-                  (1, -forward))
+    directions = ((-1, forward), (1, forward), (-1, -forward), (1, -forward))
     candidates = []
     for file_step, rank_step in directions:
         next_file = source.file + file_step
@@ -1124,8 +1163,7 @@ def horse_move_candidates(board: Board, source: Square) -> list[Square]:
                 break
             next_file += file_step
             next_rank += rank_step
-    for file_step, rank_step in ((0, forward), (-1, 0),
-                                 (0, -forward), (1, 0)):
+    for file_step, rank_step in ((0, forward), (-1, 0), (0, -forward), (1, 0)):
         next_file, next_rank = source.file + file_step, source.rank + rank_step
         if not (1 <= next_file <= 9 and 1 <= next_rank <= 9):
             continue
@@ -1157,8 +1195,12 @@ def dragon_move_candidates(board: Board, source: Square) -> list[Square]:
                 break
             next_file += file_step
             next_rank += rank_step
-    for file_step, rank_step in ((-1, forward), (1, forward),
-                                 (-1, -forward), (1, -forward)):
+    for file_step, rank_step in (
+        (-1, forward),
+        (1, forward),
+        (-1, -forward),
+        (1, -forward),
+    ):
         next_file, next_rank = source.file + file_step, source.rank + rank_step
         if not (1 <= next_file <= 9 and 1 <= next_rank <= 9):
             continue

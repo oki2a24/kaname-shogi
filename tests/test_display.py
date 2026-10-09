@@ -3,9 +3,16 @@
 import unittest
 
 from kaname_shogi.display import render_position
-from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
-                                Position, Side, Square,
-                                create_initial_position)
+from kaname_shogi.model import (
+    BasicPieceType,
+    Board,
+    Piece,
+    PieceType,
+    Position,
+    Side,
+    Square,
+    create_initial_position,
+)
 
 
 EXPECTED = """手番：先手
@@ -61,8 +68,9 @@ class DisplayTests(unittest.TestCase):
         """
         position = create_initial_position()
         position.side_to_move = Side.GOTE
-        self.assertEqual(render_position(position),
-                         EXPECTED.replace("手番：先手", "手番：後手", 1))
+        self.assertEqual(
+            render_position(position), EXPECTED.replace("手番：先手", "手番：後手", 1)
+        )
 
     def test_renders_sente_and_gote_hands_in_fixed_piece_order(self):
         """先手・後手の持ち駒を固定順と枚数付きで表示する。
@@ -110,21 +118,29 @@ class DisplayTests(unittest.TestCase):
         position.sente_hand.add(BasicPieceType.PAWN)
         position.gote_hand.add(BasicPieceType.ROOK)
         piece_types = (
-            BasicPieceType.PAWN, BasicPieceType.LANCE, BasicPieceType.KNIGHT,
-            BasicPieceType.SILVER, BasicPieceType.GOLD, BasicPieceType.BISHOP,
+            BasicPieceType.PAWN,
+            BasicPieceType.LANCE,
+            BasicPieceType.KNIGHT,
+            BasicPieceType.SILVER,
+            BasicPieceType.GOLD,
+            BasicPieceType.BISHOP,
             BasicPieceType.ROOK,
         )
         before = tuple(
-            (position.sente_hand.count(piece_type),
-             position.gote_hand.count(piece_type))
+            (
+                position.sente_hand.count(piece_type),
+                position.gote_hand.count(piece_type),
+            )
             for piece_type in piece_types
         )
 
         render_position(position)
 
         after = tuple(
-            (position.sente_hand.count(piece_type),
-             position.gote_hand.count(piece_type))
+            (
+                position.sente_hand.count(piece_type),
+                position.gote_hand.count(piece_type),
+            )
             for piece_type in piece_types
         )
         self.assertEqual(after, before)

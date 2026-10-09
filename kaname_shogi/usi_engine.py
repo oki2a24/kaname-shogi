@@ -80,7 +80,12 @@ def run_usi_engine(
     configured_policy = MoveSelectionPolicy.RANDOM
     game_policy: Optional[MoveSelectionPolicy] = None
     unsupported_go_tokens = {
-        "searchmoves", "depth", "nodes", "mate", "infinite", "ponder"
+        "searchmoves",
+        "depth",
+        "nodes",
+        "mate",
+        "infinite",
+        "ponder",
     }
 
     while True:
@@ -97,15 +102,17 @@ def run_usi_engine(
         if command_name == "usi":
             output_fn("id name kaname-shogi")
             output_fn("id author kaname-shogi project")
-            output_fn("option name Difficulty type combo default Random "
-                      "var Random var Material")
+            output_fn(
+                "option name Difficulty type combo default Random "
+                "var Random var Material"
+            )
             output_fn("usiok")
         elif command_name == "isready":
             output_fn("readyok")
         elif command_name == "setoption":
-            if (len(tokens) == 5
-                    and tuple(token.casefold() for token in tokens[1:4])
-                    == ("name", "difficulty", "value")):
+            if len(tokens) == 5 and tuple(
+                token.casefold() for token in tokens[1:4]
+            ) == ("name", "difficulty", "value"):
                 value = tokens[4].casefold()
                 if value in _USI_DIFFICULTY_VALUES:
                     configured_policy = _USI_DIFFICULTY_VALUES[value]

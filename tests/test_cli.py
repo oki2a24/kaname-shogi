@@ -10,8 +10,16 @@ from kaname_shogi.game_record import GameRecord, RecordedDrop, RecordedMove
 from kaname_shogi.move import BoardMove, DropMove
 from kaname_shogi import cli
 from kaname_shogi.display import render_position
-from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
-                                Position, Side, Square, create_initial_position)
+from kaname_shogi.model import (
+    BasicPieceType,
+    Board,
+    Piece,
+    PieceType,
+    Position,
+    Side,
+    Square,
+    create_initial_position,
+)
 from kaname_shogi.movegen import MoveSelectionPolicy
 
 
@@ -25,16 +33,26 @@ class CommandParsingTests(unittest.TestCase):
         command = cli.parse_command("help")
 
         self.assertEqual(command, cli.HelpCommand())
-        self.assertEqual(cli.__all__, (
-            "GameMode", "choose_game_mode", "choose_move_selection_policy",
-            "MoveCommand", "DropCommand",
-            "ResignCommand", "SaveCommand", "LoadCommand", "HelpCommand",
-            "Command", "parse_command", "run_game",
-        ))
+        self.assertEqual(
+            cli.__all__,
+            (
+                "GameMode",
+                "choose_game_mode",
+                "choose_move_selection_policy",
+                "MoveCommand",
+                "DropCommand",
+                "ResignCommand",
+                "SaveCommand",
+                "LoadCommand",
+                "HelpCommand",
+                "Command",
+                "parse_command",
+                "run_game",
+            ),
+        )
         for invalid in ("help now", "HELP"):
             with self.subTest(command=invalid):
-                with self.assertRaisesRegex(
-                        ValueError, "入力形式が正しくありません。"):
+                with self.assertRaisesRegex(ValueError, "入力形式が正しくありません。"):
                     cli.parse_command(invalid)
 
     def test_parses_move_and_drop_with_halfwidth_or_fullwidth_input(self):
@@ -44,26 +62,41 @@ class CommandParsingTests(unittest.TestCase):
         drop = cli.parse_command("drop　歩　５　５")
 
         self.assertIsInstance(move, cli.MoveCommand)
-        self.assertEqual((move.source, move.destination, move.promote),
-                         (Square(7, 7), Square(7, 6), False))
+        self.assertEqual(
+            (move.source, move.destination, move.promote),
+            (Square(7, 7), Square(7, 6), False),
+        )
         self.assertIsInstance(promoted, cli.MoveCommand)
-        self.assertEqual((promoted.source, promoted.destination,
-                          promoted.promote),
-                         (Square(2, 2), Square(2, 1), True))
+        self.assertEqual(
+            (promoted.source, promoted.destination, promoted.promote),
+            (Square(2, 2), Square(2, 1), True),
+        )
         self.assertIsInstance(drop, cli.DropCommand)
-        self.assertEqual((drop.piece_type, drop.destination),
-                         (BasicPieceType.PAWN, Square(5, 5)))
+        self.assertEqual(
+            (drop.piece_type, drop.destination), (BasicPieceType.PAWN, Square(5, 5))
+        )
 
     def test_parses_resign_command(self):
         """resignを公開投了型へ変換し、CLIの公開APIを明示する。"""
         command = cli.parse_command("resign")
 
-        self.assertEqual(cli.__all__, (
-            "GameMode", "choose_game_mode", "choose_move_selection_policy",
-            "MoveCommand", "DropCommand",
-            "ResignCommand", "SaveCommand", "LoadCommand", "HelpCommand",
-            "Command", "parse_command", "run_game",
-        ))
+        self.assertEqual(
+            cli.__all__,
+            (
+                "GameMode",
+                "choose_game_mode",
+                "choose_move_selection_policy",
+                "MoveCommand",
+                "DropCommand",
+                "ResignCommand",
+                "SaveCommand",
+                "LoadCommand",
+                "HelpCommand",
+                "Command",
+                "parse_command",
+                "run_game",
+            ),
+        )
         self.assertIsInstance(command, cli.ResignCommand)
 
     def test_parses_save_and_load_commands(self):
@@ -83,8 +116,7 @@ class CommandParsingTests(unittest.TestCase):
         """パスなし・空白を含むパスは入力形式エラーとして拒否する。"""
         for command in ("save", "load", "save a b", "load a b"):
             with self.subTest(command=command):
-                with self.assertRaisesRegex(
-                        ValueError, "入力形式が正しくありません。"):
+                with self.assertRaisesRegex(ValueError, "入力形式が正しくありません。"):
                     cli.parse_command(command)
 
     def test_rejects_invalid_command_format(self):
@@ -103,8 +135,7 @@ class CommandParsingTests(unittest.TestCase):
 
         for command in invalid_commands:
             with self.subTest(command=command):
-                with self.assertRaisesRegex(ValueError,
-                                             "入力形式が正しくありません。"):
+                with self.assertRaisesRegex(ValueError, "入力形式が正しくありません。"):
                     cli.parse_command(command)
 
 
@@ -120,8 +151,9 @@ class GameModeMenuTests(unittest.TestCase):
         for value, mode_name in expected:
             with self.subTest(value=value):
                 self.assertEqual(
-                    cli.choose_game_mode(input_fn=ScriptedInput([value]),
-                                         output_fn=lambda _: None),
+                    cli.choose_game_mode(
+                        input_fn=ScriptedInput([value]), output_fn=lambda _: None
+                    ),
                     getattr(cli.GameMode, mode_name),
                 )
 
@@ -129,8 +161,9 @@ class GameModeMenuTests(unittest.TestCase):
         """無効な番号の後に、人間対コンピュータを選び直せる。"""
         outputs = []
 
-        mode = cli.choose_game_mode(input_fn=ScriptedInput(["4", "2"]),
-                                    output_fn=outputs.append)
+        mode = cli.choose_game_mode(
+            input_fn=ScriptedInput(["4", "2"]), output_fn=outputs.append
+        )
 
         self.assertEqual(mode, cli.GameMode.HUMAN_VS_COMPUTER)
         self.assertIn("エラー：対局形式を1〜3で選んでください。", outputs)
@@ -140,8 +173,9 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
     def _choose_policy(self, **kwargs):
         """未実装のメニューを属性エラーでなく振る舞い失敗にする。"""
         choose = getattr(cli, "choose_move_selection_policy", None)
-        self.assertIsNotNone(choose,
-                             "choose_move_selection_policy がまだ実装されていません")
+        self.assertIsNotNone(
+            choose, "choose_move_selection_policy がまだ実装されていません"
+        )
         return choose(**kwargs)
 
     def test_choose_move_selection_policy_maps_choices(self):
@@ -150,15 +184,16 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         表示値と内部方針を取り違える誤りや、利用者向けの合意済み名称を欠かす
         誤りを検出する。
         """
-        cases = (("1", MoveSelectionPolicy.RANDOM),
-                 ("2", MoveSelectionPolicy.MATERIAL))
+        cases = (("1", MoveSelectionPolicy.RANDOM), ("2", MoveSelectionPolicy.MATERIAL))
         for value, expected in cases:
             outputs = []
             with self.subTest(value=value):
                 self.assertEqual(
                     self._choose_policy(
-                        input_fn=ScriptedInput([value]), output_fn=outputs.append),
-                    expected)
+                        input_fn=ScriptedInput([value]), output_fn=outputs.append
+                    ),
+                    expected,
+                )
                 menu = " ".join(outputs)
                 self.assertIn("最弱（一様ランダム）", menu)
                 self.assertIn("駒得を考える", menu)
@@ -169,7 +204,8 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         対局前の選択を省略しただけで駒得方針へ変わる誤りを検出する。
         """
         policy = self._choose_policy(
-            input_fn=ScriptedInput([""]), output_fn=lambda _: None)
+            input_fn=ScriptedInput([""]), output_fn=lambda _: None
+        )
 
         self.assertEqual(policy, MoveSelectionPolicy.RANDOM)
 
@@ -180,11 +216,13 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         """
         outputs = []
         policy = self._choose_policy(
-            input_fn=ScriptedInput(["3", "2"]), output_fn=outputs.append)
+            input_fn=ScriptedInput(["3", "2"]), output_fn=outputs.append
+        )
 
         self.assertEqual(policy, MoveSelectionPolicy.MATERIAL)
-        self.assertEqual(sum("一手選択方針を選んでください" in line
-                             for line in outputs), 2)
+        self.assertEqual(
+            sum("一手選択方針を選んでください" in line for line in outputs), 2
+        )
         self.assertIn("エラー：一手選択方針を1〜2で選んでください。", outputs)
 
 
@@ -210,12 +248,17 @@ class GameplayTests(unittest.TestCase):
         CLI経由で方針を指定しない呼び出しが、駒得評価へ暗黙に変わる誤りを検出する。
         """
         selected_move = BoardMove(Square(3, 3), Square(3, 4), False)
-        with patch.object(cli, "legal_moves", return_value=(selected_move,)), \
-                patch.object(cli, "choose_move", create=True,
-                             return_value=selected_move) as choose_move:
+        with (
+            patch.object(cli, "legal_moves", return_value=(selected_move,)),
+            patch.object(
+                cli, "choose_move", create=True, return_value=selected_move
+            ) as choose_move,
+        ):
             cli.run_game(
                 input_fn=ScriptedInput(["move 7 7 7 6", "resign"]),
-                output_fn=lambda _: None, rng=random.Random(20261005))
+                output_fn=lambda _: None,
+                rng=random.Random(20261005),
+            )
 
         choose_move.assert_called_once()
         self.assertEqual(choose_move.call_args.args[2], MoveSelectionPolicy.RANDOM)
@@ -226,20 +269,24 @@ class GameplayTests(unittest.TestCase):
         対局前に選んだ方針をrun_gameが保持せず、既定のランダムへ戻す誤りを検出する。
         """
         selected_move = BoardMove(Square(3, 3), Square(3, 4), False)
-        with patch.object(cli, "legal_moves", return_value=(selected_move,)), \
-                patch.object(cli, "choose_move", create=True,
-                             return_value=selected_move) as choose_move:
+        with (
+            patch.object(cli, "legal_moves", return_value=(selected_move,)),
+            patch.object(
+                cli, "choose_move", create=True, return_value=selected_move
+            ) as choose_move,
+        ):
             try:
                 cli.run_game(
                     input_fn=ScriptedInput(["move 7 7 7 6", "resign"]),
-                    output_fn=lambda _: None, rng=random.Random(20261005),
-                    move_selection_policy=MoveSelectionPolicy.MATERIAL)
+                    output_fn=lambda _: None,
+                    rng=random.Random(20261005),
+                    move_selection_policy=MoveSelectionPolicy.MATERIAL,
+                )
             except TypeError as error:
                 self.fail(f"run_gameが選択方針を受け付けません: {error}")
 
         choose_move.assert_called_once()
-        self.assertEqual(choose_move.call_args.args[2],
-                         MoveSelectionPolicy.MATERIAL)
+        self.assertEqual(choose_move.call_args.args[2], MoveSelectionPolicy.MATERIAL)
 
     def test_help_displays_commands_and_reprompts_same_turn(self):
         """help表示後は案内を再表示して同じ手番から入力を続ける。
@@ -250,27 +297,37 @@ class GameplayTests(unittest.TestCase):
         inputs = ScriptedInput(["help", "move 7 7 7 6", "resign"])
         outputs = []
 
-        record = cli.run_game(mode=cli.GameMode.HUMAN_VS_HUMAN,
-                              input_fn=inputs, output_fn=outputs.append)
+        record = cli.run_game(
+            mode=cli.GameMode.HUMAN_VS_HUMAN, input_fn=inputs, output_fn=outputs.append
+        )
 
         help_text = next(output for output in outputs if "move <出発筋>" in output)
         for expected in (
-                "move <出発筋> <出発段> <到着筋> <到着段> [+]",
-                "drop <歩|香|桂|銀|金|角|飛> <筋> <段>",
-                "resign", "save <path>", "load <path>", "+",
-                "全角数字", "空白を含まない一語", "保存成功後",
-                "読込成功後"):
+            "move <出発筋> <出発段> <到着筋> <到着段> [+]",
+            "drop <歩|香|桂|銀|金|角|飛> <筋> <段>",
+            "resign",
+            "save <path>",
+            "load <path>",
+            "+",
+            "全角数字",
+            "空白を含まない一語",
+            "保存成功後",
+            "読込成功後",
+        ):
             with self.subTest(expected=expected):
                 self.assertIn(expected, help_text)
         prompt = "指し手を入力してください（例: move 7 7 7 6）:"
         help_index = outputs.index(help_text)
         self.assertEqual(outputs[help_index + 1], prompt)
         self.assertEqual(inputs.calls, 3)
-        self.assertEqual(record.moves,
-                         (RecordedMove(Square(7, 7), Square(7, 6), False),))
+        self.assertEqual(
+            record.moves, (RecordedMove(Square(7, 7), Square(7, 6), False),)
+        )
         self.assertEqual(record.current_position.side_to_move, Side.GOTE)
-        self.assertEqual(record.current_position.board.piece_at(Square(7, 6)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            record.current_position.board.piece_at(Square(7, 6)),
+            Piece(PieceType.PAWN, Side.SENTE),
+        )
 
     def test_help_preserves_record_when_input_ends(self):
         """help後のEOFは開始局面と空の棋譜を保って終了する。
@@ -281,13 +338,16 @@ class GameplayTests(unittest.TestCase):
         inputs = ScriptedInput(["help"])
         outputs = []
 
-        record = cli.run_game(mode=cli.GameMode.HUMAN_VS_HUMAN,
-                              input_fn=inputs, output_fn=outputs.append)
+        record = cli.run_game(
+            mode=cli.GameMode.HUMAN_VS_HUMAN, input_fn=inputs, output_fn=outputs.append
+        )
 
         self.assertEqual(inputs.calls, 2)
         self.assertEqual(record.moves, ())
-        self.assertEqual(render_position(record.current_position),
-                         render_position(record.initial_position))
+        self.assertEqual(
+            render_position(record.current_position),
+            render_position(record.initial_position),
+        )
         self.assertEqual(outputs[-1], "入力を終了しました。")
         self.assertFalse(any("投了しました。" in output for output in outputs))
         self.assertFalse(any("勝ちです。" in output for output in outputs))
@@ -298,8 +358,7 @@ class GameplayTests(unittest.TestCase):
         board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
         board.set_piece(Square(5, 8), Piece(PieceType.ROOK, Side.GOTE))
         board.set_piece(Square(6, 7), Piece(PieceType.GOLD, Side.GOTE))
-        for square in (Square(4, 8), Square(6, 8),
-                       Square(4, 9), Square(6, 9)):
+        for square in (Square(4, 8), Square(6, 8), Square(4, 9), Square(6, 9)):
             board.set_piece(square, Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         return Position(board, Side.SENTE)
@@ -311,8 +370,7 @@ class GameplayTests(unittest.TestCase):
         board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
         board.set_piece(Square(5, 3), Piece(PieceType.ROOK, Side.SENTE))
         board.set_piece(Square(4, 3), Piece(PieceType.GOLD, Side.SENTE))
-        for square in (Square(4, 1), Square(6, 1),
-                       Square(4, 2), Square(6, 2)):
+        for square in (Square(4, 1), Square(6, 1), Square(4, 2), Square(6, 2)):
             board.set_piece(square, Piece(PieceType.PAWN, Side.GOTE))
         return Position(board, Side.SENTE)
 
@@ -331,10 +389,13 @@ class GameplayTests(unittest.TestCase):
         )
 
         self.assertEqual(inputs.calls, 3)
-        self.assertEqual(record.moves, (
-            RecordedMove(Square(7, 7), Square(7, 6), False),
-            RecordedMove(Square(3, 3), Square(3, 4), False),
-        ))
+        self.assertEqual(
+            record.moves,
+            (
+                RecordedMove(Square(7, 7), Square(7, 6), False),
+                RecordedMove(Square(3, 3), Square(3, 4), False),
+            ),
+        )
 
     def test_computer_vs_computer_plays_alternately_until_ctrl_c(self):
         """コンピュータ対コンピュータは、交互に二手指してCtrl-Cで中断する。
@@ -342,6 +403,7 @@ class GameplayTests(unittest.TestCase):
         自動手でCtrl-Cを捕捉できない誤りと、入力を読んだり中断を棋譜へ残したり
         する誤りを検出する。
         """
+
         class InterruptingRandom(random.Random):
             def __init__(self):
                 super().__init__(20260927)
@@ -370,21 +432,28 @@ class GameplayTests(unittest.TestCase):
 
     def test_human_vs_human_does_not_consume_rng(self):
         """人間対人間では注入した乱数生成器を消費しない。"""
+
         class FailingRandom(random.Random):
             def choice(self, sequence):
                 raise AssertionError("人間対人間でchoiceを呼んではいけません")
 
-        cli.run_game(mode=cli.GameMode.HUMAN_VS_HUMAN,
-                     input_fn=ScriptedInput(["move 7 7 7 6", "move 3 3 3 4"]),
-                     output_fn=lambda _: None, rng=FailingRandom())
+        cli.run_game(
+            mode=cli.GameMode.HUMAN_VS_HUMAN,
+            input_fn=ScriptedInput(["move 7 7 7 6", "move 3 3 3 4"]),
+            output_fn=lambda _: None,
+            rng=FailingRandom(),
+        )
 
     def test_computer_vs_computer_stops_without_winner_when_no_legal_move(self):
         """自動対局の合法手空一覧は入力せず勝者なしで停止する。"""
         inputs = ScriptedInput([])
         outputs = []
         with patch.object(cli, "legal_moves", return_value=()):
-            record = cli.run_game(mode=cli.GameMode.COMPUTER_VS_COMPUTER,
-                                  input_fn=inputs, output_fn=outputs.append)
+            record = cli.run_game(
+                mode=cli.GameMode.COMPUTER_VS_COMPUTER,
+                input_fn=inputs,
+                output_fn=outputs.append,
+            )
 
         self.assertEqual(inputs.calls, 0)
         self.assertEqual(record.moves, ())
@@ -402,11 +471,11 @@ class GameplayTests(unittest.TestCase):
 
         self.assertEqual(inputs.calls, 2)
         self.assertEqual(len(record.moves), 2)
-        self.assertEqual(record.moves[0], RecordedMove(Square(7, 7),
-                                                        Square(7, 6), False))
+        self.assertEqual(
+            record.moves[0], RecordedMove(Square(7, 7), Square(7, 6), False)
+        )
         self.assertEqual(record.current_position.side_to_move, Side.SENTE)
-        self.assertTrue(any(line.startswith("後手の指し手: ")
-                            for line in outputs))
+        self.assertTrue(any(line.startswith("後手の指し手: ") for line in outputs))
 
     def test_fixed_rng_reproduces_computer_move(self):
         """同じ乱数種の対局は、コンピュータ手と表示を再現する。
@@ -433,9 +502,11 @@ class GameplayTests(unittest.TestCase):
         """明示した人間対コンピュータは既定値と棋譜・表示が同じになる。"""
         default_outputs = []
         explicit_outputs = []
-        default_record = cli.run_game(input_fn=ScriptedInput(["move 7 7 7 6"]),
-                                      output_fn=default_outputs.append,
-                                      rng=random.Random(20260927))
+        default_record = cli.run_game(
+            input_fn=ScriptedInput(["move 7 7 7 6"]),
+            output_fn=default_outputs.append,
+            rng=random.Random(20260927),
+        )
         explicit_record = cli.run_game(
             mode=cli.GameMode.HUMAN_VS_COMPUTER,
             input_fn=ScriptedInput(["move 7 7 7 6"]),
@@ -451,6 +522,7 @@ class GameplayTests(unittest.TestCase):
 
         自動手ごとに乱数生成器を作り直して同じ初期状態へ戻す誤りを検出する。
         """
+
         class CountingRandom(random.Random):
             def __init__(self):
                 super().__init__(20260926)
@@ -464,8 +536,7 @@ class GameplayTests(unittest.TestCase):
         inputs = ScriptedInput(["move 7 7 7 6", "move 2 7 2 6"])
         outputs = []
 
-        record = cli.run_game(input_fn=inputs, output_fn=outputs.append,
-                              rng=rng)
+        record = cli.run_game(input_fn=inputs, output_fn=outputs.append, rng=rng)
 
         self.assertEqual(rng.choice_calls, 2)
         self.assertEqual(len(record.moves), 4)
@@ -476,18 +547,26 @@ class GameplayTests(unittest.TestCase):
         自動手を盤面更新後に表示する誤りと、次の入力案内を先に出す誤りを検出する。
         """
         outputs = []
-        cli.run_game(input_fn=ScriptedInput(["move 7 7 7 6"]),
-                     output_fn=outputs.append,
-                     rng=random.Random(20260926))
+        cli.run_game(
+            input_fn=ScriptedInput(["move 7 7 7 6"]),
+            output_fn=outputs.append,
+            rng=random.Random(20260926),
+        )
 
-        gote_boards = [i for i, line in enumerate(outputs)
-                       if line.startswith("手番：後手")]
-        computer_moves = [i for i, line in enumerate(outputs)
-                          if line.startswith("後手の指し手: ")]
-        sente_boards = [i for i, line in enumerate(outputs)
-                        if line.startswith("手番：先手")]
-        prompts = [i for i, line in enumerate(outputs)
-                   if line.startswith("指し手を入力してください")]
+        gote_boards = [
+            i for i, line in enumerate(outputs) if line.startswith("手番：後手")
+        ]
+        computer_moves = [
+            i for i, line in enumerate(outputs) if line.startswith("後手の指し手: ")
+        ]
+        sente_boards = [
+            i for i, line in enumerate(outputs) if line.startswith("手番：先手")
+        ]
+        prompts = [
+            i
+            for i, line in enumerate(outputs)
+            if line.startswith("指し手を入力してください")
+        ]
 
         self.assertEqual(len(gote_boards), 1)
         self.assertEqual(len(computer_moves), 1)
@@ -504,8 +583,9 @@ class GameplayTests(unittest.TestCase):
         outputs = []
 
         with patch.object(cli, "legal_moves", return_value=()):
-            record = cli.run_game(input_fn=inputs, output_fn=outputs.append,
-                                  rng=random.Random(20260926))
+            record = cli.run_game(
+                input_fn=inputs, output_fn=outputs.append, rng=random.Random(20260926)
+            )
 
         self.assertEqual(inputs.calls, 1)
         self.assertEqual(len(record.moves), 1)
@@ -527,31 +607,40 @@ class GameplayTests(unittest.TestCase):
         inputs = ScriptedInput(["move 7 7 7 6"])
         outputs = []
 
-        with patch.object(cli, "create_initial_position",
-                          return_value=position, create=True), \
-                patch.object(cli, "legal_moves",
-                             return_value=(DropMove(BasicPieceType.PAWN,
-                                                    Square(5, 5)),)):
-            record = cli.run_game(input_fn=inputs, output_fn=outputs.append,
-                                  rng=random.Random(20260926))
+        with (
+            patch.object(
+                cli, "create_initial_position", return_value=position, create=True
+            ),
+            patch.object(
+                cli,
+                "legal_moves",
+                return_value=(DropMove(BasicPieceType.PAWN, Square(5, 5)),),
+            ),
+        ):
+            record = cli.run_game(
+                input_fn=inputs, output_fn=outputs.append, rng=random.Random(20260926)
+            )
 
-        self.assertEqual(record.moves[1],
-                         RecordedDrop(BasicPieceType.PAWN, Square(5, 5)))
+        self.assertEqual(
+            record.moves[1], RecordedDrop(BasicPieceType.PAWN, Square(5, 5))
+        )
         self.assertIn("後手の指し手: drop 歩 5 5", outputs)
-        self.assertEqual(record.current_position.board.piece_at(Square(5, 5)),
-                         Piece(PieceType.PAWN, Side.GOTE))
+        self.assertEqual(
+            record.current_position.board.piece_at(Square(5, 5)),
+            Piece(PieceType.PAWN, Side.GOTE),
+        )
 
     def test_reprompts_after_format_and_legality_errors(self):
         """形式エラーと合法性エラーの後も、同じ手番で合法手を受け付ける。"""
         outputs = []
-        inputs = ScriptedInput(["move 7", "move 7 7 7 8",
-                                "move 7 7 7 6", "move 3 3 3 4"])
+        inputs = ScriptedInput(
+            ["move 7", "move 7 7 7 8", "move 7 7 7 6", "move 3 3 3 4"]
+        )
 
         cli.run_game(input_fn=inputs, output_fn=outputs.append)
 
         self.assertIn("エラー：入力形式が正しくありません。", outputs)
-        self.assertIn("エラー：到着マスは出発駒の移動先候補に含まれません",
-                      outputs)
+        self.assertIn("エラー：到着マスは出発駒の移動先候補に含まれません", outputs)
         self.assertEqual(sum("手番：後手" in output for output in outputs), 1)
         self.assertEqual(sum("手番：先手" in output for output in outputs), 2)
 
@@ -559,10 +648,12 @@ class GameplayTests(unittest.TestCase):
         """save成功後は記録を変えず、同じ人間手番で入力を受け直す。"""
         with TemporaryDirectory() as directory:
             path = f"{directory}/record.json"
-            inputs = ScriptedInput([
-                f"save {path}",
-                "move 7 7 7 6",
-            ])
+            inputs = ScriptedInput(
+                [
+                    f"save {path}",
+                    "move 7 7 7 6",
+                ]
+            )
             outputs = []
 
             try:
@@ -577,9 +668,9 @@ class GameplayTests(unittest.TestCase):
             saved = GameRecord.load(path)
 
         self.assertEqual(saved.moves, ())
-        self.assertEqual(record.moves, (
-            RecordedMove(Square(7, 7), Square(7, 6), False),
-        ))
+        self.assertEqual(
+            record.moves, (RecordedMove(Square(7, 7), Square(7, 6), False),)
+        )
         self.assertIn("棋譜を保存しました。", outputs)
         self.assertEqual(record.current_position.side_to_move, Side.GOTE)
 
@@ -591,11 +682,13 @@ class GameplayTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             path = f"{directory}/record.json"
             loaded_record.save(path)
-            inputs = ScriptedInput([
-                "move 7 7 7 6",
-                f"load {path}",
-                "resign",
-            ])
+            inputs = ScriptedInput(
+                [
+                    "move 7 7 7 6",
+                    f"load {path}",
+                    "resign",
+                ]
+            )
             outputs = []
 
             try:
@@ -607,16 +700,16 @@ class GameplayTests(unittest.TestCase):
             except AttributeError as error:
                 self.fail(f"save/load進行が未実装です: {error}")
 
-        self.assertEqual(record.moves, (
-            RecordedMove(Square(2, 7), Square(2, 6), False),
-        ))
-        self.assertIsNone(record.current_position.board.piece_at(
-            Square(7, 6)))
+        self.assertEqual(
+            record.moves, (RecordedMove(Square(2, 7), Square(2, 6), False),)
+        )
+        self.assertIsNone(record.current_position.board.piece_at(Square(7, 6)))
         self.assertEqual(record.current_position.side_to_move, Side.GOTE)
         self.assertIn("棋譜を読み込みました。", outputs)
         load_index = outputs.index("棋譜を読み込みました。")
-        self.assertEqual(outputs[load_index + 1],
-                         render_position(loaded_record.current_position))
+        self.assertEqual(
+            outputs[load_index + 1], render_position(loaded_record.current_position)
+        )
 
     def test_load_to_computer_turn_plays_and_records_computer_move(self):
         """load後がコンピュータ手番なら自動手を表示して履歴へ追加する。"""
@@ -626,10 +719,12 @@ class GameplayTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             path = f"{directory}/record.json"
             loaded_record.save(path)
-            inputs = ScriptedInput([
-                f"load {path}",
-                "resign",
-            ])
+            inputs = ScriptedInput(
+                [
+                    f"load {path}",
+                    "resign",
+                ]
+            )
             outputs = []
 
             record = cli.run_game(
@@ -639,11 +734,11 @@ class GameplayTests(unittest.TestCase):
                 rng=random.Random(20260927),
             )
 
-        self.assertEqual(record.moves[0],
-                         RecordedMove(Square(2, 7), Square(2, 6), False))
+        self.assertEqual(
+            record.moves[0], RecordedMove(Square(2, 7), Square(2, 6), False)
+        )
         self.assertEqual(len(record.moves), 2)
-        self.assertTrue(any(line.startswith("後手の指し手: ")
-                            for line in outputs))
+        self.assertTrue(any(line.startswith("後手の指し手: ") for line in outputs))
 
     def test_appends_human_move_after_loaded_record(self):
         """load後の成功手を、読込済み履歴の末尾へ追加する。"""
@@ -653,10 +748,12 @@ class GameplayTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             path = f"{directory}/record.json"
             loaded_record.save(path)
-            inputs = ScriptedInput([
-                f"load {path}",
-                "move 3 3 3 4",
-            ])
+            inputs = ScriptedInput(
+                [
+                    f"load {path}",
+                    "move 3 3 3 4",
+                ]
+            )
 
             record = cli.run_game(
                 mode=cli.GameMode.HUMAN_VS_HUMAN,
@@ -664,20 +761,25 @@ class GameplayTests(unittest.TestCase):
                 output_fn=lambda _: None,
             )
 
-        self.assertEqual(record.moves, (
-            RecordedMove(Square(2, 7), Square(2, 6), False),
-            RecordedMove(Square(3, 3), Square(3, 4), False),
-        ))
+        self.assertEqual(
+            record.moves,
+            (
+                RecordedMove(Square(2, 7), Square(2, 6), False),
+                RecordedMove(Square(3, 3), Square(3, 4), False),
+            ),
+        )
 
     def test_reprompts_without_replacing_record_after_load_error(self):
         """load失敗は元の記録を保ち、同じ人間手番で再入力する。"""
         with TemporaryDirectory() as directory:
             path = f"{directory}/missing/record.json"
-            inputs = ScriptedInput([
-                "move 7 7 7 6",
-                f"load {path}",
-                "move 3 3 3 4",
-            ])
+            inputs = ScriptedInput(
+                [
+                    "move 7 7 7 6",
+                    f"load {path}",
+                    "move 3 3 3 4",
+                ]
+            )
             outputs = []
 
             try:
@@ -689,10 +791,13 @@ class GameplayTests(unittest.TestCase):
             except AttributeError as error:
                 self.fail(f"save/load進行が未実装です: {error}")
 
-        self.assertEqual(record.moves, (
-            RecordedMove(Square(7, 7), Square(7, 6), False),
-            RecordedMove(Square(3, 3), Square(3, 4), False),
-        ))
+        self.assertEqual(
+            record.moves,
+            (
+                RecordedMove(Square(7, 7), Square(7, 6), False),
+                RecordedMove(Square(3, 3), Square(3, 4), False),
+            ),
+        )
         self.assertTrue(any(line.startswith("エラー：") for line in outputs))
 
     def test_reprompts_without_replacing_record_after_invalid_json(self):
@@ -700,11 +805,13 @@ class GameplayTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             path = Path(directory) / "invalid.json"
             path.write_text("{", encoding="utf-8")
-            inputs = ScriptedInput([
-                "move 7 7 7 6",
-                f"load {path}",
-                "move 3 3 3 4",
-            ])
+            inputs = ScriptedInput(
+                [
+                    "move 7 7 7 6",
+                    f"load {path}",
+                    "move 3 3 3 4",
+                ]
+            )
             outputs = []
 
             record = cli.run_game(
@@ -713,21 +820,26 @@ class GameplayTests(unittest.TestCase):
                 output_fn=outputs.append,
             )
 
-        self.assertEqual(record.moves, (
-            RecordedMove(Square(7, 7), Square(7, 6), False),
-            RecordedMove(Square(3, 3), Square(3, 4), False),
-        ))
+        self.assertEqual(
+            record.moves,
+            (
+                RecordedMove(Square(7, 7), Square(7, 6), False),
+                RecordedMove(Square(3, 3), Square(3, 4), False),
+            ),
+        )
         self.assertTrue(any(line.startswith("エラー：") for line in outputs))
 
     def test_reprompts_after_save_file_error_without_changing_record(self):
         """save失敗は記録を保ち、同じ人間手番で再入力する。"""
         with TemporaryDirectory() as directory:
             path = f"{directory}/missing/record.json"
-            inputs = ScriptedInput([
-                "move 7 7 7 6",
-                f"save {path}",
-                "move 3 3 3 4",
-            ])
+            inputs = ScriptedInput(
+                [
+                    "move 7 7 7 6",
+                    f"save {path}",
+                    "move 3 3 3 4",
+                ]
+            )
             outputs = []
 
             try:
@@ -739,10 +851,13 @@ class GameplayTests(unittest.TestCase):
             except AttributeError as error:
                 self.fail(f"save/load進行が未実装です: {error}")
 
-        self.assertEqual(record.moves, (
-            RecordedMove(Square(7, 7), Square(7, 6), False),
-            RecordedMove(Square(3, 3), Square(3, 4), False),
-        ))
+        self.assertEqual(
+            record.moves,
+            (
+                RecordedMove(Square(7, 7), Square(7, 6), False),
+                RecordedMove(Square(3, 3), Square(3, 4), False),
+            ),
+        )
         self.assertTrue(any(line.startswith("エラー：") for line in outputs))
 
     def test_does_not_read_save_or_load_after_checkmate(self):
@@ -750,8 +865,12 @@ class GameplayTests(unittest.TestCase):
         inputs = ScriptedInput(["save ignored.json"])
         outputs = []
 
-        with patch.object(cli, "create_initial_position",
-                          side_effect=self._mated_sente_position, create=True):
+        with patch.object(
+            cli,
+            "create_initial_position",
+            side_effect=self._mated_sente_position,
+            create=True,
+        ):
             cli.run_game(input_fn=inputs, output_fn=outputs.append)
 
         self.assertEqual(inputs.calls, 0)
@@ -767,20 +886,25 @@ class GameplayTests(unittest.TestCase):
         inputs = ScriptedInput(["drop 歩 5 5"])
         outputs = []
 
-        with patch.object(cli, "create_initial_position",
-                          return_value=position, create=True):
+        with patch.object(
+            cli, "create_initial_position", return_value=position, create=True
+        ):
             record = cli.run_game(input_fn=inputs, output_fn=outputs.append)
 
         self.assertIsNotNone(record, "run_gameが対局記録を返していません")
         if record is None:
             return
-        self.assertEqual(record.moves[0],
-                         RecordedDrop(BasicPieceType.PAWN, Square(5, 5)))
+        self.assertEqual(
+            record.moves[0], RecordedDrop(BasicPieceType.PAWN, Square(5, 5))
+        )
         self.assertEqual(len(record.moves), 2)
-        self.assertEqual(record.current_position.board.piece_at(Square(5, 5)),
-                         Piece(PieceType.PAWN, Side.SENTE))
-        self.assertEqual(record.current_position.sente_hand.count(
-            BasicPieceType.PAWN), 0)
+        self.assertEqual(
+            record.current_position.board.piece_at(Square(5, 5)),
+            Piece(PieceType.PAWN, Side.SENTE),
+        )
+        self.assertEqual(
+            record.current_position.sente_hand.count(BasicPieceType.PAWN), 0
+        )
 
     def test_returns_record_with_successful_moves_on_eof(self):
         """EOF時に成功手を含む対局記録を返す。
@@ -796,8 +920,9 @@ class GameplayTests(unittest.TestCase):
         self.assertIsNotNone(record, "run_gameが対局記録を返していません")
         if record is None:
             return
-        self.assertEqual(record.moves[0],
-                         RecordedMove(Square(7, 7), Square(7, 6), False))
+        self.assertEqual(
+            record.moves[0], RecordedMove(Square(7, 7), Square(7, 6), False)
+        )
         self.assertEqual(len(record.moves), 2)
         self.assertEqual(record.current_position.side_to_move, Side.SENTE)
 
@@ -819,10 +944,10 @@ class GameplayTests(unittest.TestCase):
         initial = record.position_at(0)
         current = record.current_position
         self.assertEqual(current.side_to_move, Side.SENTE)
-        for square in (Square(7, 7), Square(2, 8), Square(5, 9),
-                       Square(5, 1)):
-            self.assertEqual(current.board.piece_at(square),
-                             initial.board.piece_at(square))
+        for square in (Square(7, 7), Square(2, 8), Square(5, 9), Square(5, 1)):
+            self.assertEqual(
+                current.board.piece_at(square), initial.board.piece_at(square)
+            )
 
     def test_stops_when_sente_resigns_without_changing_position(self):
         """先手が投了すると、局面を変えず後手の勝ちを表示して終了する。"""
@@ -831,8 +956,9 @@ class GameplayTests(unittest.TestCase):
         inputs = ScriptedInput(["resign"])
         outputs = []
 
-        with patch.object(cli, "create_initial_position",
-                          return_value=position, create=True):
+        with patch.object(
+            cli, "create_initial_position", return_value=position, create=True
+        ):
             record = cli.run_game(input_fn=inputs, output_fn=outputs.append)
 
         self.assertIsNotNone(record, "run_gameが対局記録を返していません")
@@ -840,10 +966,13 @@ class GameplayTests(unittest.TestCase):
             return
         self.assertEqual(inputs.calls, 1)
         self.assertEqual(record.current_position.side_to_move, Side.SENTE)
-        self.assertEqual(record.current_position.board.piece_at(Square(7, 7)),
-                         Piece(PieceType.PAWN, Side.SENTE))
-        self.assertEqual(record.current_position.sente_hand.count(
-            BasicPieceType.PAWN), 1)
+        self.assertEqual(
+            record.current_position.board.piece_at(Square(7, 7)),
+            Piece(PieceType.PAWN, Side.SENTE),
+        )
+        self.assertEqual(
+            record.current_position.sente_hand.count(BasicPieceType.PAWN), 1
+        )
         self.assertIn("先手が投了しました。後手の勝ちです。", outputs)
         self.assertNotIn("入力を終了しました。", outputs)
 
@@ -856,8 +985,9 @@ class GameplayTests(unittest.TestCase):
         inputs = ScriptedInput(["move 7 7 7 6", "resign"])
         outputs = []
 
-        with patch.object(cli, "create_initial_position",
-                          return_value=position, create=True):
+        with patch.object(
+            cli, "create_initial_position", return_value=position, create=True
+        ):
             record = cli.run_game(input_fn=inputs, output_fn=outputs.append)
 
         self.assertIsNotNone(record, "run_gameが対局記録を返していません")
@@ -865,8 +995,10 @@ class GameplayTests(unittest.TestCase):
             return
         self.assertEqual(inputs.calls, 2)
         self.assertEqual(record.current_position.side_to_move, Side.SENTE)
-        self.assertEqual(record.current_position.board.piece_at(Square(7, 6)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            record.current_position.board.piece_at(Square(7, 6)),
+            Piece(PieceType.PAWN, Side.SENTE),
+        )
         self.assertEqual(len(record.moves), 2)
         self.assertIn("先手が投了しました。後手の勝ちです。", outputs)
         self.assertNotIn("入力を終了しました。", outputs)
@@ -876,8 +1008,12 @@ class GameplayTests(unittest.TestCase):
         inputs = ScriptedInput([])
         outputs = []
 
-        with patch.object(cli, "create_initial_position",
-                          side_effect=self._mated_sente_position, create=True):
+        with patch.object(
+            cli,
+            "create_initial_position",
+            side_effect=self._mated_sente_position,
+            create=True,
+        ):
             cli.run_game(input_fn=inputs, output_fn=outputs.append)
 
         self.assertEqual(inputs.calls, 0)
@@ -889,8 +1025,9 @@ class GameplayTests(unittest.TestCase):
         inputs = ScriptedInput(["move 5 3 5 2"])
         outputs = []
 
-        with patch.object(cli, "create_initial_position",
-                          return_value=position, create=True):
+        with patch.object(
+            cli, "create_initial_position", return_value=position, create=True
+        ):
             cli.run_game(input_fn=inputs, output_fn=outputs.append)
 
         self.assertEqual(inputs.calls, 1)
@@ -932,8 +1069,12 @@ class GameplayTests(unittest.TestCase):
         inputs = ScriptedInput([])
         outputs = []
 
-        with patch.object(cli, "create_initial_position",
-                          side_effect=self._mated_sente_position, create=True):
+        with patch.object(
+            cli,
+            "create_initial_position",
+            side_effect=self._mated_sente_position,
+            create=True,
+        ):
             record = cli.run_game(input_fn=inputs, output_fn=outputs.append)
 
         self.assertEqual(inputs.calls, 0)

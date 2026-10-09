@@ -9,8 +9,7 @@ from .display import render_position
 from .game_record import GameRecord
 from .move import BoardMove, DropMove, Move
 from .model import BasicPieceType, Side, Square, create_initial_position
-from .movegen import (MoveSelectionPolicy, choose_move, is_game_over,
-                      legal_moves)
+from .movegen import MoveSelectionPolicy, choose_move, is_game_over, legal_moves
 
 
 __all__ = (
@@ -31,14 +30,16 @@ __all__ = (
 
 FORMAT_ERROR = "入力形式が正しくありません。"
 
-_HELP_TEXT = "\n".join((
-    "move <出発筋> <出発段> <到着筋> <到着段> [+] — 盤上の駒を動かします。+で成ります。",
-    "drop <歩|香|桂|銀|金|角|飛> <筋> <段> — 持ち駒を打ちます。",
-    "resign — 投了して対局を終了します。",
-    "save <path> — 棋譜を保存します。保存成功後は同じ手番を続けます。",
-    "load <path> — 棋譜を読み込みます。読込成功後はその局面から再開します。",
-    "筋・段には全角数字も使えます。パスは空白を含まない一語です。",
-))
+_HELP_TEXT = "\n".join(
+    (
+        "move <出発筋> <出発段> <到着筋> <到着段> [+] — 盤上の駒を動かします。+で成ります。",
+        "drop <歩|香|桂|銀|金|角|飛> <筋> <段> — 持ち駒を打ちます。",
+        "resign — 投了して対局を終了します。",
+        "save <path> — 棋譜を保存します。保存成功後は同じ手番を続けます。",
+        "load <path> — 棋譜を読み込みます。読込成功後はその局面から再開します。",
+        "筋・段には全角数字も使えます。パスは空白を含まない一語です。",
+    )
+)
 
 
 class GameMode(Enum):
@@ -69,13 +70,14 @@ class GameMode(Enum):
         先後が交互に指す規則と、人間・コンピュータの担当設定を分離するため、
         先後そのものではなく対局形式が担当を決める。
         """
-        return (self == GameMode.HUMAN_VS_HUMAN
-                or (self == GameMode.HUMAN_VS_COMPUTER
-                    and side == Side.SENTE))
+        return self == GameMode.HUMAN_VS_HUMAN or (
+            self == GameMode.HUMAN_VS_COMPUTER and side == Side.SENTE
+        )
 
 
-def choose_game_mode(*, input_fn: Callable[[], str] = input,
-                     output_fn: Callable[[str], None] = print) -> GameMode:
+def choose_game_mode(
+    *, input_fn: Callable[[], str] = input, output_fn: Callable[[str], None] = print
+) -> GameMode:
     """CLI開始前に対局形式を選び、対応するGameModeを返す。
 
     引数:
@@ -97,8 +99,10 @@ def choose_game_mode(*, input_fn: Callable[[], str] = input,
         "3": GameMode.COMPUTER_VS_COMPUTER,
     }
     while True:
-        output_fn("対局形式を選んでください（1: 人間対人間、"
-                  "2: 人間対コンピュータ、3: コンピュータ対コンピュータ）:")
+        output_fn(
+            "対局形式を選んでください（1: 人間対人間、"
+            "2: 人間対コンピュータ、3: コンピュータ対コンピュータ）:"
+        )
         try:
             return modes[input_fn().strip()]
         except KeyError:
@@ -106,8 +110,8 @@ def choose_game_mode(*, input_fn: Callable[[], str] = input,
 
 
 def choose_move_selection_policy(
-        input_fn: Callable[[], str] = input,
-        output_fn: Callable[[str], None] = print) -> MoveSelectionPolicy:
+    input_fn: Callable[[], str] = input, output_fn: Callable[[str], None] = print
+) -> MoveSelectionPolicy:
     """コンピュータの一手選択方針を対局開始前に選ぶ。
 
     引数:
@@ -129,8 +133,10 @@ def choose_move_selection_policy(
         "2": MoveSelectionPolicy.MATERIAL,
     }
     while True:
-        output_fn("一手選択方針を選んでください（1: 最弱（一様ランダム）、"
-                  "2: 駒得を考える、空入力: 最弱）:")
+        output_fn(
+            "一手選択方針を選んでください（1: 最弱（一様ランダム）、"
+            "2: 駒得を考える、空入力: 最弱）:"
+        )
         choice = input_fn().strip()
         if choice == "":
             return MoveSelectionPolicy.RANDOM
@@ -264,8 +270,9 @@ class HelpCommand:
 
 
 # Commandは解析済みの6種類の指示のいずれかを表す公開の型別名である。
-Command = Union[MoveCommand, DropCommand, ResignCommand, SaveCommand,
-                LoadCommand, HelpCommand]
+Command = Union[
+    MoveCommand, DropCommand, ResignCommand, SaveCommand, LoadCommand, HelpCommand
+]
 
 
 # 駒打ちで入力・表示する基本駒の型と日本語名を、この順序で対応付ける。
@@ -280,9 +287,7 @@ _DROP_PIECE_SPECS = (
 )
 
 _PIECE_NAMES = dict(_DROP_PIECE_SPECS)
-_PIECE_TYPES_BY_NAME = {
-    name: piece_type for piece_type, name in _DROP_PIECE_SPECS
-}
+_PIECE_TYPES_BY_NAME = {name: piece_type for piece_type, name in _DROP_PIECE_SPECS}
 
 
 def parse_command(text: str) -> Command:
@@ -339,8 +344,9 @@ def parse_command(text: str) -> Command:
     raise ValueError(FORMAT_ERROR)
 
 
-def _apply_command(record: GameRecord,
-                   command: Union[MoveCommand, DropCommand]) -> None:
+def _apply_command(
+    record: GameRecord, command: Union[MoveCommand, DropCommand]
+) -> None:
     """解析済みの指示を対局記録の操作へ一度だけ渡す。
 
     引数:
@@ -355,8 +361,7 @@ def _apply_command(record: GameRecord,
         解析と履歴更新を分離し、成功した指し手だけを棋譜へ残すための操作である。
     """
     if isinstance(command, MoveCommand):
-        record.apply_move(command.source, command.destination,
-                          promote=command.promote)
+        record.apply_move(command.source, command.destination, promote=command.promote)
         return
     record.apply_drop(command.piece_type, command.destination)
 
@@ -364,8 +369,7 @@ def _apply_command(record: GameRecord,
 def _apply_selected_move(record: GameRecord, move: Move) -> None:
     """合法手データを既存のGameRecord操作へ変換して適用する。"""
     if isinstance(move, BoardMove):
-        record.apply_move(move.source, move.destination,
-                          promote=move.promote)
+        record.apply_move(move.source, move.destination, promote=move.promote)
         return
     if isinstance(move, DropMove):
         record.apply_drop(move.piece_type, move.destination)
@@ -377,30 +381,35 @@ def _format_selected_move(move: Move) -> str:
     """コンピュータの合法手を既存CLI形式の文字列へ変換する。"""
     if isinstance(move, BoardMove):
         suffix = " +" if move.promote else ""
-        return (f"move {move.source.file} {move.source.rank} "
-                f"{move.destination.file} {move.destination.rank}{suffix}")
+        return (
+            f"move {move.source.file} {move.source.rank} "
+            f"{move.destination.file} {move.destination.rank}{suffix}"
+        )
     if isinstance(move, DropMove):
-        return (f"drop {_PIECE_NAMES[move.piece_type]} "
-                f"{move.destination.file} {move.destination.rank}")
+        return (
+            f"drop {_PIECE_NAMES[move.piece_type]} "
+            f"{move.destination.file} {move.destination.rank}"
+        )
     raise TypeError("未知の合法手データです")
 
 
-def _run_computer_turn(record: GameRecord, rng: random.Random,
-                       output_fn: Callable[[str], None],
-                       move_selection_policy: MoveSelectionPolicy) -> bool:
+def _run_computer_turn(
+    record: GameRecord,
+    rng: random.Random,
+    output_fn: Callable[[str], None],
+    move_selection_policy: MoveSelectionPolicy,
+) -> bool:
     """コンピュータ担当側の合法手を一つ選んで適用し、成功したかを返す。
 
     合法手が空の場合は選択不能を勝敗や投了へ変換せず、専用メッセージを表示して
     Falseを返す。選択された手は適用前に表示し、成功後の局面を表示する。
     """
     moves = legal_moves(record.current_position)
-    selected = choose_move(record.current_position, moves,
-                           move_selection_policy, rng)
+    selected = choose_move(record.current_position, moves, move_selection_policy, rng)
     if selected is None:
         output_fn("コンピュータの合法手がありません。")
         return False
-    side_name = ("先手" if record.current_position.side_to_move == Side.SENTE
-                 else "後手")
+    side_name = "先手" if record.current_position.side_to_move == Side.SENTE else "後手"
     output_fn(side_name + "の指し手: " + _format_selected_move(selected))
     _apply_selected_move(record, selected)
     output_fn(render_position(record.current_position))
@@ -421,12 +430,14 @@ def _checkmate_message(side_to_move: Side) -> str:
     return f"詰みです。{winner_name}の勝ちです。"
 
 
-def run_game(*, input_fn: Callable[[], str] = input,
-             output_fn: Callable[[str], None] = print,
-             rng: Optional[random.Random] = None,
-             mode: GameMode = GameMode.HUMAN_VS_COMPUTER,
-             move_selection_policy: MoveSelectionPolicy =
-             MoveSelectionPolicy.RANDOM) -> GameRecord:
+def run_game(
+    *,
+    input_fn: Callable[[], str] = input,
+    output_fn: Callable[[str], None] = print,
+    rng: Optional[random.Random] = None,
+    mode: GameMode = GameMode.HUMAN_VS_COMPUTER,
+    move_selection_policy: MoveSelectionPolicy = MoveSelectionPolicy.RANDOM,
+) -> GameRecord:
     """初期局面から、modeが決める担当で対局を進める。
 
     引数:
@@ -471,8 +482,9 @@ def run_game(*, input_fn: Callable[[], str] = input,
                 return record
 
             if not mode.is_human_turn(position.side_to_move):
-                if not _run_computer_turn(record, rng, output_fn,
-                                          move_selection_policy):
+                if not _run_computer_turn(
+                    record, rng, output_fn, move_selection_policy
+                ):
                     return record
                 continue
 

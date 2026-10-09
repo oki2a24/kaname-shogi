@@ -32,33 +32,33 @@ class PieceType(Enum):
     auto()の数値を外部形式や永続化の識別子として使用しない。
     """
 
-    KING = auto()    # 玉将・王将（玉・王）
-    ROOK = auto()    # 飛車（飛）
+    KING = auto()  # 玉将・王将（玉・王）
+    ROOK = auto()  # 飛車（飛）
     BISHOP = auto()  # 角行（角）
-    GOLD = auto()    # 金将（金）
+    GOLD = auto()  # 金将（金）
     SILVER = auto()  # 銀将（銀）
     KNIGHT = auto()  # 桂馬（桂）
-    LANCE = auto()   # 香車（香）
-    PAWN = auto()    # 歩兵（歩）
-    PRO_PAWN = auto()    # と金
-    PRO_LANCE = auto()   # 成香
+    LANCE = auto()  # 香車（香）
+    PAWN = auto()  # 歩兵（歩）
+    PRO_PAWN = auto()  # と金
+    PRO_LANCE = auto()  # 成香
     PRO_KNIGHT = auto()  # 成桂
     PRO_SILVER = auto()  # 成銀
-    HORSE = auto()       # 龍馬（馬）
-    DRAGON = auto()      # 龍王（竜）
+    HORSE = auto()  # 龍馬（馬）
+    DRAGON = auto()  # 龍王（竜）
 
 
 class BasicPieceType(Enum):
     """持ち駒と成駒からの復元に使う基本8種類。"""
 
-    KING = auto()    # 玉将・王将（玉・王）
-    ROOK = auto()    # 飛車（飛）
+    KING = auto()  # 玉将・王将（玉・王）
+    ROOK = auto()  # 飛車（飛）
     BISHOP = auto()  # 角行（角）
-    GOLD = auto()    # 金将（金）
+    GOLD = auto()  # 金将（金）
     SILVER = auto()  # 銀将（銀）
     KNIGHT = auto()  # 桂馬（桂）
-    LANCE = auto()   # 香車（香）
-    PAWN = auto()    # 歩兵（歩）
+    LANCE = auto()  # 香車（香）
+    PAWN = auto()  # 歩兵（歩）
 
 
 @dataclass(frozen=True)
@@ -81,8 +81,10 @@ class Square:
     def __post_init__(self) -> None:
         """dataclassの生成直後に、筋・段の型と盤内の範囲を検証する。"""
         # boolはintの一種だが、将棋の座標としては受け付けない。
-        if any(type(value) is not int or not 1 <= value <= 9
-               for value in (self.file, self.rank)):
+        if any(
+            type(value) is not int or not 1 <= value <= 9
+            for value in (self.file, self.rank)
+        ):
             raise ValueError("筋・段は1〜9の整数で指定してください")
 
     def to_index(self) -> int:
@@ -126,9 +128,12 @@ class Piece:
     def is_promoted(self) -> bool:
         """盤上の駒が成駒ならTrue、未成駒ならFalseを返す。"""
         return self.piece_type in {
-            PieceType.PRO_PAWN, PieceType.PRO_LANCE,
-            PieceType.PRO_KNIGHT, PieceType.PRO_SILVER,
-            PieceType.HORSE, PieceType.DRAGON,
+            PieceType.PRO_PAWN,
+            PieceType.PRO_LANCE,
+            PieceType.PRO_KNIGHT,
+            PieceType.PRO_SILVER,
+            PieceType.HORSE,
+            PieceType.DRAGON,
         }
 
 
@@ -142,8 +147,9 @@ class Hand:
     対応付けることで、枚数のデータと局面規則を分ける。
     """
 
-    _counts: dict[BasicPieceType, int] = field(default_factory=dict,
-                                          init=False, repr=False)
+    _counts: dict[BasicPieceType, int] = field(
+        default_factory=dict, init=False, repr=False
+    )
 
     def _validate_piece_type(self, piece_type: BasicPieceType) -> BasicPieceType:
         """持ち駒にできる基本駒種へ正規化し、玉ならValueErrorにする。"""
@@ -325,8 +331,12 @@ class Position:
         枚数辞書は各copy操作で複製する。王手判定の試し指しが本物の局面を
         変更しないよう、局面全体をこの操作で分離する。
         """
-        return Position(self.board.copy(), self.side_to_move,
-                        self.sente_hand.copy(), self.gote_hand.copy())
+        return Position(
+            self.board.copy(),
+            self.side_to_move,
+            self.sente_hand.copy(),
+            self.gote_hand.copy(),
+        )
 
 
 def create_initial_position() -> Position:
@@ -342,9 +352,15 @@ def create_initial_position() -> Position:
     """
     board = Board()
     back_rank = (
-        PieceType.LANCE, PieceType.KNIGHT, PieceType.SILVER,
-        PieceType.GOLD, PieceType.KING, PieceType.GOLD,
-        PieceType.SILVER, PieceType.KNIGHT, PieceType.LANCE,
+        PieceType.LANCE,
+        PieceType.KNIGHT,
+        PieceType.SILVER,
+        PieceType.GOLD,
+        PieceType.KING,
+        PieceType.GOLD,
+        PieceType.SILVER,
+        PieceType.KNIGHT,
+        PieceType.LANCE,
     )
     for side, home_rank, pawn_rank in [(Side.SENTE, 9, 7), (Side.GOTE, 1, 3)]:
         for file, piece_type in enumerate(back_rank, start=1):

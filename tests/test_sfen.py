@@ -4,15 +4,27 @@ import importlib.util
 import unittest
 from unittest.mock import patch
 
-from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
-                                Hand, Position, Side, Square,
-                                create_initial_position)
+from kaname_shogi.model import (
+    BasicPieceType,
+    Board,
+    Piece,
+    PieceType,
+    Hand,
+    Position,
+    Side,
+    Square,
+    create_initial_position,
+)
 from kaname_shogi.sfen import SfenPosition, format_sfen, parse_sfen
 
 
 HAND_PIECE_TYPES = (
-    BasicPieceType.ROOK, BasicPieceType.BISHOP, BasicPieceType.GOLD,
-    BasicPieceType.SILVER, BasicPieceType.KNIGHT, BasicPieceType.LANCE,
+    BasicPieceType.ROOK,
+    BasicPieceType.BISHOP,
+    BasicPieceType.GOLD,
+    BasicPieceType.SILVER,
+    BasicPieceType.KNIGHT,
+    BasicPieceType.LANCE,
     BasicPieceType.PAWN,
 )
 
@@ -25,15 +37,20 @@ class SfenConversionTests(unittest.TestCase):
             for rank in range(1, 10):
                 square = Square(file, rank)
                 with self.subTest(file=file, rank=rank):
-                    self.assertEqual(actual.board.piece_at(square),
-                                     expected.board.piece_at(square))
+                    self.assertEqual(
+                        actual.board.piece_at(square), expected.board.piece_at(square)
+                    )
         for piece_type in HAND_PIECE_TYPES:
             with self.subTest(side="sente", piece_type=piece_type):
-                self.assertEqual(actual.sente_hand.count(piece_type),
-                                 expected.sente_hand.count(piece_type))
+                self.assertEqual(
+                    actual.sente_hand.count(piece_type),
+                    expected.sente_hand.count(piece_type),
+                )
             with self.subTest(side="gote", piece_type=piece_type):
-                self.assertEqual(actual.gote_hand.count(piece_type),
-                                 expected.gote_hand.count(piece_type))
+                self.assertEqual(
+                    actual.gote_hand.count(piece_type),
+                    expected.gote_hand.count(piece_type),
+                )
 
     def snapshot_position(self, position):
         """書出し前後を比較するため、局面の公開状態を値に写す。"""
@@ -42,10 +59,12 @@ class SfenConversionTests(unittest.TestCase):
             for rank in range(1, 10)
             for file in range(1, 10)
         )
-        sente_hand = tuple(position.sente_hand.count(piece_type)
-                           for piece_type in HAND_PIECE_TYPES)
-        gote_hand = tuple(position.gote_hand.count(piece_type)
-                          for piece_type in HAND_PIECE_TYPES)
+        sente_hand = tuple(
+            position.sente_hand.count(piece_type) for piece_type in HAND_PIECE_TYPES
+        )
+        gote_hand = tuple(
+            position.gote_hand.count(piece_type) for piece_type in HAND_PIECE_TYPES
+        )
         return board, position.side_to_move, sente_hand, gote_hand
 
     def test_parses_and_formats_initial_sfen(self):
@@ -72,8 +91,10 @@ class SfenConversionTests(unittest.TestCase):
         result = parse_sfen(sfen)
 
         self.assertEqual(result.move_number, 17)
-        self.assertEqual(result.position.board.piece_at(Square(6, 4)),
-                         Piece(PieceType.PRO_PAWN, Side.SENTE))
+        self.assertEqual(
+            result.position.board.piece_at(Square(6, 4)),
+            Piece(PieceType.PRO_PAWN, Side.SENTE),
+        )
         self.assertEqual(result.position.sente_hand.count(BasicPieceType.ROOK), 2)
         self.assertEqual(result.position.sente_hand.count(BasicPieceType.BISHOP), 1)
         self.assertEqual(result.position.sente_hand.count(BasicPieceType.GOLD), 1)
@@ -108,7 +129,8 @@ class SfenConversionTests(unittest.TestCase):
             for rank in range(1, 10):
                 with self.subTest(file=file, rank=rank):
                     self.assertIsNone(
-                        result.position.board.piece_at(Square(file, rank)))
+                        result.position.board.piece_at(Square(file, rank))
+                    )
 
     def test_rejects_malformed_sfen_fields(self):
         """不正な盤面・手番・持ち駒・手数を理由付きValueErrorにする。
@@ -141,8 +163,9 @@ class SfenConversionTests(unittest.TestCase):
         """
         sfen = "9/9/9/9/9/9/9/9/9 b 1000000000000P 1"
 
-        with patch.object(Hand, "add",
-                          side_effect=AssertionError("1枚ずつの追加は禁止")):
+        with patch.object(
+            Hand, "add", side_effect=AssertionError("1枚ずつの追加は禁止")
+        ):
             result = parse_sfen(sfen)
 
         self.assertEqual(
@@ -169,15 +192,22 @@ class SfenConversionTests(unittest.TestCase):
         追加された順や辞書の順序で表記が揺れ、同じ局面のSFEN比較が不安定になる誤りを検出する。
         """
         position = Position(Board(), Side.SENTE)
-        for piece_type in (BasicPieceType.PAWN, BasicPieceType.GOLD,
-                           BasicPieceType.ROOK):
+        for piece_type in (
+            BasicPieceType.PAWN,
+            BasicPieceType.GOLD,
+            BasicPieceType.ROOK,
+        ):
             position.sente_hand.add(piece_type)
-        for piece_type in (BasicPieceType.PAWN, BasicPieceType.KNIGHT,
-                           BasicPieceType.SILVER):
+        for piece_type in (
+            BasicPieceType.PAWN,
+            BasicPieceType.KNIGHT,
+            BasicPieceType.SILVER,
+        ):
             position.gote_hand.add(piece_type)
 
-        self.assertEqual(format_sfen(SfenPosition(position, 1)),
-                         "9/9/9/9/9/9/9/9/9 b RGPsnp 1")
+        self.assertEqual(
+            format_sfen(SfenPosition(position, 1)), "9/9/9/9/9/9/9/9/9 b RGPsnp 1"
+        )
 
     def test_rejects_invalid_move_number_in_sfen_position(self):
         """SFEN専用結果は1以上の整数手数だけを保持する。

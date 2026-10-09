@@ -2,8 +2,15 @@
 
 import unittest
 
-from kaname_shogi.model import (BasicPieceType, Piece, PieceType, Position,
-                                Side, Square, create_initial_position)
+from kaname_shogi.model import (
+    BasicPieceType,
+    Piece,
+    PieceType,
+    Position,
+    Side,
+    Square,
+    create_initial_position,
+)
 from kaname_shogi.sfen import SfenPosition
 from kaname_shogi.usi_position import parse_usi_position
 
@@ -15,20 +22,21 @@ class UsiPositionTests(unittest.TestCase):
         最後の一手だけを初期局面へ適用する誤りや、手順数に応じた手番の
         更新漏れを検出する。
         """
-        result = parse_usi_position(
-            "position startpos moves 7g7f 3c3d 2g2f"
-        )
+        result = parse_usi_position("position startpos moves 7g7f 3c3d 2g2f")
         position = result.position
 
         self.assertIsInstance(result, SfenPosition)
         self.assertIsInstance(position, Position)
         self.assertEqual(result.move_number, 4)
-        self.assertEqual(position.board.piece_at(Square(7, 6)),
-                         Piece(PieceType.PAWN, Side.SENTE))
-        self.assertEqual(position.board.piece_at(Square(3, 4)),
-                         Piece(PieceType.PAWN, Side.GOTE))
-        self.assertEqual(position.board.piece_at(Square(2, 6)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            position.board.piece_at(Square(7, 6)), Piece(PieceType.PAWN, Side.SENTE)
+        )
+        self.assertEqual(
+            position.board.piece_at(Square(3, 4)), Piece(PieceType.PAWN, Side.GOTE)
+        )
+        self.assertEqual(
+            position.board.piece_at(Square(2, 6)), Piece(PieceType.PAWN, Side.SENTE)
+        )
         self.assertEqual(position.side_to_move, Side.GOTE)
 
     def test_replays_promoting_move_from_startpos(self):
@@ -38,14 +46,14 @@ class UsiPositionTests(unittest.TestCase):
         検出する。
         """
         result = parse_usi_position(
-            "position startpos moves 7g7f 3c3d 7f7e 3d3e "
-            "7e7d 3e3f 7d7c+"
+            "position startpos moves 7g7f 3c3d 7f7e 3d3e 7e7d 3e3f 7d7c+"
         )
         position = result.position
 
         self.assertEqual(result.move_number, 8)
-        self.assertEqual(position.board.piece_at(Square(7, 3)),
-                         Piece(PieceType.PRO_PAWN, Side.SENTE))
+        self.assertEqual(
+            position.board.piece_at(Square(7, 3)), Piece(PieceType.PRO_PAWN, Side.SENTE)
+        )
         self.assertEqual(position.side_to_move, Side.GOTE)
 
     def test_replays_captured_pawn_drop_from_startpos(self):
@@ -55,16 +63,17 @@ class UsiPositionTests(unittest.TestCase):
         取り違えを検出する。
         """
         result = parse_usi_position(
-            "position startpos moves 1g1f 1c1d 1f1e 1d1e "
-            "1i1h 4c4d 1h1e 4d4e P*1d"
+            "position startpos moves 1g1f 1c1d 1f1e 1d1e 1i1h 4c4d 1h1e 4d4e P*1d"
         )
         position = result.position
 
         self.assertEqual(result.move_number, 10)
-        self.assertEqual(position.board.piece_at(Square(1, 4)),
-                         Piece(PieceType.PAWN, Side.SENTE))
-        self.assertEqual(position.board.piece_at(Square(1, 5)),
-                         Piece(PieceType.LANCE, Side.SENTE))
+        self.assertEqual(
+            position.board.piece_at(Square(1, 4)), Piece(PieceType.PAWN, Side.SENTE)
+        )
+        self.assertEqual(
+            position.board.piece_at(Square(1, 5)), Piece(PieceType.LANCE, Side.SENTE)
+        )
         self.assertEqual(position.sente_hand.count(BasicPieceType.PAWN), 0)
         self.assertEqual(position.side_to_move, Side.GOTE)
 
@@ -99,8 +108,10 @@ class UsiPositionTests(unittest.TestCase):
             for rank in range(1, 10):
                 square = Square(file, rank)
                 with self.subTest(file=file, rank=rank):
-                    self.assertEqual(result.position.board.piece_at(square),
-                                     expected.board.piece_at(square))
+                    self.assertEqual(
+                        result.position.board.piece_at(square),
+                        expected.board.piece_at(square),
+                    )
 
     def test_replays_moves_from_sfen_and_advances_move_number(self):
         """SFEN局面から複数手を再生し、手数を指し手数だけ進める。
@@ -113,10 +124,14 @@ class UsiPositionTests(unittest.TestCase):
         )
 
         self.assertEqual(result.move_number, 19)
-        self.assertEqual(result.position.board.piece_at(Square(7, 6)),
-                         Piece(PieceType.PAWN, Side.SENTE))
-        self.assertEqual(result.position.board.piece_at(Square(3, 4)),
-                         Piece(PieceType.PAWN, Side.GOTE))
+        self.assertEqual(
+            result.position.board.piece_at(Square(7, 6)),
+            Piece(PieceType.PAWN, Side.SENTE),
+        )
+        self.assertEqual(
+            result.position.board.piece_at(Square(3, 4)),
+            Piece(PieceType.PAWN, Side.GOTE),
+        )
         self.assertEqual(result.position.side_to_move, Side.SENTE)
 
     def test_replays_moves_from_sfen_without_move_number(self):
@@ -130,8 +145,10 @@ class UsiPositionTests(unittest.TestCase):
         )
 
         self.assertEqual(result.move_number, 2)
-        self.assertEqual(result.position.board.piece_at(Square(7, 6)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            result.position.board.piece_at(Square(7, 6)),
+            Piece(PieceType.PAWN, Side.SENTE),
+        )
         self.assertEqual(result.position.side_to_move, Side.GOTE)
 
     def test_replays_drop_using_sfen_hand(self):
@@ -143,8 +160,10 @@ class UsiPositionTests(unittest.TestCase):
             "position sfen 4k4/9/9/9/9/9/9/9/4K4 b P 17 moves P*5e"
         )
 
-        self.assertEqual(result.position.board.piece_at(Square(5, 5)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            result.position.board.piece_at(Square(5, 5)),
+            Piece(PieceType.PAWN, Side.SENTE),
+        )
         self.assertEqual(result.position.sente_hand.count(BasicPieceType.PAWN), 0)
         self.assertEqual(result.position.side_to_move, Side.GOTE)
         self.assertEqual(result.move_number, 18)
@@ -207,9 +226,7 @@ class UsiPositionTests(unittest.TestCase):
         呼び出し側が特定できることを確認する。
         """
         with self.assertRaises(ValueError) as context:
-            parse_usi_position(
-                "position sfen 9/9/9/9/9/9/9/9/9 b - 23 moves invalid"
-            )
+            parse_usi_position("position sfen 9/9/9/9/9/9/9/9/9 b - 23 moves invalid")
 
         message = str(context.exception)
         self.assertIn("第1手", message)
@@ -223,9 +240,7 @@ class UsiPositionTests(unittest.TestCase):
         盤上適用の理由を残して報告することを確認する。
         """
         with self.assertRaises(ValueError) as context:
-            parse_usi_position(
-                "position sfen 9/9/9/9/9/9/9/9/9 b - 23 moves 1a1b"
-            )
+            parse_usi_position("position sfen 9/9/9/9/9/9/9/9/9 b - 23 moves 1a1b")
 
         message = str(context.exception)
         self.assertIn("第1手", message)

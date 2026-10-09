@@ -2,8 +2,7 @@
 
 from dataclasses import dataclass
 
-from .model import (BasicPieceType, Board, Hand, Piece, PieceType, Position,
-                    Side, Square)
+from .model import BasicPieceType, Board, Hand, Piece, PieceType, Position, Side, Square
 
 
 _UNPROMOTED_PIECES = {
@@ -104,8 +103,9 @@ def parse_sfen(sfen: str) -> SfenPosition:
     side_to_move = _parse_side_to_move(fields[1])
     sente_hand, gote_hand = _parse_hands(fields[2])
     move_number = _parse_move_number(fields[3]) if len(fields) == 4 else 1
-    return SfenPosition(Position(board, side_to_move, sente_hand, gote_hand),
-                        move_number)
+    return SfenPosition(
+        Position(board, side_to_move, sente_hand, gote_hand), move_number
+    )
 
 
 def format_sfen(sfen_position: SfenPosition) -> str:
@@ -129,8 +129,7 @@ def format_sfen(sfen_position: SfenPosition) -> str:
         raise ValueError("SFEN書出しにはSfenPositionを指定してください")
     if not isinstance(sfen_position.position, Position):
         raise ValueError("SFEN局面にはPositionを指定してください")
-    if (type(sfen_position.move_number) is not int
-            or sfen_position.move_number < 1):
+    if type(sfen_position.move_number) is not int or sfen_position.move_number < 1:
         raise ValueError("SFEN手数は1以上の整数で指定してください")
 
     position = sfen_position.position
@@ -187,7 +186,9 @@ def _parse_board(board_text: str) -> Board:
                 raise ValueError(f"SFEN盤面に不明な駒記号があります: {token}")
             if promoted:
                 if symbol not in _PROMOTED_PIECES:
-                    raise ValueError(f"SFEN盤面で成れない駒に成り記号があります: {token}")
+                    raise ValueError(
+                        f"SFEN盤面で成れない駒に成り記号があります: {token}"
+                    )
                 piece_type = _PROMOTED_PIECES[symbol]
             else:
                 piece_type = _UNPROMOTED_PIECES[symbol]

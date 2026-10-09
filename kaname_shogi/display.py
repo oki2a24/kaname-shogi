@@ -4,8 +4,7 @@
 分けることで、端末を介さず全文を検証できる。将来のUSI通信は別の責務。
 """
 
-from .model import (BasicPieceType, Hand, PieceType, Position, Side,
-                    Square)
+from .model import BasicPieceType, Hand, PieceType, Position, Side, Square
 
 
 _HAND_PIECE_SPECS = (
@@ -56,15 +55,27 @@ def render_position(position: Position) -> str:
     """
     side_name = "先手" if position.side_to_move == Side.SENTE else "後手"
     names = {
-        PieceType.ROOK: "飛", PieceType.BISHOP: "角", PieceType.GOLD: "金",
-        PieceType.SILVER: "銀", PieceType.KNIGHT: "桂", PieceType.LANCE: "香",
-        PieceType.PAWN: "歩", PieceType.PRO_PAWN: "と",
-        PieceType.PRO_LANCE: "成香", PieceType.PRO_KNIGHT: "成桂",
-        PieceType.PRO_SILVER: "成銀", PieceType.HORSE: "馬",
+        PieceType.ROOK: "飛",
+        PieceType.BISHOP: "角",
+        PieceType.GOLD: "金",
+        PieceType.SILVER: "銀",
+        PieceType.KNIGHT: "桂",
+        PieceType.LANCE: "香",
+        PieceType.PAWN: "歩",
+        PieceType.PRO_PAWN: "と",
+        PieceType.PRO_LANCE: "成香",
+        PieceType.PRO_KNIGHT: "成桂",
+        PieceType.PRO_SILVER: "成銀",
+        PieceType.HORSE: "馬",
         PieceType.DRAGON: "竜",
     }
-    lines = [f"手番：{side_name}", "+：先手、-：後手", "",
-             _render_hand(position.gote_hand, "後手"), ""]
+    lines = [
+        f"手番：{side_name}",
+        "+：先手、-：後手",
+        "",
+        _render_hand(position.gote_hand, "後手"),
+        "",
+    ]
     lines.append("   " + "".join(f" {file}  " for file in range(9, 0, -1)).rstrip())
     # 保存順によらず、表示は一段目から、各段は９筋からたどる。
     for rank, label in enumerate("一二三四五六七八九", start=1):

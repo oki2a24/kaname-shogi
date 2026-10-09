@@ -6,11 +6,22 @@ from unittest.mock import patch
 
 from kaname_shogi import movegen
 from kaname_shogi.move import BoardMove, DropMove
-from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
-                                Position, Side, Square)
+from kaname_shogi.model import (
+    BasicPieceType,
+    Board,
+    Piece,
+    PieceType,
+    Position,
+    Side,
+    Square,
+)
 from kaname_shogi.movegen import (
-    bishop_move_candidates, gold_move_candidates, lance_move_candidates,
-    king_move_candidates, knight_move_candidates, pawn_move_candidates,
+    bishop_move_candidates,
+    gold_move_candidates,
+    lance_move_candidates,
+    king_move_candidates,
+    knight_move_candidates,
+    pawn_move_candidates,
     rook_move_candidates,
     silver_move_candidates,
 )
@@ -30,18 +41,23 @@ class PromotedMinorMoveCandidateTests(unittest.TestCase):
         )
         source = Square(5, 5)
         for function_name, piece_type in function_names:
-            self.assertTrue(hasattr(movegen, function_name),
-                            function_name + " がまだ実装されていません")
+            self.assertTrue(
+                hasattr(movegen, function_name),
+                function_name + " がまだ実装されていません",
+            )
             function = getattr(movegen, function_name)
             for side in Side:
                 board = Board()
                 board.set_piece(source, Piece(piece_type, side))
                 forward = -1 if side == Side.SENTE else 1
-                expected = [Square(5, 5 + forward),
-                            Square(6, 5 + forward),
-                            Square(4, 5 + forward),
-                            Square(6, 5), Square(4, 5),
-                            Square(5, 5 - forward)]
+                expected = [
+                    Square(5, 5 + forward),
+                    Square(6, 5 + forward),
+                    Square(4, 5 + forward),
+                    Square(6, 5),
+                    Square(4, 5),
+                    Square(5, 5 - forward),
+                ]
                 with self.subTest(piece_type=piece_type, side=side):
                     self.assertEqual(function(board, source), expected)
 
@@ -56,8 +72,10 @@ class PromotedMinorMoveCandidateTests(unittest.TestCase):
         board.set_piece(Square(6, 5), Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(Square(4, 5), Piece(PieceType.PAWN, Side.GOTE))
 
-        self.assertTrue(hasattr(movegen, "pro_pawn_move_candidates"),
-                        "pro_pawn_move_candidates がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "pro_pawn_move_candidates"),
+            "pro_pawn_move_candidates がまだ実装されていません",
+        )
         result = movegen.pro_pawn_move_candidates(board, source)
 
         self.assertNotIn(Square(6, 5), result)
@@ -72,15 +90,23 @@ class PromotedMinorMoveCandidateTests(unittest.TestCase):
         source = Square(5, 5)
         piece = Piece(PieceType.PRO_SILVER, Side.GOTE)
         board.set_piece(source, piece)
-        before = [board.piece_at(Square(file, rank))
-                  for file in range(1, 10) for rank in range(1, 10)]
+        before = [
+            board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
 
-        self.assertTrue(hasattr(movegen, "pro_silver_move_candidates"),
-                        "pro_silver_move_candidates がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "pro_silver_move_candidates"),
+            "pro_silver_move_candidates がまだ実装されていません",
+        )
         movegen.pro_silver_move_candidates(board, source)
 
-        after = [board.piece_at(Square(file, rank))
-                 for file in range(1, 10) for rank in range(1, 10)]
+        after = [
+            board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
         self.assertEqual(after, before)
 
 
@@ -94,16 +120,30 @@ class HorseMoveCandidateTests(unittest.TestCase):
         source = Square(5, 5)
         board.set_piece(source, Piece(PieceType.HORSE, Side.SENTE))
 
-        self.assertTrue(hasattr(movegen, "horse_move_candidates"),
-                        "horse_move_candidates がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "horse_move_candidates"),
+            "horse_move_candidates がまだ実装されていません",
+        )
         result = movegen.horse_move_candidates(board, source)
 
-        expected = ([Square(4, 4), Square(3, 3), Square(2, 2), Square(1, 1),
-                     Square(6, 4), Square(7, 3), Square(8, 2), Square(9, 1),
-                     Square(4, 6), Square(3, 7), Square(2, 8), Square(1, 9),
-                     Square(6, 6), Square(7, 7), Square(8, 8), Square(9, 9)]
-                    + [Square(5, 4), Square(4, 5), Square(5, 6),
-                       Square(6, 5)])
+        expected = [
+            Square(4, 4),
+            Square(3, 3),
+            Square(2, 2),
+            Square(1, 1),
+            Square(6, 4),
+            Square(7, 3),
+            Square(8, 2),
+            Square(9, 1),
+            Square(4, 6),
+            Square(3, 7),
+            Square(2, 8),
+            Square(1, 9),
+            Square(6, 6),
+            Square(7, 7),
+            Square(8, 8),
+            Square(9, 9),
+        ] + [Square(5, 4), Square(4, 5), Square(5, 6), Square(6, 5)]
         self.assertEqual(result, expected)
 
     def test_horse_respects_occupancy_and_preserves_board(self):
@@ -117,19 +157,30 @@ class HorseMoveCandidateTests(unittest.TestCase):
         board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(Square(6, 4), Piece(PieceType.PAWN, Side.GOTE))
         board.set_piece(Square(5, 4), Piece(PieceType.PAWN, Side.SENTE))
-        before = [board.piece_at(Square(file, rank))
-                  for file in range(1, 10) for rank in range(1, 10)]
+        before = [
+            board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
 
-        self.assertTrue(hasattr(movegen, "horse_move_candidates"),
-                        "horse_move_candidates がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "horse_move_candidates"),
+            "horse_move_candidates がまだ実装されていません",
+        )
         result = movegen.horse_move_candidates(board, source)
 
         self.assertNotIn(Square(4, 4), result)
         self.assertNotIn(Square(3, 3), result)
         self.assertIn(Square(6, 4), result)
         self.assertNotIn(Square(5, 4), result)
-        self.assertEqual([board.piece_at(Square(file, rank))
-                          for file in range(1, 10) for rank in range(1, 10)], before)
+        self.assertEqual(
+            [
+                board.piece_at(Square(file, rank))
+                for file in range(1, 10)
+                for rank in range(1, 10)
+            ],
+            before,
+        )
 
 
 class DragonMoveCandidateTests(unittest.TestCase):
@@ -142,16 +193,30 @@ class DragonMoveCandidateTests(unittest.TestCase):
         source = Square(5, 5)
         board.set_piece(source, Piece(PieceType.DRAGON, Side.SENTE))
 
-        self.assertTrue(hasattr(movegen, "dragon_move_candidates"),
-                        "dragon_move_candidates がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "dragon_move_candidates"),
+            "dragon_move_candidates がまだ実装されていません",
+        )
         result = movegen.dragon_move_candidates(board, source)
 
-        expected = ([Square(4, 5), Square(3, 5), Square(2, 5), Square(1, 5),
-                     Square(6, 5), Square(7, 5), Square(8, 5), Square(9, 5),
-                     Square(5, 4), Square(5, 3), Square(5, 2), Square(5, 1),
-                     Square(5, 6), Square(5, 7), Square(5, 8), Square(5, 9)]
-                    + [Square(4, 4), Square(6, 4), Square(4, 6),
-                       Square(6, 6)])
+        expected = [
+            Square(4, 5),
+            Square(3, 5),
+            Square(2, 5),
+            Square(1, 5),
+            Square(6, 5),
+            Square(7, 5),
+            Square(8, 5),
+            Square(9, 5),
+            Square(5, 4),
+            Square(5, 3),
+            Square(5, 2),
+            Square(5, 1),
+            Square(5, 6),
+            Square(5, 7),
+            Square(5, 8),
+            Square(5, 9),
+        ] + [Square(4, 4), Square(6, 4), Square(4, 6), Square(6, 6)]
         self.assertEqual(result, expected)
 
     def test_dragon_respects_occupancy_and_preserves_board(self):
@@ -166,11 +231,16 @@ class DragonMoveCandidateTests(unittest.TestCase):
         board.set_piece(Square(6, 5), Piece(PieceType.PAWN, Side.GOTE))
         board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(Square(6, 4), Piece(PieceType.PAWN, Side.GOTE))
-        before = [board.piece_at(Square(file, rank))
-                  for file in range(1, 10) for rank in range(1, 10)]
+        before = [
+            board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
 
-        self.assertTrue(hasattr(movegen, "dragon_move_candidates"),
-                        "dragon_move_candidates がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "dragon_move_candidates"),
+            "dragon_move_candidates がまだ実装されていません",
+        )
         result = movegen.dragon_move_candidates(board, source)
 
         self.assertNotIn(Square(4, 5), result)
@@ -178,8 +248,14 @@ class DragonMoveCandidateTests(unittest.TestCase):
         self.assertIn(Square(6, 5), result)
         self.assertNotIn(Square(4, 4), result)
         self.assertIn(Square(6, 4), result)
-        self.assertEqual([board.piece_at(Square(file, rank))
-                          for file in range(1, 10) for rank in range(1, 10)], before)
+        self.assertEqual(
+            [
+                board.piece_at(Square(file, rank))
+                for file in range(1, 10)
+                for rank in range(1, 10)
+            ],
+            before,
+        )
 
 
 class CheckDetectionTests(unittest.TestCase):
@@ -206,17 +282,16 @@ class CheckDetectionTests(unittest.TestCase):
         ]
         source = Square(5, 5)
         for piece_type, sente_target, gote_target in cases:
-            for attacker_side, target in ((Side.SENTE, sente_target),
-                                          (Side.GOTE, gote_target)):
-                defender_side = (Side.GOTE if attacker_side == Side.SENTE
-                                 else Side.SENTE)
+            for attacker_side, target in (
+                (Side.SENTE, sente_target),
+                (Side.GOTE, gote_target),
+            ):
+                defender_side = Side.GOTE if attacker_side == Side.SENTE else Side.SENTE
                 board = Board()
                 board.set_piece(source, Piece(piece_type, attacker_side))
                 board.set_piece(target, Piece(PieceType.KING, defender_side))
-                board.set_piece(Square(9, 9),
-                                Piece(PieceType.KING, attacker_side))
-                with self.subTest(piece_type=piece_type,
-                                  attacker_side=attacker_side):
+                board.set_piece(Square(9, 9), Piece(PieceType.KING, attacker_side))
+                with self.subTest(piece_type=piece_type, attacker_side=attacker_side):
                     self.assertTrue(movegen.is_in_check(board, defender_side))
                     if piece_type == PieceType.KING:
                         self.assertTrue(movegen.is_in_check(board, attacker_side))
@@ -241,10 +316,8 @@ class CheckDetectionTests(unittest.TestCase):
                 board = Board()
                 board.set_piece(source, Piece(piece_type, Side.SENTE))
                 board.set_piece(king_square, Piece(PieceType.KING, Side.GOTE))
-                board.set_piece(blocker_square,
-                                Piece(blocker_piece_type, blocker_side))
-                with self.subTest(piece_type=piece_type,
-                                  blocker_side=blocker_side):
+                board.set_piece(blocker_square, Piece(blocker_piece_type, blocker_side))
+                with self.subTest(piece_type=piece_type, blocker_side=blocker_side):
                     self.assertFalse(movegen.is_in_check(board, Side.GOTE))
 
     def test_knight_check_ignores_intermediate_occupancy(self):
@@ -297,8 +370,7 @@ class CheckDetectionTests(unittest.TestCase):
 
         not_checked = Board()
         not_checked.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.GOTE))
-        not_checked.set_piece(Square(5, 3),
-                              Piece(PieceType.BISHOP, Side.GOTE))
+        not_checked.set_piece(Square(5, 3), Piece(PieceType.BISHOP, Side.GOTE))
         not_checked.set_piece(Square(5, 2), Piece(PieceType.KING, Side.SENTE))
         cases.append(("not_checked", not_checked, Side.SENTE))
 
@@ -307,12 +379,18 @@ class CheckDetectionTests(unittest.TestCase):
         cases.append(("no_king", no_king, Side.SENTE))
 
         for name, board, side in cases:
-            before = [board.piece_at(Square(file, rank))
-                      for file in range(1, 10) for rank in range(1, 10)]
+            before = [
+                board.piece_at(Square(file, rank))
+                for file in range(1, 10)
+                for rank in range(1, 10)
+            ]
             with self.subTest(case=name):
                 movegen.is_in_check(board, side)
-                after = [board.piece_at(Square(file, rank))
-                         for file in range(1, 10) for rank in range(1, 10)]
+                after = [
+                    board.piece_at(Square(file, rank))
+                    for file in range(1, 10)
+                    for rank in range(1, 10)
+                ]
                 self.assertEqual(after, before)
 
     def test_multiple_attackers_and_fully_blocked_lines_have_stable_results(self):
@@ -337,22 +415,19 @@ def _position_snapshot(position):
     盤面、先手の玉を除く基本持ち駒7種、後手の同7種、手番の順に返す。
     局面は変更しない。
     """
-    squares = [Square(file, rank)
-               for file in range(1, 10) for rank in range(1, 10)]
-    piece_types = [piece_type for piece_type in BasicPieceType
-                   if piece_type != BasicPieceType.KING]
+    squares = [Square(file, rank) for file in range(1, 10) for rank in range(1, 10)]
+    piece_types = [
+        piece_type for piece_type in BasicPieceType if piece_type != BasicPieceType.KING
+    ]
     return (
         tuple(position.board.piece_at(square) for square in squares),
-        tuple(position.sente_hand.count(piece_type)
-              for piece_type in piece_types),
-        tuple(position.gote_hand.count(piece_type)
-              for piece_type in piece_types),
+        tuple(position.sente_hand.count(piece_type) for piece_type in piece_types),
+        tuple(position.gote_hand.count(piece_type) for piece_type in piece_types),
         position.side_to_move,
     )
 
 
 class LegalMoveTests(unittest.TestCase):
-
     def test_rejects_move_that_leaves_own_king_in_check(self):
         """王手を受けている側の無関係な移動を拒否する。
 
@@ -418,10 +493,10 @@ class LegalMoveTests(unittest.TestCase):
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         position = Position(board, Side.SENTE)
 
-        self.assertIsNone(movegen.apply_move(
-            position, Square(5, 5), Square(4, 5)))
-        self.assertEqual(board.piece_at(Square(4, 5)),
-                         Piece(PieceType.KING, Side.SENTE))
+        self.assertIsNone(movegen.apply_move(position, Square(5, 5), Square(4, 5)))
+        self.assertEqual(
+            board.piece_at(Square(4, 5)), Piece(PieceType.KING, Side.SENTE)
+        )
         self.assertEqual(position.side_to_move, Side.GOTE)
 
     def test_allows_king_to_capture_checking_piece(self):
@@ -435,10 +510,10 @@ class LegalMoveTests(unittest.TestCase):
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         position = Position(board, Side.SENTE)
 
-        self.assertIsNone(movegen.apply_move(
-            position, Square(5, 5), Square(5, 4)))
-        self.assertEqual(board.piece_at(Square(5, 4)),
-                         Piece(PieceType.KING, Side.SENTE))
+        self.assertIsNone(movegen.apply_move(position, Square(5, 5), Square(5, 4)))
+        self.assertEqual(
+            board.piece_at(Square(5, 4)), Piece(PieceType.KING, Side.SENTE)
+        )
         self.assertEqual(position.sente_hand.count(BasicPieceType.GOLD), 1)
 
     def test_allows_drop_between_king_and_rook(self):
@@ -453,10 +528,12 @@ class LegalMoveTests(unittest.TestCase):
         position = Position(board, Side.SENTE)
         position.sente_hand.add(BasicPieceType.GOLD)
 
-        self.assertIsNone(movegen.apply_drop(
-            position, BasicPieceType.GOLD, Square(5, 3)))
-        self.assertEqual(board.piece_at(Square(5, 3)),
-                         Piece(PieceType.GOLD, Side.SENTE))
+        self.assertIsNone(
+            movegen.apply_drop(position, BasicPieceType.GOLD, Square(5, 3))
+        )
+        self.assertEqual(
+            board.piece_at(Square(5, 3)), Piece(PieceType.GOLD, Side.SENTE)
+        )
         self.assertEqual(position.sente_hand.count(BasicPieceType.GOLD), 0)
         self.assertEqual(position.side_to_move, Side.GOTE)
 
@@ -500,8 +577,9 @@ class LegalMoveTests(unittest.TestCase):
 class MovePieceTests(unittest.TestCase):
     def _move_piece(self, board, source, destination):
         """移動適用関数を取得し、未実装をテスト失敗として扱う。"""
-        self.assertTrue(hasattr(movegen, "move_piece"),
-                        "move_piece がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "move_piece"), "move_piece がまだ実装されていません"
+        )
         return movegen.move_piece(board, source, destination)
 
     def test_moves_piece_to_empty_destination(self):
@@ -527,14 +605,20 @@ class MovePieceTests(unittest.TestCase):
         """
         board = Board()
         destination = Square(5, 4)
-        before = [board.piece_at(Square(file, rank))
-                  for file in range(1, 10) for rank in range(1, 10)]
+        before = [
+            board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
 
         with self.assertRaises(ValueError):
             self._move_piece(board, Square(5, 5), destination)
 
-        after = [board.piece_at(Square(file, rank))
-                 for file in range(1, 10) for rank in range(1, 10)]
+        after = [
+            board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
         self.assertEqual(after, before)
 
     def test_rejects_occupied_destination_without_changing_board(self):
@@ -548,14 +632,20 @@ class MovePieceTests(unittest.TestCase):
         destination_piece = Piece(PieceType.GOLD, Side.GOTE)
         board.set_piece(source, moving_piece)
         board.set_piece(destination, destination_piece)
-        before = [board.piece_at(Square(file, rank))
-                  for file in range(1, 10) for rank in range(1, 10)]
+        before = [
+            board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
 
         with self.assertRaises(ValueError):
             self._move_piece(board, source, destination)
 
-        after = [board.piece_at(Square(file, rank))
-                 for file in range(1, 10) for rank in range(1, 10)]
+        after = [
+            board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
         self.assertEqual(after, before)
 
     def test_rejects_same_source_and_destination_without_changing_board(self):
@@ -567,39 +657,46 @@ class MovePieceTests(unittest.TestCase):
         source = Square(5, 5)
         piece = Piece(PieceType.KING, Side.SENTE)
         board.set_piece(source, piece)
-        before = [board.piece_at(Square(file, rank))
-                  for file in range(1, 10) for rank in range(1, 10)]
+        before = [
+            board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
 
         with self.assertRaises(ValueError):
             self._move_piece(board, source, source)
 
-        after = [board.piece_at(Square(file, rank))
-                 for file in range(1, 10) for rank in range(1, 10)]
+        after = [
+            board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
         self.assertEqual(after, before)
 
 
 class ApplyMoveTests(unittest.TestCase):
     def _apply_move(self, position, source, destination, *, promote=False):
         """局面への移動適用関数を取得し、未実装をテスト失敗として扱う。"""
-        self.assertTrue(hasattr(movegen, "apply_move"),
-                        "apply_move がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "apply_move"), "apply_move がまだ実装されていません"
+        )
         try:
             if promote:
-                return movegen.apply_move(position, source, destination,
-                                          promote=True)
+                return movegen.apply_move(position, source, destination, promote=True)
             return movegen.apply_move(position, source, destination)
         except (TypeError, KeyError) as error:
             raise AssertionError("成り指定または成駒の拒否が未実装です") from error
 
     def _hand_counts(self, position):
         """先後の玉以外の持ち駒枚数を、比較用の変更不可の値として返す。"""
-        piece_types = [piece_type for piece_type in BasicPieceType
-                       if piece_type != BasicPieceType.KING]
+        piece_types = [
+            piece_type
+            for piece_type in BasicPieceType
+            if piece_type != BasicPieceType.KING
+        ]
         return (
-            tuple(position.sente_hand.count(piece_type)
-                  for piece_type in piece_types),
-            tuple(position.gote_hand.count(piece_type)
-                  for piece_type in piece_types),
+            tuple(position.sente_hand.count(piece_type) for piece_type in piece_types),
+            tuple(position.gote_hand.count(piece_type) for piece_type in piece_types),
         )
 
     def test_moves_piece_and_switches_turn_after_success(self):
@@ -613,8 +710,7 @@ class ApplyMoveTests(unittest.TestCase):
         ]:
             board = Board()
             source = Square(5, 5)
-            destination = (Square(5, 4) if initial_turn == Side.SENTE
-                           else Square(5, 6))
+            destination = Square(5, 4) if initial_turn == Side.SENTE else Square(5, 6)
             piece = Piece(PieceType.PAWN, initial_turn)
             board.set_piece(source, piece)
             position = Position(board, initial_turn)
@@ -669,12 +765,13 @@ class ApplyMoveTests(unittest.TestCase):
             with self.subTest(side=side):
                 self.assertIsNone(self._apply_move(position, source, destination))
                 self.assertIsNone(board.piece_at(source))
-                self.assertEqual(board.piece_at(destination),
-                                 Piece(PieceType.PAWN, side))
-                hand = (position.sente_hand if side == Side.SENTE
-                        else position.gote_hand)
-                other_hand = (position.gote_hand if side == Side.SENTE
-                              else position.sente_hand)
+                self.assertEqual(
+                    board.piece_at(destination), Piece(PieceType.PAWN, side)
+                )
+                hand = position.sente_hand if side == Side.SENTE else position.gote_hand
+                other_hand = (
+                    position.gote_hand if side == Side.SENTE else position.sente_hand
+                )
                 self.assertEqual(hand.count(BasicPieceType.PAWN), 1)
                 self.assertEqual(other_hand.count(BasicPieceType.PAWN), 0)
                 self.assertEqual(position.side_to_move, expected_turn)
@@ -714,8 +811,7 @@ class ApplyMoveTests(unittest.TestCase):
         board.set_piece(source, Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(destination, Piece(PieceType.KING, Side.GOTE))
         position = Position(board, Side.SENTE)
-        squares = [Square(file, rank) for file in range(1, 10)
-                   for rank in range(1, 10)]
+        squares = [Square(file, rank) for file in range(1, 10) for rank in range(1, 10)]
         before_board = [board.piece_at(square) for square in squares]
         before_hands = self._hand_counts(position)
 
@@ -726,16 +822,19 @@ class ApplyMoveTests(unittest.TestCase):
         self.assertEqual(position.side_to_move, Side.SENTE)
         self.assertEqual(self._hand_counts(position), before_hands)
 
-    def test_rejects_empty_destination_outside_piece_candidates_without_changing_position(self):
+    def test_rejects_empty_destination_outside_piece_candidates_without_changing_position(
+        self,
+    ):
         """候補外の空マスを拒否し、盤面と手番を変更しない。
 
         空いているだけの任意のマスへ動かしてしまう誤りを、先後の歩の反対向きで検出する。
         """
         source = Square(5, 5)
-        squares = [Square(file, rank) for file in range(1, 10)
-                   for rank in range(1, 10)]
-        for side, destination in [(Side.SENTE, Square(5, 6)),
-                                  (Side.GOTE, Square(5, 4))]:
+        squares = [Square(file, rank) for file in range(1, 10) for rank in range(1, 10)]
+        for side, destination in [
+            (Side.SENTE, Square(5, 6)),
+            (Side.GOTE, Square(5, 4)),
+        ]:
             board = Board()
             board.set_piece(source, Piece(PieceType.PAWN, side))
             position = Position(board, side)
@@ -755,25 +854,41 @@ class ApplyMoveTests(unittest.TestCase):
         """
         cases = [
             ("empty_source", Square(5, 5), Square(5, 4), ()),
-            ("occupied_destination", Square(5, 5), Square(5, 4),
-             ((Square(5, 5), Piece(PieceType.PAWN, Side.SENTE)),
-              (Square(5, 4), Piece(PieceType.GOLD, Side.SENTE)))),
-            ("same_square", Square(5, 5), Square(5, 5),
-             ((Square(5, 5), Piece(PieceType.PAWN, Side.SENTE)),)),
+            (
+                "occupied_destination",
+                Square(5, 5),
+                Square(5, 4),
+                (
+                    (Square(5, 5), Piece(PieceType.PAWN, Side.SENTE)),
+                    (Square(5, 4), Piece(PieceType.GOLD, Side.SENTE)),
+                ),
+            ),
+            (
+                "same_square",
+                Square(5, 5),
+                Square(5, 5),
+                ((Square(5, 5), Piece(PieceType.PAWN, Side.SENTE)),),
+            ),
         ]
         for name, source, destination, placements in cases:
             board = Board()
             for square, piece in placements:
                 board.set_piece(square, piece)
             position = Position(board, Side.SENTE)
-            before_board = [board.piece_at(Square(file, rank))
-                            for file in range(1, 10) for rank in range(1, 10)]
+            before_board = [
+                board.piece_at(Square(file, rank))
+                for file in range(1, 10)
+                for rank in range(1, 10)
+            ]
             before_hands = self._hand_counts(position)
             with self.subTest(case=name):
                 with self.assertRaises(ValueError):
                     self._apply_move(position, source, destination)
-                after_board = [board.piece_at(Square(file, rank))
-                               for file in range(1, 10) for rank in range(1, 10)]
+                after_board = [
+                    board.piece_at(Square(file, rank))
+                    for file in range(1, 10)
+                    for rank in range(1, 10)
+                ]
                 self.assertEqual(after_board, before_board)
                 self.assertEqual(position.side_to_move, Side.SENTE)
                 self.assertEqual(self._hand_counts(position), before_hands)
@@ -785,20 +900,25 @@ class ApplyMoveTests(unittest.TestCase):
         例外時の盤面または手番の部分変更を検出する。
         """
         source, destination = Square(5, 5), Square(5, 4)
-        for turn, piece_side in [(Side.SENTE, Side.GOTE),
-                                 (Side.GOTE, Side.SENTE)]:
+        for turn, piece_side in [(Side.SENTE, Side.GOTE), (Side.GOTE, Side.SENTE)]:
             board = Board()
             piece = Piece(PieceType.PAWN, piece_side)
             board.set_piece(source, piece)
             position = Position(board, turn)
-            before_board = [board.piece_at(Square(file, rank))
-                            for file in range(1, 10) for rank in range(1, 10)]
+            before_board = [
+                board.piece_at(Square(file, rank))
+                for file in range(1, 10)
+                for rank in range(1, 10)
+            ]
             before_hands = self._hand_counts(position)
             with self.subTest(turn=turn, piece_side=piece_side):
                 with self.assertRaises(ValueError):
                     self._apply_move(position, source, destination)
-                after_board = [board.piece_at(Square(file, rank))
-                               for file in range(1, 10) for rank in range(1, 10)]
+                after_board = [
+                    board.piece_at(Square(file, rank))
+                    for file in range(1, 10)
+                    for rank in range(1, 10)
+                ]
                 self.assertEqual(after_board, before_board)
                 self.assertEqual(position.side_to_move, turn)
                 self.assertEqual(self._hand_counts(position), before_hands)
@@ -817,10 +937,12 @@ class ApplyMoveTests(unittest.TestCase):
             board.set_piece(source, Piece(PieceType.PAWN, side))
             position = Position(board, side)
             with self.subTest(side=side):
-                self.assertIsNone(self._apply_move(
-                    position, source, destination, promote=True))
-                self.assertEqual(board.piece_at(destination),
-                                 Piece(PieceType.PRO_PAWN, side))
+                self.assertIsNone(
+                    self._apply_move(position, source, destination, promote=True)
+                )
+                self.assertEqual(
+                    board.piece_at(destination), Piece(PieceType.PRO_PAWN, side)
+                )
 
     def test_promotes_when_only_source_is_in_enemy_camp(self):
         """移動前だけが敵陣でも、成りを選べる。
@@ -832,10 +954,10 @@ class ApplyMoveTests(unittest.TestCase):
         board.set_piece(source, Piece(PieceType.SILVER, Side.SENTE))
         position = Position(board, Side.SENTE)
 
-        self.assertIsNone(self._apply_move(
-            position, source, destination, promote=True))
-        self.assertEqual(board.piece_at(destination),
-                         Piece(PieceType.PRO_SILVER, Side.SENTE))
+        self.assertIsNone(self._apply_move(position, source, destination, promote=True))
+        self.assertEqual(
+            board.piece_at(destination), Piece(PieceType.PRO_SILVER, Side.SENTE)
+        )
 
     def test_rejects_promotion_outside_enemy_camp_without_changing_position(self):
         """敵陣に関係しない成り指定を拒否し、局面を変更しない。
@@ -846,15 +968,23 @@ class ApplyMoveTests(unittest.TestCase):
         source, destination = Square(5, 5), Square(5, 4)
         board.set_piece(source, Piece(PieceType.PAWN, Side.SENTE))
         position = Position(board, Side.SENTE)
-        before = [board.piece_at(Square(file, rank))
-                  for file in range(1, 10) for rank in range(1, 10)]
+        before = [
+            board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
 
         with self.assertRaises(ValueError):
             self._apply_move(position, source, destination, promote=True)
 
-        self.assertEqual([board.piece_at(Square(file, rank))
-                          for file in range(1, 10) for rank in range(1, 10)],
-                         before)
+        self.assertEqual(
+            [
+                board.piece_at(Square(file, rank))
+                for file in range(1, 10)
+                for rank in range(1, 10)
+            ],
+            before,
+        )
         self.assertEqual(position.side_to_move, Side.SENTE)
 
     def test_rejects_gold_promotion_without_changing_position(self):
@@ -910,28 +1040,54 @@ class ApplyMoveTests(unittest.TestCase):
         不成を拒否するだけで成り駒を配置しない実装を、先後と駒種の境界で検出する。
         """
         cases = [
-            (Side.SENTE, PieceType.PAWN, Square(5, 2), Square(5, 1),
-             PieceType.PRO_PAWN),
-            (Side.SENTE, PieceType.LANCE, Square(5, 2), Square(5, 1),
-             PieceType.PRO_LANCE),
-            (Side.SENTE, PieceType.KNIGHT, Square(5, 3), Square(4, 1),
-             PieceType.PRO_KNIGHT),
-            (Side.GOTE, PieceType.PAWN, Square(5, 8), Square(5, 9),
-             PieceType.PRO_PAWN),
-            (Side.GOTE, PieceType.LANCE, Square(5, 8), Square(5, 9),
-             PieceType.PRO_LANCE),
-            (Side.GOTE, PieceType.KNIGHT, Square(5, 7), Square(4, 9),
-             PieceType.PRO_KNIGHT),
+            (
+                Side.SENTE,
+                PieceType.PAWN,
+                Square(5, 2),
+                Square(5, 1),
+                PieceType.PRO_PAWN,
+            ),
+            (
+                Side.SENTE,
+                PieceType.LANCE,
+                Square(5, 2),
+                Square(5, 1),
+                PieceType.PRO_LANCE,
+            ),
+            (
+                Side.SENTE,
+                PieceType.KNIGHT,
+                Square(5, 3),
+                Square(4, 1),
+                PieceType.PRO_KNIGHT,
+            ),
+            (Side.GOTE, PieceType.PAWN, Square(5, 8), Square(5, 9), PieceType.PRO_PAWN),
+            (
+                Side.GOTE,
+                PieceType.LANCE,
+                Square(5, 8),
+                Square(5, 9),
+                PieceType.PRO_LANCE,
+            ),
+            (
+                Side.GOTE,
+                PieceType.KNIGHT,
+                Square(5, 7),
+                Square(4, 9),
+                PieceType.PRO_KNIGHT,
+            ),
         ]
         for side, piece_type, source, destination, promoted_type in cases:
             board = Board()
             board.set_piece(source, Piece(piece_type, side))
             position = Position(board, side)
             with self.subTest(side=side, piece_type=piece_type):
-                self.assertIsNone(self._apply_move(
-                    position, source, destination, promote=True))
-                self.assertEqual(board.piece_at(destination),
-                                 Piece(promoted_type, side))
+                self.assertIsNone(
+                    self._apply_move(position, source, destination, promote=True)
+                )
+                self.assertEqual(
+                    board.piece_at(destination), Piece(promoted_type, side)
+                )
 
     def test_moves_each_promoted_piece_and_keeps_its_piece_type(self):
         """6種類の成駒は候補内へ移動し、成駒種を保ったまま手番を交代する。
@@ -949,9 +1105,15 @@ class ApplyMoveTests(unittest.TestCase):
         for piece_type, destination in cases:
             for side in Side:
                 side_destination = destination
-                if piece_type == PieceType.PRO_PAWN or piece_type == PieceType.PRO_LANCE:
+                if (
+                    piece_type == PieceType.PRO_PAWN
+                    or piece_type == PieceType.PRO_LANCE
+                ):
                     side_destination = Square(5, 5 + (-1 if side == Side.SENTE else 1))
-                elif piece_type == PieceType.PRO_KNIGHT or piece_type == PieceType.PRO_SILVER:
+                elif (
+                    piece_type == PieceType.PRO_KNIGHT
+                    or piece_type == PieceType.PRO_SILVER
+                ):
                     side_destination = Square(5, 5 + (-1 if side == Side.SENTE else 1))
                 elif piece_type == PieceType.HORSE:
                     side_destination = Square(4, 4 if side == Side.SENTE else 6)
@@ -962,8 +1124,9 @@ class ApplyMoveTests(unittest.TestCase):
                 position = Position(board, side)
                 expected_turn = Side.GOTE if side == Side.SENTE else Side.SENTE
                 with self.subTest(piece_type=piece_type, side=side):
-                    self.assertIsNone(self._apply_move(
-                        position, source, side_destination))
+                    self.assertIsNone(
+                        self._apply_move(position, source, side_destination)
+                    )
                     self.assertIsNone(board.piece_at(source))
                     self.assertEqual(board.piece_at(side_destination), piece)
                     self.assertEqual(position.side_to_move, expected_turn)
@@ -981,8 +1144,9 @@ class ApplyMoveTests(unittest.TestCase):
 
         self.assertIsNone(self._apply_move(position, source, destination))
 
-        self.assertEqual(board.piece_at(destination),
-                         Piece(PieceType.HORSE, Side.SENTE))
+        self.assertEqual(
+            board.piece_at(destination), Piece(PieceType.HORSE, Side.SENTE)
+        )
         self.assertEqual(position.sente_hand.count(BasicPieceType.ROOK), 1)
         self.assertEqual(position.side_to_move, Side.GOTE)
 
@@ -1007,28 +1171,31 @@ class ApplyMoveTests(unittest.TestCase):
 class ApplyDropTests(unittest.TestCase):
     def _apply_drop(self, position, piece_type, destination):
         """局面への駒打ち適用関数を取得し、未実装をテスト失敗として扱う。"""
-        self.assertTrue(hasattr(movegen, "apply_drop"),
-                        "apply_drop がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "apply_drop"), "apply_drop がまだ実装されていません"
+        )
         return movegen.apply_drop(position, piece_type, destination)
 
     def _hand_counts(self, position):
         """先後の玉以外の持ち駒枚数を、比較用の変更不可の値として返す。"""
-        piece_types = [piece_type for piece_type in BasicPieceType
-                       if piece_type != BasicPieceType.KING]
+        piece_types = [
+            piece_type
+            for piece_type in BasicPieceType
+            if piece_type != BasicPieceType.KING
+        ]
         return (
-            tuple(position.sente_hand.count(piece_type)
-                  for piece_type in piece_types),
-            tuple(position.gote_hand.count(piece_type)
-                  for piece_type in piece_types),
+            tuple(position.sente_hand.count(piece_type) for piece_type in piece_types),
+            tuple(position.gote_hand.count(piece_type) for piece_type in piece_types),
         )
 
-    def _assert_position_unchanged(self, position, before_board, before_hands,
-                                   before_turn):
+    def _assert_position_unchanged(
+        self, position, before_board, before_hands, before_turn
+    ):
         """盤面・双方の持ち駒・手番が、失敗前から変わらないことを確認する。"""
-        squares = [Square(file, rank) for file in range(1, 10)
-                   for rank in range(1, 10)]
-        self.assertEqual([position.board.piece_at(square) for square in squares],
-                         before_board)
+        squares = [Square(file, rank) for file in range(1, 10) for rank in range(1, 10)]
+        self.assertEqual(
+            [position.board.piece_at(square) for square in squares], before_board
+        )
         self.assertEqual(self._hand_counts(position), before_hands)
         self.assertEqual(position.side_to_move, before_turn)
 
@@ -1042,16 +1209,18 @@ class ApplyDropTests(unittest.TestCase):
         cases = [(Side.SENTE, Side.GOTE), (Side.GOTE, Side.SENTE)]
         for side, expected_turn in cases:
             position = Position(Board(), side)
-            hand = (position.sente_hand if side == Side.SENTE
-                    else position.gote_hand)
-            other_hand = (position.gote_hand if side == Side.SENTE
-                          else position.sente_hand)
+            hand = position.sente_hand if side == Side.SENTE else position.gote_hand
+            other_hand = (
+                position.gote_hand if side == Side.SENTE else position.sente_hand
+            )
             hand.add(BasicPieceType.PAWN)
             with self.subTest(side=side):
-                self.assertIsNone(self._apply_drop(position, BasicPieceType.PAWN,
-                                                    destination))
-                self.assertEqual(position.board.piece_at(destination),
-                                 Piece(PieceType.PAWN, side))
+                self.assertIsNone(
+                    self._apply_drop(position, BasicPieceType.PAWN, destination)
+                )
+                self.assertEqual(
+                    position.board.piece_at(destination), Piece(PieceType.PAWN, side)
+                )
                 self.assertEqual(hand.count(BasicPieceType.PAWN), 0)
                 self.assertEqual(other_hand.count(BasicPieceType.PAWN), 0)
                 self.assertEqual(position.side_to_move, expected_turn)
@@ -1063,16 +1232,16 @@ class ApplyDropTests(unittest.TestCase):
         検出する。
         """
         position = Position(Board(), Side.SENTE)
-        squares = [Square(file, rank) for file in range(1, 10)
-                   for rank in range(1, 10)]
+        squares = [Square(file, rank) for file in range(1, 10) for rank in range(1, 10)]
         before_board = [position.board.piece_at(square) for square in squares]
         before_hands = self._hand_counts(position)
 
         with self.assertRaises(ValueError):
             self._apply_drop(position, BasicPieceType.PAWN, Square(5, 5))
 
-        self._assert_position_unchanged(position, before_board, before_hands,
-                                        Side.SENTE)
+        self._assert_position_unchanged(
+            position, before_board, before_hands, Side.SENTE
+        )
 
     def test_rejects_occupied_square_without_changing_position(self):
         """先手・後手の駒があるマスへの打ちを拒否し、局面を変更しない。
@@ -1084,17 +1253,20 @@ class ApplyDropTests(unittest.TestCase):
         for occupying_side in Side:
             position = Position(Board(), Side.SENTE)
             position.sente_hand.add(BasicPieceType.PAWN)
-            position.board.set_piece(destination,
-                                     Piece(PieceType.SILVER, occupying_side))
-            squares = [Square(file, rank) for file in range(1, 10)
-                       for rank in range(1, 10)]
+            position.board.set_piece(
+                destination, Piece(PieceType.SILVER, occupying_side)
+            )
+            squares = [
+                Square(file, rank) for file in range(1, 10) for rank in range(1, 10)
+            ]
             before_board = [position.board.piece_at(square) for square in squares]
             before_hands = self._hand_counts(position)
             with self.subTest(occupying_side=occupying_side):
                 with self.assertRaises(ValueError):
                     self._apply_drop(position, BasicPieceType.PAWN, destination)
-                self._assert_position_unchanged(position, before_board,
-                                                before_hands, Side.SENTE)
+                self._assert_position_unchanged(
+                    position, before_board, before_hands, Side.SENTE
+                )
 
     def test_rejects_double_pawn_without_changing_position(self):
         """同じ筋に自分の歩がある持ち歩打ちを拒否し、局面を変更しない。
@@ -1104,20 +1276,20 @@ class ApplyDropTests(unittest.TestCase):
         """
         for side, pawn_rank in ((Side.SENTE, 7), (Side.GOTE, 3)):
             position = Position(Board(), side)
-            hand = (position.sente_hand if side == Side.SENTE
-                    else position.gote_hand)
+            hand = position.sente_hand if side == Side.SENTE else position.gote_hand
             hand.add(BasicPieceType.PAWN)
-            position.board.set_piece(Square(5, pawn_rank),
-                                     Piece(PieceType.PAWN, side))
-            squares = [Square(file, rank) for file in range(1, 10)
-                       for rank in range(1, 10)]
+            position.board.set_piece(Square(5, pawn_rank), Piece(PieceType.PAWN, side))
+            squares = [
+                Square(file, rank) for file in range(1, 10) for rank in range(1, 10)
+            ]
             before_board = [position.board.piece_at(square) for square in squares]
             before_hands = self._hand_counts(position)
             with self.subTest(side=side):
                 with self.assertRaises(ValueError):
                     self._apply_drop(position, BasicPieceType.PAWN, Square(5, 5))
-                self._assert_position_unchanged(position, before_board,
-                                                before_hands, side)
+                self._assert_position_unchanged(
+                    position, before_board, before_hands, side
+                )
 
     def test_allows_non_pawn_drop_on_file_with_own_pawn(self):
         """同じ筋に自分の歩があっても、銀の打ちは二歩として拒否しない。
@@ -1126,13 +1298,14 @@ class ApplyDropTests(unittest.TestCase):
         """
         position = Position(Board(), Side.SENTE)
         position.sente_hand.add(BasicPieceType.SILVER)
-        position.board.set_piece(Square(5, 7),
-                                 Piece(PieceType.PAWN, Side.SENTE))
+        position.board.set_piece(Square(5, 7), Piece(PieceType.PAWN, Side.SENTE))
 
-        self.assertIsNone(self._apply_drop(position, BasicPieceType.SILVER,
-                                           Square(5, 5)))
-        self.assertEqual(position.board.piece_at(Square(5, 5)),
-                         Piece(PieceType.SILVER, Side.SENTE))
+        self.assertIsNone(
+            self._apply_drop(position, BasicPieceType.SILVER, Square(5, 5))
+        )
+        self.assertEqual(
+            position.board.piece_at(Square(5, 5)), Piece(PieceType.SILVER, Side.SENTE)
+        )
 
     def test_allows_drop_on_file_with_own_promoted_pawn(self):
         """自分のと金がある筋でも、持ち歩を二歩として拒否しない。
@@ -1141,13 +1314,12 @@ class ApplyDropTests(unittest.TestCase):
         """
         position = Position(Board(), Side.SENTE)
         position.sente_hand.add(BasicPieceType.PAWN)
-        position.board.set_piece(Square(5, 7),
-                                 Piece(PieceType.PRO_PAWN, Side.SENTE))
+        position.board.set_piece(Square(5, 7), Piece(PieceType.PRO_PAWN, Side.SENTE))
 
-        self.assertIsNone(self._apply_drop(
-            position, BasicPieceType.PAWN, Square(5, 5)))
-        self.assertEqual(position.board.piece_at(Square(5, 5)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertIsNone(self._apply_drop(position, BasicPieceType.PAWN, Square(5, 5)))
+        self.assertEqual(
+            position.board.piece_at(Square(5, 5)), Piece(PieceType.PAWN, Side.SENTE)
+        )
 
     def test_rejects_piece_with_no_legal_destination_without_changing_position(self):
         """行き所のない段への歩・香・桂打ちを拒否し、局面を変更しない。
@@ -1167,19 +1339,21 @@ class ApplyDropTests(unittest.TestCase):
         )
         for side, piece_type, rank in cases:
             position = Position(Board(), side)
-            hand = (position.sente_hand if side == Side.SENTE
-                    else position.gote_hand)
+            hand = position.sente_hand if side == Side.SENTE else position.gote_hand
             hand.add(BasicPieceType[piece_type.name])
-            squares = [Square(file, board_rank) for file in range(1, 10)
-                       for board_rank in range(1, 10)]
-            before_board = [position.board.piece_at(square)
-                            for square in squares]
+            squares = [
+                Square(file, board_rank)
+                for file in range(1, 10)
+                for board_rank in range(1, 10)
+            ]
+            before_board = [position.board.piece_at(square) for square in squares]
             before_hands = self._hand_counts(position)
             with self.subTest(side=side, piece_type=piece_type, rank=rank):
                 with self.assertRaises(ValueError):
                     self._apply_drop(position, piece_type, Square(5, rank))
-                self._assert_position_unchanged(position, before_board,
-                                                before_hands, side)
+                self._assert_position_unchanged(
+                    position, before_board, before_hands, side
+                )
 
     def test_allows_piece_drop_just_before_no_legal_destination(self):
         """禁止段の一つ手前へ歩・香・桂を打てる。
@@ -1197,16 +1371,17 @@ class ApplyDropTests(unittest.TestCase):
         )
         for side, piece_type, rank, expected_turn in cases:
             position = Position(Board(), side)
-            hand = (position.sente_hand if side == Side.SENTE
-                    else position.gote_hand)
+            hand = position.sente_hand if side == Side.SENTE else position.gote_hand
             destination = Square(5, rank)
             basic_piece_type = BasicPieceType[piece_type.name]
             hand.add(basic_piece_type)
             with self.subTest(side=side, piece_type=piece_type, rank=rank):
-                self.assertIsNone(self._apply_drop(position, basic_piece_type,
-                                                    destination))
-                self.assertEqual(position.board.piece_at(destination),
-                                 Piece(piece_type, side))
+                self.assertIsNone(
+                    self._apply_drop(position, basic_piece_type, destination)
+                )
+                self.assertEqual(
+                    position.board.piece_at(destination), Piece(piece_type, side)
+                )
                 self.assertEqual(hand.count(BasicPieceType[piece_type.name]), 0)
                 self.assertEqual(position.side_to_move, expected_turn)
 
@@ -1218,16 +1393,16 @@ class ApplyDropTests(unittest.TestCase):
         """
         position = Position(Board(), Side.SENTE)
         position.sente_hand.add(BasicPieceType.PAWN)
-        squares = [Square(file, rank) for file in range(1, 10)
-                   for rank in range(1, 10)]
+        squares = [Square(file, rank) for file in range(1, 10) for rank in range(1, 10)]
         before_board = [position.board.piece_at(square) for square in squares]
         before_hands = self._hand_counts(position)
 
         with self.assertRaises(ValueError):
             self._apply_drop(position, BasicPieceType.KING, Square(5, 5))
 
-        self._assert_position_unchanged(position, before_board, before_hands,
-                                        Side.SENTE)
+        self._assert_position_unchanged(
+            position, before_board, before_hands, Side.SENTE
+        )
 
 
 class KingMoveCandidatesTests(unittest.TestCase):
@@ -1260,8 +1435,16 @@ class KingMoveCandidatesTests(unittest.TestCase):
 
         玉に前方の反転を適用する誤りと方向順の誤りを検出する。
         """
-        expected = [Square(5, 4), Square(4, 4), Square(4, 5), Square(4, 6),
-                    Square(5, 6), Square(6, 6), Square(6, 5), Square(6, 4)]
+        expected = [
+            Square(5, 4),
+            Square(4, 4),
+            Square(4, 5),
+            Square(4, 6),
+            Square(5, 6),
+            Square(6, 6),
+            Square(6, 5),
+            Square(6, 4),
+        ]
         for side in Side:
             board = Board()
             source = Square(5, 5)
@@ -1277,8 +1460,10 @@ class KingMoveCandidatesTests(unittest.TestCase):
         board = Board()
         source = Square(1, 1)
         board.set_piece(source, Piece(PieceType.KING, Side.SENTE))
-        self.assertEqual(king_move_candidates(board, source),
-                         [Square(1, 2), Square(2, 2), Square(2, 1)])
+        self.assertEqual(
+            king_move_candidates(board, source),
+            [Square(1, 2), Square(2, 2), Square(2, 1)],
+        )
 
     def test_own_destination_is_excluded_and_opponent_is_included(self):
         """自駒の到着先を除外し、相手駒の到着先を候補に含める。
@@ -1290,10 +1475,18 @@ class KingMoveCandidatesTests(unittest.TestCase):
         board.set_piece(source, Piece(PieceType.KING, Side.SENTE))
         board.set_piece(Square(5, 4), Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.GOTE))
-        self.assertEqual(king_move_candidates(board, source),
-                         [Square(4, 4), Square(4, 5), Square(4, 6),
-                          Square(5, 6), Square(6, 6), Square(6, 5),
-                          Square(6, 4)])
+        self.assertEqual(
+            king_move_candidates(board, source),
+            [
+                Square(4, 4),
+                Square(4, 5),
+                Square(4, 6),
+                Square(5, 6),
+                Square(6, 6),
+                Square(6, 5),
+                Square(6, 4),
+            ],
+        )
 
     def test_candidate_generation_preserves_board_and_turn(self):
         """候補計算は盤面と局面の手番を変更しない。
@@ -1305,14 +1498,20 @@ class KingMoveCandidatesTests(unittest.TestCase):
         board.set_piece(source, Piece(PieceType.KING, Side.SENTE))
         board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.GOTE))
         position = Position(board, Side.SENTE)
-        before = [board.piece_at(Square(file, rank))
-                  for file in range(1, 10) for rank in range(1, 10)]
+        before = [
+            board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
         for turn in Side:
             position.side_to_move = turn
             king_move_candidates(position.board, source)
             self.assertEqual(position.side_to_move, turn)
-        after = [board.piece_at(Square(file, rank))
-                 for file in range(1, 10) for rank in range(1, 10)]
+        after = [
+            board.piece_at(Square(file, rank))
+            for file in range(1, 10)
+            for rank in range(1, 10)
+        ]
         self.assertEqual(after, before)
 
     def test_results_are_independent_lists(self):
@@ -1378,8 +1577,9 @@ class KnightMoveCandidatesTests(unittest.TestCase):
         board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
         board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(Square(6, 4), Piece(PieceType.PAWN, Side.GOTE))
-        self.assertEqual(knight_move_candidates(board, source),
-                         [Square(4, 3), Square(6, 3)])
+        self.assertEqual(
+            knight_move_candidates(board, source), [Square(4, 3), Square(6, 3)]
+        )
 
     def test_own_destination_is_excluded(self):
         """桂馬の到着先にある自駒のマスを候補から除外する。
@@ -1401,8 +1601,9 @@ class KnightMoveCandidatesTests(unittest.TestCase):
         source = Square(5, 5)
         board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
         board.set_piece(Square(6, 3), Piece(PieceType.PAWN, Side.GOTE))
-        self.assertEqual(knight_move_candidates(board, source),
-                         [Square(4, 3), Square(6, 3)])
+        self.assertEqual(
+            knight_move_candidates(board, source), [Square(4, 3), Square(6, 3)]
+        )
 
     def test_edges_exclude_off_board_candidates_for_both_sides(self):
         """先後の桂馬は盤外の到着先を候補から除外する。
@@ -1434,8 +1635,7 @@ class KnightMoveCandidatesTests(unittest.TestCase):
         source = Square(5, 5)
         board.set_piece(source, Piece(PieceType.KNIGHT, Side.SENTE))
         board.set_piece(Square(4, 3), Piece(PieceType.PAWN, Side.GOTE))
-        squares = [Square(file, rank) for file in range(1, 10)
-                   for rank in range(1, 10)]
+        squares = [Square(file, rank) for file in range(1, 10) for rank in range(1, 10)]
         before = [board.piece_at(square) for square in squares]
         knight_move_candidates(board, source)
         self.assertEqual([board.piece_at(square) for square in squares], before)
@@ -1457,10 +1657,14 @@ class KnightMoveCandidatesTests(unittest.TestCase):
         for turn in Side:
             with self.subTest(turn=turn):
                 position.side_to_move = turn
-                self.assertEqual(knight_move_candidates(position.board, sente_source),
-                                 expected[Side.SENTE])
-                self.assertEqual(knight_move_candidates(position.board, gote_source),
-                                 expected[Side.GOTE])
+                self.assertEqual(
+                    knight_move_candidates(position.board, sente_source),
+                    expected[Side.SENTE],
+                )
+                self.assertEqual(
+                    knight_move_candidates(position.board, gote_source),
+                    expected[Side.GOTE],
+                )
                 self.assertEqual(position.side_to_move, turn)
 
     def test_results_are_independent_lists(self):
@@ -1507,18 +1711,48 @@ class BishopMoveCandidatesTests(unittest.TestCase):
         筋と段の同時増減、先後の前後、方向順、走査距離の誤りを検出する。
         """
         for side, expected in [
-            (Side.SENTE, (
-                [Square(file, rank) for file, rank in [(4, 4), (3, 3), (2, 2), (1, 1)]]
-                + [Square(file, rank) for file, rank in [(6, 4), (7, 3), (8, 2), (9, 1)]]
-                + [Square(file, rank) for file, rank in [(4, 6), (3, 7), (2, 8), (1, 9)]]
-                + [Square(file, rank) for file, rank in [(6, 6), (7, 7), (8, 8), (9, 9)]]
-            )),
-            (Side.GOTE, (
-                [Square(file, rank) for file, rank in [(4, 6), (3, 7), (2, 8), (1, 9)]]
-                + [Square(file, rank) for file, rank in [(6, 6), (7, 7), (8, 8), (9, 9)]]
-                + [Square(file, rank) for file, rank in [(4, 4), (3, 3), (2, 2), (1, 1)]]
-                + [Square(file, rank) for file, rank in [(6, 4), (7, 3), (8, 2), (9, 1)]]
-            )),
+            (
+                Side.SENTE,
+                (
+                    [
+                        Square(file, rank)
+                        for file, rank in [(4, 4), (3, 3), (2, 2), (1, 1)]
+                    ]
+                    + [
+                        Square(file, rank)
+                        for file, rank in [(6, 4), (7, 3), (8, 2), (9, 1)]
+                    ]
+                    + [
+                        Square(file, rank)
+                        for file, rank in [(4, 6), (3, 7), (2, 8), (1, 9)]
+                    ]
+                    + [
+                        Square(file, rank)
+                        for file, rank in [(6, 6), (7, 7), (8, 8), (9, 9)]
+                    ]
+                ),
+            ),
+            (
+                Side.GOTE,
+                (
+                    [
+                        Square(file, rank)
+                        for file, rank in [(4, 6), (3, 7), (2, 8), (1, 9)]
+                    ]
+                    + [
+                        Square(file, rank)
+                        for file, rank in [(6, 6), (7, 7), (8, 8), (9, 9)]
+                    ]
+                    + [
+                        Square(file, rank)
+                        for file, rank in [(4, 4), (3, 3), (2, 2), (1, 1)]
+                    ]
+                    + [
+                        Square(file, rank)
+                        for file, rank in [(6, 4), (7, 3), (8, 2), (9, 1)]
+                    ]
+                ),
+            ),
         ]:
             with self.subTest(side=side):
                 board = Board()
@@ -1536,8 +1770,10 @@ class BishopMoveCandidatesTests(unittest.TestCase):
         blockers = [Square(4, 4), Square(7, 3), Square(3, 7), Square(7, 7)]
         for blocker in blockers:
             board.set_piece(blocker, Piece(PieceType.PAWN, Side.SENTE))
-        self.assertEqual(bishop_move_candidates(board, source),
-                         [Square(6, 4), Square(4, 6), Square(6, 6)])
+        self.assertEqual(
+            bishop_move_candidates(board, source),
+            [Square(6, 4), Square(4, 6), Square(6, 6)],
+        )
 
     def test_opponent_piece_is_last_destination_in_each_direction(self):
         """4方向それぞれで最初の相手駒を最後の候補に含め、その先へ進まない。
@@ -1550,11 +1786,19 @@ class BishopMoveCandidatesTests(unittest.TestCase):
         blockers = [Square(3, 3), Square(7, 3), Square(3, 7), Square(7, 7)]
         for blocker in blockers:
             board.set_piece(blocker, Piece(PieceType.PAWN, Side.GOTE))
-        self.assertEqual(bishop_move_candidates(board, source),
-                         [Square(4, 4), Square(3, 3),
-                          Square(6, 4), Square(7, 3),
-                          Square(4, 6), Square(3, 7),
-                          Square(6, 6), Square(7, 7)])
+        self.assertEqual(
+            bishop_move_candidates(board, source),
+            [
+                Square(4, 4),
+                Square(3, 3),
+                Square(6, 4),
+                Square(7, 3),
+                Square(4, 6),
+                Square(3, 7),
+                Square(6, 6),
+                Square(7, 7),
+            ],
+        )
 
     def test_blocked_direction_does_not_stop_other_directions(self):
         """1方向が自駒で塞がっても、残り3方向を候補計算する。
@@ -1565,10 +1809,23 @@ class BishopMoveCandidatesTests(unittest.TestCase):
         source = Square(5, 5)
         board.set_piece(source, Piece(PieceType.BISHOP, Side.SENTE))
         board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.SENTE))
-        self.assertEqual(bishop_move_candidates(board, source),
-                         [Square(6, 4), Square(7, 3), Square(8, 2), Square(9, 1),
-                          Square(4, 6), Square(3, 7), Square(2, 8), Square(1, 9),
-                          Square(6, 6), Square(7, 7), Square(8, 8), Square(9, 9)])
+        self.assertEqual(
+            bishop_move_candidates(board, source),
+            [
+                Square(6, 4),
+                Square(7, 3),
+                Square(8, 2),
+                Square(9, 1),
+                Square(4, 6),
+                Square(3, 7),
+                Square(2, 8),
+                Square(1, 9),
+                Square(6, 6),
+                Square(7, 7),
+                Square(8, 8),
+                Square(9, 9),
+            ],
+        )
 
     def test_edges_stop_at_board_boundary_for_both_sides(self):
         """四隅の角は盤外を除き、固定した斜め方向順で候補を返す。
@@ -1576,18 +1833,58 @@ class BishopMoveCandidatesTests(unittest.TestCase):
         筋・段の境界判定の欠落、座標の誤り、方向順の入れ替えを検出する。
         """
         cases = [
-            (Square(1, 1), [Square(2, 2), Square(3, 3), Square(4, 4),
-                           Square(5, 5), Square(6, 6), Square(7, 7),
-                           Square(8, 8), Square(9, 9)]),
-            (Square(9, 1), [Square(8, 2), Square(7, 3), Square(6, 4),
-                           Square(5, 5), Square(4, 6), Square(3, 7),
-                           Square(2, 8), Square(1, 9)]),
-            (Square(1, 9), [Square(2, 8), Square(3, 7), Square(4, 6),
-                           Square(5, 5), Square(6, 4), Square(7, 3),
-                           Square(8, 2), Square(9, 1)]),
-            (Square(9, 9), [Square(8, 8), Square(7, 7), Square(6, 6),
-                           Square(5, 5), Square(4, 4), Square(3, 3),
-                           Square(2, 2), Square(1, 1)]),
+            (
+                Square(1, 1),
+                [
+                    Square(2, 2),
+                    Square(3, 3),
+                    Square(4, 4),
+                    Square(5, 5),
+                    Square(6, 6),
+                    Square(7, 7),
+                    Square(8, 8),
+                    Square(9, 9),
+                ],
+            ),
+            (
+                Square(9, 1),
+                [
+                    Square(8, 2),
+                    Square(7, 3),
+                    Square(6, 4),
+                    Square(5, 5),
+                    Square(4, 6),
+                    Square(3, 7),
+                    Square(2, 8),
+                    Square(1, 9),
+                ],
+            ),
+            (
+                Square(1, 9),
+                [
+                    Square(2, 8),
+                    Square(3, 7),
+                    Square(4, 6),
+                    Square(5, 5),
+                    Square(6, 4),
+                    Square(7, 3),
+                    Square(8, 2),
+                    Square(9, 1),
+                ],
+            ),
+            (
+                Square(9, 9),
+                [
+                    Square(8, 8),
+                    Square(7, 7),
+                    Square(6, 6),
+                    Square(5, 5),
+                    Square(4, 4),
+                    Square(3, 3),
+                    Square(2, 2),
+                    Square(1, 1),
+                ],
+            ),
         ]
         for side in Side:
             for source, expected in cases:
@@ -1606,8 +1903,7 @@ class BishopMoveCandidatesTests(unittest.TestCase):
         board.set_piece(source, Piece(PieceType.BISHOP, Side.SENTE))
         board.set_piece(Square(4, 4), Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(Square(7, 3), Piece(PieceType.PAWN, Side.GOTE))
-        squares = [Square(file, rank) for file in range(1, 10)
-                   for rank in range(1, 10)]
+        squares = [Square(file, rank) for file in range(1, 10) for rank in range(1, 10)]
         before = [board.piece_at(square) for square in squares]
         bishop_move_candidates(board, source)
         self.assertEqual([board.piece_at(square) for square in squares], before)
@@ -1640,10 +1936,12 @@ class BishopMoveCandidatesTests(unittest.TestCase):
         for turn in Side:
             with self.subTest(turn=turn):
                 position.side_to_move = turn
-                self.assertEqual(bishop_move_candidates(position.board, sente_source),
-                                 sente_expected)
-                self.assertEqual(bishop_move_candidates(position.board, gote_source),
-                                 gote_expected)
+                self.assertEqual(
+                    bishop_move_candidates(position.board, sente_source), sente_expected
+                )
+                self.assertEqual(
+                    bishop_move_candidates(position.board, gote_source), gote_expected
+                )
                 self.assertEqual(position.side_to_move, turn)
 
 
@@ -1677,18 +1975,24 @@ class RookMoveCandidatesTests(unittest.TestCase):
         筋の増減、先後の前方、方向順、走査距離の誤りを開いた盤面で検出する。
         """
         for side, vertical in [
-            (Side.SENTE, [(5, 4), (5, 3), (5, 2), (5, 1),
-                          (5, 6), (5, 7), (5, 8), (5, 9)]),
-            (Side.GOTE, [(5, 6), (5, 7), (5, 8), (5, 9),
-                         (5, 4), (5, 3), (5, 2), (5, 1)]),
+            (
+                Side.SENTE,
+                [(5, 4), (5, 3), (5, 2), (5, 1), (5, 6), (5, 7), (5, 8), (5, 9)],
+            ),
+            (
+                Side.GOTE,
+                [(5, 6), (5, 7), (5, 8), (5, 9), (5, 4), (5, 3), (5, 2), (5, 1)],
+            ),
         ]:
             with self.subTest(side=side):
                 board = Board()
                 source = Square(5, 5)
                 board.set_piece(source, Piece(PieceType.ROOK, side))
-                expected = ([Square(file, 5) for file in [4, 3, 2, 1]]
-                            + [Square(file, 5) for file in [6, 7, 8, 9]]
-                            + [Square(file, rank) for file, rank in vertical])
+                expected = (
+                    [Square(file, 5) for file in [4, 3, 2, 1]]
+                    + [Square(file, 5) for file in [6, 7, 8, 9]]
+                    + [Square(file, rank) for file, rank in vertical]
+                )
                 self.assertEqual(rook_move_candidates(board, source), expected)
 
     def test_own_piece_stops_each_direction_before_its_square(self):
@@ -1702,8 +2006,10 @@ class RookMoveCandidatesTests(unittest.TestCase):
         blockers = [Square(4, 5), Square(7, 5), Square(5, 3), Square(5, 7)]
         for blocker in blockers:
             board.set_piece(blocker, Piece(PieceType.PAWN, Side.SENTE))
-        self.assertEqual(rook_move_candidates(board, source),
-                         [Square(6, 5), Square(5, 4), Square(5, 6)])
+        self.assertEqual(
+            rook_move_candidates(board, source),
+            [Square(6, 5), Square(5, 4), Square(5, 6)],
+        )
 
     def test_opponent_piece_is_last_destination_in_each_direction(self):
         """4方向それぞれで最初の相手駒を候補に含め、その先へ進まない。
@@ -1716,11 +2022,19 @@ class RookMoveCandidatesTests(unittest.TestCase):
         blockers = [Square(3, 5), Square(7, 5), Square(5, 3), Square(5, 7)]
         for blocker in blockers:
             board.set_piece(blocker, Piece(PieceType.PAWN, Side.GOTE))
-        self.assertEqual(rook_move_candidates(board, source),
-                         [Square(4, 5), Square(3, 5),
-                          Square(6, 5), Square(7, 5),
-                          Square(5, 4), Square(5, 3),
-                          Square(5, 6), Square(5, 7)])
+        self.assertEqual(
+            rook_move_candidates(board, source),
+            [
+                Square(4, 5),
+                Square(3, 5),
+                Square(6, 5),
+                Square(7, 5),
+                Square(5, 4),
+                Square(5, 3),
+                Square(5, 6),
+                Square(5, 7),
+            ],
+        )
 
     def test_blocked_direction_does_not_stop_other_directions(self):
         """1方向が自駒で塞がっても、残り3方向を候補計算する。
@@ -1731,10 +2045,12 @@ class RookMoveCandidatesTests(unittest.TestCase):
         source = Square(5, 5)
         board.set_piece(source, Piece(PieceType.ROOK, Side.SENTE))
         board.set_piece(Square(4, 5), Piece(PieceType.PAWN, Side.SENTE))
-        self.assertEqual(rook_move_candidates(board, source),
-                         [Square(file, 5) for file in [6, 7, 8, 9]]
-                         + [Square(5, rank) for rank in [4, 3, 2, 1]]
-                         + [Square(5, rank) for rank in [6, 7, 8, 9]])
+        self.assertEqual(
+            rook_move_candidates(board, source),
+            [Square(file, 5) for file in [6, 7, 8, 9]]
+            + [Square(5, rank) for rank in [4, 3, 2, 1]]
+            + [Square(5, rank) for rank in [6, 7, 8, 9]],
+        )
 
     def test_edges_stop_at_board_boundary_for_both_sides(self):
         """四隅の飛車は盤外を除き、右・左・前・後ろの順で候補を返す。
@@ -1742,18 +2058,26 @@ class RookMoveCandidatesTests(unittest.TestCase):
         筋・段の境界判定の欠落、座標の誤り、方向順の入れ替えを検出する。
         """
         cases = [
-            (Square(1, 1),
-             [Square(file, 1) for file in range(2, 10)]
-             + [Square(1, rank) for rank in range(2, 10)]),
-            (Square(9, 1),
-             [Square(file, 1) for file in range(8, 0, -1)]
-             + [Square(9, rank) for rank in range(2, 10)]),
-            (Square(1, 9),
-             [Square(file, 9) for file in range(2, 10)]
-             + [Square(1, rank) for rank in range(8, 0, -1)]),
-            (Square(9, 9),
-             [Square(file, 9) for file in range(8, 0, -1)]
-             + [Square(9, rank) for rank in range(8, 0, -1)]),
+            (
+                Square(1, 1),
+                [Square(file, 1) for file in range(2, 10)]
+                + [Square(1, rank) for rank in range(2, 10)],
+            ),
+            (
+                Square(9, 1),
+                [Square(file, 1) for file in range(8, 0, -1)]
+                + [Square(9, rank) for rank in range(2, 10)],
+            ),
+            (
+                Square(1, 9),
+                [Square(file, 9) for file in range(2, 10)]
+                + [Square(1, rank) for rank in range(8, 0, -1)],
+            ),
+            (
+                Square(9, 9),
+                [Square(file, 9) for file in range(8, 0, -1)]
+                + [Square(9, rank) for rank in range(8, 0, -1)],
+            ),
         ]
         for side in Side:
             for source, expected in cases:
@@ -1772,8 +2096,7 @@ class RookMoveCandidatesTests(unittest.TestCase):
         board.set_piece(source, Piece(PieceType.ROOK, Side.SENTE))
         board.set_piece(Square(4, 5), Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(Square(7, 5), Piece(PieceType.PAWN, Side.GOTE))
-        squares = [Square(file, rank) for file in range(1, 10)
-                   for rank in range(1, 10)]
+        squares = [Square(file, rank) for file in range(1, 10) for rank in range(1, 10)]
         before = [board.piece_at(square) for square in squares]
         rook_move_candidates(board, source)
         self.assertEqual([board.piece_at(square) for square in squares], before)
@@ -1806,10 +2129,12 @@ class RookMoveCandidatesTests(unittest.TestCase):
         for turn in Side:
             with self.subTest(turn=turn):
                 position.side_to_move = turn
-                self.assertEqual(rook_move_candidates(position.board, sente_source),
-                                 sente_expected)
-                self.assertEqual(rook_move_candidates(position.board, gote_source),
-                                 gote_expected)
+                self.assertEqual(
+                    rook_move_candidates(position.board, sente_source), sente_expected
+                )
+                self.assertEqual(
+                    rook_move_candidates(position.board, gote_source), gote_expected
+                )
                 self.assertEqual(position.side_to_move, turn)
 
 
@@ -1833,8 +2158,10 @@ class LanceMoveCandidatesTests(unittest.TestCase):
                     board = Board()
                     source = Square(file, source_rank)
                     board.set_piece(source, Piece(PieceType.LANCE, side))
-                    self.assertEqual(lance_move_candidates(board, source),
-                                     [Square(file, rank) for rank in expected_ranks])
+                    self.assertEqual(
+                        lance_move_candidates(board, source),
+                        [Square(file, rank) for rank in expected_ranks],
+                    )
 
     def test_first_piece_blocks_later_pieces(self):
         """前方に複数の駒があっても最初の駒で候補を打ち切る。
@@ -1847,15 +2174,23 @@ class LanceMoveCandidatesTests(unittest.TestCase):
         ]:
             for near_owner in (side, opponent):
                 for far_owner in (side, opponent):
-                    with self.subTest(side=side, near_owner=near_owner, far_owner=far_owner):
+                    with self.subTest(
+                        side=side, near_owner=near_owner, far_owner=far_owner
+                    ):
                         board = Board()
                         board.set_piece(Square(5, 5), Piece(PieceType.LANCE, side))
-                        board.set_piece(Square(5, near_rank), Piece(PieceType.GOLD, near_owner))
-                        board.set_piece(Square(5, far_rank), Piece(PieceType.SILVER, far_owner))
+                        board.set_piece(
+                            Square(5, near_rank), Piece(PieceType.GOLD, near_owner)
+                        )
+                        board.set_piece(
+                            Square(5, far_rank), Piece(PieceType.SILVER, far_owner)
+                        )
                         expected = [Square(5, rank) for rank in empty_ranks]
                         if near_owner == opponent:
                             expected.append(Square(5, near_rank))
-                        self.assertEqual(lance_move_candidates(board, Square(5, 5)), expected)
+                        self.assertEqual(
+                            lance_move_candidates(board, Square(5, 5)), expected
+                        )
 
     def test_pieces_outside_forward_file_do_not_block(self):
         """横・斜め・後ろの駒は香の前方の候補を妨げない。
@@ -1869,11 +2204,20 @@ class LanceMoveCandidatesTests(unittest.TestCase):
             with self.subTest(side=side):
                 board = Board()
                 board.set_piece(Square(5, 5), Piece(PieceType.LANCE, side))
-                for file, rank in [(4, 4), (4, 5), (4, 6),
-                                   (6, 4), (6, 5), (6, 6), (5, rear_rank)]:
+                for file, rank in [
+                    (4, 4),
+                    (4, 5),
+                    (4, 6),
+                    (6, 4),
+                    (6, 5),
+                    (6, 6),
+                    (5, rear_rank),
+                ]:
                     board.set_piece(Square(file, rank), Piece(PieceType.GOLD, side))
-                self.assertEqual(lance_move_candidates(board, Square(5, 5)),
-                                 [Square(5, rank) for rank in expected_ranks])
+                self.assertEqual(
+                    lance_move_candidates(board, Square(5, 5)),
+                    [Square(5, rank) for rank in expected_ranks],
+                )
 
     def test_results_are_independent_lists(self):
         """候補あり・自駒・盤外のいずれも独立した候補リストを返す。
@@ -1914,11 +2258,15 @@ class LanceMoveCandidatesTests(unittest.TestCase):
                     board.set_piece(source, Piece(PieceType.LANCE, side))
                     if state in ("own", "opponent"):
                         owner = side if state == "own" else opponent
-                        board.set_piece(Square(5, blocked_rank), Piece(PieceType.PAWN, owner))
+                        board.set_piece(
+                            Square(5, blocked_rank), Piece(PieceType.PAWN, owner)
+                        )
                     board.set_piece(Square(2, 2), Piece(PieceType.KING, opponent))
                     before = [board.piece_at(square) for square in squares]
                     lance_move_candidates(board, source)
-                    self.assertEqual([board.piece_at(square) for square in squares], before)
+                    self.assertEqual(
+                        [board.piece_at(square) for square in squares], before
+                    )
 
     def test_turn_does_not_restrict_candidates_or_change(self):
         """手番によらず先後の香を調べられ、手番も変えない。
@@ -1932,10 +2280,14 @@ class LanceMoveCandidatesTests(unittest.TestCase):
         for turn in Side:
             with self.subTest(turn=turn):
                 position.side_to_move = turn
-                self.assertEqual(lance_move_candidates(position.board, Square(1, 3)),
-                                 [Square(1, 2), Square(1, 1)])
-                self.assertEqual(lance_move_candidates(position.board, Square(9, 7)),
-                                 [Square(9, 8), Square(9, 9)])
+                self.assertEqual(
+                    lance_move_candidates(position.board, Square(1, 3)),
+                    [Square(1, 2), Square(1, 1)],
+                )
+                self.assertEqual(
+                    lance_move_candidates(position.board, Square(9, 7)),
+                    [Square(9, 8), Square(9, 9)],
+                )
                 self.assertEqual(position.side_to_move, turn)
 
     def test_opponent_piece_is_last_destination(self):
@@ -1954,9 +2306,13 @@ class LanceMoveCandidatesTests(unittest.TestCase):
             with self.subTest(side=side, blocked_rank=blocked_rank):
                 board = Board()
                 board.set_piece(Square(5, 5), Piece(PieceType.LANCE, side))
-                board.set_piece(Square(5, blocked_rank), Piece(PieceType.PAWN, opponent))
-                self.assertEqual(lance_move_candidates(board, Square(5, 5)),
-                                 [Square(5, rank) for rank in expected_ranks])
+                board.set_piece(
+                    Square(5, blocked_rank), Piece(PieceType.PAWN, opponent)
+                )
+                self.assertEqual(
+                    lance_move_candidates(board, Square(5, 5)),
+                    [Square(5, rank) for rank in expected_ranks],
+                )
 
     def test_own_piece_stops_before_its_square(self):
         """自駒の手前までを候補にし、自駒もその先も含めない。
@@ -1975,8 +2331,10 @@ class LanceMoveCandidatesTests(unittest.TestCase):
                 board = Board()
                 board.set_piece(Square(5, 5), Piece(PieceType.LANCE, side))
                 board.set_piece(Square(5, blocked_rank), Piece(PieceType.PAWN, side))
-                self.assertEqual(lance_move_candidates(board, Square(5, 5)),
-                                 [Square(5, rank) for rank in expected_ranks])
+                self.assertEqual(
+                    lance_move_candidates(board, Square(5, 5)),
+                    [Square(5, rank) for rank in expected_ranks],
+                )
 
     def test_gote_destinations_are_nearest_first(self):
         """後手の香は段が増える向きへ近い順に進める。
@@ -1985,8 +2343,10 @@ class LanceMoveCandidatesTests(unittest.TestCase):
         """
         board = Board()
         board.set_piece(Square(5, 5), Piece(PieceType.LANCE, Side.GOTE))
-        self.assertEqual(lance_move_candidates(board, Square(5, 5)),
-                         [Square(5, 6), Square(5, 7), Square(5, 8), Square(5, 9)])
+        self.assertEqual(
+            lance_move_candidates(board, Square(5, 5)),
+            [Square(5, 6), Square(5, 7), Square(5, 8), Square(5, 9)],
+        )
 
     def test_sente_destinations_are_nearest_first(self):
         """先手の香は同じ筋の前方を近い順に候補として返す。
@@ -1995,8 +2355,10 @@ class LanceMoveCandidatesTests(unittest.TestCase):
         """
         board = Board()
         board.set_piece(Square(5, 5), Piece(PieceType.LANCE, Side.SENTE))
-        self.assertEqual(lance_move_candidates(board, Square(5, 5)),
-                         [Square(5, 4), Square(5, 3), Square(5, 2), Square(5, 1)])
+        self.assertEqual(
+            lance_move_candidates(board, Square(5, 5)),
+            [Square(5, 4), Square(5, 3), Square(5, 2), Square(5, 1)],
+        )
 
     def test_non_lance_source_is_rejected(self):
         """香以外の駒種を先後どちらでも拒否する。
@@ -2042,9 +2404,15 @@ class SilverMoveCandidatesTests(unittest.TestCase):
                         if owner is not None:
                             board.set_piece(target, Piece(PieceType.PAWN, owner))
                         before = [board.piece_at(square) for square in squares]
-                        expected = [sq for sq in destinations if owner != side or sq != target]
-                        self.assertEqual(silver_move_candidates(board, Square(5, 5)), expected)
-                        self.assertEqual([board.piece_at(square) for square in squares], before)
+                        expected = [
+                            sq for sq in destinations if owner != side or sq != target
+                        ]
+                        self.assertEqual(
+                            silver_move_candidates(board, Square(5, 5)), expected
+                        )
+                        self.assertEqual(
+                            [board.piece_at(square) for square in squares], before
+                        )
 
     def test_all_destinations_blocked_returns_fresh_empty_list(self):
         """銀の全方向が自駒なら毎回独立した空リストを返す。
@@ -2054,8 +2422,7 @@ class SilverMoveCandidatesTests(unittest.TestCase):
         for side in Side:
             with self.subTest(side=side):
                 board = Board()
-                for f, r in [(5, 5), (5, 4), (6, 4), (4, 4),
-                             (5, 6), (6, 6), (4, 6)]:
+                for f, r in [(5, 5), (5, 4), (6, 4), (4, 4), (5, 6), (6, 6), (4, 6)]:
                     board.set_piece(Square(f, r), Piece(PieceType.SILVER, side))
                 result = silver_move_candidates(board, Square(5, 5))
                 self.assertEqual(result, [])
@@ -2074,8 +2441,10 @@ class SilverMoveCandidatesTests(unittest.TestCase):
             with self.subTest(side=side):
                 board = Board()
                 board.set_piece(source, Piece(PieceType.SILVER, side))
-                self.assertEqual(silver_move_candidates(board, source),
-                                 [Square(f, r) for f, r in coordinates])
+                self.assertEqual(
+                    silver_move_candidates(board, source),
+                    [Square(f, r) for f, r in coordinates],
+                )
 
     def test_turn_does_not_restrict_candidates_or_change(self):
         """手番によらず先後の銀を調べられ、盤外除外でも盤面・手番を変えない。
@@ -2091,8 +2460,12 @@ class SilverMoveCandidatesTests(unittest.TestCase):
         for turn in Side:
             with self.subTest(turn=turn):
                 position.side_to_move = turn
-                self.assertEqual(silver_move_candidates(board, Square(1, 1)), [Square(2, 2)])
-                self.assertEqual(silver_move_candidates(board, Square(9, 9)), [Square(8, 8)])
+                self.assertEqual(
+                    silver_move_candidates(board, Square(1, 1)), [Square(2, 2)]
+                )
+                self.assertEqual(
+                    silver_move_candidates(board, Square(9, 9)), [Square(8, 8)]
+                )
                 self.assertEqual(position.side_to_move, turn)
                 self.assertEqual([board.piece_at(square) for square in squares], before)
 
@@ -2109,8 +2482,10 @@ class SilverMoveCandidatesTests(unittest.TestCase):
                 board = Board()
                 board.set_piece(Square(5, 5), Piece(PieceType.SILVER, side))
                 board.set_piece(blocked, Piece(PieceType.PAWN, side))
-                self.assertEqual(silver_move_candidates(board, Square(5, 5)),
-                                 [Square(f, r) for f, r in coordinates])
+                self.assertEqual(
+                    silver_move_candidates(board, Square(5, 5)),
+                    [Square(f, r) for f, r in coordinates],
+                )
 
     def test_corners_exclude_only_outside_destinations(self):
         """四隅の銀は盤外だけを除外し、盤内の候補を順に返す。
@@ -2148,8 +2523,10 @@ class SilverMoveCandidatesTests(unittest.TestCase):
             with self.subTest(side=side):
                 board = Board()
                 board.set_piece(Square(5, 5), Piece(PieceType.SILVER, side))
-                self.assertEqual(silver_move_candidates(board, Square(5, 5)),
-                                 [Square(f, r) for f, r in coordinates])
+                self.assertEqual(
+                    silver_move_candidates(board, Square(5, 5)),
+                    [Square(f, r) for f, r in coordinates],
+                )
 
     def test_non_silver_source_is_rejected(self):
         """銀以外の駒種を先後どちらでも拒否する。
@@ -2195,9 +2572,15 @@ class GoldMoveCandidatesTests(unittest.TestCase):
                         if owner is not None:
                             board.set_piece(target, Piece(PieceType.PAWN, owner))
                         before = [board.piece_at(square) for square in squares]
-                        expected = [sq for sq in destinations if owner != side or sq != target]
-                        self.assertEqual(gold_move_candidates(board, Square(5, 5)), expected)
-                        self.assertEqual([board.piece_at(square) for square in squares], before)
+                        expected = [
+                            sq for sq in destinations if owner != side or sq != target
+                        ]
+                        self.assertEqual(
+                            gold_move_candidates(board, Square(5, 5)), expected
+                        )
+                        self.assertEqual(
+                            [board.piece_at(square) for square in squares], before
+                        )
 
     def test_all_destinations_blocked_returns_fresh_empty_list(self):
         """全方向が自駒なら毎回独立した空リストを返す。
@@ -2207,8 +2590,17 @@ class GoldMoveCandidatesTests(unittest.TestCase):
         for side in Side:
             with self.subTest(side=side):
                 board = Board()
-                for f, r in [(5, 5), (5, 4), (6, 4), (4, 4), (6, 5),
-                             (4, 5), (5, 6), (6, 6), (4, 6)]:
+                for f, r in [
+                    (5, 5),
+                    (5, 4),
+                    (6, 4),
+                    (4, 4),
+                    (6, 5),
+                    (4, 5),
+                    (5, 6),
+                    (6, 6),
+                    (4, 6),
+                ]:
                     board.set_piece(Square(f, r), Piece(PieceType.GOLD, side))
                 result = gold_move_candidates(board, Square(5, 5))
                 self.assertEqual(result, [])
@@ -2221,14 +2613,20 @@ class GoldMoveCandidatesTests(unittest.TestCase):
         盤外判定を狭く設定する境界の誤りを固定した期待値で検出する。
         """
         for side, source, coordinates in [
-            (Side.SENTE, Square(2, 2), [(2, 1), (3, 1), (1, 1), (3, 2), (1, 2), (2, 3)]),
+            (
+                Side.SENTE,
+                Square(2, 2),
+                [(2, 1), (3, 1), (1, 1), (3, 2), (1, 2), (2, 3)],
+            ),
             (Side.GOTE, Square(8, 8), [(8, 9), (9, 9), (7, 9), (9, 8), (7, 8), (8, 7)]),
         ]:
             with self.subTest(side=side):
                 board = Board()
                 board.set_piece(source, Piece(PieceType.GOLD, side))
-                self.assertEqual(gold_move_candidates(board, source),
-                                 [Square(f, r) for f, r in coordinates])
+                self.assertEqual(
+                    gold_move_candidates(board, source),
+                    [Square(f, r) for f, r in coordinates],
+                )
 
     def test_turn_does_not_restrict_candidates_or_change(self):
         """同じ盤の手番を変えても両側の金の候補は同じで手番も変えない。
@@ -2243,10 +2641,14 @@ class GoldMoveCandidatesTests(unittest.TestCase):
         before = [board.piece_at(square) for square in squares]
         for turn in Side:
             position.side_to_move = turn
-            self.assertEqual(gold_move_candidates(position.board, Square(1, 1)),
-                             [Square(2, 1), Square(1, 2)])
-            self.assertEqual(gold_move_candidates(position.board, Square(9, 9)),
-                             [Square(8, 9), Square(9, 8)])
+            self.assertEqual(
+                gold_move_candidates(position.board, Square(1, 1)),
+                [Square(2, 1), Square(1, 2)],
+            )
+            self.assertEqual(
+                gold_move_candidates(position.board, Square(9, 9)),
+                [Square(8, 9), Square(9, 8)],
+            )
             self.assertEqual(position.side_to_move, turn)
             self.assertEqual([board.piece_at(square) for square in squares], before)
 
@@ -2263,8 +2665,10 @@ class GoldMoveCandidatesTests(unittest.TestCase):
                 board = Board()
                 board.set_piece(Square(5, 5), Piece(PieceType.GOLD, side))
                 board.set_piece(blocked, Piece(PieceType.PAWN, side))
-                self.assertEqual(gold_move_candidates(board, Square(5, 5)),
-                                 [Square(f, r) for f, r in coordinates])
+                self.assertEqual(
+                    gold_move_candidates(board, Square(5, 5)),
+                    [Square(f, r) for f, r in coordinates],
+                )
 
     def test_corners_exclude_only_outside_destinations(self):
         """四隅で盤外だけを除外し、残る候補を順序どおり返す。
@@ -2303,8 +2707,10 @@ class GoldMoveCandidatesTests(unittest.TestCase):
                 board = Board()
                 source = Square(5, 5)
                 board.set_piece(source, Piece(PieceType.GOLD, side))
-                self.assertEqual(gold_move_candidates(board, source),
-                                 [Square(f, r) for f, r in coordinates])
+                self.assertEqual(
+                    gold_move_candidates(board, source),
+                    [Square(f, r) for f, r in coordinates],
+                )
 
     def test_non_gold_source_is_rejected(self):
         """金以外の全駒種を先後どちらでも拒否する。
@@ -2342,8 +2748,9 @@ class PawnMoveCandidatesTests(unittest.TestCase):
                     board = Board()
                     source = Square(file, rank)
                     board.set_piece(source, Piece(PieceType.PAWN, side))
-                    self.assertEqual(pawn_move_candidates(board, source),
-                                     [Square(file, next_rank)])
+                    self.assertEqual(
+                        pawn_move_candidates(board, source), [Square(file, next_rank)]
+                    )
 
     def test_outside_board_returns_no_candidates(self):
         """先手の一段目と後手の九段目からは例外を出さず候補なしにする。
@@ -2367,8 +2774,9 @@ class PawnMoveCandidatesTests(unittest.TestCase):
                 board = Board()
                 source = Square(7, rank)
                 board.set_piece(source, Piece(PieceType.PAWN, side))
-                self.assertEqual(pawn_move_candidates(board, source),
-                                 [Square(7, next_rank)])
+                self.assertEqual(
+                    pawn_move_candidates(board, source), [Square(7, next_rank)]
+                )
 
     def test_own_piece_blocks_destination(self):
         """一歩前の自駒は先後どちらでも候補から除外する。
@@ -2389,7 +2797,8 @@ class PawnMoveCandidatesTests(unittest.TestCase):
         駒があるマスをすべて除外する誤りを検出する。駒取りの実行ではない。
         """
         for side, opponent, rank, next_rank in [
-            (Side.SENTE, Side.GOTE, 7, 6), (Side.GOTE, Side.SENTE, 3, 4),
+            (Side.SENTE, Side.GOTE, 7, 6),
+            (Side.GOTE, Side.SENTE, 3, 4),
         ]:
             with self.subTest(side=side):
                 board = Board()
@@ -2437,11 +2846,15 @@ class PawnMoveCandidatesTests(unittest.TestCase):
                     board.set_piece(source, Piece(PieceType.PAWN, side))
                     if state in ["own", "opponent"]:
                         owner = side if state == "own" else opponent
-                        board.set_piece(Square(7, next_rank), Piece(PieceType.GOLD, owner))
+                        board.set_piece(
+                            Square(7, next_rank), Piece(PieceType.GOLD, owner)
+                        )
                     squares = [Square(f, r) for f in range(1, 10) for r in range(1, 10)]
                     before = [board.piece_at(square) for square in squares]
                     pawn_move_candidates(board, source)
-                    self.assertEqual([board.piece_at(square) for square in squares], before)
+                    self.assertEqual(
+                        [board.piece_at(square) for square in squares], before
+                    )
 
     def test_turn_does_not_restrict_candidates_or_change(self):
         """候補は手番によらず歩の所有者で決まり、手番も変更しない。
@@ -2455,29 +2868,36 @@ class PawnMoveCandidatesTests(unittest.TestCase):
         for turn in Side:
             with self.subTest(turn=turn):
                 position.side_to_move = turn
-                self.assertEqual(pawn_move_candidates(position.board, Square(7, 7)),
-                                 [Square(7, 6)])
-                self.assertEqual(pawn_move_candidates(position.board, Square(7, 3)),
-                                 [Square(7, 4)])
+                self.assertEqual(
+                    pawn_move_candidates(position.board, Square(7, 7)), [Square(7, 6)]
+                )
+                self.assertEqual(
+                    pawn_move_candidates(position.board, Square(7, 3)), [Square(7, 4)]
+                )
                 self.assertEqual(position.side_to_move, turn)
 
 
 class LegalMoveListTests(unittest.TestCase):
-    _DROP_ORDER = (BasicPieceType.ROOK, BasicPieceType.BISHOP,
-                   BasicPieceType.GOLD, BasicPieceType.SILVER,
-                   BasicPieceType.KNIGHT, BasicPieceType.LANCE,
-                   BasicPieceType.PAWN)
+    _DROP_ORDER = (
+        BasicPieceType.ROOK,
+        BasicPieceType.BISHOP,
+        BasicPieceType.GOLD,
+        BasicPieceType.SILVER,
+        BasicPieceType.KNIGHT,
+        BasicPieceType.LANCE,
+        BasicPieceType.PAWN,
+    )
 
     def _require_implementation(self):
         """合法手一覧の実装不足を属性エラーでなく明示的に失敗させる。"""
-        self.assertTrue(hasattr(movegen, "legal_moves"),
-                        "legal_moves がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "legal_moves"), "legal_moves がまだ実装されていません"
+        )
 
     def _position_with_all_drops(self, side):
         """全7駒種を一枚ずつ持つ、駒打ちだけを調べる空盤面を作る。"""
         position = Position(Board(), side)
-        hand = (position.sente_hand if side == Side.SENTE
-                else position.gote_hand)
+        hand = position.sente_hand if side == Side.SENTE else position.gote_hand
         for piece_type in self._DROP_ORDER:
             hand.add(piece_type)
         return position
@@ -2487,8 +2907,7 @@ class LegalMoveListTests(unittest.TestCase):
         excluded_ranks = {
             BasicPieceType.PAWN: ({1} if side == Side.SENTE else {9}),
             BasicPieceType.LANCE: ({1} if side == Side.SENTE else {9}),
-            BasicPieceType.KNIGHT: (
-                {1, 2} if side == Side.SENTE else {8, 9}),
+            BasicPieceType.KNIGHT: ({1, 2} if side == Side.SENTE else {8, 9}),
         }
         return tuple(
             DropMove(piece_type, Square(file, rank))
@@ -2512,7 +2931,8 @@ class LegalMoveListTests(unittest.TestCase):
         self._require_implementation()
         self.assertEqual(
             movegen.legal_moves(position),
-            (BoardMove(Square(5, 5), Square(5, 4), False),))
+            (BoardMove(Square(5, 5), Square(5, 4), False),),
+        )
         self.assertEqual(_position_snapshot(position), before)
 
     def test_puts_nonpromotion_before_promotion(self):
@@ -2528,8 +2948,11 @@ class LegalMoveListTests(unittest.TestCase):
         self._require_implementation()
         self.assertEqual(
             movegen.legal_moves(position),
-            (BoardMove(Square(5, 4), Square(5, 3), False),
-             BoardMove(Square(5, 4), Square(5, 3), True)))
+            (
+                BoardMove(Square(5, 4), Square(5, 3), False),
+                BoardMove(Square(5, 4), Square(5, 3), True),
+            ),
+        )
 
     def test_puts_drops_after_board_moves_in_piece_and_square_order(self):
         """駒打ちは盤上移動の後、駒種とマスの固定順で並べる。
@@ -2545,12 +2968,9 @@ class LegalMoveListTests(unittest.TestCase):
         self._require_implementation()
         moves = movegen.legal_moves(position)
 
-        self.assertEqual(moves[0],
-                         BoardMove(Square(5, 5), Square(5, 4), False))
-        self.assertEqual(moves[1], DropMove(BasicPieceType.GOLD,
-                                            Square(1, 1)))
-        self.assertEqual(moves[2], DropMove(BasicPieceType.GOLD,
-                                            Square(1, 2)))
+        self.assertEqual(moves[0], BoardMove(Square(5, 5), Square(5, 4), False))
+        self.assertEqual(moves[1], DropMove(BasicPieceType.GOLD, Square(1, 1)))
+        self.assertEqual(moves[2], DropMove(BasicPieceType.GOLD, Square(1, 2)))
 
     def test_drop_order_does_not_follow_basic_piece_type_iteration(self):
         """駒打ち順はBasicPieceTypeの反復順に依存しない。
@@ -2558,6 +2978,7 @@ class LegalMoveListTests(unittest.TestCase):
         持ち駒の種類を表す列挙の反復順を変えても、公開APIの契約である
         飛・角・金・銀・桂・香・歩の順が変わらないことを確認する。
         """
+
         class ReorderedBasicPieceTypes:
             KING = BasicPieceType.KING
             ROOK = BasicPieceType.ROOK
@@ -2569,16 +2990,25 @@ class LegalMoveListTests(unittest.TestCase):
             PAWN = BasicPieceType.PAWN
 
             def __iter__(self):
-                return iter((self.KING, self.PAWN, self.LANCE,
-                             self.KNIGHT, self.SILVER, self.GOLD,
-                             self.BISHOP, self.ROOK))
+                return iter(
+                    (
+                        self.KING,
+                        self.PAWN,
+                        self.LANCE,
+                        self.KNIGHT,
+                        self.SILVER,
+                        self.GOLD,
+                        self.BISHOP,
+                        self.ROOK,
+                    )
+                )
 
         position = self._position_with_all_drops(Side.SENTE)
         before = _position_snapshot(position)
-        with patch.object(movegen, "BasicPieceType",
-                          ReorderedBasicPieceTypes()):
-            self.assertEqual(movegen.legal_moves(position),
-                             self._expected_drops(Side.SENTE))
+        with patch.object(movegen, "BasicPieceType", ReorderedBasicPieceTypes()):
+            self.assertEqual(
+                movegen.legal_moves(position), self._expected_drops(Side.SENTE)
+            )
         self.assertEqual(_position_snapshot(position), before)
 
     def test_returns_all_drops_in_fixed_order_for_each_side(self):
@@ -2591,8 +3021,9 @@ class LegalMoveListTests(unittest.TestCase):
             with self.subTest(side=side):
                 position = self._position_with_all_drops(side)
                 before = _position_snapshot(position)
-                self.assertEqual(movegen.legal_moves(position),
-                                 self._expected_drops(side))
+                self.assertEqual(
+                    movegen.legal_moves(position), self._expected_drops(side)
+                )
                 self.assertEqual(_position_snapshot(position), before)
 
     def test_returns_empty_tuple_when_current_rules_reject_every_candidate(self):
@@ -2604,8 +3035,7 @@ class LegalMoveListTests(unittest.TestCase):
         board = Board()
         for file in range(1, 10):
             for rank in range(1, 10):
-                board.set_piece(Square(file, rank),
-                                Piece(PieceType.PAWN, Side.SENTE))
+                board.set_piece(Square(file, rank), Piece(PieceType.PAWN, Side.SENTE))
         position = Position(board, Side.SENTE)
 
         self._require_implementation()
@@ -2625,8 +3055,10 @@ class LegalMoveEnumerationTests(unittest.TestCase):
         position = Position(board, Side.SENTE)
         before = _position_snapshot(position)
 
-        self.assertTrue(hasattr(movegen, "has_legal_move"),
-                        "has_legal_move がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "has_legal_move"),
+            "has_legal_move がまだ実装されていません",
+        )
         self.assertTrue(movegen.has_legal_move(position))
         self.assertEqual(_position_snapshot(position), before)
 
@@ -2639,14 +3071,17 @@ class LegalMoveEnumerationTests(unittest.TestCase):
         for file in range(1, 10):
             for rank in range(1, 10):
                 if Square(file, rank) != Square(5, 9):
-                    board.set_piece(Square(file, rank),
-                                    Piece(PieceType.PAWN, Side.SENTE))
+                    board.set_piece(
+                        Square(file, rank), Piece(PieceType.PAWN, Side.SENTE)
+                    )
         position = Position(board, Side.SENTE)
         position.sente_hand.add(BasicPieceType.GOLD)
         before = _position_snapshot(position)
 
-        self.assertTrue(hasattr(movegen, "has_legal_move"),
-                        "has_legal_move がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "has_legal_move"),
+            "has_legal_move がまだ実装されていません",
+        )
         self.assertTrue(movegen.has_legal_move(position))
         self.assertEqual(_position_snapshot(position), before)
 
@@ -2658,13 +3093,14 @@ class LegalMoveEnumerationTests(unittest.TestCase):
         board = Board()
         for file in range(1, 10):
             for rank in range(1, 10):
-                board.set_piece(Square(file, rank),
-                                Piece(PieceType.PAWN, Side.SENTE))
+                board.set_piece(Square(file, rank), Piece(PieceType.PAWN, Side.SENTE))
         position = Position(board, Side.SENTE)
         before = _position_snapshot(position)
 
-        self.assertTrue(hasattr(movegen, "has_legal_move"),
-                        "has_legal_move がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "has_legal_move"),
+            "has_legal_move がまだ実装されていません",
+        )
         self.assertFalse(movegen.has_legal_move(position))
         self.assertEqual(_position_snapshot(position), before)
 
@@ -2672,8 +3108,10 @@ class LegalMoveEnumerationTests(unittest.TestCase):
 class WeakMoveSelectionTests(unittest.TestCase):
     def _require_implementation(self):
         """弱い一手選択の実装不足を属性エラーでなく明示的に失敗させる。"""
-        self.assertTrue(hasattr(movegen, "choose_weak_move"),
-                        "choose_weak_move がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "choose_weak_move"),
+            "choose_weak_move がまだ実装されていません",
+        )
 
     def test_returns_reproducible_member_for_seeded_random_generator(self):
         """固定種の乱数生成器で合法手一覧から一手を再現可能に選ぶ。
@@ -2701,8 +3139,7 @@ class WeakMoveSelectionTests(unittest.TestCase):
         """
         self._require_implementation()
 
-        self.assertIsNone(movegen.choose_weak_move(
-            (), random.Random(20260925)))
+        self.assertIsNone(movegen.choose_weak_move((), random.Random(20260925)))
 
     def test_does_not_change_the_input_move_tuple(self):
         """一手選択は渡された合法手タプルを変更しない。
@@ -2725,8 +3162,9 @@ class MaterialEvaluationTests(unittest.TestCase):
     def _require_api(self):
         """難易度選択APIが未実装なら明示的な振る舞い失敗にする。"""
         for name in ("MoveSelectionPolicy", "material_balance", "choose_move"):
-            self.assertIsNotNone(getattr(movegen, name, None),
-                                 name + " がまだ実装されていません")
+            self.assertIsNotNone(
+                getattr(movegen, name, None), name + " がまだ実装されていません"
+            )
         return movegen.MoveSelectionPolicy
 
     def _silver_capture_position(self):
@@ -2743,17 +3181,17 @@ class MaterialEvaluationTests(unittest.TestCase):
 
     def _snapshot(self, position):
         """可変な盤面・手番・先後の全持ち駒を比較用タプルにする。"""
-        squares = [Square(file, rank) for file in range(1, 10)
-                   for rank in range(1, 10)]
-        hand_types = tuple(piece_type for piece_type in BasicPieceType
-                           if piece_type != BasicPieceType.KING)
+        squares = [Square(file, rank) for file in range(1, 10) for rank in range(1, 10)]
+        hand_types = tuple(
+            piece_type
+            for piece_type in BasicPieceType
+            if piece_type != BasicPieceType.KING
+        )
         return (
             tuple(position.board.piece_at(square) for square in squares),
             position.side_to_move,
-            tuple(position.sente_hand.count(piece_type)
-                  for piece_type in hand_types),
-            tuple(position.gote_hand.count(piece_type)
-                  for piece_type in hand_types),
+            tuple(position.sente_hand.count(piece_type) for piece_type in hand_types),
+            tuple(position.gote_hand.count(piece_type) for piece_type in hand_types),
         )
 
     def test_material_balance_counts_tanigawa_values_on_board_and_in_hands(self):
@@ -2766,9 +3204,12 @@ class MaterialEvaluationTests(unittest.TestCase):
         position = Position(Board(), Side.SENTE)
         position.board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
         position.board.set_piece(Square(1, 1), Piece(PieceType.KING, Side.GOTE))
-        squares = [Square(file, rank) for file in range(1, 10)
-                   for rank in range(1, 10)
-                   if Square(file, rank) not in (Square(9, 9), Square(1, 1))]
+        squares = [
+            Square(file, rank)
+            for file in range(1, 10)
+            for rank in range(1, 10)
+            if Square(file, rank) not in (Square(9, 9), Square(1, 1))
+        ]
         board_values = {
             PieceType.ROOK: 15,
             PieceType.BISHOP: 13,
@@ -2795,8 +3236,7 @@ class MaterialEvaluationTests(unittest.TestCase):
         self.assertEqual(movegen.material_balance(position, Side.GOTE), -187)
 
         king_only = Position(Board(), Side.SENTE)
-        king_only.board.set_piece(
-            Square(5, 5), Piece(PieceType.KING, Side.SENTE))
+        king_only.board.set_piece(Square(5, 5), Piece(PieceType.KING, Side.SENTE))
         self.assertEqual(movegen.material_balance(king_only, Side.SENTE), 0)
         self.assertEqual(movegen.material_balance(king_only, Side.GOTE), 0)
 
@@ -2811,11 +3251,15 @@ class MaterialEvaluationTests(unittest.TestCase):
         before = movegen.material_balance(position, Side.SENTE)
 
         selected = movegen.choose_move(
-            position, (quiet, capture), policy.MATERIAL,
-            random.Random(20261005))
+            position, (quiet, capture), policy.MATERIAL, random.Random(20261005)
+        )
         scored_position = position.copy()
-        movegen.apply_move(scored_position, capture.source,
-                           capture.destination, promote=capture.promote)
+        movegen.apply_move(
+            scored_position,
+            capture.source,
+            capture.destination,
+            promote=capture.promote,
+        )
         after = movegen.material_balance(scored_position, Side.SENTE)
 
         self.assertEqual(selected, capture)
@@ -2838,15 +3282,20 @@ class MaterialEvaluationTests(unittest.TestCase):
         before = movegen.material_balance(position, Side.GOTE)
 
         selected = movegen.choose_move(
-            position, (quiet, capture), policy.MATERIAL,
-            random.Random(20261005))
+            position, (quiet, capture), policy.MATERIAL, random.Random(20261005)
+        )
         scored_position = position.copy()
-        movegen.apply_move(scored_position, capture.source,
-                           capture.destination, promote=capture.promote)
+        movegen.apply_move(
+            scored_position,
+            capture.source,
+            capture.destination,
+            promote=capture.promote,
+        )
 
         self.assertEqual(selected, capture)
-        self.assertEqual(movegen.material_balance(scored_position, Side.GOTE)
-                         - before, 16)
+        self.assertEqual(
+            movegen.material_balance(scored_position, Side.GOTE) - before, 16
+        )
 
     def test_material_policy_values_captured_promoted_piece_as_basic_in_hand(self):
         """取った竜は飛車の持ち駒15点に戻り、相対差が32点増える。
@@ -2866,8 +3315,9 @@ class MaterialEvaluationTests(unittest.TestCase):
         movegen.apply_move(scored_position, Square(5, 5), Square(5, 4))
 
         self.assertEqual(scored_position.sente_hand.count(BasicPieceType.ROOK), 1)
-        self.assertEqual(movegen.material_balance(scored_position, Side.SENTE)
-                         - before, 32)
+        self.assertEqual(
+            movegen.material_balance(scored_position, Side.SENTE) - before, 32
+        )
 
     def test_material_policy_uses_only_supplied_one_ply_moves(self):
         """評価は渡された移動・打ちの各候補を一度だけ適用する。
@@ -2886,12 +3336,18 @@ class MaterialEvaluationTests(unittest.TestCase):
             BoardMove(Square(5, 5), Square(5, 4), False),
             DropMove(BasicPieceType.PAWN, Square(7, 7)),
         )
-        with patch.object(movegen, "legal_moves", wraps=movegen.legal_moves) as legal_moves:
-            with patch.object(movegen, "apply_move", wraps=movegen.apply_move) as apply_move:
-                with patch.object(movegen, "apply_drop", wraps=movegen.apply_drop) as apply_drop:
+        with patch.object(
+            movegen, "legal_moves", wraps=movegen.legal_moves
+        ) as legal_moves:
+            with patch.object(
+                movegen, "apply_move", wraps=movegen.apply_move
+            ) as apply_move:
+                with patch.object(
+                    movegen, "apply_drop", wraps=movegen.apply_drop
+                ) as apply_drop:
                     selected = movegen.choose_move(
-                        position, moves, policy.MATERIAL,
-                        random.Random(20261005))
+                        position, moves, policy.MATERIAL, random.Random(20261005)
+                    )
 
         self.assertIn(selected, moves)
         legal_moves.assert_not_called()
@@ -2920,8 +3376,7 @@ class MaterialEvaluationTests(unittest.TestCase):
         candidates = best_moves + (lower_scoring_move,)
         rng = random.Random(20261005)
         with patch.object(rng, "choice", side_effect=lambda moves: moves[-1]) as choice:
-            selected = movegen.choose_move(position, candidates,
-                                           policy.MATERIAL, rng)
+            selected = movegen.choose_move(position, candidates, policy.MATERIAL, rng)
 
         choice.assert_called_once_with(best_moves)
         self.assertEqual(selected, best_moves[-1])
@@ -2937,7 +3392,8 @@ class MaterialEvaluationTests(unittest.TestCase):
             rng = random.Random(20261005)
             with patch.object(rng, "choice", wraps=rng.choice) as choice:
                 selected = movegen.choose_move(
-                    Position(Board(), Side.SENTE), (), choice_policy, rng)
+                    Position(Board(), Side.SENTE), (), choice_policy, rng
+                )
             with self.subTest(policy=choice_policy):
                 self.assertIsNone(selected)
                 choice.assert_not_called()
@@ -2952,8 +3408,9 @@ class MaterialEvaluationTests(unittest.TestCase):
         position, capture, quiet = self._silver_capture_position()
         before = self._snapshot(position)
 
-        movegen.choose_move(position, (capture, quiet), policy.MATERIAL,
-                            random.Random(20261005))
+        movegen.choose_move(
+            position, (capture, quiet), policy.MATERIAL, random.Random(20261005)
+        )
 
         self.assertEqual(self._snapshot(position), before)
 
@@ -2968,8 +3425,9 @@ class MaterialEvaluationTests(unittest.TestCase):
         moves = (capture, quiet)
 
         expected = movegen.choose_weak_move(moves, random.Random(20261005))
-        selected = movegen.choose_move(position, moves, policy.RANDOM,
-                                       random.Random(20261005))
+        selected = movegen.choose_move(
+            position, moves, policy.RANDOM, random.Random(20261005)
+        )
 
         self.assertEqual(selected, expected)
 
@@ -2977,10 +3435,12 @@ class MaterialEvaluationTests(unittest.TestCase):
 class CheckmateAndGameEndTests(unittest.TestCase):
     def _assert_public_operations_exist(self):
         """詰み・終局の公開操作が未実装なら、明示的なテスト失敗にする。"""
-        self.assertTrue(hasattr(movegen, "is_checkmate"),
-                        "is_checkmate がまだ実装されていません")
-        self.assertTrue(hasattr(movegen, "is_game_over"),
-                        "is_game_over がまだ実装されていません")
+        self.assertTrue(
+            hasattr(movegen, "is_checkmate"), "is_checkmate がまだ実装されていません"
+        )
+        self.assertTrue(
+            hasattr(movegen, "is_game_over"), "is_game_over がまだ実装されていません"
+        )
 
     def _mated_sente_position(self):
         """先手玉が飛車王手を防げない局面を作る。"""
@@ -3132,10 +3592,8 @@ class CheckmateAndGameEndTests(unittest.TestCase):
         合法手なしだけを詰みとする、玉なしを例外や詰みとする誤りを検出する。
         """
         non_checked = Position(Board(), Side.SENTE)
-        non_checked.board.set_piece(Square(5, 5),
-                                    Piece(PieceType.KING, Side.SENTE))
-        non_checked.board.set_piece(Square(9, 1),
-                                    Piece(PieceType.KING, Side.GOTE))
+        non_checked.board.set_piece(Square(5, 5), Piece(PieceType.KING, Side.SENTE))
+        non_checked.board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         kingless = Position(Board(), Side.SENTE)
 
         for position in (non_checked, kingless):
@@ -3155,8 +3613,7 @@ class UchiFuzumeTests(unittest.TestCase):
             board.set_piece(Square(5, 1), Piece(PieceType.KING, Side.GOTE))
             board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
             board.set_piece(Square(4, 3), Piece(PieceType.GOLD, Side.SENTE))
-            for square in (Square(4, 1), Square(6, 1),
-                           Square(4, 2), Square(6, 2)):
+            for square in (Square(4, 1), Square(6, 1), Square(4, 2), Square(6, 2)):
                 board.set_piece(square, Piece(PieceType.PAWN, Side.GOTE))
             position = Position(board, Side.SENTE)
             position.sente_hand.add(BasicPieceType.PAWN)
@@ -3165,8 +3622,7 @@ class UchiFuzumeTests(unittest.TestCase):
         board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         board.set_piece(Square(4, 7), Piece(PieceType.GOLD, Side.GOTE))
-        for square in (Square(4, 9), Square(6, 9),
-                       Square(4, 8), Square(6, 8)):
+        for square in (Square(4, 9), Square(6, 9), Square(4, 8), Square(6, 8)):
             board.set_piece(square, Piece(PieceType.PAWN, Side.SENTE))
         position = Position(board, Side.GOTE)
         position.gote_hand.add(BasicPieceType.PAWN)
@@ -3180,13 +3636,11 @@ class UchiFuzumeTests(unittest.TestCase):
         for side in Side:
             with self.subTest(side=side):
                 position = self._pawn_drop_mate_position(side)
-                destination = (Square(5, 2) if side == Side.SENTE
-                               else Square(5, 8))
+                destination = Square(5, 2) if side == Side.SENTE else Square(5, 8)
                 before = _position_snapshot(position)
 
                 with self.assertRaises(ValueError):
-                    movegen.apply_drop(position, BasicPieceType.PAWN,
-                                       destination)
+                    movegen.apply_drop(position, BasicPieceType.PAWN, destination)
 
                 self.assertEqual(_position_snapshot(position), before)
 
@@ -3203,8 +3657,9 @@ class UchiFuzumeTests(unittest.TestCase):
 
         movegen.apply_drop(position, BasicPieceType.PAWN, Square(5, 2))
 
-        self.assertEqual(position.board.piece_at(Square(5, 2)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            position.board.piece_at(Square(5, 2)), Piece(PieceType.PAWN, Side.SENTE)
+        )
 
     def test_allows_pawn_drop_without_check(self):
         """相手玉を利かせない歩打ちは拒否しない。
@@ -3212,16 +3667,15 @@ class UchiFuzumeTests(unittest.TestCase):
         歩を打っただけで打ち歩詰めと判定する誤りを検出する。
         """
         position = Position(Board(), Side.SENTE)
-        position.board.set_piece(Square(5, 1),
-                                  Piece(PieceType.KING, Side.GOTE))
-        position.board.set_piece(Square(9, 9),
-                                  Piece(PieceType.KING, Side.SENTE))
+        position.board.set_piece(Square(5, 1), Piece(PieceType.KING, Side.GOTE))
+        position.board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
         position.sente_hand.add(BasicPieceType.PAWN)
 
         movegen.apply_drop(position, BasicPieceType.PAWN, Square(4, 5))
 
-        self.assertEqual(position.board.piece_at(Square(4, 5)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            position.board.piece_at(Square(4, 5)), Piece(PieceType.PAWN, Side.SENTE)
+        )
 
     def test_allows_pawn_drop_when_king_can_escape(self):
         """相手玉に安全な逃げ場がある歩打ちは拒否しない。
@@ -3247,8 +3701,9 @@ class UchiFuzumeTests(unittest.TestCase):
 
         movegen.apply_drop(position, BasicPieceType.GOLD, Square(5, 2))
 
-        self.assertEqual(position.board.piece_at(Square(5, 2)),
-                         Piece(PieceType.GOLD, Side.SENTE))
+        self.assertEqual(
+            position.board.piece_at(Square(5, 2)), Piece(PieceType.GOLD, Side.SENTE)
+        )
 
     def test_allows_board_pawn_move_that_gives_checkmate(self):
         """盤上の歩の移動による詰みは打ち歩詰めとして拒否しない。
@@ -3257,13 +3712,13 @@ class UchiFuzumeTests(unittest.TestCase):
         """
         position = self._pawn_drop_mate_position(Side.SENTE)
         position.sente_hand.remove(BasicPieceType.PAWN)
-        position.board.set_piece(Square(5, 3),
-                                 Piece(PieceType.PAWN, Side.SENTE))
+        position.board.set_piece(Square(5, 3), Piece(PieceType.PAWN, Side.SENTE))
 
         movegen.apply_move(position, Square(5, 3), Square(5, 2))
 
-        self.assertEqual(position.board.piece_at(Square(5, 2)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            position.board.piece_at(Square(5, 2)), Piece(PieceType.PAWN, Side.SENTE)
+        )
 
     def test_allows_pawn_drop_in_kingless_partial_position(self):
         """玉のない部分局面の歩打ちは打ち歩詰めとして拒否しない。
@@ -3275,8 +3730,9 @@ class UchiFuzumeTests(unittest.TestCase):
 
         movegen.apply_drop(position, BasicPieceType.PAWN, Square(5, 5))
 
-        self.assertEqual(position.board.piece_at(Square(5, 5)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            position.board.piece_at(Square(5, 5)), Piece(PieceType.PAWN, Side.SENTE)
+        )
 
     def test_reply_search_disables_nested_uchi_fuzume_check(self):
         """王手中の応手探索へFalse設定を伝播させる。
@@ -3284,17 +3740,20 @@ class UchiFuzumeTests(unittest.TestCase):
         打ち歩詰め確認中に公開apply_dropへ再入する循環を、内部設定の伝播で防ぐ。
         """
         position = self._pawn_drop_mate_position(Side.SENTE)
-        movegen._apply_drop_unchecked(position, BasicPieceType.PAWN,
-                                      Square(5, 2))
+        movegen._apply_drop_unchecked(position, BasicPieceType.PAWN, Square(5, 2))
         position.gote_hand.add(BasicPieceType.PAWN)
 
-        with patch.object(movegen, "_apply_drop",
-                          wraps=movegen._apply_drop) as apply_drop:
-            self.assertFalse(movegen._has_legal_move(
-                position, check_uchi_fuzume=False))
+        with patch.object(
+            movegen, "_apply_drop", wraps=movegen._apply_drop
+        ) as apply_drop:
+            self.assertFalse(movegen._has_legal_move(position, check_uchi_fuzume=False))
 
-        self.assertTrue(any(call.kwargs.get("check_uchi_fuzume") is False
-                            for call in apply_drop.call_args_list))
+        self.assertTrue(
+            any(
+                call.kwargs.get("check_uchi_fuzume") is False
+                for call in apply_drop.call_args_list
+            )
+        )
 
     def test_pawn_drop_mate_position_has_no_legal_move(self):
         """歩打ち後に詰んだ側の公開合法手判定はFalseを返す。
@@ -3302,7 +3761,6 @@ class UchiFuzumeTests(unittest.TestCase):
         打ち歩詰めとなる歩打ち後の相手局面を、合法手ありとして数える誤りを検出する。
         """
         position = self._pawn_drop_mate_position(Side.SENTE)
-        movegen._apply_drop_unchecked(position, BasicPieceType.PAWN,
-                                      Square(5, 2))
+        movegen._apply_drop_unchecked(position, BasicPieceType.PAWN, Square(5, 2))
 
         self.assertFalse(movegen.has_legal_move(position))

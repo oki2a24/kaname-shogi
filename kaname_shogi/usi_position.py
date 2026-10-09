@@ -40,9 +40,7 @@ def parse_usi_position(command: str) -> SfenPosition:
 
     if tokens[1] == "startpos":
         if len(tokens) < 4 or tokens[2] != "moves":
-            raise ValueError(
-                "USI startpos局面はmovesと1手以上で指定してください"
-            )
+            raise ValueError("USI startpos局面はmovesと1手以上で指定してください")
         initial_position = create_initial_position()
         base_move_number = 1
         move_tokens = tokens[3:]
@@ -59,7 +57,7 @@ def parse_usi_position(command: str) -> SfenPosition:
             return sfen_position
         if tokens[next_index] != "moves":
             raise ValueError("USI SFEN局面の後はmovesで指し手を指定してください")
-        move_tokens = tokens[next_index + 1:]
+        move_tokens = tokens[next_index + 1 :]
         if not move_tokens:
             raise ValueError("USI SFEN局面のmovesには1手以上が必要です")
         initial_position = sfen_position.position
@@ -86,5 +84,4 @@ def parse_usi_position(command: str) -> SfenPosition:
                 f"第{move_index}手 ({token}) の解析または局面適用に失敗しました: {error}"
             ) from error
 
-    return SfenPosition(record.current_position,
-                        base_move_number + len(move_tokens))
+    return SfenPosition(record.current_position, base_move_number + len(move_tokens))

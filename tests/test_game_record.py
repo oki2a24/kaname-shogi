@@ -5,13 +5,19 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from kaname_shogi.model import (BasicPieceType, Board, Piece, PieceType,
-                                Position, Side, Square,
-                                create_initial_position)
+from kaname_shogi.model import (
+    BasicPieceType,
+    Board,
+    Piece,
+    PieceType,
+    Position,
+    Side,
+    Square,
+    create_initial_position,
+)
 
 try:
-    from kaname_shogi.game_record import (GameRecord, RecordedDrop,
-                                          RecordedMove)
+    from kaname_shogi.game_record import GameRecord, RecordedDrop, RecordedMove
 except ModuleNotFoundError as error:
     if error.name != "kaname_shogi.game_record":
         raise
@@ -36,10 +42,13 @@ class GameRecordTests(unittest.TestCase):
         record.apply_move(Square(7, 7), Square(7, 6))
         record.apply_move(Square(3, 3), Square(3, 4))
 
-        self.assertEqual(record.moves, (
-            RecordedMove(Square(7, 7), Square(7, 6), False),
-            RecordedMove(Square(3, 3), Square(3, 4), False),
-        ))
+        self.assertEqual(
+            record.moves,
+            (
+                RecordedMove(Square(7, 7), Square(7, 6), False),
+                RecordedMove(Square(3, 3), Square(3, 4), False),
+            ),
+        )
         self.assertEqual(record.current_position.side_to_move, Side.SENTE)
 
     def test_records_successful_drop_after_updating_position(self):
@@ -58,12 +67,13 @@ class GameRecordTests(unittest.TestCase):
 
         record.apply_drop(BasicPieceType.PAWN, Square(5, 5))
 
-        self.assertEqual(record.moves, (
-            RecordedDrop(BasicPieceType.PAWN, Square(5, 5)),
-        ))
+        self.assertEqual(
+            record.moves, (RecordedDrop(BasicPieceType.PAWN, Square(5, 5)),)
+        )
         current = record.current_position
-        self.assertEqual(current.board.piece_at(Square(5, 5)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            current.board.piece_at(Square(5, 5)), Piece(PieceType.PAWN, Side.SENTE)
+        )
         self.assertEqual(current.sente_hand.count(BasicPieceType.PAWN), 0)
         self.assertEqual(current.side_to_move, Side.GOTE)
 
@@ -86,16 +96,24 @@ class GameRecordTests(unittest.TestCase):
         for file in range(1, 10):
             for rank in range(1, 10):
                 square = Square(file, rank)
-                self.assertEqual(after.board.piece_at(square),
-                                 before.board.piece_at(square))
-        for piece_type in (BasicPieceType.PAWN, BasicPieceType.LANCE,
-                           BasicPieceType.KNIGHT, BasicPieceType.SILVER,
-                           BasicPieceType.GOLD, BasicPieceType.BISHOP,
-                           BasicPieceType.ROOK):
-            self.assertEqual(after.sente_hand.count(piece_type),
-                             before.sente_hand.count(piece_type))
-            self.assertEqual(after.gote_hand.count(piece_type),
-                             before.gote_hand.count(piece_type))
+                self.assertEqual(
+                    after.board.piece_at(square), before.board.piece_at(square)
+                )
+        for piece_type in (
+            BasicPieceType.PAWN,
+            BasicPieceType.LANCE,
+            BasicPieceType.KNIGHT,
+            BasicPieceType.SILVER,
+            BasicPieceType.GOLD,
+            BasicPieceType.BISHOP,
+            BasicPieceType.ROOK,
+        ):
+            self.assertEqual(
+                after.sente_hand.count(piece_type), before.sente_hand.count(piece_type)
+            )
+            self.assertEqual(
+                after.gote_hand.count(piece_type), before.gote_hand.count(piece_type)
+            )
 
     def test_rejected_drop_does_not_change_record(self):
         """失敗した駒打ちでは履歴と現在局面を変更しない。
@@ -116,8 +134,9 @@ class GameRecordTests(unittest.TestCase):
         for file in range(1, 10):
             for rank in range(1, 10):
                 square = Square(file, rank)
-                self.assertEqual(after.board.piece_at(square),
-                                 before.board.piece_at(square))
+                self.assertEqual(
+                    after.board.piece_at(square), before.board.piece_at(square)
+                )
 
     def test_exposed_positions_are_independent_copies(self):
         """開始局面・現在局面の返却値を変更しても記録内部を変更しない。
@@ -133,17 +152,16 @@ class GameRecordTests(unittest.TestCase):
         self.assertIsNotNone(initial, "開始局面の読み取り値が未実装です")
         if initial is None:
             return
-        initial.board.set_piece(Square(1, 5),
-                                Piece(PieceType.ROOK, Side.SENTE))
+        initial.board.set_piece(Square(1, 5), Piece(PieceType.ROOK, Side.SENTE))
         current = record.current_position
-        current.board.set_piece(Square(1, 5),
-                                Piece(PieceType.ROOK, Side.SENTE))
+        current.board.set_piece(Square(1, 5), Piece(PieceType.ROOK, Side.SENTE))
         current.sente_hand.add(BasicPieceType.PAWN)
 
         self.assertIsNone(record.initial_position.board.piece_at(Square(1, 5)))
         self.assertIsNone(record.current_position.board.piece_at(Square(1, 5)))
-        self.assertEqual(record.current_position.sente_hand.count(
-            BasicPieceType.PAWN), 0)
+        self.assertEqual(
+            record.current_position.sente_hand.count(BasicPieceType.PAWN), 0
+        )
 
     def test_replays_position_at_each_recorded_move(self):
         """開始局面から任意の手数まで適用した局面を再現する。
@@ -165,15 +183,19 @@ class GameRecordTests(unittest.TestCase):
         position_two = position_at(2)
 
         self.assertEqual(position_zero.side_to_move, Side.SENTE)
-        self.assertEqual(position_zero.board.piece_at(Square(7, 7)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            position_zero.board.piece_at(Square(7, 7)),
+            Piece(PieceType.PAWN, Side.SENTE),
+        )
         self.assertIsNone(position_zero.board.piece_at(Square(7, 6)))
         self.assertEqual(position_one.side_to_move, Side.GOTE)
-        self.assertEqual(position_one.board.piece_at(Square(7, 6)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            position_one.board.piece_at(Square(7, 6)), Piece(PieceType.PAWN, Side.SENTE)
+        )
         self.assertEqual(position_two.side_to_move, Side.SENTE)
-        self.assertEqual(position_two.board.piece_at(Square(3, 4)),
-                         Piece(PieceType.PAWN, Side.GOTE))
+        self.assertEqual(
+            position_two.board.piece_at(Square(3, 4)), Piece(PieceType.PAWN, Side.GOTE)
+        )
 
     def test_rejects_position_at_outside_recorded_range(self):
         """履歴の範囲外の手数を局面再現から拒否する。
@@ -223,19 +245,28 @@ class GameRecordTests(unittest.TestCase):
 
         self.assertEqual(payload["format"], "kaname-shogi-game-record-v1")
         self.assertEqual(payload["initial_position"]["side_to_move"], "SENTE")
-        self.assertIn({"file": 2, "rank": 2, "piece_type": "PAWN",
-                       "side": "SENTE"},
-                      payload["initial_position"]["pieces"])
-        self.assertEqual(payload["initial_position"]["hands"]["SENTE"],
-                         {"PAWN": 1})
-        self.assertEqual(payload["initial_position"]["hands"]["GOTE"],
-                         {"PAWN": 1})
-        self.assertEqual(payload["moves"], [
-            {"kind": "move", "source": {"file": 2, "rank": 2},
-             "destination": {"file": 2, "rank": 1}, "promote": True},
-            {"kind": "drop", "piece_type": "PAWN",
-             "destination": {"file": 4, "rank": 4}},
-        ])
+        self.assertIn(
+            {"file": 2, "rank": 2, "piece_type": "PAWN", "side": "SENTE"},
+            payload["initial_position"]["pieces"],
+        )
+        self.assertEqual(payload["initial_position"]["hands"]["SENTE"], {"PAWN": 1})
+        self.assertEqual(payload["initial_position"]["hands"]["GOTE"], {"PAWN": 1})
+        self.assertEqual(
+            payload["moves"],
+            [
+                {
+                    "kind": "move",
+                    "source": {"file": 2, "rank": 2},
+                    "destination": {"file": 2, "rank": 1},
+                    "promote": True,
+                },
+                {
+                    "kind": "drop",
+                    "piece_type": "PAWN",
+                    "destination": {"file": 4, "rank": 4},
+                },
+            ],
+        )
 
     def test_loads_saved_record_and_replays_current_position(self):
         """保存済みの開始局面と履歴から独立した記録を再現する。
@@ -257,8 +288,10 @@ class GameRecordTests(unittest.TestCase):
             loaded = load(path)
 
         self.assertEqual(loaded.moves, record.moves)
-        self.assertEqual(loaded.current_position.board.piece_at(Square(7, 6)),
-                         Piece(PieceType.PAWN, Side.SENTE))
+        self.assertEqual(
+            loaded.current_position.board.piece_at(Square(7, 6)),
+            Piece(PieceType.PAWN, Side.SENTE),
+        )
         loaded.apply_move(Square(7, 6), Square(7, 5))
         self.assertEqual(len(record.moves), 2)
 
@@ -267,29 +300,36 @@ class GameRecordTests(unittest.TestCase):
         self._require_implementation()
         invalid_payloads = (
             "{",
-            json.dumps({"format": "wrong", "initial_position": {},
-                        "moves": []}),
-            json.dumps({
-                "format": "kaname-shogi-game-record-v1",
-                "initial_position": {
-                    "side_to_move": "SENTE", "pieces": [],
-                    "hands": {"SENTE": {"KING": 1}, "GOTE": {}},
-                },
-                "moves": [],
-            }),
-            json.dumps({
-                "format": "kaname-shogi-game-record-v1",
-                "initial_position": {
-                    "side_to_move": "SENTE", "pieces": [],
-                    "hands": {"SENTE": {}, "GOTE": {}},
-                },
-                "moves": [{
-                    "kind": "move",
-                    "source": {"file": 7, "rank": 7},
-                    "destination": {"file": 7, "rank": 6},
-                    "promote": False,
-                }],
-            }),
+            json.dumps({"format": "wrong", "initial_position": {}, "moves": []}),
+            json.dumps(
+                {
+                    "format": "kaname-shogi-game-record-v1",
+                    "initial_position": {
+                        "side_to_move": "SENTE",
+                        "pieces": [],
+                        "hands": {"SENTE": {"KING": 1}, "GOTE": {}},
+                    },
+                    "moves": [],
+                }
+            ),
+            json.dumps(
+                {
+                    "format": "kaname-shogi-game-record-v1",
+                    "initial_position": {
+                        "side_to_move": "SENTE",
+                        "pieces": [],
+                        "hands": {"SENTE": {}, "GOTE": {}},
+                    },
+                    "moves": [
+                        {
+                            "kind": "move",
+                            "source": {"file": 7, "rank": 7},
+                            "destination": {"file": 7, "rank": 6},
+                            "promote": False,
+                        }
+                    ],
+                }
+            ),
         )
         load = getattr(GameRecord, "load", None)
         self.assertIsNotNone(load, "GameRecordのJSON読込操作が未実装です")
@@ -331,10 +371,11 @@ class GameRecordTests(unittest.TestCase):
 
         self.assertEqual(payload["format"], "kaname-shogi-game-record-v1")
         self.assertEqual(record.moves, ())
-        self.assertEqual(record.current_position.side_to_move,
-                         before.side_to_move)
-        self.assertEqual(record.current_position.board.piece_at(Square(7, 7)),
-                         before.board.piece_at(Square(7, 7)))
+        self.assertEqual(record.current_position.side_to_move, before.side_to_move)
+        self.assertEqual(
+            record.current_position.board.piece_at(Square(7, 7)),
+            before.board.piece_at(Square(7, 7)),
+        )
 
     def test_rejects_malformed_nested_values(self):
         """余分キー、重複マス、0枚、真偽値座標、不正な成りを拒否する。
@@ -360,7 +401,8 @@ class GameRecordTests(unittest.TestCase):
 
             duplicate = json.loads(json.dumps(valid))
             duplicate["initial_position"]["pieces"].append(
-                duplicate["initial_position"]["pieces"][0])
+                duplicate["initial_position"]["pieces"][0]
+            )
             invalid_payloads.append(duplicate)
 
             zero_hand = json.loads(json.dumps(valid))

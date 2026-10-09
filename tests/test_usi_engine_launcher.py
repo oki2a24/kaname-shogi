@@ -18,7 +18,9 @@ class UsiEngineLauncherTests(unittest.TestCase):
         検出する。
         """
         self.assertTrue(LAUNCHER.is_file(), "USIエンジンの実行ファイルがありません")
-        self.assertTrue(os.access(LAUNCHER, os.X_OK), "USIエンジンの実行権限がありません")
+        self.assertTrue(
+            os.access(LAUNCHER, os.X_OK), "USIエンジンの実行権限がありません"
+        )
 
         result = subprocess.run(
             [str(LAUNCHER)],
@@ -47,7 +49,9 @@ class UsiEngineLauncherTests(unittest.TestCase):
         mainの戻り値を破棄し、エラーを成功終了として報告する誤りを検出する。
         """
         self.assertTrue(LAUNCHER.is_file(), "USIエンジンの実行ファイルがありません")
-        self.assertTrue(os.access(LAUNCHER, os.X_OK), "USIエンジンの実行権限がありません")
+        self.assertTrue(
+            os.access(LAUNCHER, os.X_OK), "USIエンジンの実行権限がありません"
+        )
 
         result = subprocess.run(
             [str(LAUNCHER)],

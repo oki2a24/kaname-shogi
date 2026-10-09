@@ -1,7 +1,6 @@
 """python3 -m kaname_shogiで実行するCLIの入口。"""
 
-from .cli import (GameMode, choose_game_mode,
-                  choose_move_selection_policy, run_game)
+from .cli import GameMode, choose_game_mode, choose_move_selection_policy, run_game
 
 
 def main() -> int:
@@ -26,8 +25,7 @@ def main() -> int:
             run_game(mode=mode)
         else:
             move_selection_policy = choose_move_selection_policy()
-            run_game(mode=mode,
-                     move_selection_policy=move_selection_policy)
+            run_game(mode=mode, move_selection_policy=move_selection_policy)
     except (EOFError, KeyboardInterrupt):
         print("入力を終了しました。")
     return 0

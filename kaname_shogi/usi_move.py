@@ -99,11 +99,7 @@ def format_usi_move(move: Move) -> str:
             raise ValueError("BoardMoveの値がUSI表記に対応しません")
 
         suffix = "+" if move.promote else ""
-        return (
-            _format_square(move.source)
-            + _format_square(move.destination)
-            + suffix
-        )
+        return _format_square(move.source) + _format_square(move.destination) + suffix
 
     if isinstance(move, DropMove):
         if (

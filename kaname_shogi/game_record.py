@@ -7,8 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Union
 
-from .model import (BasicPieceType, Board, Hand, Piece, PieceType, Position,
-                    Side, Square)
+from .model import BasicPieceType, Board, Hand, Piece, PieceType, Position, Side, Square
 from .movegen import apply_drop, apply_move
 
 
@@ -106,8 +105,9 @@ class GameRecord:
         position = self._initial_position.copy()
         for move in self._moves[:move_count]:
             if isinstance(move, RecordedMove):
-                apply_move(position, move.source, move.destination,
-                           promote=move.promote)
+                apply_move(
+                    position, move.source, move.destination, promote=move.promote
+                )
             else:
                 apply_drop(position, move.piece_type, move.destination)
         return position
@@ -158,14 +158,14 @@ class GameRecord:
         record = cls(initial_position)
         for move in moves:
             if isinstance(move, RecordedMove):
-                record.apply_move(move.source, move.destination,
-                                  promote=move.promote)
+                record.apply_move(move.source, move.destination, promote=move.promote)
             else:
                 record.apply_drop(move.piece_type, move.destination)
         return record
 
-    def apply_move(self, source: Square, destination: Square,
-                   *, promote: bool = False) -> None:
+    def apply_move(
+        self, source: Square, destination: Square, *, promote: bool = False
+    ) -> None:
         """合法な盤上移動を現在局面へ適用し、成功後だけ履歴へ追加する。
 
         引数:
@@ -186,8 +186,7 @@ class GameRecord:
         apply_move(self._current_position, source, destination, promote=promote)
         self._moves.append(RecordedMove(source, destination, promote))
 
-    def apply_drop(self, piece_type: BasicPieceType,
-                   destination: Square) -> None:
+    def apply_drop(self, piece_type: BasicPieceType, destination: Square) -> None:
         """合法な駒打ちを現在局面へ適用し、成功後だけ履歴へ追加する。
 
         引数:
@@ -226,16 +225,20 @@ def _position_to_payload(position: Position) -> dict:
             piece = position.board.piece_at(square)
             if piece is None:
                 continue
-            pieces.append({
-                "file": file,
-                "rank": rank,
-                "piece_type": piece.piece_type.name,
-                "side": piece.side.name,
-            })
+            pieces.append(
+                {
+                    "file": file,
+                    "rank": rank,
+                    "piece_type": piece.piece_type.name,
+                    "side": piece.side.name,
+                }
+            )
 
     hands = {}
-    for side_name, hand in (("SENTE", position.sente_hand),
-                            ("GOTE", position.gote_hand)):
+    for side_name, hand in (
+        ("SENTE", position.sente_hand),
+        ("GOTE", position.gote_hand),
+    ):
         hand_payload = {}
         for piece_type in _HAND_PIECE_TYPES:
             count = hand.count(piece_type)
@@ -277,8 +280,7 @@ def _move_to_payload(move: Union[RecordedMove, RecordedDrop]) -> dict:
 def _payload_to_position_and_moves(payload: object) -> tuple:
     """JSON値を検証し、開始局面と履歴へ変換する。"""
     _require_dict(payload, "トップレベル")
-    _require_keys(payload, {"format", "initial_position", "moves"},
-                  "トップレベル")
+    _require_keys(payload, {"format", "initial_position", "moves"}, "トップレベル")
     if payload["format"] != "kaname-shogi-game-record-v1":
         raise ValueError("JSON形式識別子が正しくありません")
     position = _payload_to_position(payload["initial_position"])
@@ -292,8 +294,7 @@ def _payload_to_position_and_moves(payload: object) -> tuple:
 def _payload_to_position(payload: object) -> Position:
     """JSONの開始局面を検証してPositionへ変換する。"""
     _require_dict(payload, "initial_position")
-    _require_keys(payload, {"side_to_move", "pieces", "hands"},
-                  "initial_position")
+    _require_keys(payload, {"side_to_move", "pieces", "hands"}, "initial_position")
     side = _enum_from_name(Side, payload["side_to_move"], "手番")
 
     pieces_payload = payload["pieces"]
@@ -303,17 +304,15 @@ def _payload_to_position(payload: object) -> Position:
     seen_squares = set()
     for piece_payload in pieces_payload:
         _require_dict(piece_payload, "盤上の駒")
-        _require_keys(piece_payload,
-                      {"file", "rank", "piece_type", "side"}, "盤上の駒")
-        square = _payload_to_square(piece_payload, "盤上の駒",
-                                    allow_extra=True)
+        _require_keys(piece_payload, {"file", "rank", "piece_type", "side"}, "盤上の駒")
+        square = _payload_to_square(piece_payload, "盤上の駒", allow_extra=True)
         if square in seen_squares:
             raise ValueError("同じマスに複数の駒を指定できません")
         seen_squares.add(square)
-        piece_type = _enum_from_name(PieceType, piece_payload["piece_type"],
-                                     "盤上の駒種")
-        piece_side = _enum_from_name(Side, piece_payload["side"],
-                                     "盤上の所有者")
+        piece_type = _enum_from_name(
+            PieceType, piece_payload["piece_type"], "盤上の駒種"
+        )
+        piece_side = _enum_from_name(Side, piece_payload["side"], "盤上の所有者")
         board.set_piece(square, Piece(piece_type, piece_side))
 
     hands_payload = payload["hands"]
@@ -324,8 +323,7 @@ def _payload_to_position(payload: object) -> Position:
         _require_dict(hand_payload, f"{side_name}の持ち駒")
         hand = Hand()
         for name, count in hand_payload.items():
-            piece_type = _enum_from_name(BasicPieceType, name,
-                                         f"{side_name}の持ち駒")
+            piece_type = _enum_from_name(BasicPieceType, name, f"{side_name}の持ち駒")
             if piece_type == BasicPieceType.KING:
                 raise ValueError("玉は持ち駒に指定できません")
             if type(count) is not int or count <= 0:
@@ -343,8 +341,7 @@ def _payload_to_move(payload: object) -> Union[RecordedMove, RecordedDrop]:
     _require_dict(payload, "履歴")
     kind = payload.get("kind")
     if kind == "move":
-        _require_keys(payload,
-                      {"kind", "source", "destination", "promote"}, "盤上移動")
+        _require_keys(payload, {"kind", "source", "destination", "promote"}, "盤上移動")
         promote = payload["promote"]
         if type(promote) is not bool:
             raise ValueError("promoteは真偽値で指定してください")
@@ -355,17 +352,20 @@ def _payload_to_move(payload: object) -> Union[RecordedMove, RecordedDrop]:
         )
     if kind == "drop":
         _require_keys(payload, {"kind", "piece_type", "destination"}, "駒打ち")
-        piece_type = _enum_from_name(BasicPieceType, payload["piece_type"],
-                                     "駒打ちの駒種")
+        piece_type = _enum_from_name(
+            BasicPieceType, payload["piece_type"], "駒打ちの駒種"
+        )
         if piece_type == BasicPieceType.KING:
             raise ValueError("玉は駒打ちに指定できません")
-        return RecordedDrop(piece_type,
-                            _payload_to_square(payload["destination"], "打ち先"))
+        return RecordedDrop(
+            piece_type, _payload_to_square(payload["destination"], "打ち先")
+        )
     raise ValueError("履歴の操作種別が正しくありません")
 
 
-def _payload_to_square(payload: object, label: str,
-                       *, allow_extra: bool = False) -> Square:
+def _payload_to_square(
+    payload: object, label: str, *, allow_extra: bool = False
+) -> Square:
     """JSONの筋・段を厳密に検証してSquareへ変換する。"""
     _require_dict(payload, label)
     if allow_extra:
