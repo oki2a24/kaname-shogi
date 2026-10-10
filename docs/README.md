@@ -126,7 +126,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | Ruff I追加 | [記録](learning/ruff-import-order.md) | [品質検査](knowledge/python-quality-checks.md) | — | — | — |
 | Ruff追加検査・運用方針 | [記録](learning/ruff-practical-rules.md) | [品質検査](knowledge/python-quality-checks.md) | — | — | — |
 | 評価・探索前の文書整理 | [記録](learning/documentation-chapter.md) | [更新ガイド](documentation-guide.md) | — | — | [開始時引き継ぎ](handover-documentation-chapter.md) |
-| 一手駒得評価の次段階の設計（設計承認済み・実装未承認） | [学習記録](learning/evaluation-next-stage.md) | — | [設計書](plans/2026-10-10-evaluation-next-stage-design.md) | — | [開始時引き継ぎ](handover-evaluation-next-stage.md) |
+| 一手駒得評価の次段階の設計（main統合・検証・理解確認完了、実装未開始） | [学習記録](learning/evaluation-next-stage.md) | — | [設計書](plans/2026-10-10-evaluation-next-stage-design.md) | — | [開始時引き継ぎ](handover-evaluation-next-stage.md) |
 
 ## 例外と履歴の読み方
 
