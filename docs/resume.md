@@ -2,17 +2,17 @@
 
 ## 現在地
 
-2026-10-10更新。「詰み優先を確認する」は承認済み計画タスク2の最初の2項目と小補強を検証・独立レビューし、本人承認でmainへ取り込み済み。取り込み先検証も成功。最後の理解確認も回答・補足の記録まで完了。次テーマの本人選定待ちで、後続へ進まない。
+2026-10-10更新。本人は次テーマ「同点最高の候補だけを抽選することを確認する」を選定し、新セッション準備を依頼した。対象は承認済み計画タスク2の `test_draws_only_equal_best_candidates` 1項目だけ。今回は準備のみで、新テーマは未開始。
 
-- 作業場所：`/Users/oki2a24/kaname-shogi`、現在main。`776d836` から `d4dcdc5` へfast-forward。準備 `cf30896`・最初の2テスト `555b615`・補強 `d4dcdc5` を統合済み。新規worktree・push・ブランチ削除なし。最新状態はGitで確認する。
-- 対象：先後両方の詰み勝ち/負けと極端な通常点との順序、負けの詰み応手群の先頭/中間/末尾。補強後は誤り注入計11回で対象FAILと復元成功。製品コード変更なし。
-- 取り込み先実測：全体349件成功、Ruff整形確認28ファイル・lint・差分検査成功。取り込み11文書の相対リンク・見出し389件問題0。独立コード/文書レビューは各Critical 0・Important 0・Minor 0。[学習記録](learning/two-ply-mate-priority.md#main取り込みと取り込み先検証)を参照。
-- 次の行動：[次テーマ候補](next-topics.md#詰み優先完了後の候補2026-10-10小さい順)を提示して本人選定を待つ。推薦は同点最高の抽選確認1項目。理解確認の[回答と補足](learning/two-ply-mate-priority.md#最後の理解確認とテーマ完了)は記録済み。取り込み記録 `83c9f3e`。
-- タスク2の残り、CLI・USI三択、性能・対局測定は未実施。利用面は二方式のまま。今後の[テスト点検手順](knowledge/test-coverage-review.md)はプロジェクトと個人Codex設定へ導入済み。
+- 作業場所：`/Users/oki2a24/kaname-shogi`。準備開始mainのHEAD `d0441af`、origin/mainより5コミット先行、変更なし。準備ブランチ `codex/two-ply-equal-best-handoff`。今回のmain統合・push・新規worktreeなし。最新状態はGitで確認する。
+- 次の行動：本人が[引き継ぎの再開用プロンプト](handover-two-ply-equal-best.md#再開用プロンプト)を新セッションへ入力する。入力後、現行基準と既存計画を照合し、対象1項目だけを進める。
+- 最高同点だけを一回抽選する内部経路は実装済み。実局面の合法性・同点最高の独立検算と、初回Green時の隔離誤り注入で検出力を確認する。不要な製品変更をしない。
+- 前テーマ「詰み優先」は2項目・小補強・独立レビュー・本人承認のmain統合・取り込み先検証・最後の理解確認まで完了。[本人回答と補足](learning/two-ply-mate-priority.md#最後の理解確認とテーマ完了)を参照。全体349件・対象176件は前テーマの実績であり次回の現在結果に流用しない。
+- タスク2のさらに残り、CLI/USI三択、選択時間・棋力測定は未実施。利用面は二方式のまま。[テスト点検手順](knowledge/test-coverage-review.md)を継続適用する。
 
 ## 次に読む資料
 
-[今回の学習記録](learning/two-ply-mate-priority.md)、[承認済み計画タスク2の最初の2項目](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[選択の知識メモ](knowledge/31-weak-move-selection.md)、[AGENTS.md](../AGENTS.md)、[更新ガイド](documentation-guide.md)。開始時の背景と再開指示は[引き継ぎ](handover-two-ply-mate-priority.md)に保存し、入力済みのプロンプトを再実行待ちとは扱わない。
+[今回の引き継ぎ](handover-two-ply-equal-best.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ記録](learning/two-ply-mate-priority.md)、[選択の知識メモ](knowledge/31-weak-move-selection.md)、[テスト点検手順](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書更新ガイド](documentation-guide.md)。個人知見と具体的なコード位置は引き継ぎを参照する。
 
 ## 二手先読み設計の完了
 
