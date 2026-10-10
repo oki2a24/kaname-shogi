@@ -2,17 +2,17 @@
 
 ## 現在地
 
-2026-10-10更新。「通常の二手比較を実装する」の計画タスク1を実装・検証・独立レビュー済み。通常比較のテスト補強4項目も実施・検証・独立レビュー済み。本人承認でmainへ取り込み、取り込み先検証も完了。最後の理解確認も回答・補足の記録まで完了。次テーマは本人の選定待ち。
+2026-10-10更新。本人は次テーマ「詰み優先を確認する」を選び、新セッション準備を依頼した。承認済み計画タスク2の最初の2項目へ限定する。今回は準備のみで、新テーマの学習・テスト追加・製品修正は未開始。
 
-- 作業場所：`/Users/oki2a24/kaname-shogi`、現在ブランチ `main`。実装開始HEAD `84ca6c1`、実装ブランチ `codex/two-ply-basic-comparison` を `c5e1716` までfast-forward取り込み済み。新規worktree・pushなし。コミットの最新状態はGitで確認する。
-- 実装範囲：取り返し回避、全応手の最悪値、後手開始視点、得な駒取りの4振る舞い。新方針値と三つの非公開操作、既存選択入口の分岐を追加した。既存RANDOM・MATERIALと公開APIを維持する。
-- 検証：基準340件、初回実装後344件成功、補強後347件成功、対象174件成功、取り込み先でも全347件・Ruff整形・lint成功、取り込み文書10件のリンク・見出し387件問題0。独立レビューCritical 0・Important 0・Minor 0。詳細は[学習記録](learning/two-ply-basic-comparison.md)。
-- CLI・USIは引き続き二方式。詰み・境界・枝独立性の網羅テスト、利用面の三択対応、性能・対局測定は未実施。
-- 次の行動：[次テーマ候補](next-topics.md)から本人の選定を待つ。推薦はタスク2の最初の2項目「詰み優先を確認する」。選定前に新テーマへ進まない。章番号・学習回番号は未確定。
+- 作業場所：`/Users/oki2a24/kaname-shogi`。準備開始HEAD `776d836`、開始時mainはorigin/mainより29コミット先行、変更なし。準備ブランチ `codex/two-ply-mate-priority-handoff`。新規worktree・今回のmain統合・pushなし。最新状態はGitで確認する。
+- 次の行動：本人が[引き継ぎの再開用プロンプト](handover-two-ply-mate-priority.md#再開用プロンプト)全文を新しいセッションへ入力する。入力後に現在状態と承認済み計画を照合し、対象2項目だけを確認する。
+- 対象は `test_prioritizes_mate_over_large_material` と `test_rates_reply_mate_as_loss`。詰み優先のコード経路はタスク1で実装済み。実局面・極端な通常点との順序を確認し、初回Greenなら計画どおり誤り注入で検出力を確認する。不要な製品変更をしない。
+- 通常比較タスク1は実装・補強・独立レビュー・main取り込み・取り込み先検証・最後の理解確認まで完了。[本人回答と補足](learning/two-ply-basic-comparison.md#最後の理解確認とテーマ完了)を参照。直近全体347件・対象174件成功は前テーマの実績であり、次回の現在結果に流用しない。
+- タスク2の残り、CLI・USI三択、性能・対局測定は未実施。利用面は引き続き二方式。章番号・学習回番号は未確定。
 
 ## 次に読む資料
 
-[今回の学習記録](learning/two-ply-basic-comparison.md)、[承認済み計画のタスク1](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[選択の知識メモ](knowledge/31-weak-move-selection.md)。開始時の背景は[引き継ぎ](handover-two-ply-basic-comparison.md)、前テーマの完了記録は[計画テーマ学習記録](learning/two-ply-implementation-plan.md)を参照する。
+[今回の引き継ぎ](handover-two-ply-mate-priority.md)、[承認済み計画タスク2の最初の2項目](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ学習記録](learning/two-ply-basic-comparison.md)、[選択の知識メモ](knowledge/31-weak-move-selection.md)、[AGENTS.md](../AGENTS.md)、[更新ガイド](documentation-guide.md)。コード・テストの確認箇所は引き継ぎに記載した。
 
 ## 二手先読み設計の完了
 
