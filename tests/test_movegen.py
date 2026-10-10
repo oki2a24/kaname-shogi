@@ -3825,16 +3825,29 @@ class TwoPlyMaterialSelectionTests(unittest.TestCase):
     def test_uses_worst_reply_independent_of_order(self):
         """応手の順序を逆にしても飛車を失う最悪値-23点を使う。
 
-        実生成した全応手を渡し、先頭・末尾だけの評価や最大値での評価を検出する。
+        実生成した全応手を保持し、最悪応手を先頭・中間・末尾にも置く。
+        先頭・末尾・両端だけの評価や最大値での評価を検出する。
         応手の生成以外は実処理のまま動かす。
         """
         position, capture, _ = self._recapture_position()
         after_capture = position.copy()
         movegen.apply_move(after_capture, capture.source, capture.destination)
         replies = movegen.legal_moves(after_capture)
-        self.assertGreater(len(replies), 1)
-        for ordered in (replies, tuple(reversed(replies))):
-            with self.subTest(reversed=ordered != replies):
+        self.assertGreater(len(replies), 2)
+        worst = BoardMove(Square(5, 3), Square(5, 4), False)
+        self.assertIn(worst, replies)
+        others = tuple(reply for reply in replies if reply != worst)
+        middle = len(others) // 2
+        orders = (
+            replies,
+            tuple(reversed(replies)),
+            (worst,) + others,
+            others[:middle] + (worst,) + others[middle:],
+            others + (worst,),
+        )
+        for index, ordered in enumerate(orders):
+            with self.subTest(order=index, worst_index=ordered.index(worst)):
+                self.assertCountEqual(ordered, replies)
                 with patch.object(movegen, "legal_moves", return_value=ordered):
                     score = movegen._two_ply_score(after_capture, Side.SENTE)
                 self.assertEqual(score, (0, -23))
@@ -3894,6 +3907,94 @@ class TwoPlyMaterialSelectionTests(unittest.TestCase):
         after_capture = position.copy()
         movegen.apply_move(after_capture, capture.source, capture.destination)
         self.assertEqual(movegen._two_ply_score(after_capture, Side.SENTE), (0, 16))
+
+        selected = movegen.choose_move(
+            position,
+            (capture, safe),
+            movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+            random.Random(20261010),
+        )
+
+        self.assertEqual(selected, capture)
+
+    def test_selects_least_loss_when_all_scores_are_negative(self):
+        """両候補が通常評価の負点でも損の小さい候補だけから選ぶ。
+
+        負点をゼロへ丸める、絶対値で比較する、負点だけなら手なしとする誤りを
+        検出する。後手の持ち金9点により、元教材の-23と5が-32と-4になる。
+        """
+        position, capture, safe = self._recapture_position()
+        position.gote_hand.add(BasicPieceType.GOLD)
+        for move, expected in ((capture, -32), (safe, -4)):
+            self.assertIn(move, movegen.legal_moves(position))
+            after = position.copy()
+            movegen.apply_move(after, move.source, move.destination)
+            self.assertEqual(movegen._two_ply_score(after, Side.SENTE), (0, expected))
+        rng = random.Random(20261010)
+        with patch.object(rng, "choice", wraps=rng.choice) as choice:
+            selected = movegen.choose_move(
+                position,
+                (capture, safe),
+                movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+                rng,
+            )
+        self.assertEqual(selected, safe)
+        choice.assert_called_once_with((safe,))
+
+    def test_selects_best_among_three_candidates_independent_of_order(self):
+        """唯一最高の候補が先頭・中間・末尾のどこにあっても選ぶ。
+
+        三候補の両端だけを比較して中間を飛ばす誤りと、候補順への依存を検出する。
+        金を除いた教材で、歩取りは16点、二つの横移動は14点となる。
+        """
+        position, capture, safe = self._recapture_position()
+        position.board.set_piece(Square(5, 3), None)
+        other_safe = BoardMove(Square(5, 5), Square(6, 5), False)
+        for move, expected in ((safe, 14), (capture, 16), (other_safe, 14)):
+            self.assertIn(move, movegen.legal_moves(position))
+            after = position.copy()
+            movegen.apply_move(after, move.source, move.destination)
+            self.assertEqual(movegen._two_ply_score(after, Side.SENTE), (0, expected))
+        for moves in (
+            (capture, safe, other_safe),
+            (safe, capture, other_safe),
+            (safe, other_safe, capture),
+        ):
+            with self.subTest(best_index=moves.index(capture)):
+                rng = random.Random(20261010)
+                with patch.object(rng, "choice", wraps=rng.choice) as choice:
+                    selected = movegen.choose_move(
+                        position,
+                        moves,
+                        movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+                        rng,
+                    )
+                self.assertEqual(selected, capture)
+                choice.assert_called_once_with((capture,))
+
+    def test_keeps_profitable_capture_for_gote(self):
+        """後手でも取り返されない得な歩取りを選ぶ。
+
+        先手固定や開始側の反転を、視点引数だけでなく選択結果で検出する。
+        金を除いた教材の所属と筋・段を反転し、後手視点で歩取り16点、
+        横移動14点を実処理で照合する。
+        """
+        board = Board()
+        for square, piece_type, side in (
+            (Square(1, 1), PieceType.KING, Side.GOTE),
+            (Square(5, 5), PieceType.ROOK, Side.GOTE),
+            (Square(9, 9), PieceType.KING, Side.SENTE),
+            (Square(5, 6), PieceType.PAWN, Side.SENTE),
+        ):
+            board.set_piece(square, Piece(piece_type, side))
+        position = Position(board, Side.GOTE)
+        capture = BoardMove(Square(5, 5), Square(5, 6), False)
+        safe = BoardMove(Square(5, 5), Square(6, 5), False)
+        for move, expected in ((capture, 16), (safe, 14)):
+            self.assertIn(move, movegen.legal_moves(position))
+            after = position.copy()
+            movegen.apply_move(after, move.source, move.destination)
+            self.assertEqual(movegen._two_ply_score(after, Side.GOTE), (0, expected))
 
         selected = movegen.choose_move(
             position,
