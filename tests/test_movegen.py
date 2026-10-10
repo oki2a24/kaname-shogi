@@ -3767,6 +3767,78 @@ class UchiFuzumeTests(unittest.TestCase):
 
 
 class TwoPlyMaterialSelectionTests(unittest.TestCase):
+    def test_prioritizes_mate_over_large_material(self):
+        """持ち歩が百万枚あっても詰みの勝ちを大きな通常点より高くする。
+
+        ５三飛から５二飛の合法性と詰みを実操作で確認する。
+        詰みの無視や勝ちの通常点化による優先順位の逆転を検出する。
+        駒総数は実戦の上限を超える、モデルで表現可能な境界入力である。
+        """
+        board = Board()
+        for square, piece_type, side in (
+            (Square(5, 1), PieceType.KING, Side.GOTE),
+            (Square(9, 9), PieceType.KING, Side.SENTE),
+            (Square(5, 3), PieceType.ROOK, Side.SENTE),
+            (Square(4, 3), PieceType.GOLD, Side.SENTE),
+        ):
+            board.set_piece(square, Piece(piece_type, side))
+        for square in (Square(4, 1), Square(6, 1), Square(4, 2), Square(6, 2)):
+            board.set_piece(square, Piece(PieceType.PAWN, Side.GOTE))
+        position = Position(board, Side.SENTE)
+        position.gote_hand.add_many(BasicPieceType.PAWN, 1000000)
+        mate = BoardMove(Square(5, 3), Square(5, 2), False)
+        self.assertFalse(movegen.is_checkmate(position))
+        self.assertIn(mate, movegen.legal_moves(position))
+        after_mate = position.copy()
+        movegen.apply_move(after_mate, mate.source, mate.destination)
+        self.assertEqual(after_mate.side_to_move, Side.GOTE)
+        self.assertEqual(after_mate.gote_hand.count(BasicPieceType.PAWN), 1000000)
+        self.assertTrue(movegen.is_checkmate(after_mate))
+
+        score = movegen._two_ply_score(after_mate, Side.SENTE)
+
+        self.assertEqual(score, (1, 0))
+        normal = Position(Board(), Side.GOTE)
+        normal.sente_hand.add_many(BasicPieceType.PAWN, 1000000)
+        normal_score = movegen._two_ply_score(normal, Side.SENTE)
+        self.assertEqual(normal_score, (0, 1000000))
+        self.assertGreater(score, normal_score)
+
+    def test_rates_reply_mate_as_loss(self):
+        """相手の合法応手で詰む評価を百万点の通常損失より低くする。
+
+        詰み直前教材の筋・段と所属を反転し、後手の５七飛から５八飛で
+        開始側の先手が詰むことを実操作で確認する。一手後相当の局面から
+        全応手を実評価し、詰み無視や負けの通常点化を検出する。
+        """
+        board = Board()
+        for square, piece_type, side in (
+            (Square(5, 9), PieceType.KING, Side.SENTE),
+            (Square(1, 1), PieceType.KING, Side.GOTE),
+            (Square(5, 7), PieceType.ROOK, Side.GOTE),
+            (Square(6, 7), PieceType.GOLD, Side.GOTE),
+        ):
+            board.set_piece(square, Piece(piece_type, side))
+        for square in (Square(6, 9), Square(4, 9), Square(6, 8), Square(4, 8)):
+            board.set_piece(square, Piece(PieceType.PAWN, Side.SENTE))
+        after_move = Position(board, Side.GOTE)
+        reply = BoardMove(Square(5, 7), Square(5, 8), False)
+        self.assertFalse(movegen.is_checkmate(after_move))
+        self.assertIn(reply, movegen.legal_moves(after_move))
+        leaf = after_move.copy()
+        movegen.apply_move(leaf, reply.source, reply.destination)
+        self.assertEqual(leaf.side_to_move, Side.SENTE)
+        self.assertTrue(movegen.is_checkmate(leaf))
+
+        score = movegen._two_ply_score(after_move, Side.SENTE)
+
+        self.assertEqual(score, (-1, 0))
+        normal = Position(Board(), Side.GOTE)
+        normal.gote_hand.add_many(BasicPieceType.PAWN, 1000000)
+        normal_score = movegen._two_ply_score(normal, Side.SENTE)
+        self.assertEqual(normal_score, (0, -1000000))
+        self.assertLess(score, normal_score)
+
     @staticmethod
     def _recapture_position():
         """飛車の歩取りを金で取り返せる教材局面と二候補を作る。"""
