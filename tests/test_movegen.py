@@ -3767,6 +3767,65 @@ class UchiFuzumeTests(unittest.TestCase):
 
 
 class TwoPlyMaterialSelectionTests(unittest.TestCase):
+    def test_draws_only_equal_best_candidates(self):
+        """同点最高の銀取り二候補だけを元順に一回抽選する。
+
+        全候補の混入、同点候補の欠落、先頭固定、順序反転、複数回抽選を検出する。
+        実局面の全応手を照合し、期待値を製品の最大値計算から作らない。
+        """
+        board = Board()
+        for file, rank, piece_type, side in (
+            (9, 9, PieceType.KING, Side.SENTE),
+            (5, 5, PieceType.GOLD, Side.SENTE),
+            (1, 1, PieceType.KING, Side.GOTE),
+            (5, 4, PieceType.SILVER, Side.GOTE),
+            (4, 5, PieceType.SILVER, Side.GOTE),
+        ):
+            board.set_piece(Square(file, rank), Piece(piece_type, side))
+        position = Position(board, Side.SENTE)
+        first = BoardMove(Square(5, 5), Square(5, 4), False)
+        second = BoardMove(Square(5, 5), Square(4, 5), False)
+        lower = BoardMove(Square(5, 5), Square(5, 6), False)
+        for move, leaf_values, expected in (
+            (first, {-9, 9}, -9),
+            (second, {-9, 9}, -9),
+            (lower, {-25, -7}, -25),
+        ):
+            self.assertIn(move, movegen.legal_moves(position))
+            after = position.copy()
+            movegen.apply_move(after, move.source, move.destination)
+            self.assertFalse(movegen.is_checkmate(after))
+            replies = movegen.legal_moves(after)
+            self.assertTrue(replies)
+            values = set()
+            for reply in replies:
+                leaf = after.copy()
+                movegen.apply_move(
+                    leaf, reply.source, reply.destination, promote=reply.promote
+                )
+                self.assertFalse(movegen.is_checkmate(leaf))
+                values.add(movegen.material_balance(leaf, Side.SENTE))
+            self.assertEqual(values, leaf_values)
+            self.assertEqual(movegen._two_ply_score(after, Side.SENTE), (0, expected))
+
+        for moves, best_moves in (
+            ((lower, first, second), (first, second)),
+            ((first, lower, second), (first, second)),
+            ((first, second, lower), (first, second)),
+            ((lower, second, first), (second, first)),
+        ):
+            with self.subTest(moves=moves):
+                rng = random.Random(20261011)
+                with patch.object(rng, "choice", wraps=rng.choice) as choice:
+                    selected = movegen.choose_move(
+                        position,
+                        moves,
+                        movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+                        rng,
+                    )
+                choice.assert_called_once_with(best_moves)
+                self.assertIn(selected, best_moves)
+
     @staticmethod
     def _mate_priority_position(perspective):
         """開始側の飛車で相手玉を詰ませられる先後対称の教材を作る。"""

@@ -2,13 +2,12 @@
 
 ## 現在地
 
-2026-10-10更新。本人は次テーマ「同点最高の候補だけを抽選することを確認する」を選定し、新セッション準備を依頼した。対象は承認済み計画タスク2の `test_draws_only_equal_best_candidates` 1項目だけ。今回は準備のみで、新テーマは未開始。
+2026-10-11更新。現在テーマは「同点最高の候補だけを抽選することを確認する」。承認済み計画タスク2の `test_draws_only_equal_best_candidates` 1項目を追加し、初回Green・隔離6変異の対象FAILと各復元成功、対象177件・全体350件を確認した。製品変更なし。[実施記録](learning/two-ply-equal-best.md)を参照する。
 
-- 作業場所：`/Users/oki2a24/kaname-shogi`。準備開始mainのHEAD `d0441af`、origin/mainより5コミット先行、変更なし。準備ブランチ `codex/two-ply-equal-best-handoff`。今回のmain統合・push・新規worktreeなし。最新状態はGitで確認する。
-- 次の行動：本人が[引き継ぎの再開用プロンプト](handover-two-ply-equal-best.md#再開用プロンプト)を新セッションへ入力する。入力後、現行基準と既存計画を照合し、対象1項目だけを進める。
-- 最高同点だけを一回抽選する内部経路は実装済み。実局面の合法性・同点最高の独立検算と、初回Green時の隔離誤り注入で検出力を確認する。不要な製品変更をしない。
-- 前テーマ「詰み優先」は2項目・小補強・独立レビュー・本人承認のmain統合・取り込み先検証・最後の理解確認まで完了。[本人回答と補足](learning/two-ply-mate-priority.md#最後の理解確認とテーマ完了)を参照。全体349件・対象176件は前テーマの実績であり次回の現在結果に流用しない。
-- タスク2のさらに残り、CLI/USI三択、選択時間・棋力測定は未実施。利用面は二方式のまま。[テスト点検手順](knowledge/test-coverage-review.md)を継続適用する。
+- 作業場所：`/Users/oki2a24/kaname-shogi`。開始HEAD `eacd25c`、ブランチ `codex/two-ply-equal-best-handoff`。新規worktree・pushなし。
+- 独立コード・文書レビューは各Critical 0・Important 0・Minor 0。記録を確認し作業ブランチへ通常コミットする。次の行動は本人のmain統合承認を待つこと。main統合と取り込み先検証・最後の理解確認は未実施。
+- タスク2全体は未完了。残りのタスク2、CLI/USI三択、性能・棋力測定へ自動継続しない。利用面は二方式のまま。
+- 前テーマの詰み優先はmain統合・検証・理解確認まで完了。[本人回答と補足](learning/two-ply-mate-priority.md#最後の理解確認とテーマ完了)を参照する。
 
 ## 次に読む資料
 
