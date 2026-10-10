@@ -28,6 +28,7 @@ class MoveSelectionPolicy(Enum):
 
     RANDOM = auto()
     MATERIAL = auto()
+    TWO_PLY_MATERIAL = auto()
 
 
 # 谷川浩司さんの参考値。成駒を含め、盤上にある駒種ごとの値を記録する。
@@ -614,6 +615,65 @@ def material_balance(position: Position, perspective: Side) -> int:
     return totals[perspective] - totals[opponent]
 
 
+def _position_after_move(position: Position, move: Move) -> Position:
+    """元局面を変更せず独立した複製へ一手を適用する非公開操作。
+
+    合法手を前提とし、盤上移動・駒打ちを既存操作へ委ねる。
+    未知の型のTypeErrorと不合法手のValueErrorを呼び出し側へ伝える。
+    """
+    trial = position.copy()
+    if isinstance(move, BoardMove):
+        apply_move(trial, move.source, move.destination, promote=move.promote)
+    elif isinstance(move, DropMove):
+        apply_drop(trial, move.piece_type, move.destination)
+    else:
+        raise TypeError("対応していない一手の型です")
+    return trial
+
+
+def _two_ply_score(after_move: Position, perspective: Side) -> tuple[int, int]:
+    """一手後から全応手を読み、開始側に最も不利な評価を返す非公開操作。
+
+    after_moveは相手手番、perspectiveは開始側を表す。元局面を変更せず、
+    各応手を独立した複製へ適用する。勝ち・通常・負けを組の第一要素で分け、
+    駒得差の大きさで勝敗の優先順位が逆転することを防ぐ。
+    詰みでない手なしは静的評価。詰みの防御確認より先の駒得探索はしない。
+    """
+    if is_checkmate(after_move):
+        return (1, 0)
+    replies = legal_moves(after_move)
+    if not replies:
+        return (0, material_balance(after_move, perspective))
+    scores = []
+    for reply in replies:
+        leaf = _position_after_move(after_move, reply)
+        score = (
+            (-1, 0) if is_checkmate(leaf) else (0, material_balance(leaf, perspective))
+        )
+        scores.append(score)
+    return min(scores)
+
+
+def _choose_two_ply_material_move(
+    position: Position, moves: tuple[Move, ...], rng: random.Random
+) -> Optional[Move]:
+    """各候補の最悪応手評価を比較し、最高候補だけを一回抽選する非公開操作。
+
+    movesはpositionの合法手を前提とする。空ならNone。開始側視点を固定し、
+    position・持ち駒・movesを変更しない。抽選時だけrngの状態を進める。
+    """
+    if not moves:
+        return None
+    perspective = position.side_to_move
+    scored_moves = [
+        (move, _two_ply_score(_position_after_move(position, move), perspective))
+        for move in moves
+    ]
+    best_score = max(score for _, score in scored_moves)
+    best_moves = tuple(move for move, score in scored_moves if score == best_score)
+    return rng.choice(best_moves)
+
+
 def choose_move(
     position: Position,
     moves: tuple[Move, ...],
@@ -625,12 +685,13 @@ def choose_move(
     引数:
         position: 合法手の元になった局面。候補評価では変更しない。
         moves: その局面の合法手を表す変更不可タプル。
-        policy: 既存一様ランダムまたは一手後の駒得評価を表す値。
+        policy: 一様ランダム・一手駒得・二手先読み（駒得）の方針データ。
         rng: 乱数選択を呼び出し側で再現可能にする生成器。
 
     戻り値:
         空のmovesならNone。RANDOMなら既存選択器の一手、MATERIALなら元の手番から
-        見た一手後の駒得差が最大の手。同点ではその手の中から乱数で選ぶ。
+        見た一手後の駒得差が最大の手。TWO_PLY_MATERIALなら相手の全応手後の
+        最悪評価が最大の手。同点最高候補だけから一様に抽選する。
 
     副作用:
         positionとmovesを変更しない。抽選時だけrngの状態を進める。
@@ -638,12 +699,17 @@ def choose_move(
     前提条件:
         movesはpositionの合法手を渡す。MATERIALは各候補をPosition.copy()へ一度
         適用して局面点を計算し、相手の応手を含む探索をしない。既存選択との互換性
-        を保つためRANDOMはchoose_weak_moveへ委譲する。
+        を保つためRANDOMはchoose_weak_moveへ委譲する。TWO_PLY_MATERIALは
+        開始側視点のまま自分一手＋相手一手まで読み、詰みの勝ちを通常駒得より
+        高く、詰みの負けを低く扱う。詰みでない手なしは静的駒得で比較する。
+        勝ち同士・負け同士は同点とし、詰みまでの距離は比較しない。
     """
     if not moves:
         return None
     if policy == MoveSelectionPolicy.RANDOM:
         return choose_weak_move(moves, rng)
+    if policy == MoveSelectionPolicy.TWO_PLY_MATERIAL:
+        return _choose_two_ply_material_move(position, moves, rng)
     if policy != MoveSelectionPolicy.MATERIAL:
         raise ValueError("未知の一手選択方針です")
 

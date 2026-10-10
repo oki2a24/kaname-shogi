@@ -3764,3 +3764,142 @@ class UchiFuzumeTests(unittest.TestCase):
         movegen._apply_drop_unchecked(position, BasicPieceType.PAWN, Square(5, 2))
 
         self.assertFalse(movegen.has_legal_move(position))
+
+
+class TwoPlyMaterialSelectionTests(unittest.TestCase):
+    @staticmethod
+    def _recapture_position():
+        """飛車の歩取りを金で取り返せる教材局面と二候補を作る。"""
+        board = Board()
+        for square, piece_type, side in (
+            (Square(9, 9), PieceType.KING, Side.SENTE),
+            (Square(5, 5), PieceType.ROOK, Side.SENTE),
+            (Square(1, 1), PieceType.KING, Side.GOTE),
+            (Square(5, 3), PieceType.GOLD, Side.GOTE),
+            (Square(5, 4), PieceType.PAWN, Side.GOTE),
+        ):
+            board.set_piece(square, Piece(piece_type, side))
+        return (
+            Position(board, Side.SENTE),
+            BoardMove(Square(5, 5), Square(5, 4), False),
+            BoardMove(Square(5, 5), Square(4, 5), False),
+        )
+
+    def test_avoids_rook_recapture(self):
+        """歩取り後に金で飛車を取り返される候補を避ける。
+
+        一手直後の7点だけを見て、取り返し後の-23点を見落とす誤りを検出する。
+        安全手なら全応手後も5点を保つ教材を実操作で照合する。
+        """
+        position, capture, safe = self._recapture_position()
+        self.assertIn(capture, movegen.legal_moves(position))
+        self.assertIn(safe, movegen.legal_moves(position))
+        self.assertEqual(movegen.material_balance(position, Side.SENTE), 5)
+        after_capture = position.copy()
+        movegen.apply_move(after_capture, capture.source, capture.destination)
+        self.assertEqual(movegen.material_balance(after_capture, Side.SENTE), 7)
+        recapture = BoardMove(Square(5, 3), Square(5, 4), False)
+        self.assertIn(recapture, movegen.legal_moves(after_capture))
+        movegen.apply_move(after_capture, recapture.source, recapture.destination)
+        self.assertEqual(movegen.material_balance(after_capture, Side.SENTE), -23)
+        after_safe = position.copy()
+        movegen.apply_move(after_safe, safe.source, safe.destination)
+        reply_scores = []
+        for reply in movegen.legal_moves(after_safe):
+            leaf = after_safe.copy()
+            movegen.apply_move(
+                leaf, reply.source, reply.destination, promote=reply.promote
+            )
+            reply_scores.append(movegen.material_balance(leaf, Side.SENTE))
+        self.assertEqual(min(reply_scores), 5)
+
+        selected = movegen.choose_move(
+            position,
+            (capture, safe),
+            movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+            random.Random(20261010),
+        )
+
+        self.assertEqual(selected, safe)
+
+    def test_uses_worst_reply_independent_of_order(self):
+        """応手の順序を逆にしても飛車を失う最悪値-23点を使う。
+
+        実生成した全応手を渡し、先頭・末尾だけの評価や最大値での評価を検出する。
+        応手の生成以外は実処理のまま動かす。
+        """
+        position, capture, _ = self._recapture_position()
+        after_capture = position.copy()
+        movegen.apply_move(after_capture, capture.source, capture.destination)
+        replies = movegen.legal_moves(after_capture)
+        self.assertGreater(len(replies), 1)
+        for ordered in (replies, tuple(reversed(replies))):
+            with self.subTest(reversed=ordered != replies):
+                with patch.object(movegen, "legal_moves", return_value=ordered):
+                    score = movegen._two_ply_score(after_capture, Side.SENTE)
+                self.assertEqual(score, (0, -23))
+
+    def test_keeps_root_side_for_gote(self):
+        """後手開始でも後手の飛車を失う歩取りを避ける。
+
+        教材を筋・段とも反転して所属を交換し、先手固定の採点や途中の視点反転を
+        検出する。後手視点の開始差5点と応手後-23点も照合する。
+        """
+        original, capture, safe = self._recapture_position()
+        board = Board()
+        for file in range(1, 10):
+            for rank in range(1, 10):
+                piece = original.board.piece_at(Square(file, rank))
+                if piece is not None:
+                    side = Side.GOTE if piece.side == Side.SENTE else Side.SENTE
+                    board.set_piece(
+                        Square(10 - file, 10 - rank), Piece(piece.piece_type, side)
+                    )
+        position = Position(board, Side.GOTE)
+        capture = BoardMove(Square(5, 5), Square(5, 6), capture.promote)
+        safe = BoardMove(Square(5, 5), Square(6, 5), safe.promote)
+        self.assertIn(capture, movegen.legal_moves(position))
+        self.assertIn(safe, movegen.legal_moves(position))
+        self.assertEqual(movegen.material_balance(position, Side.GOTE), 5)
+        after_capture = position.copy()
+        movegen.apply_move(after_capture, capture.source, capture.destination)
+        self.assertEqual(movegen._two_ply_score(after_capture, Side.GOTE), (0, -23))
+
+        with patch.object(
+            movegen, "_two_ply_score", wraps=movegen._two_ply_score
+        ) as score:
+            selected = movegen.choose_move(
+                position,
+                (capture, safe),
+                movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+                random.Random(20261010),
+            )
+
+        self.assertEqual(selected, safe)
+        self.assertEqual(
+            [call.args[1] for call in score.call_args_list], [Side.GOTE, Side.GOTE]
+        )
+
+    def test_keeps_profitable_capture(self):
+        """取り返す金がなければ得な歩取りを選ぶ。
+
+        損な取り返しを避けるために駒取りを一律禁止する誤りを検出する。
+        金を除いた局面の駒得差は14点、歩取り後の最悪応手でも16点となる。
+        """
+        position, capture, safe = self._recapture_position()
+        position.board.set_piece(Square(5, 3), None)
+        self.assertIn(capture, movegen.legal_moves(position))
+        self.assertIn(safe, movegen.legal_moves(position))
+        self.assertEqual(movegen.material_balance(position, Side.SENTE), 14)
+        after_capture = position.copy()
+        movegen.apply_move(after_capture, capture.source, capture.destination)
+        self.assertEqual(movegen._two_ply_score(after_capture, Side.SENTE), (0, 16))
+
+        selected = movegen.choose_move(
+            position,
+            (capture, safe),
+            movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+            random.Random(20261010),
+        )
+
+        self.assertEqual(selected, capture)

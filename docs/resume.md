@@ -2,16 +2,17 @@
 
 ## 現在地
 
-2026-10-10更新。本人は次テーマ「通常の二手比較を実装する」を選び、新セッション準備を依頼した。承認済み実装計画のタスク1に絞る。今回は準備のみで、新テーマの学習・TDD・実装は未開始。
+2026-10-10更新。「通常の二手比較を実装する」の計画タスク1を実装・検証・独立レビュー済み。main取り込みの本人承認待ち。タスク2以降へ進まない。
 
-- 作業場所：`/Users/oki2a24/kaname-shogi`。準備開始HEAD `0ea81de`、開始時mainはorigin/mainより22コミット先行、変更なし。準備ブランチ `codex/two-ply-basic-comparison-handoff`。今回の新規worktree・main統合・pushなし。最新状態はGitで確認する。
-- 次の行動：本人が[引き継ぎの再開用プロンプト](handover-two-ply-basic-comparison.md#再開用プロンプト)全文を新しいセッションへ入力する。入力後に現状と承認済み計画を照合し、タスク1だけを実行する。
-- 二手設計・実装計画は承認済み。USI値Random・Materialを維持しTwoPlyMaterialを追加、内部名RANDOM・MATERIALを維持しTWO_PLY_MATERIALを追加、公開型・関数・引数と既存動作を維持する。今回は利用面の三択対応へ進まない。製品は二方式のままで、二手探索は未実装。
-- 計画テーマは独立レビュー残件全分類0、main統合・取り込み先検証・最後の理解確認まで完了。[本人回答と補足](learning/two-ply-implementation-plan.md)を参照。今回の準備の検証は引き継ぎへ記録する。章番号・学習回番号は未確定。
+- 作業場所：`/Users/oki2a24/kaname-shogi`、ブランチ `codex/two-ply-basic-comparison`。開始HEAD `84ca6c1`。新規worktree・main統合・pushなし。コミットの最新状態はGitで確認する。
+- 実装範囲：取り返し回避、全応手の最悪値、後手開始視点、得な駒取りの4振る舞い。新方針値と三つの非公開操作、既存選択入口の分岐を追加した。既存RANDOM・MATERIALと公開APIを維持する。
+- 検証：基準340件、実装後344件成功、対象171件成功、Ruff整形・lint成功。独立レビューCritical 0・Important 0・Minor 0。詳細は[学習記録](learning/two-ply-basic-comparison.md)。
+- CLI・USIは引き続き二方式。詰み・境界・枝独立性の網羅テスト、利用面の三択対応、性能・対局測定は未実施。
+- 次の行動：本人のmain取り込み承認後に取り込み先で検証し、最後の理解確認を一問出す。現在は未出題・未回答。章番号・学習回番号は未確定。
 
 ## 次に読む資料
 
-[今回の引き継ぎ](handover-two-ply-basic-comparison.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[計画テーマ学習記録](learning/two-ply-implementation-plan.md)、[AGENTS.md](../AGENTS.md)、[更新ガイド](documentation-guide.md)。コード・テストの確認箇所は引き継ぎに記載した。
+[今回の学習記録](learning/two-ply-basic-comparison.md)、[承認済み計画のタスク1](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[選択の知識メモ](knowledge/31-weak-move-selection.md)。開始時の背景は[引き継ぎ](handover-two-ply-basic-comparison.md)、前テーマの完了記録は[計画テーマ学習記録](learning/two-ply-implementation-plan.md)を参照する。
 
 ## 二手先読み設計の完了
 
