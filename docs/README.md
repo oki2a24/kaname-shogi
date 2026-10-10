@@ -37,7 +37,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 [再開案内](resume.md)で承認・作業状態と次に読む資料を確認する。細かな進捗はこの索引に重複させない。
 
-完了した設計の学習・合意は[次段階設計の記録](learning/evaluation-next-stage.md)、今回の実装計画は[計画案](plans/2026-10-10-two-ply-implementation-plan.md)と[合意記録](learning/two-ply-implementation-plan.md)、開始時点の背景は[引き継ぎ](handover-two-ply-implementation-plan.md)を参照する。
+完了した設計の学習・合意は[次段階設計の記録](learning/evaluation-next-stage.md)、今回の実装計画は[計画案](plans/2026-10-10-two-ply-implementation-plan.md)と[合意記録](learning/two-ply-implementation-plan.md)、計画テーマ開始時点の背景は[引き継ぎ](handover-two-ply-implementation-plan.md)、次の通常二手比較の準備は[新しい引き継ぎ](handover-two-ply-basic-comparison.md)を参照する。
 
 ## よく参照する現行資料
 
@@ -128,6 +128,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 評価・探索前の文書整理 | [記録](learning/documentation-chapter.md) | [更新ガイド](documentation-guide.md) | — | — | [開始時引き継ぎ](handover-documentation-chapter.md) |
 | 一手駒得評価の次段階の設計（main統合・検証・理解確認完了、実装未開始） | [学習記録](learning/evaluation-next-stage.md) | — | [設計書](plans/2026-10-10-evaluation-next-stage-design.md) | — | [開始時引き継ぎ](handover-evaluation-next-stage.md) |
 | 二手先読みの実装計画（main統合・検証・理解確認完了、実装未開始） | [学習記録](learning/two-ply-implementation-plan.md) | — | — | [計画案](plans/2026-10-10-two-ply-implementation-plan.md) | [開始時引き継ぎ](handover-two-ply-implementation-plan.md) |
+| 通常の二手比較を実装する（新セッション準備のみ、学習・実装未開始） | — | — | — | [承認済み計画のタスク1](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-basic-comparison.md) |
 
 ## 例外と履歴の読み方
 
