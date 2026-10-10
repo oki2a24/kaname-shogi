@@ -2,17 +2,20 @@
 
 ## 現在地
 
-2026-10-10更新。「一手駒得評価の次段階を設計する」を開始し、現状確認と具体案提示後、本人が学習・設計の進め方を承認した。自分一手＋相手一手、詰み優先、最高評価の同点ランダム、王手でない合法手なしの駒得評価を説明・合意し、[設計書](plans/2026-10-10-evaluation-next-stage-design.md)を作成した。設計書全体は本人承認済み。本人は既存方式の改名も許容した。表示名は「ランダム」「一手駒得」「二手先読み（駒得）」に合意。USI値・内部識別名・互換性と実装は未承認。
+2026-10-10更新。二手先読みの設計テーマは設計承認・独立レビュー・main統合・取り込み先検証・最後の理解確認まで完了。本人は次テーマ「二手先読みの実装計画を作る」を選び、新セッション準備を依頼した。今回は準備のみで、計画作成は未開始。
 
-- 作業場所：`/Users/oki2a24/kaname-shogi`。開始HEAD `57ad922`、ブランチ `codex/evaluation-next-stage-handoff`。開始時は変更なし。設計・学習記録 `3e3c4cf` と開始時引き継ぎ `57ad922` を本人承認後mainへ取り込み済み。現在はmain。統合・検証記録は `cd19b58`。最後の理解確認まで完了。pushなし。
-- 本人は今後もRandomとMaterialをプレイ時の選択肢に残す継続方針を明示した。[方向性](02-project-direction.md)と[今回の学習記録](learning/evaluation-next-stage.md)を参照する。
-- 次の行動：最後の理解確認の回答と補足を記録済み。次テーマの本人選定を待つ。USI値・内部識別名・互換性は後続の実装テーマで合意する。コード・テスト変更、TDDは始めない。
-- 章番号・学習回番号は未確定。今回の全体テストは未実行。取り込み先で相対リンク先373件・差分・Ruff整形28ファイルとlintを確認済み。独立設計レビューはMinor 2件を修正・再確認し、残件全分類0。数値比較の習得を確認したとは扱わず、具体的な盤上の出来事で説明を続ける。
-- 開始時の背景と過去の検証は[引き継ぎ](handover-evaluation-next-stage.md)に保持している。再開プロンプトは入力済み。
+- 作業場所：`/Users/oki2a24/kaname-shogi`。準備開始HEAD `c41aaea`、開始時mainはorigin/mainより18コミット先行・変更なし。準備ブランチ `codex/two-ply-implementation-plan-handoff`。今回の新規worktree・main取り込み・pushなし。最新状態はGitで確認する。
+- 次の行動：本人が[引き継ぎの再開用プロンプト](handover-two-ply-implementation-plan.md#再開用プロンプト)全文を新しいセッションへ入力する。その後、現状と承認済み設計を読み取り専用で照合する。
+- 表示名は「ランダム」「一手駒得」「二手先読み（駒得）」に合意済み。既存方式の動作を選択可能に保ち、名称変更は許容。USI値・内部識別名・旧設定/API互換性は未決定。実装計画・コード・テスト変更は未承認。
+- 計画テーマの選定は具体的な技術選択・計画・実装の承認ではない。章番号・学習回番号は未確定。具体例から説明し、確認問題は一問ずつ回答を待つ。
 
 ## 次に読む資料
 
-[次テーマ引き継ぎ](handover-evaluation-next-stage.md)、[AGENTS.md](../AGENTS.md)、[README](../README.md)、[更新ガイド](documentation-guide.md)、[候補](next-topics.md)、[方向性](02-project-direction.md)、[一手選択の現行知識](knowledge/31-weak-move-selection.md)。その他は引き継ぎと[索引](README.md)から選ぶ。
+[今回の引き継ぎ](handover-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[学習・合意・理解確認](learning/evaluation-next-stage.md)、[AGENTS.md](../AGENTS.md)、[更新ガイド](documentation-guide.md)。その他のコードと資料は引き継ぎに列挙した。
+
+## 二手先読み設計の完了
+
+設計記録 `3e3c4cf`、統合検証 `cd19b58`、最終回答と候補 `c41aaea` はmainにある。取り込み先の相対リンク先373件欠落0（見出しアンカー対象外）、差分、Ruff整形28ファイルとlintを確認済み。文書のみで全体テストは再実行していない。今回の準備の検証は[引き継ぎ](handover-two-ply-implementation-plan.md)へ記録する。数値比較の習得全般を確認済みとは扱わない。
 
 ## 前テーマの完了と履歴
 

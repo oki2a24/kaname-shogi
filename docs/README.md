@@ -37,7 +37,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 [再開案内](resume.md)で承認・作業状態と次に読む資料を確認する。細かな進捗はこの索引に重複させない。
 
-現在のテーマの学習・合意は[次段階設計の記録](learning/evaluation-next-stage.md)を参照する。開始時の背景と再開プロンプトは[一手駒得評価の次段階設計への引き継ぎ](handover-evaluation-next-stage.md)を参照する。
+完了した設計の学習・合意は[次段階設計の記録](learning/evaluation-next-stage.md)、次の実装計画テーマの背景と再開プロンプトは[今回の引き継ぎ](handover-two-ply-implementation-plan.md)を参照する。
 
 ## よく参照する現行資料
 
