@@ -44,7 +44,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 - [一手選択と駒得評価](knowledge/31-weak-move-selection.md)、[難易度選択の設計](plans/2026-10-05-weakest-mode-difficulty-selection-design.md)
 - [USI応答](knowledge/usi-engine-response.md)、[SFEN](knowledge/sfen-position-notation.md)
 - [ShogiHome接続手順書](shogihome-connection-guide.md)、[接続用スキル](../.agents/skills/shogihome-connection/SKILL.md)
-- [Python品質検査](knowledge/python-quality-checks.md)
+- [Python品質検査](knowledge/python-quality-checks.md)、[テストの検出力と範囲の点検](knowledge/test-coverage-review.md)
 - [方向性](02-project-direction.md)、[次テーマ候補](next-topics.md)
 - [文書更新ガイド](documentation-guide.md)
 

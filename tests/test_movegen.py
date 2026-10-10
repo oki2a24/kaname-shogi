@@ -3767,77 +3767,123 @@ class UchiFuzumeTests(unittest.TestCase):
 
 
 class TwoPlyMaterialSelectionTests(unittest.TestCase):
-    def test_prioritizes_mate_over_large_material(self):
-        """持ち歩が百万枚あっても詰みの勝ちを大きな通常点より高くする。
+    @staticmethod
+    def _mate_priority_position(perspective):
+        """開始側の飛車で相手玉を詰ませられる先後対称の教材を作る。"""
+        board = Board()
+        pieces = (
+            (5, 1, PieceType.KING, Side.GOTE),
+            (9, 9, PieceType.KING, Side.SENTE),
+            (5, 3, PieceType.ROOK, Side.SENTE),
+            (4, 3, PieceType.GOLD, Side.SENTE),
+            (4, 1, PieceType.PAWN, Side.GOTE),
+            (6, 1, PieceType.PAWN, Side.GOTE),
+            (4, 2, PieceType.PAWN, Side.GOTE),
+            (6, 2, PieceType.PAWN, Side.GOTE),
+        )
+        for file, rank, piece_type, side in pieces:
+            if perspective == Side.GOTE:
+                file, rank = 10 - file, 10 - rank
+                side = Side.GOTE if side == Side.SENTE else Side.SENTE
+            board.set_piece(Square(file, rank), Piece(piece_type, side))
+        source_rank, destination_rank = (3, 2) if perspective == Side.SENTE else (7, 8)
+        return Position(board, perspective), BoardMove(
+            Square(5, source_rank), Square(5, destination_rank), False
+        )
 
-        ５三飛から５二飛の合法性と詰みを実操作で確認する。
-        詰みの無視や勝ちの通常点化による優先順位の逆転を検出する。
+    def test_prioritizes_mate_over_large_material(self):
+        """先手・後手とも持ち歩百万枚の相手を詰ませれば通常点より高くする。
+
+        ５三飛から５二飛とその鏡像の合法性・詰みを実操作で確認する。
+        詰み無視・勝ち通常点化・先手固定・後手開始だけの詰み無視を検出する。
         駒総数は実戦の上限を超える、モデルで表現可能な境界入力である。
         """
-        board = Board()
-        for square, piece_type, side in (
-            (Square(5, 1), PieceType.KING, Side.GOTE),
-            (Square(9, 9), PieceType.KING, Side.SENTE),
-            (Square(5, 3), PieceType.ROOK, Side.SENTE),
-            (Square(4, 3), PieceType.GOLD, Side.SENTE),
-        ):
-            board.set_piece(square, Piece(piece_type, side))
-        for square in (Square(4, 1), Square(6, 1), Square(4, 2), Square(6, 2)):
-            board.set_piece(square, Piece(PieceType.PAWN, Side.GOTE))
-        position = Position(board, Side.SENTE)
-        position.gote_hand.add_many(BasicPieceType.PAWN, 1000000)
-        mate = BoardMove(Square(5, 3), Square(5, 2), False)
-        self.assertFalse(movegen.is_checkmate(position))
-        self.assertIn(mate, movegen.legal_moves(position))
-        after_mate = position.copy()
-        movegen.apply_move(after_mate, mate.source, mate.destination)
-        self.assertEqual(after_mate.side_to_move, Side.GOTE)
-        self.assertEqual(after_mate.gote_hand.count(BasicPieceType.PAWN), 1000000)
-        self.assertTrue(movegen.is_checkmate(after_mate))
+        for perspective in (Side.SENTE, Side.GOTE):
+            with self.subTest(perspective=perspective):
+                position, mate = self._mate_priority_position(perspective)
+                opponent = Side.GOTE if perspective == Side.SENTE else Side.SENTE
+                opponent_hand = (
+                    position.gote_hand
+                    if perspective == Side.SENTE
+                    else position.sente_hand
+                )
+                opponent_hand.add_many(BasicPieceType.PAWN, 1000000)
+                self.assertFalse(movegen.is_checkmate(position))
+                self.assertIn(mate, movegen.legal_moves(position))
+                after_mate = position.copy()
+                movegen.apply_move(after_mate, mate.source, mate.destination)
+                self.assertEqual(after_mate.side_to_move, opponent)
+                remaining_hand = (
+                    after_mate.gote_hand
+                    if perspective == Side.SENTE
+                    else after_mate.sente_hand
+                )
+                self.assertEqual(remaining_hand.count(BasicPieceType.PAWN), 1000000)
+                self.assertTrue(movegen.is_checkmate(after_mate))
 
-        score = movegen._two_ply_score(after_mate, Side.SENTE)
+                score = movegen._two_ply_score(after_mate, perspective)
 
-        self.assertEqual(score, (1, 0))
-        normal = Position(Board(), Side.GOTE)
-        normal.sente_hand.add_many(BasicPieceType.PAWN, 1000000)
-        normal_score = movegen._two_ply_score(normal, Side.SENTE)
-        self.assertEqual(normal_score, (0, 1000000))
-        self.assertGreater(score, normal_score)
+                self.assertEqual(score, (1, 0))
+                normal = Position(Board(), opponent)
+                own_hand = (
+                    normal.sente_hand if perspective == Side.SENTE else normal.gote_hand
+                )
+                own_hand.add_many(BasicPieceType.PAWN, 1000000)
+                normal_score = movegen._two_ply_score(normal, perspective)
+                self.assertEqual(normal_score, (0, 1000000))
+                self.assertGreater(score, normal_score)
 
     def test_rates_reply_mate_as_loss(self):
-        """相手の合法応手で詰む評価を百万点の通常損失より低くする。
+        """先後と応手順に依存せず詰みの負けを百万点の通常損失より低くする。
 
-        詰み直前教材の筋・段と所属を反転し、後手の５七飛から５八飛で
-        開始側の先手が詰むことを実操作で確認する。一手後相当の局面から
-        全応手を実評価し、詰み無視や負けの通常点化を検出する。
+        開始側の相手が飛車で詰ませる一手後相当の局面を先後とも確認する。
+        全実応手を保持し、詰ませる応手群を先頭・中間・末尾へ置く。
+        先頭/末尾だけ・最善応手・先手固定・後手開始だけの詰み無視を検出する。
         """
-        board = Board()
-        for square, piece_type, side in (
-            (Square(5, 9), PieceType.KING, Side.SENTE),
-            (Square(1, 1), PieceType.KING, Side.GOTE),
-            (Square(5, 7), PieceType.ROOK, Side.GOTE),
-            (Square(6, 7), PieceType.GOLD, Side.GOTE),
-        ):
-            board.set_piece(square, Piece(piece_type, side))
-        for square in (Square(6, 9), Square(4, 9), Square(6, 8), Square(4, 8)):
-            board.set_piece(square, Piece(PieceType.PAWN, Side.SENTE))
-        after_move = Position(board, Side.GOTE)
-        reply = BoardMove(Square(5, 7), Square(5, 8), False)
-        self.assertFalse(movegen.is_checkmate(after_move))
-        self.assertIn(reply, movegen.legal_moves(after_move))
-        leaf = after_move.copy()
-        movegen.apply_move(leaf, reply.source, reply.destination)
-        self.assertEqual(leaf.side_to_move, Side.SENTE)
-        self.assertTrue(movegen.is_checkmate(leaf))
+        for perspective in (Side.SENTE, Side.GOTE):
+            with self.subTest(perspective=perspective):
+                opponent = Side.GOTE if perspective == Side.SENTE else Side.SENTE
+                after_move, mate_reply = self._mate_priority_position(opponent)
+                self.assertFalse(movegen.is_checkmate(after_move))
+                replies = movegen.legal_moves(after_move)
+                self.assertIn(mate_reply, replies)
+                leaf = after_move.copy()
+                movegen.apply_move(leaf, mate_reply.source, mate_reply.destination)
+                self.assertEqual(leaf.side_to_move, perspective)
+                self.assertTrue(movegen.is_checkmate(leaf))
 
-        score = movegen._two_ply_score(after_move, Side.SENTE)
+                mating, non_mating = [], []
+                for reply in replies:
+                    trial = after_move.copy()
+                    movegen.apply_move(
+                        trial, reply.source, reply.destination, promote=reply.promote
+                    )
+                    target = mating if movegen.is_checkmate(trial) else non_mating
+                    target.append(reply)
+                self.assertIn(mate_reply, mating)
+                self.assertGreaterEqual(len(non_mating), 2)
+                mating, non_mating = tuple(mating), tuple(non_mating)
+                middle = len(non_mating) // 2
+                orders = (
+                    mating + non_mating,
+                    non_mating[:middle] + mating + non_mating[middle:],
+                    non_mating + mating,
+                )
+                for index, ordered in enumerate(orders):
+                    with self.subTest(order=index):
+                        self.assertCountEqual(ordered, replies)
+                        with patch.object(movegen, "legal_moves", return_value=ordered):
+                            score = movegen._two_ply_score(after_move, perspective)
+                        self.assertEqual(score, (-1, 0))
 
-        self.assertEqual(score, (-1, 0))
-        normal = Position(Board(), Side.GOTE)
-        normal.gote_hand.add_many(BasicPieceType.PAWN, 1000000)
-        normal_score = movegen._two_ply_score(normal, Side.SENTE)
-        self.assertEqual(normal_score, (0, -1000000))
-        self.assertLess(score, normal_score)
+                normal = Position(Board(), opponent)
+                opponent_hand = (
+                    normal.gote_hand if perspective == Side.SENTE else normal.sente_hand
+                )
+                opponent_hand.add_many(BasicPieceType.PAWN, 1000000)
+                normal_score = movegen._two_ply_score(normal, perspective)
+                self.assertEqual(normal_score, (0, -1000000))
+                self.assertLess(score, normal_score)
 
     @staticmethod
     def _recapture_position():
