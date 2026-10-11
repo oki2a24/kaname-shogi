@@ -3767,6 +3767,53 @@ class UchiFuzumeTests(unittest.TestCase):
 
 
 class TwoPlyMaterialSelectionTests(unittest.TestCase):
+    def test_selects_win_then_normal_then_loss(self):
+        """通常点が極端でも勝ち、通常、負けの順に候補を選ぶ。
+
+        採点だけを置換し、最大最小の逆転、駒得優先、勝敗の固定点数化、
+        候補位置への依存、低評価候補の抽選混入を検出する。実詰み採点は別検証。
+        """
+        position, win, normal = self._recapture_position()
+        loss = BoardMove(Square(5, 5), Square(6, 5), False)
+        legal = movegen.legal_moves(position)
+        for move in (win, normal, loss):
+            self.assertIn(move, legal)
+
+        for moves, normal_value, expected in (
+            ((win, normal, loss), 1000000, win),
+            ((loss, win, normal), 1000000, win),
+            ((normal, loss, win), 1000000, win),
+            ((normal, loss), -1000000, normal),
+            ((loss, normal), -1000000, normal),
+        ):
+            with self.subTest(moves=moves, normal_value=normal_value):
+                scores = {win: (1, 0), normal: (0, normal_value), loss: (-1, 0)}
+
+                def score_after_move(after, perspective, scores=scores):
+                    # 実適用後の飛車位置で採点を対応付け、呼出し順に依存させない。
+                    return next(
+                        score
+                        for move, score in scores.items()
+                        if after.board.piece_at(move.destination)
+                        == Piece(PieceType.ROOK, Side.SENTE)
+                    )
+
+                rng = random.Random(20261011)
+                with (
+                    patch.object(
+                        movegen, "_two_ply_score", side_effect=score_after_move
+                    ),
+                    patch.object(rng, "choice", wraps=rng.choice) as choice,
+                ):
+                    selected = movegen.choose_move(
+                        position,
+                        moves,
+                        movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+                        rng,
+                    )
+                choice.assert_called_once_with((expected,))
+                self.assertEqual(selected, expected)
+
     def test_ties_all_wins_and_all_losses(self):
         """勝ち同士・負け同士の二候補を元順に一回抽選する。
 
