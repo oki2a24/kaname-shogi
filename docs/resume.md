@@ -2,16 +2,16 @@
 
 ## 現在地
 
-2026-10-11更新。「USI新方式の局中固定・次局継承だけ」の指定1項目は、main統合・取り込み先検証・最後の理解確認まで完了。
+2026-10-11更新。本人は次テーマ「USI新値後の未知値保持だけ」を選定し、新セッション準備を依頼した。今回は文書準備のみ、新テーマのテスト・実装は未開始。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、現在ブランチ `main`。テスト `d3a7f32`、統合記録 `944b214` を保存済み。今回の回答記録開始時は差分なし。pushなし。
-- 取り込み先全体360件・Ruff成功。本人は現在局が二手先読み、次局がMaterialと回答し、正解を確認した。[回答と補足](learning/usi-policy-lifetime.md#最後の理解確認への回答とテーマ完了2026-10-11)。
-- 次は[候補](next-topics.md)を本人が選ぶまで待つ。推薦は承認済みタスク4の未知値保持1項目だけ。
-- タスク4全体は未完了。未知値保持・実応答・性能・棋力へ自動継続しない。
+- 場所 `/Users/oki2a24/kaname-shogi`、準備ブランチ `codex/usi-invalid-value-handoff`。準備開始main `12a6d74`、差分なし、origin/mainより8コミット先を確認。今回push・main統合・新規worktreeなし。
+- 前テーマの局中固定・次局継承はテスト `d3a7f32`、統合記録 `944b214`、回答と完了 `12a6d74` をmain保存済み。取り込み先360件成功、本人回答「現在局は二手先読み、次局はMaterial」まで完了。[実施記録](learning/usi-policy-lifetime.md)。
+- 対象は承認済みタスク4の `test_invalid_value_preserves_two_ply_setting` 1項目のみ。[引き継ぎと再開用プロンプト](handover-usi-invalid-value.md#再開用プロンプト)を本人が新セッションへ入力して開始する。
+- 計画訂正が必要になった場合は明示承認を待つ。main取り込みは別途承認。実応答・性能・棋力へ自動継続しない。
 
 ## 次に読む資料
 
-[今回の実施記録](learning/usi-policy-lifetime.md)、[開始時点の引き継ぎ](handover-usi-policy-lifetime.md)、[承認済み計画タスク4](plans/2026-10-10-two-ply-implementation-plan.md#タスク4usi設定と実応答)、[USI知識](knowledge/usi-engine-response.md)、[テスト点検](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書ガイド](documentation-guide.md)。
+[今回の引き継ぎ](handover-usi-invalid-value.md)、[承認済み計画タスク4](plans/2026-10-10-two-ply-implementation-plan.md#タスク4usi設定と実応答)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマの実施記録](learning/usi-policy-lifetime.md)、[USI知識](knowledge/usi-engine-response.md)、[テスト点検](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書ガイド](documentation-guide.md)。コード位置と個人知見は引き継ぎを参照する。
 
 ## 二手先読み設計の完了
 

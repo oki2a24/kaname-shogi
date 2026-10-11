@@ -159,3 +159,5 @@ CLIの三方式選択（計画タスク3、main取り込み・検証・理解確
 USIへの三方式の通知・受付（計画タスク4先頭2項目のみ、main取り込み・検証・最後の理解確認完了）は[実施記録](learning/usi-three-policies.md)、開始背景と再開手順は[引き継ぎ](handover-usi-three-policies.md)を参照する。
 
 USI新方式の局中固定・次局継承（計画タスク4の1項目のみ、main取り込み・検証・理解確認完了）は[実施記録](learning/usi-policy-lifetime.md)、開始背景は[引き継ぎ](handover-usi-policy-lifetime.md)を参照する。
+
+USI新値後の未知値保持（計画タスク4の1項目のみ、準備段階）は[引き継ぎ](handover-usi-invalid-value.md)を参照する。
