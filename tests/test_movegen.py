@@ -3767,6 +3767,21 @@ class UchiFuzumeTests(unittest.TestCase):
 
 
 class TwoPlyMaterialSelectionTests(unittest.TestCase):
+    def test_empty_candidates_do_not_draw(self):
+        """二手先読みも空候補ならNoneを返し、抽選しない。
+
+        公開入口で候補のない戻り値を別の値にしたり、不要な抽選を行う誤りを
+        検出する。Noneは選べる一手なしであり、投了・詰み・勝敗の判定ではない。
+        """
+        position = Position(Board(), Side.SENTE)
+        rng = random.Random(20261011)
+        with patch.object(rng, "choice", wraps=rng.choice) as choice:
+            selected = movegen.choose_move(
+                position, (), movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL, rng
+            )
+        self.assertIsNone(selected)
+        choice.assert_not_called()
+
     def test_selects_win_then_normal_then_loss(self):
         """通常点が極端でも勝ち、通常、負けの順に候補を選ぶ。
 

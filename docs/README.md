@@ -133,7 +133,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 同点最高の候補だけを抽選することを確認する（1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-equal-best.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2の次の1項目](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-equal-best.md) |
 | 勝ち同士・負け同士の同点抽選を確認する（1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-outcome-ties.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2の次の1項目](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-outcome-ties.md) |
 | 勝ち＞通常＞負けの選択を確認する（1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-outcome-order.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-outcome-order.md) |
-| 空候補で抽選しないことを確認する（新セッション準備のみ） | — | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-empty-candidates.md) |
+| 空候補で抽選しないことを確認する（1項目検証済み、main承認待ち） | [学習記録](learning/two-ply-empty-candidates.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-empty-candidates.md) |
 
 ## 例外と履歴の読み方
 
