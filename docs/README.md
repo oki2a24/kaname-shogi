@@ -163,3 +163,5 @@ USI新方式の局中固定・次局継承（計画タスク4の1項目のみ、
 USI新値後の未知値保持（計画タスク4の1項目のみ、main取り込み・検証済み、理解確認完了）は[実施記録](learning/usi-invalid-value.md)、開始背景は[引き継ぎ](handover-usi-invalid-value.md)を参照する。
 
 関数境界でのUSI新方式の実応答（計画タスク4の1項目のみ、main取り込み・検証・理解確認完了）は[実施記録](learning/usi-function-response.md)、開始背景は[引き継ぎ](handover-usi-function-response.md)を参照する。
+
+実プロセスのUSI新方式応答（計画タスク4の残る実プロセス項目のみ、準備段階）は[引き継ぎ](handover-usi-process-response.md)を参照する。

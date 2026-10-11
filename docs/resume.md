@@ -2,16 +2,16 @@
 
 ## 現在地
 
-2026-10-11更新。「関数境界での実応答だけ」の指定1項目は本人承認によりmain取り込み・取り込み先検証まで完了。最後の理解確認は初回答の誤答・補足を経て、再回答「変わらない」で確認完了。
+2026-10-11更新。本人は次テーマ「実プロセスの新方式応答だけ」を選定し、新セッション準備を依頼した。今回は文書準備のみ、新テーマのテスト・実装・測定は未開始。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、現在main。本人「ok」で `5afc2a4` → `57195e5` へfast-forwardし、準備 `678a47b` も取り込み済み。新規worktree・pushなし。統合記録は `62c65bc` に保存済み。
-- 対象は承認済みタスク4の `test_two_ply_bestmove_is_legal_and_preserves_position` 1項目のみ。実選択でgo二回の合法bestmove・局面保存と実手なしresignを確認。初回Green、隔離13変異FAIL・各復元成功。製品変更・Refactor・計画訂正なし。
-- 取り込み先mainで全体362件、Ruff整形確認28ファイル・lint・差分成功。実装時の独立コード／文書レビュー最終Critical 0・Important 0・Minor 0。詳細・統合検証は[実施記録](learning/usi-function-response.md#main取り込みと取り込み先検証2026-10-11)を参照する。
-- 次は本人による[次テーマ候補](next-topics.md#関数境界の実応答完了後の候補2026-10-11小さい順)の選定待ち。実プロセスの新方式応答だけを推薦する。本人が選ぶまで新テーマへ進まない。タスク4全体は未完了。実プロセス応答・性能・棋力へ自動継続しない。
+- 場所 `/Users/oki2a24/kaname-shogi`、準備ブランチ `codex/usi-process-response-handoff`。準備開始main `3be8b7d`、差分なし、origin/mainより17コミット先を確認。今回push・main統合・新規worktreeなし。
+- 前テーマは実装 `57195e5`、統合記録 `62c65bc`、初回答・補足 `36a6935`、再回答・完了 `3be8b7d` をmain保存済み。取り込み先362件成功。最初の誤答と補足、再回答「変わらない」を区別して[実施記録](learning/usi-function-response.md)へ保存。
+- 対象は承認済みタスク4の実プロセス通知・新方式の合法bestmove・stdout診断混入防止だけ。[引き継ぎと再開用プロンプト](handover-usi-process-response.md#再開用プロンプト)を本人が新セッションへ入力して開始する。
+- 計画訂正は明示承認待ち、main取り込みは別途承認。タスク4の有限待ち超過時の理由・測定は計画に従い、タスク5の三方式時間計測・性能・棋力・ShogiHomeへ自動継続しない。
 
 ## 次に読む資料
 
-[今回の実施記録](learning/usi-function-response.md)、[開始時点の引き継ぎ](handover-usi-function-response.md)、[承認済み計画タスク4](plans/2026-10-10-two-ply-implementation-plan.md#タスク4usi設定と実応答)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[USI知識](knowledge/usi-engine-response.md)、[テスト点検](knowledge/test-coverage-review.md)、[文書ガイド](documentation-guide.md)。
+[今回の引き継ぎ](handover-usi-process-response.md)、[承認済み計画タスク4](plans/2026-10-10-two-ply-implementation-plan.md#タスク4usi設定と実応答)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ記録](learning/usi-function-response.md)、[USI知識](knowledge/usi-engine-response.md)、[テスト点検](knowledge/test-coverage-review.md)、[文書ガイド](documentation-guide.md)。コード位置と個人知見は引き継ぎを参照する。
 
 ## 二手先読み設計の完了
 
