@@ -139,6 +139,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 例外を隠さず伝える確認（指定1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-invalid-move-errors.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-invalid-move-errors.md) |
 | 二手で駒得探索を止める確認（指定1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-depth-boundary.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-depth-boundary.md) |
 | 枝の独立性の確認（指定1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-branch-independence.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-branch-independence.md) |
+| CLIの三方式選択（タスク3、新セッション準備のみ） | — | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク3](plans/2026-10-10-two-ply-implementation-plan.md#タスク3cliから三方式を選ぶ) | [引き継ぎ](handover-cli-three-policies.md) |
 
 ## 例外と履歴の読み方
 
