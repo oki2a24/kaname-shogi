@@ -150,7 +150,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             [
                 "id name kaname-shogi",
                 "id author kaname-shogi project",
-                "option name Difficulty type combo default Random var Random var Material",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial",
                 "usiok",
                 "readyok",
             ],
@@ -181,7 +181,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             [
                 "id name kaname-shogi",
                 "id author kaname-shogi project",
-                "option name Difficulty type combo default Random var Random var Material",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial",
                 "usiok",
             ],
         )
@@ -239,6 +239,26 @@ class UsiEngineFunctionTests(unittest.TestCase):
 
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL)
+
+    def test_accepts_two_ply_material_case_insensitively(self):
+        """TwoPlyMaterialと大小混在の値を二手先読み方針として渡す。
+
+        新値の受付漏れ、大小混在だけの受付漏れ、旧方針への取り違えを検出する。
+        値ごとにエンジンを新しく実行し、前の有効設定による偽成功を防ぐ。
+        """
+        for value in ("TwoPlyMaterial", "tWoPlYmAtErIaL"):
+            with self.subTest(value=value):
+                calls, _ = self._run_with_policy_spy(
+                    [
+                        f"setoption name Difficulty value {value}",
+                        "position startpos moves 7g7f",
+                        "go",
+                        "quit",
+                    ]
+                )
+
+                self.assertEqual(len(calls), 1)
+                self.assertEqual(calls[0][2], MoveSelectionPolicy.TWO_PLY_MATERIAL)
 
     def test_ignores_invalid_and_unknown_options(self):
         """未知名を無視し、不正Difficulty値では最後の有効値を保つ。
@@ -591,7 +611,7 @@ class UsiEngineProcessTests(unittest.TestCase):
             self.assertEqual(reader.read_line(), "id author kaname-shogi project")
             self.assertEqual(
                 reader.read_line(),
-                "option name Difficulty type combo default Random var Random var Material",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial",
             )
             self.assertEqual(reader.read_line(), "usiok")
 

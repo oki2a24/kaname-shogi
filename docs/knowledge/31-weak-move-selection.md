@@ -45,12 +45,12 @@
 
 評価は勝ち `(1, 0)`、通常 `(0, 駒得差)`、負け `(-1, 0)`。一手後に相手が詰みなら勝ち、応手後に開始側が詰みなら負けとし、通常点の大きさで勝敗が逆転しない。勝ち同士・負け同士は同点。開始時の候補なしはNone、途中の詰みでない手なしは静的な駒得差とする。自分一手＋相手一手で駒得探索を止める。既存の詰み判定の防御確認は、その先の駒得探索には含めない。
 
-タスク1では通常比較とその補強を検証した。タスク2の最初の2項目では、実局面の詰み勝ち・応手後の詰み負けと、通常値±1000000との順序を先後両方で確認した。負け側は詰ませる応手群の先頭・中間・末尾でも同じ評価になることを確認した（[詰み優先の記録](../learning/two-ply-mate-priority.md)）。タスク2の勝敗混在・同点・境界・枝独立性の検証も完了した（[枝独立性とタスク2完了の記録](../learning/two-ply-branch-independence.md)）。設計理由と実績は[承認済み設計](../plans/2026-10-10-evaluation-next-stage-design.md)と[実装の学習記録](../learning/two-ply-basic-comparison.md)を参照する。CLIの三択追加は[CLIの実施記録](../learning/cli-three-policies.md)を参照する。USIの選択肢にはまだ追加していない。
+タスク1では通常比較とその補強を検証した。タスク2の最初の2項目では、実局面の詰み勝ち・応手後の詰み負けと、通常値±1000000との順序を先後両方で確認した。負け側は詰ませる応手群の先頭・中間・末尾でも同じ評価になることを確認した（[詰み優先の記録](../learning/two-ply-mate-priority.md)）。タスク2の勝敗混在・同点・境界・枝独立性の検証も完了した（[枝独立性とタスク2完了の記録](../learning/two-ply-branch-independence.md)）。設計理由と実績は[承認済み設計](../plans/2026-10-10-evaluation-next-stage-design.md)と[実装の学習記録](../learning/two-ply-basic-comparison.md)を参照する。CLIの三択追加は[CLIの実施記録](../learning/cli-three-policies.md)を参照する。USIへの三択通知・受付は[実施記録](../learning/usi-three-policies.md)を参照する（作業ブランチで検証、main取り込み待ち）。
 
 ## 利用面
 
 - CLIは対局形式を選んだ後、コンピュータが参加する場合に方針を尋ねる。1または空入力は「ランダム」、2は「一手駒得」、3は「二手先読み（駒得）」。選択は一局中固定する。
-- USIは `Difficulty` comboを通知し、`Random` / `Material` を受け付ける。詳細とUSI状態の寿命は[USIエンジン応答](usi-engine-response.md)を参照する。
+- USIは `Difficulty` comboを通知し、`Random` / `Material` / `TwoPlyMaterial` を受け付ける。新値固有の局中固定・実応答等は未検証。詳細とUSI状態の寿命は[USIエンジン応答](usi-engine-response.md)を参照する。
 - ShogiHome画面でのこの設定や実対局は、この実装テーマでは確認していない。
 
 ## 対象外

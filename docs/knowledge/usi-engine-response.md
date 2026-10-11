@@ -1,6 +1,6 @@
 # USIエンジンの一手応答
 
-更新日：2026-10-08
+更新日：2026-10-11
 
 ## 境界
 
@@ -18,12 +18,14 @@
 `usi` には次のcombo行を `usiok` より前に出す。
 
 ```text
-option name Difficulty type combo default Random var Random var Material
+option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial
 ```
 
-`setoption name Difficulty value Random` は一様ランダム、`value Material` は一手後の駒得比較を選ぶ。設定がない場合は `Random`。USI仕様に従い、受信時のoption名と値は大文字小文字を区別せずに比較する。[USI仕様 §5.3 `setoption`](https://hgm.nubati.net/usi.html)はnameとvalueをcase-insensitiveとしている。未知の設定名は読み飛ばし、既知の `Difficulty` に不正値が届いた場合は最後の有効値を保つ。
+`setoption name Difficulty value Random` は一様ランダム、`value Material` は一手後の駒得比較を選ぶ。`value TwoPlyMaterial` は二手先読み（駒得）の方針を選択境界へ渡す。設定がない場合は `Random`。USI仕様に従い、受信時のoption名と値は大文字小文字を区別せずに比較する。[USI仕様 §5.3 `setoption`](https://hgm.nubati.net/usi.html)はnameとvalueをcase-insensitiveとしている。未知の設定名は読み飛ばし、既知の `Difficulty` に不正値が届いた場合は最後の有効値を保つ。
 
 設定値は `run_usi_engine` 内で `_UsiEngineState` と別に保持する。局の最初の `go` で有効値を局内方針として固定するため、後から届いた `setoption` は現在局の後続 `go` には影響しない。`usinewgame` は局面を消し、局内固定だけを解除して、設定値を次局へ残す。乱数器も設定・局面状態と別にし、一回のエンジン実行中で共有する。
+
+今回の三択通知・受付は作業ブランチで検証済み、main取り込み待ち。新値固有の局中固定・次局継承・未知値保持・実選択・実プロセスbestmove・ShogiHomeは未検証。[実施記録](../learning/usi-three-policies.md)を参照する。
 
 ## コマンドとエラー
 

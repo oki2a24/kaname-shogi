@@ -37,7 +37,7 @@ class UsiEngineLauncherTests(unittest.TestCase):
             result.stdout,
             "id name kaname-shogi\n"
             "id author kaname-shogi project\n"
-            "option name Difficulty type combo default Random var Random var Material\n"
+            "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial\n"
             "usiok\n",
         )
         self.assertEqual(result.stderr, "")

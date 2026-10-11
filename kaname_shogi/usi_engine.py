@@ -12,6 +12,7 @@ from .usi_position import parse_usi_position
 _USI_DIFFICULTY_VALUES = {
     "random": MoveSelectionPolicy.RANDOM,
     "material": MoveSelectionPolicy.MATERIAL,
+    "twoplymaterial": MoveSelectionPolicy.TWO_PLY_MATERIAL,
 }
 
 
@@ -103,7 +104,7 @@ def run_usi_engine(
             output_fn("id author kaname-shogi project")
             output_fn(
                 "option name Difficulty type combo default Random "
-                "var Random var Material"
+                "var Random var Material var TwoPlyMaterial"
             )
             output_fn("usiok")
         elif command_name == "isready":

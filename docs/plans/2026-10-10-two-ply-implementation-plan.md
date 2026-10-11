@@ -162,6 +162,11 @@ USI値・内部識別名は各推薦案に本人が `1` と回答した。既存
 
 ### タスク4：USI設定と実応答
 
+#### 2026-10-11 訂正（本人承認済み）
+
+タスク4先頭2項目の実施中、既存ランチャーテストにも旧通知全文の期待値があると判明した。先頭項目の対象に `tests/test_usi_engine_launcher.py` を追加し、`test_launcher_advertises_difficulty_combo` の期待値へ `var TwoPlyMaterial` を追加する1箇所の同期を提案する。製品ランチャーの変更や新方式の実プロセスbestmove検証は追加しない。本人は内容説明後に「承認する」と明示回答した。この同期を対象へ追加する訂正は承認済み。以下の当初本文は履歴として保持し、先頭項目の通知期待値更新に限り追加ファイルも対象とする。
+
+
 対象：`usi_engine.py`、`test_usi_engine.py`。消費は `choose_move` の既存シグネチャと新方針。生産する `run_usi_engine(input_fn, output_fn, rng=None) -> None` のシグネチャは変えない。
 
 - [ ] option行の期待値を `option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial` とし、通知欠落をRedで確認して通知へ追加する。
