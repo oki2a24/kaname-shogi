@@ -2,17 +2,17 @@
 
 ## 現在地
 
-2026-10-11更新。「勝ち＞通常＞負けの選択を確認する」の指定1項目はmain統合・取り込み先検証・理解確認まで完了。次テーマの本人選定待ち。
+2026-10-11更新。本人は次テーマ「空候補で抽選しないことを確認する」1項目を選定し、新セッション準備を依頼した。今回は準備のみで新テーマ未開始。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、現在ブランチmain。開始HEAD `b6690dc`。新規worktree・pushなし。本人の「良い」を受け、準備 `b6690dc` と実装 `4e7cb58` をmainへfast-forwardで取り込み済み。現在状態はGitで再確認する。
-- 対象は承認済み計画タスク2の `test_selects_win_then_normal_then_loss` 1項目だけ。合法三候補の採点を置換し、通常±1000000でも勝ち＞通常＞負けを選択する5ケースを追加。製品変更・Refactorなし。
-- 対象179件・全体352件成功。隔離9変異の対象アサーションFAIL・各復元成功、独立コードレビューCritical 0・Important 0・Minor 0。[検証・限界・開始時の記述ミス](learning/two-ply-outcome-order.md)を参照。
-- 取り込み先でも全体352件・Ruff・リンク377件・差分検査成功。[最初の回答と補足](learning/two-ply-outcome-order.md#最後の理解確認補足後の再確認待ち)、[再確認の回答と完了記録](learning/two-ply-outcome-order.md#再確認への回答とテーマ完了)を保存した。次の行動は[候補](next-topics.md)から本人が次テーマを選ぶのを待つこと。推薦は空候補で抽選しない1項目。
+- 場所 `/Users/oki2a24/kaname-shogi`。準備開始main HEAD `d7b62ce`、origin/mainより9コミット先行、変更なし。準備ブランチ `codex/two-ply-empty-candidates-handoff`。今回の準備のmain統合・push・新規worktreeなし。現在状態はGitで再確認する。
+- 対象は承認済み計画タスク2の `test_empty_candidates_do_not_draw` 1項目だけ。次の行動は本人が[再開用プロンプト](handover-two-ply-empty-candidates.md#再開用プロンプト)を新セッションへ入力すること。入力後、現物と既存承認を照合して進める。
+- 空候補の処理は実装済み。初回Greenなら隔離誤り注入で検出力を確認し、不要な製品変更をしない。Noneは選択できる一手なしを表し、投了・詰み・勝敗を決める意味ではない。
+- 前テーマはmain統合・取り込み先検証・理解確認まで完了。[回答と補足・完了記録](learning/two-ply-outcome-order.md#再確認への回答とテーマ完了)を参照。対象179件・全体352件は前テーマの実績で、次回へ流用しない。
 - タスク2全体は未完了。残りのタスク2、CLI／USI三択、性能・棋力測定、Python更新・構成再検討へ自動継続しない。利用面は二方式のまま。[保留時期の推薦案](handover-two-ply-outcome-order.md#python更新とコード構成再検討の時期)は承認・開始済みと扱わない。
 
 ## 次に読む資料
 
-[今回の実施記録](learning/two-ply-outcome-order.md)、[開始時引き継ぎ](handover-two-ply-outcome-order.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ記録](learning/two-ply-outcome-ties.md)、[テスト点検手順](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書更新ガイド](documentation-guide.md)。個人知見とコード位置は引き継ぎを参照する。
+[今回の引き継ぎ](handover-two-ply-empty-candidates.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ記録](learning/two-ply-outcome-order.md)、[選択知識メモ](knowledge/31-weak-move-selection.md)、[テスト点検手順](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書更新ガイド](documentation-guide.md)。個人知見とコード位置は引き継ぎを参照する。
 
 ## 二手先読み設計の完了
 
