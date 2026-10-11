@@ -131,7 +131,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 通常の二手比較を実装する（タスク1完了、main取り込み・検証・理解確認済み） | [学習記録](learning/two-ply-basic-comparison.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画のタスク1](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-basic-comparison.md) |
 | 詰み優先を確認する（2項目と補強をmain統合・検証・理解確認済み） | [学習記録](learning/two-ply-mate-priority.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2の最初の2項目](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-mate-priority.md) |
 | 同点最高の候補だけを抽選することを確認する（1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-equal-best.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2の次の1項目](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-equal-best.md) |
-| 勝ち同士・負け同士の同点抽選を確認する（1項目main統合・検証済み、理解確認待ち） | [学習記録](learning/two-ply-outcome-ties.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2の次の1項目](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-outcome-ties.md) |
+| 勝ち同士・負け同士の同点抽選を確認する（1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-outcome-ties.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2の次の1項目](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-outcome-ties.md) |
 
 ## 例外と履歴の読み方
 
