@@ -11,7 +11,17 @@ from pathlib import Path
 from unittest.mock import patch
 
 from kaname_shogi import usi_engine
+from kaname_shogi.model import (
+    BasicPieceType,
+    Board,
+    Piece,
+    PieceType,
+    Position,
+    Side,
+    Square,
+)
 from kaname_shogi.movegen import MoveSelectionPolicy, legal_moves
+from kaname_shogi.sfen import SfenPosition, format_sfen
 from kaname_shogi.usi_move import parse_usi_move
 from kaname_shogi.usi_position import parse_usi_position
 
@@ -430,6 +440,106 @@ class UsiEngineFunctionTests(unittest.TestCase):
         move = parse_usi_move(response[1])
         position = parse_usi_position(position_command).position
         self.assertIn(move, legal_moves(position))
+
+    def test_two_ply_bestmove_is_legal_and_preserves_position(self):
+        """二手先読みで二回の合法応答を返し、局面を保存して手なしは投了する。
+
+        実選択を使い、不合法応答・応答欠落・局面変更・手なしの誤応答を検出する。
+        全合法手からの選択なので、教材の４五飛だけを期待値にしない。
+        """
+        board = Board()
+        for square, piece_type, side in (
+            (Square(9, 9), PieceType.KING, Side.SENTE),
+            (Square(5, 5), PieceType.ROOK, Side.SENTE),
+            (Square(1, 1), PieceType.KING, Side.GOTE),
+            (Square(5, 3), PieceType.GOLD, Side.GOTE),
+            (Square(5, 4), PieceType.PAWN, Side.GOTE),
+        ):
+            board.set_piece(square, Piece(piece_type, side))
+        position = Position(board, Side.SENTE)
+        sfen = format_sfen(SfenPosition(position, 1))
+        expected_moves = legal_moves(position)
+        self.assertTrue(expected_moves)
+        outputs = []
+        observed_positions = []
+        choose_move = usi_engine.choose_move
+
+        def snapshot(current):
+            return (
+                tuple(
+                    current.board.piece_at(Square(file, rank))
+                    for file in range(1, 10)
+                    for rank in range(1, 10)
+                ),
+                current.side_to_move,
+                tuple(
+                    hand.count(piece_type)
+                    for hand in (current.sente_hand, current.gote_hand)
+                    for piece_type in BasicPieceType
+                    if piece_type != BasicPieceType.KING
+                ),
+            )
+
+        expected_state = snapshot(position)
+
+        def record_choose_move(current, moves, policy, rng):
+            self.assertEqual(policy, MoveSelectionPolicy.TWO_PLY_MATERIAL)
+            self.assertEqual(snapshot(current), expected_state)
+            observed_positions.append(current)
+            selected = choose_move(current, moves, policy, rng)
+            self.assertEqual(snapshot(current), expected_state)
+            return selected
+
+        with patch.object(usi_engine, "choose_move", side_effect=record_choose_move):
+            usi_engine.run_usi_engine(
+                ScriptedInput(
+                    [
+                        "setoption name Difficulty value TwoPlyMaterial",
+                        f"position sfen {sfen}",
+                        "go",
+                        "go",
+                        "quit",
+                    ]
+                ),
+                outputs.append,
+                random.Random(0),
+            )
+
+        self.assertEqual(len(observed_positions), 2)
+        self.assertIs(observed_positions[0], observed_positions[1])
+        self.assertEqual(snapshot(observed_positions[0]), expected_state)
+        self.assertEqual(len(outputs), 2)
+        for response in outputs:
+            tokens = response.split()
+            self.assertEqual(len(tokens), 2)
+            self.assertEqual(tokens[0], "bestmove")
+            self.assertNotEqual(tokens[1], "resign")
+            self.assertIn(parse_usi_move(tokens[1]), expected_moves)
+
+        # 玉なし部分局面も既存モデルで表現できる。空盤なら実合法手は空になる。
+        no_move_position = Position(Board(), Side.SENTE)
+        self.assertEqual(legal_moves(no_move_position), ())
+        no_move_sfen = format_sfen(SfenPosition(no_move_position, 1))
+        expected_state = snapshot(no_move_position)
+        outputs = []
+        observed_positions = []
+        with patch.object(usi_engine, "choose_move", side_effect=record_choose_move):
+            usi_engine.run_usi_engine(
+                ScriptedInput(
+                    [
+                        "setoption name Difficulty value TwoPlyMaterial",
+                        f"position sfen {no_move_sfen}",
+                        "go",
+                        "quit",
+                    ]
+                ),
+                outputs.append,
+                random.Random(0),
+            )
+
+        self.assertEqual(outputs, ["bestmove resign"])
+        self.assertEqual(len(observed_positions), 1)
+        self.assertEqual(snapshot(observed_positions[0]), expected_state)
 
     def test_uses_most_recent_position_before_go(self):
         """複数のposition後に受けたgoは最後の局面を使う。
