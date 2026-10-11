@@ -3767,6 +3767,27 @@ class UchiFuzumeTests(unittest.TestCase):
 
 
 class TwoPlyMaterialSelectionTests(unittest.TestCase):
+    def test_does_not_hide_invalid_move_errors(self):
+        """二手先読みは未知型と不合法移動の例外を呼び出し側へ伝える。
+
+        非空候補に未知型、次に空の出発マスからの盤上移動を渡す。
+        TypeError・ValueErrorを握り潰してランダム選択やNoneへ変える誤りを
+        検出する。通常の入口には合法手を渡す前提を変更しない。
+        """
+        for move, error_type in (
+            (object(), TypeError),
+            (BoardMove(Square(5, 5), Square(5, 4), False), ValueError),
+        ):
+            with self.subTest(error_type=error_type.__name__):
+                position = Position(Board(), Side.SENTE)
+                with self.assertRaises(error_type):
+                    movegen.choose_move(
+                        position,
+                        (move,),
+                        movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+                        random.Random(20261011),
+                    )
+
     def test_non_check_no_move_at_leaf_uses_static_balance(self):
         """二手後に自分の手がなく詰みでもなければ通常の駒得差を返す。
 

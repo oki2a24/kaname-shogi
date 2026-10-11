@@ -2,17 +2,17 @@
 
 ## 現在地
 
-2026-10-11更新。本人は次テーマ「例外を隠さず伝える確認」を選定し、新セッションの準備を依頼した。今回は準備のみで、新テーマ未開始。
+2026-10-11更新。「例外を隠さず伝える確認」の指定1項目を実施し、検証・独立レビュー・記録がそろった。作業ブランチへ通常コミットして保存し、main統合は別途本人承認を待つ。
 
-- 場所 `/Users/oki2a24/kaname-shogi`。準備開始main HEAD `1e1bbd8`、origin/mainより4コミット先行、変更なしを確認。準備ブランチ `codex/two-ply-invalid-move-errors-handoff`。今回の準備のmain統合・push・新規worktreeなし。次回Gitの現物を確認する。
-- 対象は承認済み計画タスク2の `test_does_not_hide_invalid_move_errors` 1項目だけ。非空候補の未知型でTypeError、不合法な盤上移動でValueErrorを伝える確認。[引き継ぎと再開用プロンプト](handover-two-ply-invalid-move-errors.md#再開用プロンプト)を本人が新セッションへ入力して開始する。
-- 既存計画は承認済み。訂正が必要なら提示して明示承認を待つ。初回Greenなら隔離誤り注入で意図したアサーションFAILと各復元成功を確認し、不要な製品変更をしない。
-- 前テーマの二手後非詰み手なし評価はmain統合・検証・理解確認まで完了。[本人回答と補足](learning/two-ply-leaf-no-move.md#最後の理解確認への回答とテーマ完了)。実施 `9d64c05`、統合記録 `ba17f32`、回答・完了 `1e1bbd8`。対象182件・全体355件は前テーマの実績で、次回へ流用しない。
-- タスク2は11項目中8項目完了。今回の例外伝達、枝独立性・二手境界が残る。CLI／USI三択・全体仕上げ、性能・棋力測定、Python更新・構成再検討へ自動継続しない。利用面は二方式のまま。
+- 場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/two-ply-invalid-move-errors-handoff`、開始HEAD `a827caa`。mainは `1e1bbd8`。準備コミットと今回変更はmain未取り込み。push・新規worktreeなし。現在のGit状態は再開時に現物確認する。
+- 対象は承認済み計画タスク2の `test_does_not_hide_invalid_move_errors` 1項目のみ。非空未知型でTypeError、空出発マスからの盤上移動でValueErrorを確認。計画訂正・製品変更・Refactorなし。[実施記録](learning/two-ply-invalid-move-errors.md)に契約・検出範囲・未検証を保存。
+- 初回Green。隔離4変異で各assertRaisesの例外未送出FAILと各復元成功を確認。今回の基準355件、追加後単独1件・対象183件・全体356件成功。Ruff・差分成功、独立コード／文書レビュー各Critical 0・Important 0・Minor 0。変更4文書のリンク・見出し389件問題0。
+- 次は本人の別途承認でmainへ取り込み、取り込み先検証後に最後の理解確認を一問だけ出す。main統合・取り込み先検証・出題・本人回答は未実施。後続へ自動継続しない。
+- 前テーマの二手後非詰み手なしはmain統合・検証・理解確認まで完了。[本人回答と補足](learning/two-ply-leaf-no-move.md#最後の理解確認への回答とテーマ完了)。タスク2は8項目が理解確認まで完了し、今回1項目は統合前。枝独立性・二手境界は未着手で、タスク2全体は未完了。CLI／USI三択等も未開始。
 
 ## 次に読む資料
 
-[今回の引き継ぎ](handover-two-ply-invalid-move-errors.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ記録](learning/two-ply-leaf-no-move.md)、[選択知識メモ](knowledge/31-weak-move-selection.md)、[テスト点検手順](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書更新ガイド](documentation-guide.md)。個人知見とコード位置は引き継ぎを参照する。
+[今回の実施記録](learning/two-ply-invalid-move-errors.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[選択知識メモ](knowledge/31-weak-move-selection.md)、[テスト点検手順](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書更新ガイド](documentation-guide.md)。開始時の背景と旧再開プロンプトは[引き継ぎ](handover-two-ply-invalid-move-errors.md)に保持する。
 
 ## 二手先読み設計の完了
 
