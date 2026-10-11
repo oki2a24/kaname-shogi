@@ -5,7 +5,7 @@
 2026-10-11更新。現在テーマは「同点最高の候補だけを抽選することを確認する」。承認済み計画タスク2の `test_draws_only_equal_best_candidates` 1項目を追加し、初回Green・隔離6変異の対象FAILと各復元成功、対象177件・全体350件を確認した。製品変更なし。[実施記録](learning/two-ply-equal-best.md)を参照する。
 
 - 作業場所：`/Users/oki2a24/kaname-shogi`。開始HEAD `eacd25c`、作業ブランチ `codex/two-ply-equal-best-handoff`。本人承認後にローカルmainへ `ffa8217` まで取り込み済み。現在mainで統合記録を更新。新規worktree・pushなし。
-- 独立コード・文書レビューは各Critical 0・Important 0・Minor 0。取り込み先mainでも全体350件・Ruff・リンク355件・差分検査が成功。次の行動は最後の理解確認を一問出し、本人回答を待つこと。回答・補足の記録と次候補の見直しは未実施。
+- 独立コード・文書レビューは各Critical 0・Important 0・Minor 0。取り込み先mainでも全体350件・Ruff・リンク355件・差分検査が成功。最後の理解確認で本人はA・Bと回答し、負点でも最高同点を選ぶ具体例の理解を確認した。[回答と補足](learning/two-ply-equal-best.md#最後の理解確認とテーマ完了)を保存。今回のテーマは完了し、次の行動は[次テーマ候補](next-topics.md)から本人の選定を待つこと。
 - タスク2全体は未完了。残りのタスク2、CLI/USI三択、性能・棋力測定へ自動継続しない。利用面は二方式のまま。
 - 前テーマの詰み優先はmain統合・検証・理解確認まで完了。[本人回答と補足](learning/two-ply-mate-priority.md#最後の理解確認とテーマ完了)を参照する。
 
