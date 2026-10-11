@@ -3767,6 +3767,39 @@ class UchiFuzumeTests(unittest.TestCase):
 
 
 class TwoPlyMaterialSelectionTests(unittest.TestCase):
+    def test_ties_all_wins_and_all_losses(self):
+        """勝ち同士・負け同士の二候補を元順に一回抽選する。
+
+        採点だけを固定し、勝敗同点への駒得混入、候補欠落、順序反転、
+        固定選択、複数回抽選を検出する。実詰みの採点は別テストが担う。
+        """
+        position, capture, safe = self._recapture_position()
+        legal = movegen.legal_moves(position)
+        self.assertIn(capture, legal)
+        self.assertIn(safe, legal)
+        # 一手後の駒得が異なる二候補でも、勝敗同点なら区別しない。
+        for move, expected in ((capture, 7), (safe, 5)):
+            after = position.copy()
+            movegen.apply_move(after, move.source, move.destination)
+            self.assertEqual(movegen.material_balance(after, Side.SENTE), expected)
+
+        for outcome in ((1, 0), (-1, 0)):
+            for moves in ((capture, safe), (safe, capture)):
+                with self.subTest(outcome=outcome, moves=moves):
+                    rng = random.Random(20261011)
+                    with (
+                        patch.object(movegen, "_two_ply_score", return_value=outcome),
+                        patch.object(rng, "choice", return_value=moves[1]) as choice,
+                    ):
+                        selected = movegen.choose_move(
+                            position,
+                            moves,
+                            movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+                            rng,
+                        )
+                    choice.assert_called_once_with(moves)
+                    self.assertEqual(selected, moves[1])
+
     def test_draws_only_equal_best_candidates(self):
         """同点最高の銀取り二候補だけを元順に一回抽選する。
 
