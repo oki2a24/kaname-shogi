@@ -3767,6 +3767,43 @@ class UchiFuzumeTests(unittest.TestCase):
 
 
 class TwoPlyMaterialSelectionTests(unittest.TestCase):
+    def test_non_check_no_move_at_leaf_uses_static_balance(self):
+        """二手後に自分の手がなく詰みでもなければ通常の駒得差を返す。
+
+        先手駒なし・後手５五飛のみの玉なし部分局面を一手後相当とする。
+        成りを含む全応手後の手なしを勝敗・0点へ変える誤り、視点反転や
+        成り応手の最悪値を見落とす誤りを検出する。正式な終局は判定しない。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.GOTE))
+        after_move = Position(board, Side.GOTE)
+        replies = movegen.legal_moves(after_move)
+        self.assertTrue(replies)
+        self.assertIn(BoardMove(Square(5, 5), Square(5, 7), True), replies)
+        self.assertIn(BoardMove(Square(5, 5), Square(4, 5), False), replies)
+
+        for reply in replies:
+            with self.subTest(reply=reply):
+                leaf = after_move.copy()
+                movegen.apply_move(
+                    leaf, reply.source, reply.destination, promote=reply.promote
+                )
+                self.assertEqual(leaf.side_to_move, Side.SENTE)
+                self.assertEqual(movegen.legal_moves(leaf), ())
+                self.assertFalse(movegen.is_in_check(leaf.board, Side.SENTE))
+                self.assertFalse(movegen.is_checkmate(leaf))
+                self.assertEqual(
+                    leaf.board.piece_at(reply.destination),
+                    Piece(
+                        PieceType.DRAGON if reply.promote else PieceType.ROOK,
+                        Side.GOTE,
+                    ),
+                )
+
+        score = movegen._two_ply_score(after_move, Side.SENTE)
+        # 通常区分0。先手0−後手の竜17点が、成りを含む全応手の最悪値。
+        self.assertEqual(score, (0, -17))
+
     def test_non_check_no_reply_uses_static_balance(self):
         """一手後に相手の応手がなく詰みでもなければ通常の駒得差を返す。
 
