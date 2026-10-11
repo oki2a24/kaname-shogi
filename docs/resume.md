@@ -2,16 +2,16 @@
 
 ## 現在地
 
-2026-10-11更新。次テーマは「40手目の長考理由を調べる範囲の設計だけ」。本人選定済みで、新セッション開始待ち。本人の「40手上限設定が影響したのでは」という仮説は未検証。
+2026-10-11更新。「40手目の長考理由を調べる範囲の設計だけ」を開始し、[具体案](plans/2026-10-11-long-think-scope-design.md)を作成。本人の明示承認待ち。上限設定の影響という本人仮説は未検証。
 
-- 場所 `/Users/oki2a24/kaname-shogi`。準備開始main `69a66f9`、差分なし。準備ブランチ `codex/long-think-scope-handoff`、新規worktree・準備のmain取り込み・pushなし。
-- 前テーマのタスク5はmain統合・取り込み先362件成功・最後の理解確認まで完了。[実績と制約](learning/two-ply-final-check.md)を参照。今回の一局の待ちは許容済み、他局面・秒読み後の30秒以内保証はない。
-- 次は[新しい引き継ぎの再開用プロンプト](handover-long-think-scope.md#再開用プロンプト)を本人が新セッションへ入力する。入力前に新テーマを開始しない。
-- 調査範囲の具体案は未作成・未承認。今回は設計だけで、追加分析・計測・対局・実装・最適化・棋力比較へ自動継続しない。main統合も別途本人承認。
+- 場所 `/Users/oki2a24/kaname-shogi`、開始HEAD `c02b7df`、ブランチ `codex/long-think-scope-handoff`。新規worktree・今回のmain取り込み・pushなし。
+- 推薦案は保存ログの38・40手目周辺と関連処理の読取りだけ。調査・追加ログ分析・再計測・対局・実装は未開始。main統合は別承認。
+- 前テーマはmain統合・取り込み先検証・最後の理解確認まで完了。[実績](learning/two-ply-final-check.md)にある本人の待ち時間許容判断と、他局面・秒読み後の未保証を維持する。
+- 次は具体案を本人が確認し、明示承認または修正指示を返す。承認前に調査を実行しない。
 
 ## 次に読む資料
 
-[新しい引き継ぎ](handover-long-think-scope.md)、[前テーマの実績](learning/two-ply-final-check.md)、[使用感確認案と実績案内](plans/2026-10-11-two-ply-usability-check.md)、[文書ガイド](documentation-guide.md)、[次テーマ選定](next-topics.md)。詳細な証拠パス・次行動は新しい引き継ぎに保存した。
+[具体案](plans/2026-10-11-long-think-scope-design.md)、[今回の設計記録](learning/long-think-scope-design.md)。開始時点の背景・証拠パスは[引き継ぎ](handover-long-think-scope.md)、前テーマの条件案は[使用感確認案](plans/2026-10-11-two-ply-usability-check.md)に保存。古い再開プロンプトの再入力は不要。
 
 ## 二手先読み設計の完了
 
