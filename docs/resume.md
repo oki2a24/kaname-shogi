@@ -2,12 +2,12 @@
 
 ## 現在地
 
-2026-10-11更新。「枝の独立性の確認」の指定1項目の検証・レビュー・記録がそろった。対象は `test_preserves_branches_for_promotion_drop_and_capture` のみ。
+2026-10-11更新。「枝の独立性の確認」の指定1項目をmainへ取り込み、取り込み先検証まで完了。最後の理解確認が残る。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/two-ply-branch-independence-handoff`、開始HEAD `1db9048`。今回main統合・push・新規worktreeなし。
-- 三候補・各全応手の独立参照、全状態・手計算評価、単独／複数候補・応手正順／逆順を確認。初回Green、隔離8変異FAILと各復元成功。製品変更・計画訂正・Refactorなし。
-- 対象185件・全体358件成功。独立コード／文書レビュー各Critical 0・Important 0・Minor 0。変更4文書リンク・見出し400件問題0。通常コミットへ保存する。[今回の実施記録](learning/two-ply-branch-independence.md)を参照する。
-- main取り込みは別途本人承認待ち。取り込み先検証と最後の理解確認は未実施。タスク2の11項目の検証はそろったが、今回テーマの統合・理解確認まで完了したとは扱わない。
+- 場所 `/Users/oki2a24/kaname-shogi`、現在ブランチmain。本人の「ok」を受けて `7a7382e` → `61114c2` へfast-forward。準備 `1db9048` も取り込み済み。今回push・新規worktreeなし。
+- 対象は `test_preserves_branches_for_promotion_drop_and_capture` のみ。初回Green、隔離8変異FAILと各復元成功。製品変更・計画訂正・Refactorなし。独立コード／文書レビュー各重大度0。
+- 取り込み先全体358件、Ruff整形28ファイル・lint・差分成功。取り込み6文書リンク・見出し414件問題0。[実施・統合記録](learning/two-ply-branch-independence.md)を参照する。
+- 次は最後の理解確認を一問だけ出し、本人の回答を待つ。回答と補足の記録前にテーマ完了としない。タスク2の11項目の検証はそろったが、今回の理解確認は未実施。
 - CLI／USI三択・性能・棋力測定、Python更新・構成再検討へ自動継続しない。開始時の背景は[引き継ぎ](handover-two-ply-branch-independence.md)に保存済み。
 
 ## 次に読む資料

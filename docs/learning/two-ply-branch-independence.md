@@ -63,3 +63,13 @@ Positionは局面データ、BoardMove・DropMoveは一手データ、Squareは�
 成りの2点差だけでなく、取った竜の持飛化、歩を打った消費、相手に飛を取られた持飛化を別々の枝で観測した。候補同士の比較だけでは一様な誤採点が残り得るため、各応手の独立状態と手計算値を確認した。
 
 本人への確認問題はmain取り込みと取り込み先検証後に一問だけ出す。今回まだ出題・回答はなく、理解確認済みと記録しない。
+
+## main統合と取り込み先検証
+
+2026-10-11、保存 `61114c2` を報告しmain取り込みを尋ねた後、本人は「ok」と回答した。これを統合の明示承認として、元ディレクトリ `/Users/oki2a24/kaname-shogi` で清潔なGit状態と環境を再確認し、`git switch main`、`git merge --ff-only codex/two-ply-branch-independence-handoff` を実行。mainは `7a7382e` → `61114c2` へfast-forwardした。準備 `1db9048` も取り込み済み。新規worktree・pushなし。
+
+取り込み先mainで `python3 -m unittest discover -s tests -v` は358件成功（`/tmp/branch-main-full.log`）。Ruff整形検査28ファイル・lint・`git diff --check` 成功。取り込み6文書の相対リンク・見出し414件問題0。過去の作業ブランチの結果を取り込み先結果へ流用していない。
+
+最後の理解確認は未出題・未回答。統合記録の独立レビュー後に保存し、一問だけ出して回答を待つ。本人回答と補足を記録するまでテーマ完了や次テーマの開始とは扱わない。
+
+統合記録の独立文書レビューはCritical 0・Important 0・Minor 0。レビュアーはmain HEAD・reflogのfast-forward・保存ログ・414リンク問題0・差分を確認した。追記後のリンク・Ruff・差分を実行者が確認し、4文書を通常コミットへ保存する。

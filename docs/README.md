@@ -138,7 +138,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 二手後に自分の手がなく、詰みでもない場合の通常評価（指定1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-leaf-no-move.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-leaf-no-move.md) |
 | 例外を隠さず伝える確認（指定1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-invalid-move-errors.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-invalid-move-errors.md) |
 | 二手で駒得探索を止める確認（指定1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-depth-boundary.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-depth-boundary.md) |
-| 枝の独立性の確認（指定1項目、main統合・理解確認待ち） | [学習記録](learning/two-ply-branch-independence.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-branch-independence.md) |
+| 枝の独立性の確認（指定1項目main統合・検証済み、理解確認待ち） | [学習記録](learning/two-ply-branch-independence.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-branch-independence.md) |
 
 ## 例外と履歴の読み方
 
