@@ -135,7 +135,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 勝ち＞通常＞負けの選択を確認する（1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-outcome-order.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-outcome-order.md) |
 | 空候補で抽選しないことを確認する（1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-empty-candidates.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-empty-candidates.md) |
 | 相手の応手がなく、詰みでもない場合の通常評価（指定1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-no-reply.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-no-reply.md) |
-| 二手後に自分の手がなく、詰みでもない場合の通常評価（指定1項目main統合・検証済み、理解確認待ち） | [学習記録](learning/two-ply-leaf-no-move.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-leaf-no-move.md) |
+| 二手後に自分の手がなく、詰みでもない場合の通常評価（指定1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-leaf-no-move.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-leaf-no-move.md) |
 
 ## 例外と履歴の読み方
 
