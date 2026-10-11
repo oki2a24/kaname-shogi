@@ -3767,6 +3767,156 @@ class UchiFuzumeTests(unittest.TestCase):
 
 
 class TwoPlyMaterialSelectionTests(unittest.TestCase):
+    def test_preserves_branches_for_promotion_drop_and_capture(self):
+        """成り・不成の駒取りと歩打ちの各候補・全応手を独立した局面で評価する。
+
+        元局面と兄弟枝の盤面・双方の持ち駒・手番の汚染、候補内で一様に
+        誤採点する実装を検出する。実処理を観測し、独立した直接適用参照と
+        手計算の評価を、単独／複数候補・応手正順／逆順で照合する。
+        """
+        board = Board()
+        for square, piece_type, side in (
+            (Square(9, 9), PieceType.KING, Side.SENTE),
+            (Square(5, 4), PieceType.ROOK, Side.SENTE),
+            (Square(1, 1), PieceType.KING, Side.GOTE),
+            (Square(5, 3), PieceType.DRAGON, Side.GOTE),
+        ):
+            board.set_piece(square, Piece(piece_type, side))
+        position = Position(board, Side.SENTE)
+        position.sente_hand.add(BasicPieceType.PAWN)
+        moves = (
+            BoardMove(Square(5, 4), Square(5, 3), True),
+            BoardMove(Square(5, 4), Square(5, 3), False),
+            DropMove(BasicPieceType.PAWN, Square(7, 7)),
+        )
+        original = _position_snapshot(position)
+        original_moves = tuple(moves)
+        references = {}
+        after_states = {}
+        expected_scores = dict(zip(moves, ((0, 33), (0, 31), (0, -31))))
+        for move in moves:
+            self.assertIn(move, movegen.legal_moves(position))
+            after = position.copy()
+            if isinstance(move, BoardMove):
+                movegen.apply_move(
+                    after, move.source, move.destination, promote=move.promote
+                )
+                self.assertIsNone(after.board.piece_at(Square(5, 4)))
+                self.assertEqual(
+                    after.board.piece_at(Square(5, 3)),
+                    Piece(
+                        PieceType.DRAGON if move.promote else PieceType.ROOK, Side.SENTE
+                    ),
+                )
+                self.assertEqual(after.sente_hand.count(BasicPieceType.ROOK), 1)
+                self.assertEqual(after.sente_hand.count(BasicPieceType.PAWN), 1)
+            else:
+                movegen.apply_drop(after, move.piece_type, move.destination)
+                self.assertEqual(after.sente_hand.count(BasicPieceType.PAWN), 0)
+                self.assertEqual(
+                    after.board.piece_at(Square(7, 7)),
+                    Piece(PieceType.PAWN, Side.SENTE),
+                )
+            self.assertEqual(after.side_to_move, Side.GOTE)
+            self.assertFalse(movegen.is_checkmate(after))
+            after_states[move] = _position_snapshot(after)
+            replies = movegen.legal_moves(after)
+            self.assertTrue(replies)
+            leaves = []
+            for reply in replies:
+                leaf = after.copy()
+                self.assertIsInstance(reply, BoardMove)
+                movegen.apply_move(
+                    leaf, reply.source, reply.destination, promote=reply.promote
+                )
+                self.assertFalse(movegen.is_checkmate(leaf))
+                # 成り: 竜17+持飛15+歩1、不成: 飛15+持飛15+歩1。
+                # 歩打ち: 飛15+歩1−竜17。飛を取られると歩1−竜17−持飛15。
+                value = (
+                    (33 if move.promote else 31)
+                    if isinstance(move, BoardMove)
+                    else (-31 if reply.destination == Square(5, 4) else -1)
+                )
+                leaves.append((_position_snapshot(leaf), value))
+            references[move] = leaves
+            self.assertEqual(
+                (0, min(value for _, value in leaves)), expected_scores[move]
+            )
+            self.assertEqual(_position_snapshot(after), after_states[move])
+        self.assertEqual(_position_snapshot(position), original)
+
+        baseline = position
+        real_score = movegen._two_ply_score
+        real_balance = movegen.material_balance
+        real_legal = movegen.legal_moves
+        for reverse in (False, True):
+            for candidates in (*((move,) for move in moves), moves, moves[::-1]):
+                with self.subTest(reverse=reverse, candidates=candidates):
+                    position = baseline.copy()
+                    observed_leaves = []
+                    observed_scores = []
+
+                    def record_balance(
+                        current, perspective, observed_leaves=observed_leaves
+                    ):
+                        self.assertEqual(perspective, Side.SENTE)
+                        value = real_balance(current, perspective)
+                        observed_leaves.append((_position_snapshot(current), value))
+                        return value
+
+                    def ordered_replies(current, reverse=reverse):
+                        replies = real_legal(current)
+                        return replies[::-1] if reverse else replies
+
+                    def record_score(
+                        after,
+                        perspective,
+                        position=position,
+                        candidates=candidates,
+                        observed_scores=observed_scores,
+                        observed_leaves=observed_leaves,
+                    ):
+                        self.assertEqual(_position_snapshot(position), original)
+                        move = candidates[len(observed_scores)]
+                        self.assertEqual(_position_snapshot(after), after_states[move])
+                        start = len(observed_leaves)
+                        score = real_score(after, perspective)
+                        self.assertCountEqual(observed_leaves[start:], references[move])
+                        self.assertEqual(_position_snapshot(after), after_states[move])
+                        self.assertEqual(score, expected_scores[move])
+                        observed_scores.append((move, score))
+                        return score
+
+                    with (
+                        patch.object(
+                            movegen, "material_balance", side_effect=record_balance
+                        ),
+                        patch.object(
+                            movegen, "legal_moves", side_effect=ordered_replies
+                        ),
+                        patch.object(
+                            movegen, "_two_ply_score", side_effect=record_score
+                        ),
+                    ):
+                        selected = movegen.choose_move(
+                            position,
+                            candidates,
+                            movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+                            random.Random(20261011),
+                        )
+                    self.assertEqual(
+                        observed_scores,
+                        [(move, expected_scores[move]) for move in candidates],
+                    )
+                    self.assertEqual(
+                        selected, max(candidates, key=expected_scores.__getitem__)
+                    )
+                    self.assertEqual(_position_snapshot(position), original)
+                    self.assertEqual(moves, original_moves)
+                    self.assertEqual(
+                        candidates, tuple(move for move, _ in observed_scores)
+                    )
+
     def test_stops_material_scoring_at_two_plies(self):
         """二候補の全応手後だけを各一回採点し、そこで駒得探索を止める。
 

@@ -2,13 +2,13 @@
 
 ## 現在地
 
-2026-10-11更新。本人は次テーマ「枝の独立性の確認」を選定し、新セッション準備を依頼した。今回は準備のみ、新テーマ未開始。
+2026-10-11更新。「枝の独立性の確認」の指定1項目の検証・レビュー・記録がそろった。対象は `test_preserves_branches_for_promotion_drop_and_capture` のみ。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、準備ブランチ `codex/two-ply-branch-independence-handoff`。準備開始main HEAD `7a7382e`、origin/mainより11コミット先行、作業ツリー清潔だった。今回準備のmain統合・push・新規worktreeなし。次回Gitの現物を照合する。
-- 前テーマの実施 `4a2fb20`・統合記録 `80bc69a`・回答と完了 `7a7382e` はmain保存済み。取り込み先357件と最後の理解確認まで完了。[本人回答と補足](learning/two-ply-depth-boundary.md#最後の理解確認への回答とテーマ完了)。レビュー残件なし。
-- 新対象は承認済み計画タスク2の `test_preserves_branches_for_promotion_drop_and_capture` 1項目のみ。[引き継ぎ・再開用プロンプト](handover-two-ply-branch-independence.md#再開用プロンプト)を本人が新セッションへ入力して開始する。
-- 成り・不成・駒打ちの三候補と全応手の独立参照・全状態／評価、単独／複数候補、応手正順／逆順を照合する。初回Greenなら隔離誤り注入と各復元を確認し、不要な製品変更をしない。計画訂正は提示して明示承認を待つ。
-- タスク2は11項目中10項目完了。枝独立性は未開始。CLI／USI三択・性能・棋力測定、Python更新・構成再検討へ自動継続しない。main取り込みは別途本人承認。
+- 場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/two-ply-branch-independence-handoff`、開始HEAD `1db9048`。今回main統合・push・新規worktreeなし。
+- 三候補・各全応手の独立参照、全状態・手計算評価、単独／複数候補・応手正順／逆順を確認。初回Green、隔離8変異FAILと各復元成功。製品変更・計画訂正・Refactorなし。
+- 対象185件・全体358件成功。独立コード／文書レビュー各Critical 0・Important 0・Minor 0。変更4文書リンク・見出し400件問題0。通常コミットへ保存する。[今回の実施記録](learning/two-ply-branch-independence.md)を参照する。
+- main取り込みは別途本人承認待ち。取り込み先検証と最後の理解確認は未実施。タスク2の11項目の検証はそろったが、今回テーマの統合・理解確認まで完了したとは扱わない。
+- CLI／USI三択・性能・棋力測定、Python更新・構成再検討へ自動継続しない。開始時の背景は[引き継ぎ](handover-two-ply-branch-independence.md)に保存済み。
 
 ## 次に読む資料
 
