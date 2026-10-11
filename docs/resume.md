@@ -2,17 +2,17 @@
 
 ## 現在地
 
-2026-10-11更新。「例外を隠さず伝える確認」の指定1項目を本人承認でmainへ取り込み、取り込み先検証まで完了。最後の理解確認の出題・本人回答が残る。
+2026-10-11更新。本人は次テーマ「二手で駒得探索を止める確認」を選定し、新セッション準備を依頼した。今回は準備のみで、新テーマ未開始。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、mainへ準備 `a827caa` と実施 `8089e8b` を取り込み済み。今回の統合は `1e1bbd8`→`8089e8b` のfast-forward。統合記録の保存前に確認した状態であり、再開時はGitの現物を確認する。push・新規worktree・作業ブランチ削除なし。
-- 対象は承認済み計画タスク2の `test_does_not_hide_invalid_move_errors` 1項目のみ。非空未知型でTypeError、空出発マスからの盤上移動でValueErrorを確認。計画訂正・製品変更・Refactorなし。[実施・統合記録](learning/two-ply-invalid-move-errors.md)に契約・検出範囲・未検証を保存。
-- 初回Green。隔離4変異で各assertRaisesの例外未送出FAILと各復元成功。実施時の単独1件・対象183件・全体356件と、今回のmain上全体356件成功を区別して記録。Ruff・差分成功、取り込み6文書リンク・見出し397件問題0。実施時の独立コード／文書レビュー各Critical 0・Important 0・Minor 0。
-- 次は最後の理解確認を一問だけ出し、本人の回答を待つ。回答と補足を記録してから次候補を見直す。未回答を完了扱いにせず、後続へ自動継続しない。
-- 前テーマの二手後非詰み手なしは理解確認まで完了。[本人回答と補足](learning/two-ply-leaf-no-move.md#最後の理解確認への回答とテーマ完了)。タスク2は8項目が理解確認まで完了し、今回1項目はmain統合・検証済みで理解確認前。枝独立性・二手境界は未着手で、タスク2全体は未完了。CLI／USI三択等も未開始。
+- 場所 `/Users/oki2a24/kaname-shogi`、準備ブランチ `codex/two-ply-depth-boundary-handoff`。準備開始main HEAD `d7775f3`、origin/mainより7コミット先行。前テーマ回答・完了記録4文書を未コミットで保持して開始した。準備のmain統合・push・新規worktreeなし。次回Gitの現物を確認する。
+- 前テーマは実施 `8089e8b`・統合記録 `d7775f3` がmainにあり、取り込み先356件と最後の理解確認まで完了。[本人回答と補足](learning/two-ply-invalid-move-errors.md#最後の理解確認への回答とテーマ完了)を保存したが、その回答文書の独立レビューは一度利用上限で停止した。今回準備で再試行に成功し、回答記録を含む5文書は各重大度0、リンク401件問題0・Ruff・差分成功。準備ブランチへ通常コミットして保存する。回答記録と今回準備はmain未取り込み。
+- 新対象は承認済み計画タスク2の `test_stops_material_scoring_at_two_plies` 1項目のみ。[引き継ぎ・再開用プロンプト](handover-two-ply-depth-boundary.md#再開用プロンプト)を本人が新セッションへ入力して開始する。
+- 既存計画は承認済み。訂正が必要なら提示して明示承認を待つ。二手後の全状態・出現回数と採点局面・公開応手生成の位置を照合し、詰み判定の防御確認を駒得探索と区別する。手番一致だけを深さの証拠にしない。初回Greenなら隔離誤り注入と各復元を確認し、不要な製品変更をしない。
+- タスク2は11項目中9項目の実施・統合・理解確認済みで、回答文書の保存が上記理由で残る。今回の二手境界と枝独立性は未開始。CLI／USI三択・性能・棋力測定、Python更新・構成再検討へ自動継続しない。main取り込みは別途本人承認。
 
 ## 次に読む資料
 
-[今回の実施記録](learning/two-ply-invalid-move-errors.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[選択知識メモ](knowledge/31-weak-move-selection.md)、[テスト点検手順](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書更新ガイド](documentation-guide.md)。開始時の背景と旧再開プロンプトは[引き継ぎ](handover-two-ply-invalid-move-errors.md)に保持する。
+[今回の引き継ぎ](handover-two-ply-depth-boundary.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ記録](learning/two-ply-invalid-move-errors.md)、[選択知識メモ](knowledge/31-weak-move-selection.md)、[テスト点検手順](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書ガイド](documentation-guide.md)。個人知見とコード位置は引き継ぎを参照。
 
 ## 二手先読み設計の完了
 
