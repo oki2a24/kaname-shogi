@@ -2,11 +2,11 @@
 
 ## 現在地
 
-2026-10-11更新。「USI新値後の未知値保持だけ」の指定1項目を追加・検証した。独立レビュー・記録確認まで終え、作業ブランチへ保存済み。
+2026-10-11更新。「USI新値後の未知値保持だけ」の指定1項目をmainへ取り込み、取り込み先検証まで完了した。最後の理解確認が残っている。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/usi-invalid-value-handoff`、開始HEAD `b1d8777`。main取り込み・push・新規worktreeなし。
-- 承認済みタスク4の `test_invalid_value_preserves_two_ply_setting` のみ追加。初回Green、製品変更・Refactor・計画訂正なし。隔離8変異FAIL・各復元成功、USI30件・全体361件・Ruff・差分成功。[実施記録](learning/usi-invalid-value.md)。
-- 独立コード・文書レビュー各Critical 0・Important 0・Minor 0、リンク406件問題0。通常コミット後、次はmain取り込みの本人承認を待つ。取り込み先検証・最後の理解確認は未実施。タスク4全体未完了。実応答・性能・棋力へ自動継続しない。
+- 場所 `/Users/oki2a24/kaname-shogi`、現在main。本人「ok」の承認後、`12a6d74` → `d407f20` へfast-forward（準備 `b1d8777` を含む）。push・新規worktreeなし。
+- 承認済みタスク4の `test_invalid_value_preserves_two_ply_setting` のみ追加。初回Green、製品変更・Refactor・計画訂正なし。隔離8変異FAIL・各復元成功。独立コード・文書レビュー各Critical 0・Important 0・Minor 0。[実施記録](learning/usi-invalid-value.md)。
+- 取り込み先mainで全体361件・Ruff整形確認28ファイル・lint・差分成功。次は最後の理解確認を一問だけ出し、本人回答を待って記録する。タスク4全体未完了、実応答・性能・棋力へ自動継続しない。
 
 ## 次に読む資料
 
