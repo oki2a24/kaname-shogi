@@ -3767,6 +3767,34 @@ class UchiFuzumeTests(unittest.TestCase):
 
 
 class TwoPlyMaterialSelectionTests(unittest.TestCase):
+    def test_non_check_no_reply_uses_static_balance(self):
+        """一手後に相手の応手がなく詰みでもなければ通常の駒得差を返す。
+
+        先手５五飛のみの玉なし部分局面で５四飛を実適用する。
+        手なしを勝敗・0点へ変える誤りや、後手視点へ反転する誤りを検出する。
+        玉なしは教材用であり、正式な終局や実戦到達可能性を判定しない。
+        """
+        board = Board()
+        board.set_piece(Square(5, 5), Piece(PieceType.ROOK, Side.SENTE))
+        position = Position(board, Side.SENTE)
+        move = BoardMove(Square(5, 5), Square(5, 4), False)
+        self.assertIn(move, movegen.legal_moves(position))
+
+        after_move = movegen._position_after_move(position, move)
+        self.assertEqual(after_move.side_to_move, Side.GOTE)
+        self.assertIsNone(after_move.board.piece_at(Square(5, 5)))
+        self.assertEqual(
+            after_move.board.piece_at(Square(5, 4)),
+            Piece(PieceType.ROOK, Side.SENTE),
+        )
+        self.assertEqual(movegen.legal_moves(after_move), ())
+        self.assertFalse(movegen.is_in_check(after_move.board, Side.GOTE))
+        self.assertFalse(movegen.is_checkmate(after_move))
+
+        score = movegen._two_ply_score(after_move, position.side_to_move)
+        # 通常区分0、先手の飛車15点−後手0点。製品の採点から期待値を作らない。
+        self.assertEqual(score, (0, 15))
+
     def test_empty_candidates_do_not_draw(self):
         """二手先読みも空候補ならNoneを返し、抽選しない。
 
