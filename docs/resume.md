@@ -2,20 +2,17 @@
 
 ## 現在地
 
-2026-10-11更新。選定テーマ「40手目の長考理由を調べる範囲の設計だけ」について、限定読取り調査、ローカル計測、ShogiHomeでの40手上限／41手上限比較まで本人の段階ごとの承認を得て実施した。最後の比較は2組・4応答で終了。40手条件では2回とも応答後に `gameover draw`、41手条件では応答後に局が継続した。応答時間は40手条件が30.141秒・29.700秒、41手条件が29.488秒・29.578秒で、平均差は約0.388秒。この少数回から長考原因は判定できず、「40手の設定が長考の原因」という仮説は未検証のまま。詳細と限界は[実施記録](learning/long-think-scope-design.md)に保存する。
+2026-10-11更新。前テーマ「40手目の長考理由を調べる範囲の設計だけ」は、限定読取り調査、ローカル計測、ShogiHomeでの40手上限／41手上限比較まで、合意された範囲を終えた。40手条件では2回とも応答後に `gameover draw`、41手条件では応答後に局が継続した。応答時間は40手条件が30.141秒・29.700秒、41手条件が29.488秒・29.578秒で、少数回のため長考原因は判定できない。「40手の設定が長考の原因」という仮説は未検証のまま。棋譜破棄は本人の許可に基づき、ShogiHomeの設定・ログは復帰確認済み。詳細は[実施記録](learning/long-think-scope-design.md)を参照。
 
-- 場所 `/Users/oki2a24/kaname-shogi`。後片付け開始HEAD `cb8a283`、作業ブランチ `codex/long-think-scope-handoff` で実績整理を行った。本人の承認後、変更はローカルmainへ `7c2cc3d` までfast-forward統合済み。push・新規worktreeはない。
-- 上限比較では `TwoPlyMaterial`、`USI_Hash=32`、Ponder OFFの下で、4回とも同じ39手分の `position` と同じ `go btime 600000 wtime 600000 byoyomi 30000` を使った。エンジン起動はUSIオプション確認2回と比較4回の計6回で、起動上限を使い切った。予定した3組のうち2組を行い、第3組は実施していない。検証用棋譜は本人の許可により破棄し、元の対象棋譜は変更していない。USIログは `/Users/oki2a24/Library/Logs/electron-shogi/usi-20261011_165821.log`。
-- 比較後にShogiHomeを再起動し、Difficulty Random、Ponder OFF、USI・CSA・アプリログOFF、ログレベルINFO、USI/CSAセッション0を確認した。製品コード・テスト・設定ファイルの変更はない。
-- 読取り調査では上限設定そのものがエンジンへ届く直接経路は見つからなかった。本人が別途承認したローカル確認では、同じ局面の履歴再生と探索応答を分けて計測した。履歴形式の `position→readyok` は中央値7.486 ms長く、フェンス後の `go→bestmove` は両形式とも約28秒。過去ログの計時区間への正確な寄与と40手上限による長考の因果は未確定。[ローカル計測結果](learning/long-think-scope-design.md#承認後の一回ローカル計測)
-- 先行ローカル計測には、有効測定6回に対して子プロセスを7回起動した上限・停止条件からの未承認逸脱がある。A/B比較の6起動とは別の記録として[学習記録](learning/long-think-scope-design.md)に残している。
-- 比較実績・仮説の切り分け・文書検証・統合記録は[実施記録](learning/long-think-scope-design.md#承認後の40手上限比較2026-10-11事後記録)を参照する。変更はローカルmainに統合済みで、pushはしていない。
-- 前テーマはmain統合・取り込み先検証・最後の理解確認まで完了。[実績](learning/two-ply-final-check.md)にある本人の待ち時間許容判断と、他局面・秒読み後の未保証を維持する。
-- 次テーマは未選定。本人がテーマを選ぶまで、新しい学習・調査・計測・実装は開始しない。
+本人が次テーマ「時計入力を受けて応答を止める仕組みの学習・設計だけ」を選び、新セッション準備を完了した。作業場所 `/Users/oki2a24/kaname-shogi`。準備ブランチ `codex/clock-input-time-management-handoff`、開始HEAD `9c31b63`。準備ブランチはmainへ未統合、pushなし。テーマの選定は具体的な設計・実装計画の承認ではない。学習・調査・設計の開始は、本人が[再開用プロンプト](handover-clock-input-time-management.md#再開用プロンプト)を新しいセッションへ入力してからとする。
+
+- 次テーマはUSI時計入力と探索停止の現行仕様を学び、設計をまとめるところまで。コード・テスト変更、再計測、対局、ShogiHome操作、最適化、棋力比較は含まない。設計を完成して提示した後も実装へは自動継続しない。
+- 以前の上限比較では40手条件と41手条件で終局状態が異なったが、応答時間は両条件とも約30秒だった。「40手上限が長考原因」という仮説は未検証であり、新テーマと混同しない。
+- 準備ブランチの作業開始時、`.venv/bin/ruff --version` は `ruff 0.16.10`、`git config --local --get core.hooksPath` は `.githooks`。新セッションでも実測する。
 
 ## 次に読む資料
 
-[調査範囲と結果](plans/2026-10-11-long-think-scope-design.md)、[今回の実施記録](learning/long-think-scope-design.md)。開始時点の背景・証拠パスは[引き継ぎ](handover-long-think-scope.md)に保存。
+[次テーマの引き継ぎ](handover-clock-input-time-management.md)、[USI応答の知識メモ](knowledge/usi-engine-response.md)、[プロジェクトの方向性](02-project-direction.md)。40手調査の背景・証拠は[引き継ぎ](handover-long-think-scope.md)、[設計・実施記録](plans/2026-10-11-long-think-scope-design.md)、[学習記録](learning/long-think-scope-design.md)に保存。
 
 ## 二手先読み設計の完了
 

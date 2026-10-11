@@ -139,6 +139,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 例外を隠さず伝える確認（指定1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-invalid-move-errors.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-invalid-move-errors.md) |
 | 二手で駒得探索を止める確認（指定1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-depth-boundary.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-depth-boundary.md) |
 | 枝の独立性の確認（指定1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-branch-independence.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-branch-independence.md) |
+| 時計入力を受けて応答を止める仕組みの学習・設計だけ（選定済み、設計未着手） | — | [USI応答](knowledge/usi-engine-response.md) | — | — | [引き継ぎ](handover-clock-input-time-management.md) |
 | CLIの三方式選択（タスク3、新セッション準備のみ） | — | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク3](plans/2026-10-10-two-ply-implementation-plan.md#タスク3cliから三方式を選ぶ) | [引き継ぎ](handover-cli-three-policies.md) |
 
 ## 例外と履歴の読み方
@@ -173,3 +174,5 @@ USI新値後の未知値保持（計画タスク4の1項目のみ、main取り�
 実用性判断の追加条件案は[ShogiHome使用感確認案](plans/2026-10-11-two-ply-usability-check.md)を参照する。承認後の実施・時計誤設定の訂正・ログ照合・欠測・設定復帰は[実施記録](learning/two-ply-final-check.md#承認後のshogihome確認実績2026-10-11事後記録)へ保存した。今回の待ち時間は本人が「許容できる」と回答。main統合・取り込み先検証・最後の理解確認まで完了。
 
 40手目の長考調査の[範囲・結果](plans/2026-10-11-long-think-scope-design.md)と[実施記録](learning/long-think-scope-design.md)を参照する。選定・開始時の背景・証拠パスは[引き継ぎ](handover-long-think-scope.md)、現在地は[再開案内](resume.md)を参照する。
+
+本人が選んだ次テーマ「時計入力を受けて応答を止める仕組みの学習・設計だけ」の開始背景・物理状態・再開用プロンプトは[引き継ぎ](handover-clock-input-time-management.md)、現在地は[再開案内](resume.md)を参照する。具体設計・実装の承認はまだない。
