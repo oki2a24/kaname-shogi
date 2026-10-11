@@ -21,29 +21,34 @@ class CliEntrypointTests(unittest.TestCase):
         main = getattr(entrypoint, "main", None)
         self.assertIsNotNone(main, "main がまだ実装されていません")
 
-        for mode in GameMode:
-            with self.subTest(mode=mode):
-                with (
-                    patch.object(entrypoint, "choose_game_mode", return_value=mode),
-                    patch.object(
-                        entrypoint,
-                        "choose_move_selection_policy",
-                        create=True,
-                        return_value=MoveSelectionPolicy.MATERIAL,
-                    ) as choose_policy,
-                    patch.object(entrypoint, "run_game") as run_game,
-                ):
-                    result = main()
+        for policy in (
+            MoveSelectionPolicy.RANDOM,
+            MoveSelectionPolicy.MATERIAL,
+            MoveSelectionPolicy.TWO_PLY_MATERIAL,
+        ):
+            for mode in GameMode:
+                with self.subTest(mode=mode, policy=policy):
+                    with (
+                        patch.object(entrypoint, "choose_game_mode", return_value=mode),
+                        patch.object(
+                            entrypoint,
+                            "choose_move_selection_policy",
+                            create=True,
+                            return_value=policy,
+                        ) as choose_policy,
+                        patch.object(entrypoint, "run_game") as run_game,
+                    ):
+                        result = main()
 
-                self.assertEqual(result, 0)
-                if mode == GameMode.HUMAN_VS_HUMAN:
-                    choose_policy.assert_not_called()
-                    run_game.assert_called_once_with(mode=mode)
-                else:
-                    choose_policy.assert_called_once_with()
-                    run_game.assert_called_once_with(
-                        mode=mode, move_selection_policy=MoveSelectionPolicy.MATERIAL
-                    )
+                    self.assertEqual(result, 0)
+                    if mode == GameMode.HUMAN_VS_HUMAN:
+                        choose_policy.assert_not_called()
+                        run_game.assert_called_once_with(mode=mode)
+                    else:
+                        choose_policy.assert_called_once_with()
+                        run_game.assert_called_once_with(
+                            mode=mode, move_selection_policy=policy
+                        )
 
 
 class CliEntrypointSmokeTests(unittest.TestCase):

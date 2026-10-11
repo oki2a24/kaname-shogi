@@ -118,7 +118,8 @@ def choose_move_selection_policy(
         output_fn: 選択肢と入力エラーを表示する操作。
 
     戻り値:
-        1なら既存一様ランダムのRANDOM、2なら一手後の駒得比較のMATERIAL。
+        1なら既存一様ランダムのRANDOM、2なら一手後の駒得比較のMATERIAL、
+        3なら自分一手＋相手一手を比較するTWO_PLY_MATERIAL。
         空入力はRANDOMを返す。不正入力では返さず再入力する。
 
     副作用:
@@ -130,11 +131,12 @@ def choose_move_selection_policy(
     policies = {
         "1": MoveSelectionPolicy.RANDOM,
         "2": MoveSelectionPolicy.MATERIAL,
+        "3": MoveSelectionPolicy.TWO_PLY_MATERIAL,
     }
     while True:
         output_fn(
-            "一手選択方針を選んでください（1: 最弱（一様ランダム）、"
-            "2: 駒得を考える、空入力: 最弱）:"
+            "一手選択方針を選んでください（1: ランダム、2: 一手駒得、"
+            "3: 二手先読み（駒得）、空入力: ランダム）:"
         )
         choice = input_fn().strip()
         if choice == "":
@@ -142,7 +144,7 @@ def choose_move_selection_policy(
         try:
             return policies[choice]
         except KeyError:
-            output_fn("エラー：一手選択方針を1〜2で選んでください。")
+            output_fn("エラー：一手選択方針を1〜3で選んでください。")
 
 
 @dataclass(frozen=True)

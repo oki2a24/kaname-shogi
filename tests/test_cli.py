@@ -179,24 +179,32 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         return choose(**kwargs)
 
     def test_choose_move_selection_policy_maps_choices(self):
-        """1・2を最弱・駒得方針へ対応付け、選択肢を表示する。
+        """1・2・3をランダム・一手駒得・二手先読みへ対応付ける。
 
         表示値と内部方針を取り違える誤りや、利用者向けの合意済み名称を欠かす
         誤りを検出する。
         """
-        cases = (("1", MoveSelectionPolicy.RANDOM), ("2", MoveSelectionPolicy.MATERIAL))
+        cases = (
+            ("1", MoveSelectionPolicy.RANDOM),
+            ("2", MoveSelectionPolicy.MATERIAL),
+            ("3", MoveSelectionPolicy.TWO_PLY_MATERIAL),
+        )
         for value, expected in cases:
             outputs = []
             with self.subTest(value=value):
                 self.assertEqual(
                     self._choose_policy(
-                        input_fn=ScriptedInput([value]), output_fn=outputs.append
+                        input_fn=ScriptedInput([value, "1"]), output_fn=outputs.append
                     ),
                     expected,
                 )
-                menu = " ".join(outputs)
-                self.assertIn("最弱（一様ランダム）", menu)
-                self.assertIn("駒得を考える", menu)
+                self.assertEqual(
+                    outputs,
+                    [
+                        "一手選択方針を選んでください（1: ランダム、2: 一手駒得、"
+                        "3: 二手先読み（駒得）、空入力: ランダム）:"
+                    ],
+                )
 
     def test_choose_move_selection_policy_defaults_to_random_on_empty_input(self):
         """空入力は従来の一様ランダム方針を選ぶ。
@@ -216,14 +224,14 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         """
         outputs = []
         policy = self._choose_policy(
-            input_fn=ScriptedInput(["3", "2"]), output_fn=outputs.append
+            input_fn=ScriptedInput(["4", "2"]), output_fn=outputs.append
         )
 
         self.assertEqual(policy, MoveSelectionPolicy.MATERIAL)
         self.assertEqual(
             sum("一手選択方針を選んでください" in line for line in outputs), 2
         )
-        self.assertIn("エラー：一手選択方針を1〜2で選んでください。", outputs)
+        self.assertIn("エラー：一手選択方針を1〜3で選んでください。", outputs)
 
 
 class ScriptedInput:
@@ -264,29 +272,35 @@ class GameplayTests(unittest.TestCase):
         self.assertEqual(choose_move.call_args.args[2], MoveSelectionPolicy.RANDOM)
 
     def test_run_game_passes_selected_policy_to_computer_turn(self):
-        """明示されたMATERIAL方針を局中の自動手へ渡す。
+        """明示された三方式それぞれを局中の自動手へ一度渡す。
 
         対局前に選んだ方針をrun_gameが保持せず、既定のランダムへ戻す誤りを検出する。
         """
-        selected_move = BoardMove(Square(3, 3), Square(3, 4), False)
-        with (
-            patch.object(cli, "legal_moves", return_value=(selected_move,)),
-            patch.object(
-                cli, "choose_move", create=True, return_value=selected_move
-            ) as choose_move,
+        for policy in (
+            MoveSelectionPolicy.RANDOM,
+            MoveSelectionPolicy.MATERIAL,
+            MoveSelectionPolicy.TWO_PLY_MATERIAL,
         ):
-            try:
-                cli.run_game(
-                    input_fn=ScriptedInput(["move 7 7 7 6", "resign"]),
-                    output_fn=lambda _: None,
-                    rng=random.Random(20261005),
-                    move_selection_policy=MoveSelectionPolicy.MATERIAL,
-                )
-            except TypeError as error:
-                self.fail(f"run_gameが選択方針を受け付けません: {error}")
+            with self.subTest(policy=policy):
+                selected_move = BoardMove(Square(3, 3), Square(3, 4), False)
+                with (
+                    patch.object(cli, "legal_moves", return_value=(selected_move,)),
+                    patch.object(
+                        cli, "choose_move", create=True, return_value=selected_move
+                    ) as choose_move,
+                ):
+                    try:
+                        cli.run_game(
+                            input_fn=ScriptedInput(["move 7 7 7 6", "resign"]),
+                            output_fn=lambda _: None,
+                            rng=random.Random(20261005),
+                            move_selection_policy=policy,
+                        )
+                    except TypeError as error:
+                        self.fail(f"run_gameが選択方針を受け付けません: {error}")
 
-        choose_move.assert_called_once()
-        self.assertEqual(choose_move.call_args.args[2], MoveSelectionPolicy.MATERIAL)
+                choose_move.assert_called_once()
+                self.assertEqual(choose_move.call_args.args[2], policy)
 
     def test_help_displays_commands_and_reprompts_same_turn(self):
         """help表示後は案内を再表示して同じ手番から入力を続ける。
