@@ -3767,6 +3767,65 @@ class UchiFuzumeTests(unittest.TestCase):
 
 
 class TwoPlyMaterialSelectionTests(unittest.TestCase):
+    def test_stops_material_scoring_at_two_plies(self):
+        """二候補の全応手後だけを各一回採点し、そこで駒得探索を止める。
+
+        盤面81マス・双方の持ち駒・手番の全状態を直接適用した参照と照合し、
+        一手後や三手以降の採点、応手の省略・重複、葉からの公開手生成を検出する。
+        詰み判定内部の防御手確認は公開legal_movesを使わず、観測に含めない。
+        """
+        position, capture, safe = self._recapture_position()
+        moves = (capture, safe)
+        expected_after = []
+        expected_leaves = []
+        for move in moves:
+            self.assertIn(move, movegen.legal_moves(position))
+            after = position.copy()
+            movegen.apply_move(
+                after, move.source, move.destination, promote=move.promote
+            )
+            self.assertFalse(movegen.is_checkmate(after))
+            expected_after.append(_position_snapshot(after))
+            replies = movegen.legal_moves(after)
+            self.assertTrue(replies)
+            for reply in replies:
+                leaf = after.copy()
+                if isinstance(reply, BoardMove):
+                    movegen.apply_move(
+                        leaf, reply.source, reply.destination, promote=reply.promote
+                    )
+                else:
+                    self.assertIsInstance(reply, DropMove)
+                    movegen.apply_drop(leaf, reply.piece_type, reply.destination)
+                self.assertFalse(movegen.is_checkmate(leaf))
+                expected_leaves.append(_position_snapshot(leaf))
+
+        scored = []
+        generated = []
+        real_balance = movegen.material_balance
+        real_legal_moves = movegen.legal_moves
+
+        def record_balance(current, perspective):
+            scored.append(_position_snapshot(current))
+            return real_balance(current, perspective)
+
+        def record_legal_moves(current):
+            generated.append(_position_snapshot(current))
+            return real_legal_moves(current)
+
+        with (
+            patch.object(movegen, "material_balance", side_effect=record_balance),
+            patch.object(movegen, "legal_moves", side_effect=record_legal_moves),
+        ):
+            movegen.choose_move(
+                position,
+                moves,
+                movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+                random.Random(20261011),
+            )
+        self.assertCountEqual(scored, expected_leaves)
+        self.assertCountEqual(generated, expected_after)
+
     def test_does_not_hide_invalid_move_errors(self):
         """二手先読みは未知型と不合法移動の例外を呼び出し側へ伝える。
 
