@@ -171,3 +171,5 @@ USI新値後の未知値保持（計画タスク4の1項目のみ、main取り�
 タスク5全体の最終確認は[照合・検証・残件の記録](learning/two-ply-final-check.md)、開始背景・再開手順は[引き継ぎ](handover-two-ply-final-check.md)、現在地は[再開案内](resume.md)を参照する。
 
 実用性判断の追加条件案は[ShogiHome使用感確認案](plans/2026-10-11-two-ply-usability-check.md)を参照する。承認後の実施・時計誤設定の訂正・ログ照合・欠測・設定復帰は[実施記録](learning/two-ply-final-check.md#承認後のshogihome確認実績2026-10-11事後記録)へ保存した。今回の待ち時間は本人が「許容できる」と回答。main統合・取り込み先検証・最後の理解確認まで完了。
+
+40手目の長考理由を調べる範囲の設計の選定・背景・証拠パス・再開手順は[引き継ぎ](handover-long-think-scope.md)、現在地は[再開案内](resume.md)を参照する。
