@@ -50,7 +50,7 @@
 ## 利用面
 
 - CLIは対局形式を選んだ後、コンピュータが参加する場合に方針を尋ねる。1または空入力は「ランダム」、2は「一手駒得」、3は「二手先読み（駒得）」。選択は一局中固定する。
-- USIは `Difficulty` comboを通知し、`Random` / `Material` / `TwoPlyMaterial` を受け付ける。新値固有の局中固定・実応答等は未検証。詳細とUSI状態の寿命は[USIエンジン応答](usi-engine-response.md)を参照する。
+- USIは `Difficulty` comboを通知し、`Random` / `Material` / `TwoPlyMaterial` を受け付ける。新値固有の局中固定・次局継承は[実施記録](../learning/usi-policy-lifetime.md)の1系列で検証済み（main未統合）。未知値保持・実応答等は未検証。詳細とUSI状態の寿命は[USIエンジン応答](usi-engine-response.md)を参照する。
 - ShogiHome画面でのこの設定や実対局は、この実装テーマでは確認していない。
 
 ## 対象外

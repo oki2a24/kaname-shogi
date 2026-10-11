@@ -318,6 +318,39 @@ class UsiEngineFunctionTests(unittest.TestCase):
             ],
         )
 
+    def test_keeps_two_ply_policy_for_current_game(self):
+        """二手先読みは局中固定し、局中のMaterial設定は次局へ継承する。
+
+        局中変更の早期適用、新値だけの固定漏れ、次局に古い方針を残す誤り、
+        設定の既定値への消去、後続goへ方針を渡し忘れる誤りを検出する。
+        選択境界だけをspyにし、設定受付と局の状態処理は実際に動かす。
+        """
+        calls, _ = self._run_with_policy_spy(
+            [
+                "setoption name Difficulty value TwoPlyMaterial",
+                "position startpos moves 7g7f",
+                "go",
+                "setoption name Difficulty value Material",
+                "go",
+                "usinewgame",
+                "position startpos moves 7g7f",
+                "go",
+                "quit",
+            ]
+        )
+
+        self.assertEqual(len(calls), 3)
+        expected_policies = [
+            MoveSelectionPolicy.TWO_PLY_MATERIAL,
+            MoveSelectionPolicy.TWO_PLY_MATERIAL,
+            MoveSelectionPolicy.MATERIAL,
+        ]
+        for go_number, (call, expected) in enumerate(
+            zip(calls, expected_policies), start=1
+        ):
+            with self.subTest(go_number=go_number):
+                self.assertEqual(call[2], expected)
+
     def test_usinewgame_preserves_configured_difficulty(self):
         """usinewgameは局面を消しても設定済み方針を次局へ保つ。
 

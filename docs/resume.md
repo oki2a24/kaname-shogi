@@ -2,16 +2,16 @@
 
 ## 現在地
 
-2026-10-11更新。本人は次テーマ「USI新方式の局中固定・次局継承だけ」を選定し、新セッション準備を依頼した。今回は文書準備のみ、新テーマのテスト・実装は未開始。
+2026-10-11更新。「USI新方式の局中固定・次局継承だけ」の指定テスト1項目を追加し、検証済み。独立コード・文書レビュー各Critical 0・Important 0・Minor 0。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、準備ブランチ `codex/usi-policy-lifetime-handoff`。準備開始main `f5f8f82`、清潔、origin/mainより4コミット先を確認。今回push・main統合・新規worktreeなし。
-- 前テーマの通知・受付は実装 `ee9db95`、統合記録 `6202640`、理解確認と完了 `f5f8f82` をmain保存済み。取り込み先359件成功、最後の本人回答「二手先読み」まで完了。[実施記録](learning/usi-three-policies.md)。
-- 対象は承認済みタスク4の `test_keeps_two_ply_policy_for_current_game` 1項目のみ。[引き継ぎと再開用プロンプト](handover-usi-policy-lifetime.md#再開用プロンプト)を本人が新セッションへ入力して開始する。
-- 計画訂正が必要になった場合は明示承認を待つ。main取り込みは別途承認。未知値保持・実応答・性能・棋力へ自動継続しない。
+- 場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/usi-policy-lifetime-handoff`、開始HEAD `e69bf25`。製品変更・計画訂正なし。main未統合・pushなし。
+- 対象は承認済みタスク4の `test_keeps_two_ply_policy_for_current_game` のみ。初回Green、隔離6変異で対象FAIL・各復元成功。USI29件・全体360件成功。[今回の実施記録](learning/usi-policy-lifetime.md)。
+- 記録・リンク446件問題0・差分・Ruff確認済み。通常コミットへ保存し、次はmain取り込みの本人承認を待つ。取り込み先検証・最後の理解確認は未実施。
+- タスク4全体は未完了。未知値保持・実応答・性能・棋力へ自動継続しない。
 
 ## 次に読む資料
 
-[今回の引き継ぎ](handover-usi-policy-lifetime.md)、[承認済み計画タスク4](plans/2026-10-10-two-ply-implementation-plan.md#タスク4usi設定と実応答)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[CLIの実施記録](learning/cli-three-policies.md)、[USI知識](knowledge/usi-engine-response.md)、[選択知識](knowledge/31-weak-move-selection.md)、[テスト点検](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書ガイド](documentation-guide.md)。コード位置と個人知見は引き継ぎを参照する。
+[今回の実施記録](learning/usi-policy-lifetime.md)、[開始時点の引き継ぎ](handover-usi-policy-lifetime.md)、[承認済み計画タスク4](plans/2026-10-10-two-ply-implementation-plan.md#タスク4usi設定と実応答)、[USI知識](knowledge/usi-engine-response.md)、[テスト点検](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書ガイド](documentation-guide.md)。
 
 ## 二手先読み設計の完了
 
