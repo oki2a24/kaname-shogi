@@ -2,19 +2,18 @@
 
 ## 現在地
 
-2026-10-11更新。「相手の応手がなく、詰みでもない場合の通常評価」の指定1項目はmain統合・取り込み先検証・理解確認まで完了。次テーマは本人の選定待ち。詳細は[今回の学習記録](learning/two-ply-no-reply.md)を参照する。
+2026-10-11更新。本人は次テーマ「二手後に自分の手がなく、詰みでもない場合の通常評価」1項目を選定し、全体と現在地の説明後に新セッション準備を行った。今回は準備のみで新テーマ未開始。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、現在ブランチmain。本人の「ok」で統合承認を得て、mainを `ccf2863` から `d46fb60` へfast-forwardした。準備 `7391320` と今回の指定1項目は取り込み済み。新規worktree・pushなし。現在状態はGitで再確認する。
-- 対象は承認済み計画タスク2の `test_non_check_no_reply_uses_static_balance` 1項目だけ。５四飛の合法性、一手後の後手応手なし・王手なし・詰みなし、先手視点 `(0, 15)` を実処理で確認した。
-- 初回Green。隔離4変異（勝ち・負け・0点・視点反転）の対象アサーションFAILと各復元成功を確認し、製品変更・Refactorは不要。単独1件・対象181件・全体354件、Ruff・差分成功。独立レビューと記録検証は学習記録の実績を参照する。
-- 最後の理解確認では本人が「できない。0 は通常評価なため」と回答し、通常評価と勝敗認定の区別を確認した。[回答と補足・完了記録](learning/two-ply-no-reply.md#最後の理解確認への回答とテーマ完了)を参照。統合記録は `091d474`。今回の回答記録は文書のみで全体テスト再実行なし。
-- 次候補は[次テーマ候補](next-topics.md#応手なし通常評価完了後の候補2026-10-11小さい順)を参照。推薦は二手後の自分の手なし・非詰みの通常評価1項目。本人が選ぶまで新しい学習・実装は開始しない。
+- 場所 `/Users/oki2a24/kaname-shogi`。準備開始main HEAD `633cae1`、origin/mainより17コミット先行、変更なし。準備ブランチ `codex/two-ply-leaf-no-move-handoff`。今回の準備のmain統合・push・新規worktreeなし。現在状態はGitで再確認する。
+- 二手比較の中核は実装済み。承認済み計画のタスク1完了、タスク2は11項目中7項目完了。次は8項目目。CLI／USI三択と全体仕上げは未開始。[全体と現在地](handover-two-ply-leaf-no-move.md#新エンジン作成の全体と現在地)を参照する。
+- 対象はタスク2の `test_non_check_no_move_at_leaf_uses_static_balance` 1項目だけ。本人が[再開用プロンプト](handover-two-ply-leaf-no-move.md#再開用プロンプト)を新セッションへ入力して再開する。
+- 注意：計画の後手５五飛のみ教材の期待値 `(0, -15)` は、成り応手を含む最悪値 `(0, -17)` と食い違う見込み。コード読解による推論で、未実測。[疑義と承認手順](handover-two-ply-leaf-no-move.md#対象契約と教材期待値の疑義)を先に確認する。計画訂正が必要なら提示・明示承認後にTDD・テスト変更へ進む。
+- 前テーマはmain統合・検証・理解確認まで完了。[本人回答と補足](learning/two-ply-no-reply.md#最後の理解確認への回答とテーマ完了)を参照。対象181件・全体354件は前テーマ実績で、次回へ流用しない。
 - タスク2全体は未完了。残りの項目、CLI／USI三択、性能・棋力測定、Python更新・構成再検討へ自動継続しない。利用面は二方式のまま。
-- 前テーマはmain統合・検証・理解確認まで完了。[本人回答と補足](learning/two-ply-empty-candidates.md#最後の理解確認への回答とテーマ完了)を参照。
 
 ## 次に読む資料
 
-[今回の学習記録](learning/two-ply-no-reply.md)、[開始時引き継ぎ](handover-two-ply-no-reply.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[選択知識メモ](knowledge/31-weak-move-selection.md)、[テスト点検手順](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書更新ガイド](documentation-guide.md)。個人知見は開始時引き継ぎを参照する。
+[今回の引き継ぎ](handover-two-ply-leaf-no-move.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ記録](learning/two-ply-no-reply.md)、[選択知識メモ](knowledge/31-weak-move-selection.md)、[テスト点検手順](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書更新ガイド](documentation-guide.md)。個人知見とコード位置は引き継ぎを参照する。
 
 ## 二手先読み設計の完了
 
