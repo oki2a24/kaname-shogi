@@ -154,4 +154,4 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 整理前の入口文書は[再開案内の履歴](resume-history.md)、[候補・選定履歴](next-topics-history.md)、[方向性の履歴](project-direction-history.md)に保存している。
 
-CLIの三方式選択（計画タスク3、main取り込み・理解確認待ち）は[実施記録](learning/cli-three-policies.md)、開始時点は[引き継ぎ](handover-cli-three-policies.md)を参照する。
+CLIの三方式選択（計画タスク3、main取り込み・検証済み、理解確認待ち）は[実施記録](learning/cli-three-policies.md)、開始時点は[引き継ぎ](handover-cli-three-policies.md)を参照する。
