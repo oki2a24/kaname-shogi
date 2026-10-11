@@ -2,15 +2,16 @@
 
 ## 現在地
 
-2026-10-11更新。「USI新値後の未知値保持だけ」の指定1項目をmainへ取り込み、取り込み先検証まで完了した。理解確認の再確認への回答「Material」まで記録し、今回の指定1項目を完了した。
+2026-10-11更新。本人は次テーマ「関数境界での実応答だけ」を選定し、新セッション準備を依頼した。今回は文書準備のみ、新テーマのテスト・実装は未開始。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、現在main。本人「ok」の承認後、`12a6d74` → `d407f20` へfast-forward（準備 `b1d8777` を含む）。push・新規worktreeなし。
-- 承認済みタスク4の `test_invalid_value_preserves_two_ply_setting` のみ追加。初回Green、製品変更・Refactor・計画訂正なし。隔離8変異FAIL・各復元成功。独立コード・文書レビュー各Critical 0・Important 0・Minor 0。[実施記録](learning/usi-invalid-value.md)。
-- 取り込み先mainで全体361件・Ruff整形確認28ファイル・lint・差分成功。次は本人の次テーマ選定を待つ。タスク4全体未完了、実応答・性能・棋力へ自動継続しない。
+- 場所 `/Users/oki2a24/kaname-shogi`、準備ブランチ `codex/usi-function-response-handoff`。準備開始main `5afc2a4`、差分なし、origin/mainより12コミット先を確認。今回push・main統合・新規worktreeなし。
+- 前テーマの未知値保持は実装 `d407f20`、統合記録 `8baa34c`、回答・完了 `5afc2a4` をmain保存済み。取り込み先361件成功。最初の誤答randomと補足、再確認の正答Materialを区別して[実施記録](learning/usi-invalid-value.md)へ保存。
+- 対象は承認済みタスク4の `test_two_ply_bestmove_is_legal_and_preserves_position` 1項目のみ。[引き継ぎと再開用プロンプト](handover-usi-function-response.md#再開用プロンプト)を本人が新セッションへ入力して開始する。
+- 計画訂正は明示承認待ち、main取り込みは別途承認。実プロセス応答・性能・棋力へ自動継続しない。
 
 ## 次に読む資料
 
-[今回の実施記録](learning/usi-invalid-value.md)、[開始時引き継ぎ](handover-usi-invalid-value.md)、[承認済み計画タスク4](plans/2026-10-10-two-ply-implementation-plan.md#タスク4usi設定と実応答)、[テスト点検](knowledge/test-coverage-review.md)、[文書ガイド](documentation-guide.md)。
+[今回の引き継ぎ](handover-usi-function-response.md)、[承認済み計画タスク4](plans/2026-10-10-two-ply-implementation-plan.md#タスク4usi設定と実応答)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ記録](learning/usi-invalid-value.md)、[USI知識](knowledge/usi-engine-response.md)、[テスト点検](knowledge/test-coverage-review.md)、[文書ガイド](documentation-guide.md)。コード位置と個人知見は引き継ぎを参照する。
 
 ## 二手先読み設計の完了
 
