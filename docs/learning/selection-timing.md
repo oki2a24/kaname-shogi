@@ -98,7 +98,7 @@ for label in ('教材', '平手'):
 SIGALRMハンドラは `TimeoutError('60秒で打切り')` を送出する。終了後の合法性・SFEN比較・出力は時間に含めない。以下に一時ファイル消失後も追跡できる出力全文を保存する。
 
 ```text
-2026-10-11T14:27:33.355305+09:00 3.9.6 (default, Aug 25 2026, 21:26:21) 
+2026-10-11T14:27:33.355305+09:00 3.9.6 (default, Aug 25 2026, 21:26:21)
 [Clang 21.0.0 (clang-2100.3.34.2)] macOS-27.0.1-arm64-arm-64bit
 clock namespace(implementation='mach_absolute_time()', monotonic=True, adjustable=False, resolution=4.166666666666667e-08)
 教材 RANDOM 1 0.000003541 成功 候補数 16 合法 True 局面保存 True SFEN 8k/9/4g4/4p4/4R4/9/9/9/K8 b - 1
