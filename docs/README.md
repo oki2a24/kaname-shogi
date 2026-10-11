@@ -166,4 +166,4 @@ USI新値後の未知値保持（計画タスク4の1項目のみ、main取り�
 
 実プロセスのUSI新方式応答（計画タスク4の実プロセス項目のみ）は[実施記録](learning/usi-process-response.md)、開始背景は[引き継ぎ](handover-usi-process-response.md)、現在地は[再開案内](resume.md)を参照する。
 
-三方式の選択時間計測（承認済み計画タスク5の時間計測1項目のみ、準備段階）は[引き継ぎ](handover-selection-timing.md)を参照する。
+三方式の選択時間計測（承認済み計画タスク5の時間計測1項目のみ）は[条件・結果・実施記録](learning/selection-timing.md)、開始背景は[引き継ぎ](handover-selection-timing.md)を参照する。
