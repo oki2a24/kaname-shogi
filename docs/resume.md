@@ -4,9 +4,9 @@
 
 2026-10-11更新。「USI新方式の局中固定・次局継承だけ」の指定テスト1項目を追加し、検証済み。独立コード・文書レビュー各Critical 0・Important 0・Minor 0。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/usi-policy-lifetime-handoff`、開始HEAD `e69bf25`。製品変更・計画訂正なし。main未統合・pushなし。
+- 場所 `/Users/oki2a24/kaname-shogi`、現在ブランチ `main`。本人「ok」で `f5f8f82` → `d3a7f32` をfast-forward済み（準備 `e69bf25` を含む）。製品変更・計画訂正・pushなし。
 - 対象は承認済みタスク4の `test_keeps_two_ply_policy_for_current_game` のみ。初回Green、隔離6変異で対象FAIL・各復元成功。USI29件・全体360件成功。[今回の実施記録](learning/usi-policy-lifetime.md)。
-- 記録・リンク446件問題0・差分・Ruff確認済み。通常コミットへ保存し、次はmain取り込みの本人承認を待つ。取り込み先検証・最後の理解確認は未実施。
+- 取り込み先main上で全体360件・Ruff整形28ファイル・lint・差分成功。統合記録を通常コミットへ保存し、最後の理解確認を一問出して回答を待つ。未回答のためテーマ完了とはしない。
 - タスク4全体は未完了。未知値保持・実応答・性能・棋力へ自動継続しない。
 
 ## 次に読む資料
