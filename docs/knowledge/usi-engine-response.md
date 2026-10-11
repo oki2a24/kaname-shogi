@@ -25,7 +25,7 @@ option name Difficulty type combo default Random var Random var Material var Two
 
 設定値は `run_usi_engine` 内で `_UsiEngineState` と別に保持する。局の最初の `go` で有効値を局内方針として固定するため、後から届いた `setoption` は現在局の後続 `go` には影響しない。`usinewgame` は局面を消し、局内固定だけを解除して、設定値を次局へ残す。乱数器も設定・局面状態と別にし、一回のエンジン実行中で共有する。
 
-今回の三択通知・受付はmainへ取り込み、検証済み。新値固有の局中固定・次局継承は[今回の実施記録](../learning/usi-policy-lifetime.md)の1系列で検証済み（main取り込み・検証済み）。新値後の未知値保持は[実施記録](../learning/usi-invalid-value.md)の1系列と無設定・旧値対照で検証済み（main取り込み・検証済み、理解確認完了）。新方式の関数境界の実選択・二回の合法応答・局面保存・手なしresignは[実施記録](../learning/usi-function-response.md)の教材と空盤で検証済み（main取り込み・取り込み先検証・理解確認済み）。新方式設定後の実プロセスbestmove・stdout診断分離は[実施記録](../learning/usi-process-response.md)の既存pipeケースで検証した（main取り込み・取り込み先検証済み）。新方式のShogiHomeは未検証。[実施記録](../learning/usi-three-policies.md)を参照する。
+今回の三択通知・受付はmainへ取り込み、検証済み。新値固有の局中固定・次局継承は[今回の実施記録](../learning/usi-policy-lifetime.md)の1系列で検証済み（main取り込み・検証済み）。新値後の未知値保持は[実施記録](../learning/usi-invalid-value.md)の1系列と無設定・旧値対照で検証済み（main取り込み・検証済み、理解確認完了）。新方式の関数境界の実選択・二回の合法応答・局面保存・手なしresignは[実施記録](../learning/usi-function-response.md)の教材と空盤で検証済み（main取り込み・取り込み先検証・理解確認済み）。新方式設定後の実プロセスbestmove・stdout診断分離は[実施記録](../learning/usi-process-response.md)の既存pipeケースで検証した（main取り込み・取り込み先検証済み）。新方式はShogiHome 1.28.2の平手対局一例でTwoPlyMaterial送信と20回のbestmoveを確認した（[実施記録](../learning/two-ply-final-check.md#承認後のshogihome確認実績2026-10-11事後記録)）。他局面・秒読み後の互換性や応答時間上限は未保証。[実施記録](../learning/usi-three-policies.md)を参照する。
 
 ## コマンドとエラー
 

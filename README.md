@@ -24,7 +24,9 @@ CLIで対局する最初の目標を達成し、USIによるShogiHome接続と�
 
 内部の選択処理には自分一手＋相手一手の二手比較を追加し、通常比較とその補強、詰み勝ち・詰み負けの採点と極端な通常点との順序を検証しました。承認済み計画の詰み・境界・枝独立性の検証まで完了し、CLIへの三択追加はmainへ取り込み、検証済みです（[CLIの記録](docs/learning/cli-three-policies.md)）。USIの三択通知・受付はmainへ取り込み、検証済みです。新値固有の局中固定・次局継承はmainへ取り込み、検証済みです（[実施記録](docs/learning/usi-policy-lifetime.md)、main取り込み済み）。新値後の未知値保持もmainへ取り込み、検証済みです（[実施記録](docs/learning/usi-invalid-value.md)、理解確認完了）。新方式の関数境界の実応答はmain取り込み・取り込み先検証済みです（[実施記録](docs/learning/usi-function-response.md)）。新方式設定後の実プロセス応答は既存pipeケースで検証しました（[実施記録](docs/learning/usi-process-response.md)、main取り込み・取り込み先検証済み）（[通常比較の記録](docs/learning/two-ply-basic-comparison.md)、[詰み優先の記録](docs/learning/two-ply-mate-priority.md)、[枝独立性の記録](docs/learning/two-ply-branch-independence.md)）。
 
-千日手、持将棋、入玉、時間管理、反則勝敗、二手を超える探索や強さの保証、自動保存はまだ扱いません。USIで選べる駒得方針（Material）は一手後だけの評価です。ShogiHomeとの確認はMac版1.28.1の平手対局と、SFEN局面での一手応答の一例です。第75回では２手後SFENから２六歩を追加し、SFEN付き指し手履歴の送信と５二金右の合法応答を一局面で確認しました（[第75回学習記録](docs/learning/75-shogihome-sfen-moves-verification.md)）。他版・全局面・他の指し手履歴の実機互換性は未確認です。自動投了時の通信ログは37手局面からの一例です。Materialが駒を取る手を選ぶ実例は一つ確認しましたが、他局面でも駒得を選ぶ一般性、長い探索の有無、時計動作や他の終局・コマンドの互換性は未確認です。コンピュータ対コンピュータには手数上限がなく、詰み、合法手なし、または `Ctrl-C` で停止します。
+千日手、持将棋、入玉、時間管理、反則勝敗、二手を超える探索や強さの保証、自動保存はまだ扱いません。USIで選べる駒得方針（Material）は一手後だけの評価です。従来のShogiHome確認はMac版1.28.1の平手対局と、SFEN局面での一手応答の一例です。第75回では２手後SFENから２六歩を追加し、SFEN付き指し手履歴の送信と５二金右の合法応答を一局面で確認しました（[第75回学習記録](docs/learning/75-shogihome-sfen-moves-verification.md)）。他版・全局面・他の指し手履歴の実機互換性は未確認です。自動投了時の通信ログは37手局面からの一例です。Materialが駒を取る手を選ぶ実例は一つ確認しましたが、他局面でも駒得を選ぶ一般性、長い探索の有無、時計動作や他の終局・コマンドの互換性は未確認です。コンピュータ対コンピュータには手数上限がなく、詰み、合法手なし、または `Ctrl-C` で停止します。
+
+ShogiHome 1.28.2では、TwoPlyMaterialを指定した平手対局一例で20回の応答を確認しました。最大応答は約28.4秒で、秒読み後の安全性や他局面の時間上限は未保証、実用性は本人判断待ちです（[使用感確認の実施記録](docs/learning/two-ply-final-check.md#承認後のshogihome確認実績2026-10-11事後記録)）。
 
 実行と単体テストにはPython標準ライブラリだけを使います。開発時の整形・静的検査には、プロジェクト内の仮想環境へRuffを導入します。
 
