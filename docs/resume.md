@@ -2,14 +2,16 @@
 
 ## 現在地
 
-2026-10-11更新。本人は次テーマ「実プロセスの新方式応答だけ」を選定し、新セッション準備を依頼した。今回は文書準備のみ、新テーマのテスト・実装・測定は未開始。
+2026-10-11更新。「実プロセスの新方式応答だけ」を本人の開始指示で再開した。指定項目の検証・独立レビュー・記録がそろい、main取り込みの本人承認待ち。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、準備ブランチ `codex/usi-process-response-handoff`。準備開始main `3be8b7d`、差分なし、origin/mainより17コミット先を確認。今回push・main統合・新規worktreeなし。
-- 前テーマは実装 `57195e5`、統合記録 `62c65bc`、初回答・補足 `36a6935`、再回答・完了 `3be8b7d` をmain保存済み。取り込み先362件成功。最初の誤答と補足、再回答「変わらない」を区別して[実施記録](learning/usi-function-response.md)へ保存。
-- 対象は承認済みタスク4の実プロセス通知・新方式の合法bestmove・stdout診断混入防止だけ。[引き継ぎと再開用プロンプト](handover-usi-process-response.md#再開用プロンプト)を本人が新セッションへ入力して開始する。
-- 計画訂正は明示承認待ち、main取り込みは別途承認。タスク4の有限待ち超過時の理由・測定は計画に従い、タスク5の三方式時間計測・性能・棋力・ShogiHomeへ自動継続しない。
+- 場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/usi-process-response-handoff`、開始HEAD `875b60a`。新規worktree・push・main統合なし。
+- 承認済みタスク4の実プロセス通知・新方式の合法bestmove・stdout診断分離だけを既存pipeケースで確認。初回Green、7隔離変異のFAILと各復元成功。製品変更・Refactor・計画訂正・待ち延長なし。[実施記録](learning/usi-process-response.md)を参照。
+- 今回の基準・変更後全体362件、USI31件・Ruff・差分成功。独立コード・文書レビュー各C0/I0/M0、最終リンク451件問題0。通常コミットへ保存する。
+- main取り込みは別途本人承認待ち。取り込み先検証と最後の理解確認は未実施。タスク5の時間計測・性能・棋力・ShogiHomeへ進まない。
 
 ## 次に読む資料
+
+[今回の実施記録](learning/usi-process-response.md)を起点に、main取り込み承認・取り込み先検証・理解確認を扱う。開始背景の引き継ぎは履歴として参照する。
 
 [今回の引き継ぎ](handover-usi-process-response.md)、[承認済み計画タスク4](plans/2026-10-10-two-ply-implementation-plan.md#タスク4usi設定と実応答)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ記録](learning/usi-function-response.md)、[USI知識](knowledge/usi-engine-response.md)、[テスト点検](knowledge/test-coverage-review.md)、[文書ガイド](documentation-guide.md)。コード位置と個人知見は引き継ぎを参照する。
 

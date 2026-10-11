@@ -778,7 +778,8 @@ class UsiEngineProcessTests(unittest.TestCase):
     def test_entrypoint_flushes_protocol_and_bestmove(self):
         """実行入口が終了前に改行付きUSI応答をflushする。
 
-        flush欠落、局面の手を返さないこと、診断混入や余分なstdoutを検出する。
+        新方式を設定しても合法な手を返さないこと、flush欠落、診断混入や
+        余分なstdoutを検出する。合法性だけでは方針の取り違えは検出しない。
         """
         process = self.start_engine()
         reader = PipeLineReader(process.stdout)
@@ -795,6 +796,7 @@ class UsiEngineProcessTests(unittest.TestCase):
             self.send_line(process, "isready")
             self.assertEqual(reader.read_line(), "readyok")
 
+            self.send_line(process, "setoption name Difficulty value TwoPlyMaterial")
             position_command = "position startpos moves 7g7f"
             self.send_line(process, position_command)
             self.send_line(process, "go btime 591199 wtime 600000 byoyomi 30000")
@@ -863,6 +865,7 @@ class UsiEngineProcessTests(unittest.TestCase):
         process = self.start_engine()
         reader = PipeLineReader(process.stdout)
         try:
+            self.send_line(process, "setoption name Difficulty value TwoPlyMaterial")
             self.send_line(process, "position sfen 9/8 b - 1")
             self.close_stdin(process)
             return_code = process.wait(timeout=2.0)
@@ -886,6 +889,7 @@ class UsiEngineProcessTests(unittest.TestCase):
         process = self.start_engine()
         reader = PipeLineReader(process.stdout)
         try:
+            self.send_line(process, "setoption name Difficulty value TwoPlyMaterial")
             self.send_line(process, "position startpos")
             self.close_stdin(process)
             return_code = process.wait(timeout=2.0)

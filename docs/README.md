@@ -164,4 +164,4 @@ USI新値後の未知値保持（計画タスク4の1項目のみ、main取り�
 
 関数境界でのUSI新方式の実応答（計画タスク4の1項目のみ、main取り込み・検証・理解確認完了）は[実施記録](learning/usi-function-response.md)、開始背景は[引き継ぎ](handover-usi-function-response.md)を参照する。
 
-実プロセスのUSI新方式応答（計画タスク4の残る実プロセス項目のみ、準備段階）は[引き継ぎ](handover-usi-process-response.md)を参照する。
+実プロセスのUSI新方式応答（計画タスク4の実プロセス項目のみ）は[実施記録](learning/usi-process-response.md)、開始背景は[引き継ぎ](handover-usi-process-response.md)、現在地は[再開案内](resume.md)を参照する。
