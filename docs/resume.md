@@ -2,16 +2,16 @@
 
 ## 現在地
 
-2026-10-11更新。「実プロセスの新方式応答だけ」を本人の開始指示で再開した。指定項目の検証・独立レビュー・記録がそろい、main取り込みの本人承認待ち。
+2026-10-11更新。「実プロセスの新方式応答だけ」を本人の開始指示で再開した。指定項目の検証・独立レビュー・記録がそろい、main取り込み・取り込み先検証済み。最後の理解確認待ち。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/usi-process-response-handoff`、開始HEAD `875b60a`。新規worktree・push・main統合なし。
+- 場所 `/Users/oki2a24/kaname-shogi`、現在main。本人「ok」で `3be8b7d` → `d93f9ef` へfast-forward（準備 `875b60a` を含む）。新規worktree・pushなし。
 - 承認済みタスク4の実プロセス通知・新方式の合法bestmove・stdout診断分離だけを既存pipeケースで確認。初回Green、7隔離変異のFAILと各復元成功。製品変更・Refactor・計画訂正・待ち延長なし。[実施記録](learning/usi-process-response.md)を参照。
-- 今回の基準・変更後全体362件、USI31件・Ruff・差分成功。独立コード・文書レビュー各C0/I0/M0、最終リンク451件問題0。通常コミットへ保存する。
-- main取り込みは別途本人承認待ち。取り込み先検証と最後の理解確認は未実施。タスク5の時間計測・性能・棋力・ShogiHomeへ進まない。
+- 今回の基準・変更後全体362件、USI31件・Ruff・差分成功。独立コード・文書レビュー各C0/I0/M0、最終リンク451件問題0。実装・記録は `d93f9ef` に保存。取り込み先でも全体362件・Ruff・リンク451件・差分成功。
+- main取り込みは本人承認済みで実施済み。最後の理解確認は未回答。タスク5の時間計測・性能・棋力・ShogiHomeへ進まない。
 
 ## 次に読む資料
 
-[今回の実施記録](learning/usi-process-response.md)を起点に、main取り込み承認・取り込み先検証・理解確認を扱う。開始背景の引き継ぎは履歴として参照する。
+[今回の実施記録](learning/usi-process-response.md)を起点に、最後の理解確認を一問だけ出し、本人回答と補足を記録する。開始背景の引き継ぎは履歴として参照する。
 
 [今回の引き継ぎ](handover-usi-process-response.md)、[承認済み計画タスク4](plans/2026-10-10-two-ply-implementation-plan.md#タスク4usi設定と実応答)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ記録](learning/usi-function-response.md)、[USI知識](knowledge/usi-engine-response.md)、[テスト点検](knowledge/test-coverage-review.md)、[文書ガイド](documentation-guide.md)。コード位置と個人知見は引き継ぎを参照する。
 
