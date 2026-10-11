@@ -2,12 +2,12 @@
 
 ## 現在地
 
-2026-10-11更新。「関数境界での実応答だけ」の指定1項目を作業ブランチで検証・独立コード／文書レビュー済み。main取り込みは本人の別途承認待ち。取り込み先検証と最後の理解確認は未実施。
+2026-10-11更新。「関数境界での実応答だけ」の指定1項目は本人承認によりmain取り込み・取り込み先検証まで完了。最後の理解確認は未出題・未回答。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/usi-function-response-handoff`、開始HEAD `678a47b`。新規worktree・push・main取り込みなし。今回のテスト・記録は通常コミットへ保存する。
-- 対象は承認済みタスク4の `test_two_ply_bestmove_is_legal_and_preserves_position` 1項目のみ。実選択でgo二回の合法bestmove・局面保存と、実手なし部分局面の新方式resignを確認。各段階初回Green、隔離13変異FAIL・各復元成功。製品変更・Refactor・計画訂正なし。
-- 基準361件、USI31件・全体362件成功、Ruff・差分成功。独立コード／文書レビュー最終Critical 0・Important 0・Minor 0。詳細・限界・保存状況は[実施記録](learning/usi-function-response.md)を参照する。
-- 次は本人のmain取り込み承認を待つ。承認後は取り込み先で検証し、最後の理解確認を一問出して回答を待つ。タスク4全体は未完了。実プロセス応答・性能・棋力へ自動継続しない。
+- 場所 `/Users/oki2a24/kaname-shogi`、現在main。本人「ok」で `5afc2a4` → `57195e5` へfast-forwardし、準備 `678a47b` も取り込み済み。新規worktree・pushなし。統合記録は通常コミットへ保存する。
+- 対象は承認済みタスク4の `test_two_ply_bestmove_is_legal_and_preserves_position` 1項目のみ。実選択でgo二回の合法bestmove・局面保存と実手なしresignを確認。初回Green、隔離13変異FAIL・各復元成功。製品変更・Refactor・計画訂正なし。
+- 取り込み先mainで全体362件、Ruff整形確認28ファイル・lint・差分成功。実装時の独立コード／文書レビュー最終Critical 0・Important 0・Minor 0。詳細・統合検証は[実施記録](learning/usi-function-response.md#main取り込みと取り込み先検証2026-10-11)を参照する。
+- 次は最後の理解確認を一問出し、本人回答を待って記録する。回答後に次候補を示し、本人が選ぶまで新テーマへ進まない。タスク4全体は未完了。実プロセス応答・性能・棋力へ自動継続しない。
 
 ## 次に読む資料
 
