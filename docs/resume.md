@@ -2,18 +2,18 @@
 
 ## 現在地
 
-2026-10-11更新。現在テーマは「勝ち同士・負け同士の同点抽選を確認する」。承認済み計画タスク2の `test_ties_all_wins_and_all_losses` 1項目の実装・検証・独立レビュー・main統合・理解確認まで完了。詳細は[今回の学習記録](learning/two-ply-outcome-ties.md)。
+2026-10-11更新。本人は次テーマ「勝ち＞通常＞負けの選択を確認する」を選定し、新セッション準備を依頼した。対象は承認済み計画タスク2の `test_selects_win_then_normal_then_loss` 1項目だけ。今回は準備のみで新テーマ未開始。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、開始HEAD `148321b`（mainとorigin/main一致）、作業ブランチ `codex/two-ply-outcome-ties` のテスト・記録 `0f6b031` と後続候補記録 `a667a0a` を、本人承認後に元のmainへfast-forward統合済み。取り込み時HEAD `a667a0a`。新規worktree・pushなし。
-- 指定1テスト追加、初回Green。隔離8変異で対象アサーションFAIL・各復元成功。製品変更・Refactor不要。
-- 対象178件・全体351件、Ruff整形28ファイル変更なし・lint、差分検査成功。独立コード／文書レビュー各Critical 0・Important 0・Minor 0、対応不要。リンク・見出し357件問題0。
-- 取り込み先で全体351件・Ruff整形28ファイル・lint・リンク357件・差分検査成功。最後の理解確認まで完了。[本人回答と補足](learning/two-ply-outcome-ties.md#最後の理解確認とテーマ完了)を保存。次の行動：[次候補](next-topics.md#勝敗同点の確認完了後の候補2026-10-11小さい順)を提示し、本人の選定を待つ。
-- 本人依頼のPython更新と三方式のファイル分離検討を[保留候補](next-topics.md#保留候補)へ記録し、未着手。勝敗混在、タスク2の残り、CLI/USI・性能測定へ自動継続しない。利用面は二方式のまま。
-- 前テーマはmain統合・理解確認まで完了。[本人回答と補足](learning/two-ply-equal-best.md#最後の理解確認とテーマ完了)、準備時の経緯は[引き継ぎ](handover-two-ply-outcome-ties.md)を参照。
+- 場所 `/Users/oki2a24/kaname-shogi`。準備開始main HEAD `3a7b14f`、origin/mainより4コミット先行、変更なし。準備ブランチ `codex/two-ply-outcome-order-handoff`。今回の準備のmain統合・push・新規worktreeなし。現在状態はGitで再確認する。
+- 次の行動：本人が[引き継ぎの再開用プロンプト](handover-two-ply-outcome-order.md#再開用プロンプト)を新セッションへ入力する。入力後、既存承認と現物を照合し対象1項目だけ進める。
+- 内部経路は実装済み。初回Greenなら隔離誤り注入で検出力を確認し、不要な製品変更をしない。候補選択境界と実詰み採点の検証を区別する。
+- 前テーマはmain統合・取り込み先検証・理解確認まで完了。[本人回答と補足](learning/two-ply-outcome-ties.md#最後の理解確認とテーマ完了)。全体351件・対象178件は前テーマの実績で、次回へ流用しない。
+- Python更新・三方式の構成再検討は、承認済み二手比較計画完了後にPython→構成調査の順で別テーマとする推薦案を記録。本人の時期提案とアシスタント推薦を区別し、確定承認・実施済みと扱わない。[時期と理由](handover-two-ply-outcome-order.md#python更新とコード構成再検討の時期)。
+- 残りのタスク2、CLI／USI三択、性能・棋力測定、Python更新・構成再検討へ自動継続しない。利用面は二方式のまま。
 
 ## 次に読む資料
 
-[今回の学習記録](learning/two-ply-outcome-ties.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[テスト点検手順](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書更新ガイド](documentation-guide.md)。
+[今回の引き継ぎ](handover-two-ply-outcome-order.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ記録](learning/two-ply-outcome-ties.md)、[テスト点検手順](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書更新ガイド](documentation-guide.md)。個人知見とコード位置は引き継ぎを参照する。
 
 ## 二手先読み設計の完了
 
