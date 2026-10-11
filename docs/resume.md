@@ -2,16 +2,17 @@
 
 ## 現在地
 
-2026-10-11更新。現在テーマは「同点最高の候補だけを抽選することを確認する」。承認済み計画タスク2の `test_draws_only_equal_best_candidates` 1項目を追加し、初回Green・隔離6変異の対象FAILと各復元成功、対象177件・全体350件を確認した。製品変更なし。[実施記録](learning/two-ply-equal-best.md)を参照する。
+2026-10-11更新。本人は次テーマ「勝ち同士・負け同士の同点抽選を確認する」を選定し、新セッション準備を依頼した。対象は承認済み計画タスク2の `test_ties_all_wins_and_all_losses` 1項目だけ。今回は準備のみで新テーマ未開始。
 
-- 作業場所：`/Users/oki2a24/kaname-shogi`。開始HEAD `eacd25c`、作業ブランチ `codex/two-ply-equal-best-handoff`。本人承認後にローカルmainへ `ffa8217` まで取り込み済み。現在mainで統合記録を更新。新規worktree・pushなし。
-- 独立コード・文書レビューは各Critical 0・Important 0・Minor 0。取り込み先mainでも全体350件・Ruff・リンク355件・差分検査が成功。最後の理解確認で本人はA・Bと回答し、負点でも最高同点を選ぶ具体例の理解を確認した。[回答と補足](learning/two-ply-equal-best.md#最後の理解確認とテーマ完了)を保存。今回のテーマは完了し、次の行動は[次テーマ候補](next-topics.md)から本人の選定を待つこと。
-- タスク2全体は未完了。残りのタスク2、CLI/USI三択、性能・棋力測定へ自動継続しない。利用面は二方式のまま。
-- 前テーマの詰み優先はmain統合・検証・理解確認まで完了。[本人回答と補足](learning/two-ply-mate-priority.md#最後の理解確認とテーマ完了)を参照する。
+- 作業場所：`/Users/oki2a24/kaname-shogi`。準備開始mainのHEAD `4a352c6`、origin/mainより9コミット先行、変更なし。準備ブランチ `codex/two-ply-outcome-ties-handoff`。今回のmain統合・push・新規worktreeなし。最新状態はGitで確認する。
+- 次の行動：本人が[引き継ぎの再開用プロンプト](handover-two-ply-outcome-ties.md#再開用プロンプト)を新セッションへ入力する。入力後、既存計画と現物を照合し、対象1項目だけ進める。
+- 内部経路は実装済み。初回Greenなら隔離誤り注入で検出力を確認し、不要な製品変更をしない。勝敗同点の選択境界と実詰み採点の検証を区別する。
+- 前テーマ「同点最高候補」は1項目の検証・独立レビュー・main統合・取り込み先検証・理解確認まで完了。[本人回答と補足](learning/two-ply-equal-best.md#最後の理解確認とテーマ完了)を保存した。全体350件・対象177件は前テーマの実績であり次回へ流用しない。
+- 勝敗混在、タスク2のさらに残り、CLI/USI三択、性能・棋力測定は後続。利用面は二方式のまま。
 
 ## 次に読む資料
 
-[今回の引き継ぎ](handover-two-ply-equal-best.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ記録](learning/two-ply-mate-priority.md)、[選択の知識メモ](knowledge/31-weak-move-selection.md)、[テスト点検手順](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書更新ガイド](documentation-guide.md)。個人知見と具体的なコード位置は引き継ぎを参照する。
+[今回の引き継ぎ](handover-two-ply-outcome-ties.md)、[承認済み計画](plans/2026-10-10-two-ply-implementation-plan.md)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマ記録](learning/two-ply-equal-best.md)、[詰み優先記録](learning/two-ply-mate-priority.md)、[選択知識メモ](knowledge/31-weak-move-selection.md)、[テスト点検手順](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書更新ガイド](documentation-guide.md)。個人知見とコード位置は引き継ぎを参照する。
 
 ## 二手先読み設計の完了
 
