@@ -2,16 +2,15 @@
 
 ## 現在地
 
-2026-10-11更新。本人は次テーマ「USI新値後の未知値保持だけ」を選定し、新セッション準備を依頼した。今回は文書準備のみ、新テーマのテスト・実装は未開始。
+2026-10-11更新。「USI新値後の未知値保持だけ」の指定1項目を追加・検証した。独立レビュー・記録確認まで終え、作業ブランチへ保存済み。
 
-- 場所 `/Users/oki2a24/kaname-shogi`、準備ブランチ `codex/usi-invalid-value-handoff`。準備開始main `12a6d74`、差分なし、origin/mainより8コミット先を確認。今回push・main統合・新規worktreeなし。
-- 前テーマの局中固定・次局継承はテスト `d3a7f32`、統合記録 `944b214`、回答と完了 `12a6d74` をmain保存済み。取り込み先360件成功、本人回答「現在局は二手先読み、次局はMaterial」まで完了。[実施記録](learning/usi-policy-lifetime.md)。
-- 対象は承認済みタスク4の `test_invalid_value_preserves_two_ply_setting` 1項目のみ。[引き継ぎと再開用プロンプト](handover-usi-invalid-value.md#再開用プロンプト)を本人が新セッションへ入力して開始する。
-- 計画訂正が必要になった場合は明示承認を待つ。main取り込みは別途承認。実応答・性能・棋力へ自動継続しない。
+- 場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/usi-invalid-value-handoff`、開始HEAD `b1d8777`。main取り込み・push・新規worktreeなし。
+- 承認済みタスク4の `test_invalid_value_preserves_two_ply_setting` のみ追加。初回Green、製品変更・Refactor・計画訂正なし。隔離8変異FAIL・各復元成功、USI30件・全体361件・Ruff・差分成功。[実施記録](learning/usi-invalid-value.md)。
+- 独立コード・文書レビュー各Critical 0・Important 0・Minor 0、リンク406件問題0。通常コミット後、次はmain取り込みの本人承認を待つ。取り込み先検証・最後の理解確認は未実施。タスク4全体未完了。実応答・性能・棋力へ自動継続しない。
 
 ## 次に読む資料
 
-[今回の引き継ぎ](handover-usi-invalid-value.md)、[承認済み計画タスク4](plans/2026-10-10-two-ply-implementation-plan.md#タスク4usi設定と実応答)、[承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md)、[前テーマの実施記録](learning/usi-policy-lifetime.md)、[USI知識](knowledge/usi-engine-response.md)、[テスト点検](knowledge/test-coverage-review.md)、[AGENTS.md](../AGENTS.md)、[文書ガイド](documentation-guide.md)。コード位置と個人知見は引き継ぎを参照する。
+[今回の実施記録](learning/usi-invalid-value.md)、[開始時引き継ぎ](handover-usi-invalid-value.md)、[承認済み計画タスク4](plans/2026-10-10-two-ply-implementation-plan.md#タスク4usi設定と実応答)、[テスト点検](knowledge/test-coverage-review.md)、[文書ガイド](documentation-guide.md)。
 
 ## 二手先読み設計の完了
 

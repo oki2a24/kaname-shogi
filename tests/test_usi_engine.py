@@ -260,6 +260,40 @@ class UsiEngineFunctionTests(unittest.TestCase):
                 self.assertEqual(len(calls), 1)
                 self.assertEqual(calls[0][2], MoveSelectionPolicy.TWO_PLY_MATERIAL)
 
+    def test_invalid_value_preserves_two_ply_setting(self):
+        """新値後の未知値で設定を失わず、無設定と旧値も従来方針を使う。
+
+        未知値による既定値への消去や別方針への取り違えを検出する。
+        最初のgoより前に未知値を送り、局内固定による偽成功を防ぐ。
+        選択境界だけをspyにし、設定受付と状態処理は実際に動かす。
+        """
+        cases = [
+            (
+                [
+                    "setoption name Difficulty value TwoPlyMaterial",
+                    "setoption name Difficulty value Strong",
+                ],
+                MoveSelectionPolicy.TWO_PLY_MATERIAL,
+            ),
+            ([], MoveSelectionPolicy.RANDOM),
+            (
+                ["setoption name Difficulty value Random"],
+                MoveSelectionPolicy.RANDOM,
+            ),
+            (
+                ["setoption name Difficulty value Material"],
+                MoveSelectionPolicy.MATERIAL,
+            ),
+        ]
+        for settings, expected in cases:
+            with self.subTest(settings=settings):
+                calls, _ = self._run_with_policy_spy(
+                    settings + ["position startpos moves 7g7f", "go", "quit"]
+                )
+
+                self.assertEqual(len(calls), 1)
+                self.assertEqual(calls[0][2], expected)
+
     def test_ignores_invalid_and_unknown_options(self):
         """未知名を無視し、不正Difficulty値では最後の有効値を保つ。
 

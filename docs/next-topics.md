@@ -2,7 +2,7 @@
 
 ## 現在の選択
 
-2026-10-11、本人は「未知値保持だけ。新セッションの準備して」と選定した。承認済みタスク4の `test_invalid_value_preserves_two_ply_setting` 1項目のみ。今回は準備のみで、本人が[再開用プロンプト](handover-usi-invalid-value.md#再開用プロンプト)を入力するまで開始しない。前テーマの局中固定・次局継承はmain統合・検証・理解確認まで完了。[実施記録](learning/usi-policy-lifetime.md)と[再開案内](resume.md)を参照する。
+2026-10-11、本人が選定した「USI新値後の未知値保持だけ」を再開した。承認済みタスク4の `test_invalid_value_preserves_two_ply_setting` 1項目を追加・検証し、独立レビュー・記録確認まで終え、作業ブランチへ保存済み。main取り込みは別途本人承認待ち、取り込み先検証・理解確認は未実施。[実施記録](learning/usi-invalid-value.md)と[再開案内](resume.md)を参照する。
 
 実応答・性能・棋力測定は後続。以下は当時の比較・選定記録であり、開始許可ではない。
 
