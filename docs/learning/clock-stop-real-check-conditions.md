@@ -214,3 +214,8 @@ G2部分結果と復帰の独立レビューCritical0・Important0・Minor0。�
 本人へ「秒読み応答確認済み・通常中断未達」という部分結果を示し、再試行せず記録を確定するか一問で確認した。本人回答は「ok」。これを部分結果での記録確定への承認として受領。通常中断を成功へ読み替えず、追加実機試行は行わない。作業ブランチへの文書コミットへ進む。main取り込みは別承認で未受領、最後の理解確認は取り込み先検証後に一問出す。
 
 記録確定後の6文書最終独立レビューCritical0・Important0・Minor0、作業ブランチへコミット可能。本人判断・未達・違反履歴・未検証・main未承認を区別。相対リンク42件欠落0、git diff --check成功。
+
+
+## main統合と取り込み先検証
+
+本人「ok」を別途求めていたmain取り込み承認として受領。作業ツリーclean、mainが開始HEAD fe4371dの祖先、作業ブランチが3コミット先行することを確認し、`git switch main && git merge --ff-only codex/clock-stop-real-check-conditions-handoff` を実行。mainは8afddebへfast-forwardし、引き継ぎ準備コミット45a87fdと記録コミットcca2681/8afddebの変更が取り込まれた。取り込み先の相対リンク507件欠落0、`git show --check --oneline HEAD` と `git diff --check main^ main` 成功、作業ツリーclean。origin/mainより21コミット先行のローカルmainで、pushは行っていない。製品コード・テスト・係数JSON変更なし、文書のみのため全体テストなし。最後の理解確認を一問出し、回答後に記録して次テーマ候補を見直す。

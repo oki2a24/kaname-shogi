@@ -6,9 +6,9 @@
 
 現在はRandom（Rのsetoption確認）、双方10分＋30秒/加算0・Ponder OFF・時間切れありON、全ログOFF/INFOの再起動反映、before-G2.kif平手開始局面、06:52:26稼働各0を確認。今回の最大4起動はS1/G2/S2/R各直前予約、全件close0、go1・bestmove1。新保存先 `/private/tmp/kaname-clock-stop-G2-restart-20261013-cca2681/` に台帳・元棋譜・G2.kif、USIログ `/Users/oki2a24/Library/Logs/electron-shogi/usi-20261013_064743.log`。Rの棋譜だけ保存せず破棄。以前の台帳/違反/総数不確定は履歴を保全。
 
-次は記録コミット後のmain取り込み承認。独立レビューは指摘なし。追加起動・再試行は行わない。main取り込みは別承認。
+本人承認後、2026-10-13にmainへfast-forward統合済み。統合先の相対リンク507件欠落0、show --check/diff --check成功。作業ツリー clean。次は最後の理解確認を一問行い、本人回答を学習記録へ追記してから次候補を見直す。
 
-作業場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/clock-stop-real-check-conditions-handoff`、開始HEAD cca2681、別worktreeなし。本人判断を含む6文書を記録確定し最終独立レビュー指摘なし。コミット後はgit logで記録コミットを確認する。製品コード・テスト・係数JSON変更なし。main未統合・pushなし。Ruff0.16.10、hooksPath=.githooks。生ログの共有・削除なし。
+作業場所 `/Users/oki2a24/kaname-shogi`、mainは統合後記録まで反映済み。開始HEAD fe4371dから作業ブランチの3コミットをfast-forward統合。統合先の文書リンク検証507件欠落0、git show --check・diff --check成功。現在の作業ツリーはclean。mainはorigin/mainより22コミット先行、pushしていない。製品コード・テスト・係数JSON変更なし。Ruff0.16.10、hooksPath=.githooks。生ログの共有・削除なし。
 
 ## 二手先読み設計の完了
 
