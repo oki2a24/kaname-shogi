@@ -140,10 +140,10 @@ mainは設定読込だけを囲むtryでValueError/OSErrorをstderrの `USIエ�
 
 ### 終了検証・記録・統合ゲート
 
-- [ ] import追加・変更時 `.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、差分確認の順に実施。
-- [ ] `python3 -m unittest discover -s tests -p test_usi_clock.py -v`、同じ形式のtest_usi_engine.py・test_usi_engine_launcher.py・test_time_management.pyを実行し失敗/エラー0。全体 `python3 -m unittest discover -s tests -v` で回帰確認。
-- [ ] 将来の実装記録に契約・固定期待値・検出対象・単独/全体補完・未検証、実コマンドとRed/Green/誤り注入、Refactor判断、Critical/Important/Minorと対応を記す。
-- [ ] 利用案内を「時計検証・設定読込・予算計算まで接続、時間停止は未実装」と更新。文書の相対リンク/見出し、git diff --check、差分を確認し、独立最終レビュー後に対象だけステージ・通常コミット。フックを回避しない。
+- [x] import追加・変更時 `.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、差分確認の順に実施。
+- [x] `python3 -m unittest discover -s tests -p test_usi_clock.py -v`、同じ形式のtest_usi_engine.py・test_usi_engine_launcher.py・test_time_management.pyを実行し失敗/エラー0。全体 `python3 -m unittest discover -s tests -v` で回帰確認。
+- [x] 将来の実装記録に契約・固定期待値・検出対象・単独/全体補完・未検証、実コマンドとRed/Green/誤り注入、Refactor判断、Critical/Important/Minorと対応を記す。
+- [x] 利用案内を「時計検証・設定読込・予算計算まで接続、時間停止は未実装」と更新。文書の相対リンク/見出し、git diff --check、差分を確認し、独立最終レビュー後に対象だけステージ・通常コミット。フックを回避しない。
 - [ ] 実装・検証・レビュー・記録がそろった時点で本人へ提示。main取り込みは別承認後、取り込み先検証を行う。最後の理解確認は一問だけ提示して回答を待つ。後続の探索制御を自動開始しない。
 
 ## 未検証・承認段階
@@ -157,4 +157,4 @@ mainは設定読込だけを囲むtryでValueError/OSErrorをstderrの `USIエ�
 
 ## 実装開始後の現在状態
 
-2026-10-12、本人「では実装を開始して下さい。適切なスキルを使い、進めて下さい」により実装開始。上記の「今回は実行しない」「未実施」「Git保存しない」等は計画作成時の履歴。時計解析・先後選択・起動時設定保持・goへの予算準備を実装し、全389件成功、Ruff成功、代表変異9種を検出。タスク1・2の保存bf3ca1b、計画保存d942386。タスク3・ブランチ全体の独立レビューは最終Critical/Important/Minor 0。最終保存を進める。main取り込みは未承認・未実施。詳細は学習記録。
+2026-10-12、本人「では実装を開始して下さい。適切なスキルを使い、進めて下さい」により実装開始。上記の「今回は実行しない」「未実施」「Git保存しない」等は計画作成時の履歴。時計解析・先後選択・起動時設定保持・goへの予算準備を実装し、全389件成功、Ruff成功、代表変異9種を検出。タスク1・2の保存bf3ca1b、計画保存d942386。タスク3・ブランチ全体の独立レビューは最終Critical/Important/Minor 0。タスク3と記録を9fd4f10へ保存し、最終全389件成功（6.185秒）。main取り込みは未承認・未実施。詳細は学習記録。
