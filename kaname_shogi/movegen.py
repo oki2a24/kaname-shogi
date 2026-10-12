@@ -16,11 +16,13 @@ docs/design/14-hand-drops.md。
 """
 
 import random
+from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Callable, Optional
 
 from .model import BasicPieceType, Board, Piece, PieceType, Position, Side, Square
 from .move import BoardMove, DropMove, Move
+from .search_control import SearchControl, SearchSignal
 
 
 class MoveSelectionPolicy(Enum):
@@ -443,18 +445,13 @@ def _apply_drop(
     check_uchi_fuzume: bool,
 ) -> None:
     """駒打ちを適用し、必要なら打ち歩詰めを拒否する非公開操作。"""
-    side = position.side_to_move
-    trial = position.copy()
-    _apply_drop_unchecked(trial, piece_type, destination)
-    if is_in_check(trial.board, side):
-        raise ValueError("自玉が王手になる手は指せません")
-    if (
-        check_uchi_fuzume
-        and piece_type == BasicPieceType.PAWN
-        and _is_checkmate(trial, check_uchi_fuzume=False)
-    ):
-        raise ValueError("打ち歩詰めはできません")
-    _apply_drop_unchecked(position, piece_type, destination)
+    _apply_drop_controlled(
+        position,
+        piece_type,
+        destination,
+        check_uchi_fuzume=check_uchi_fuzume,
+        control=None,
+    )
 
 
 def apply_drop(
@@ -485,37 +482,9 @@ def apply_drop(
 
 def _legal_moves(position: Position, *, check_uchi_fuzume: bool) -> tuple[Move, ...]:
     """指定方針で、手番側の合法手を固定順に列挙する非公開操作。"""
-    moves = []
-    for file in range(1, 10):
-        for rank in range(1, 10):
-            source = Square(file, rank)
-            piece = position.board.piece_at(source)
-            if piece is None or piece.side != position.side_to_move:
-                continue
-            for destination in _move_candidates_for_piece(position.board, source):
-                for promote in (False, True):
-                    try:
-                        apply_move(
-                            position.copy(), source, destination, promote=promote
-                        )
-                    except ValueError:
-                        continue
-                    moves.append(BoardMove(source, destination, promote))
-
-    for piece_type in _DROP_PIECE_TYPES:
-        for file in range(1, 10):
-            for rank in range(1, 10):
-                try:
-                    _apply_drop(
-                        position.copy(),
-                        piece_type,
-                        Square(file, rank),
-                        check_uchi_fuzume=check_uchi_fuzume,
-                    )
-                except ValueError:
-                    continue
-                moves.append(DropMove(piece_type, Square(file, rank)))
-    return tuple(moves)
+    return _legal_moves_controlled(
+        position, check_uchi_fuzume=check_uchi_fuzume, control=None
+    ).moves
 
 
 def _has_legal_move(position: Position, *, check_uchi_fuzume: bool) -> bool:
@@ -621,13 +590,7 @@ def _position_after_move(position: Position, move: Move) -> Position:
     合法手を前提とし、盤上移動・駒打ちを既存操作へ委ねる。
     未知の型のTypeErrorと不合法手のValueErrorを呼び出し側へ伝える。
     """
-    trial = position.copy()
-    if isinstance(move, BoardMove):
-        apply_move(trial, move.source, move.destination, promote=move.promote)
-    elif isinstance(move, DropMove):
-        apply_drop(trial, move.piece_type, move.destination)
-    else:
-        raise TypeError("対応していない一手の型です")
+    _, trial = _position_after_move_controlled(position, move, control=None)
     return trial
 
 
@@ -753,12 +716,9 @@ def has_legal_move(position: Position) -> bool:
 
 def _is_checkmate(position: Position, *, check_uchi_fuzume: bool) -> bool:
     """指定方針で、手番側が詰みかを返す非公開操作。"""
-    side = position.side_to_move
-    if _find_king_square(position.board, side) is None:
-        return False
-    return is_in_check(position.board, side) and not _has_legal_move(
-        position, check_uchi_fuzume=check_uchi_fuzume
-    )
+    return _is_checkmate_controlled(
+        position, check_uchi_fuzume=check_uchi_fuzume, control=None
+    ).value
 
 
 def is_checkmate(position: Position) -> bool:
@@ -1275,3 +1235,248 @@ def dragon_move_candidates(board: Board, source: Square) -> list[Square]:
         if occupant is None or occupant.side != piece.side:
             candidates.append(target)
     return candidates
+
+
+@dataclass(frozen=True)
+class LegalMovesResult:
+    """合法手調査の完了状態と確定手一覧のデータ。"""
+
+    completed: bool
+    moves: tuple[Move, ...]
+
+
+@dataclass(frozen=True)
+class HasLegalMoveResult:
+    """手あり調査の完了状態と真偽、不明Noneのデータ。"""
+
+    completed: bool
+    value: Optional[bool]
+
+
+@dataclass(frozen=True)
+class CheckmateResult:
+    """詰み調査の完了状態と真偽、不明Noneのデータ。"""
+
+    completed: bool
+    value: Optional[bool]
+
+
+@dataclass(frozen=True)
+class _ApplicationResult:
+    """一手適用の完了状態データ。"""
+
+    completed: bool
+
+
+def _stopped(
+    control: Optional[SearchControl],
+    *,
+    include_target: bool = False,
+    protect_first_legal: bool = False,
+) -> bool:
+    """停止なしと注入制御の確認を共有する非公開操作。"""
+    return (
+        control is not None
+        and control.check(
+            include_target=include_target, protect_first_legal=protect_first_legal
+        )
+        != SearchSignal.CONTINUE
+    )
+
+
+def _legal_moves_controlled(
+    position: Position,
+    *,
+    check_uchi_fuzume: bool,
+    control: Optional[SearchControl],
+    root: bool = False,
+    protect_first_legal: bool = False,
+    _first_only: bool = False,
+) -> LegalMovesResult:
+    """固定順で確定手を集め、中断は未完了として伝える操作。
+
+    根の最初の手だけ通常停止を保護する。下位合法性確認へ同じ保護を渡すが、
+    抑制は保留しない。元局面は変更せず、ValueErrorの違法候補だけ除外する。
+    _first_onlyは手あり確認専用で、最初の合法手により必要な調査の完了を表す。
+    """
+    moves = []
+
+    def interrupted():
+        return _stopped(
+            control,
+            include_target=root,
+            protect_first_legal=protect_first_legal or (root and not moves),
+        )
+
+    for file in range(1, 10):
+        for rank in range(1, 10):
+            if interrupted():
+                return LegalMovesResult(False, tuple(moves))
+            source = Square(file, rank)
+            piece = position.board.piece_at(source)
+            if piece is None or piece.side != position.side_to_move:
+                continue
+            for destination in _move_candidates_for_piece(position.board, source):
+                for promote in (False, True):
+                    if interrupted():
+                        return LegalMovesResult(False, tuple(moves))
+                    try:
+                        apply_move(
+                            position.copy(), source, destination, promote=promote
+                        )
+                    except ValueError:
+                        continue
+                    if interrupted():
+                        return LegalMovesResult(False, tuple(moves))
+                    moves.append(BoardMove(source, destination, promote))
+                    if _first_only:
+                        return LegalMovesResult(True, tuple(moves))
+
+    for piece_type in _DROP_PIECE_TYPES:
+        for file in range(1, 10):
+            for rank in range(1, 10):
+                if interrupted():
+                    return LegalMovesResult(False, tuple(moves))
+                try:
+                    result = _apply_drop_controlled(
+                        position.copy(),
+                        piece_type,
+                        Square(file, rank),
+                        check_uchi_fuzume=check_uchi_fuzume,
+                        control=control,
+                        protect_first_legal=protect_first_legal or (root and not moves),
+                    )
+                except ValueError:
+                    continue
+                if not result.completed or interrupted():
+                    return LegalMovesResult(False, tuple(moves))
+                moves.append(DropMove(piece_type, Square(file, rank)))
+                if _first_only:
+                    return LegalMovesResult(True, tuple(moves))
+    return LegalMovesResult(True, tuple(moves))
+
+
+def _has_legal_move_controlled(
+    position: Position,
+    *,
+    check_uchi_fuzume: bool,
+    control: Optional[SearchControl],
+    protect_first_legal: bool = False,
+) -> HasLegalMoveResult:
+    """全調査の真偽と中断の不明を分ける。局面は変更しない。"""
+    result = _legal_moves_controlled(
+        position,
+        check_uchi_fuzume=check_uchi_fuzume,
+        control=control,
+        protect_first_legal=protect_first_legal,
+        _first_only=True,
+    )
+    return HasLegalMoveResult(
+        result.completed, bool(result.moves) if result.completed else None
+    )
+
+
+def _is_checkmate_controlled(
+    position: Position,
+    *,
+    check_uchi_fuzume: bool,
+    control: Optional[SearchControl],
+    protect_first_legal: bool = False,
+) -> CheckmateResult:
+    """王手でなければ確定False、防御調査中断は不明として返す操作。"""
+    side = position.side_to_move
+    if _find_king_square(position.board, side) is None or not is_in_check(
+        position.board, side
+    ):
+        return CheckmateResult(True, False)
+    if control is None:
+        return CheckmateResult(
+            True, not _has_legal_move(position, check_uchi_fuzume=check_uchi_fuzume)
+        )
+    result = _has_legal_move_controlled(
+        position,
+        check_uchi_fuzume=check_uchi_fuzume,
+        control=control,
+        protect_first_legal=protect_first_legal,
+    )
+    return CheckmateResult(
+        result.completed, not result.value if result.completed else None
+    )
+
+
+def _apply_drop_controlled(
+    position: Position,
+    piece_type: BasicPieceType,
+    destination: Square,
+    *,
+    check_uchi_fuzume: bool,
+    control: Optional[SearchControl],
+    protect_first_legal: bool = False,
+) -> _ApplicationResult:
+    """試し打ちと打ち歩詰め確認が完了した場合だけ元局面を変更する操作。
+
+    中断は未完了で元局面不変。違法手は従来どおりValueErrorとする。
+    """
+
+    def interrupted():
+        return _stopped(control, protect_first_legal=protect_first_legal)
+
+    if interrupted():
+        return _ApplicationResult(False)
+    side = position.side_to_move
+    trial = position.copy()
+    _apply_drop_unchecked(trial, piece_type, destination)
+    if interrupted():
+        return _ApplicationResult(False)
+    if is_in_check(trial.board, side):
+        raise ValueError("自玉が王手になる手は指せません")
+    if check_uchi_fuzume and piece_type == BasicPieceType.PAWN:
+        if control is None:
+            mate = CheckmateResult(True, _is_checkmate(trial, check_uchi_fuzume=False))
+        else:
+            mate = _is_checkmate_controlled(
+                trial,
+                check_uchi_fuzume=False,
+                control=control,
+                protect_first_legal=protect_first_legal,
+            )
+        if not mate.completed or interrupted():
+            return _ApplicationResult(False)
+        if mate.value:
+            raise ValueError("打ち歩詰めはできません")
+    if interrupted():
+        return _ApplicationResult(False)
+    _apply_drop_unchecked(position, piece_type, destination)
+    return _ApplicationResult(True)
+
+
+def _position_after_move_controlled(
+    position: Position,
+    move: Move,
+    *,
+    control: Optional[SearchControl],
+) -> tuple[_ApplicationResult, Optional[Position]]:
+    """独立複製へ適用する操作。中断時は部分局面を渡さず元局面を保存する。
+
+    未知型TypeError、違法ValueError、故障はそのまま呼出し側へ伝える。
+    """
+    if not isinstance(move, (BoardMove, DropMove)):
+        raise TypeError("対応していない一手の型です")
+    if _stopped(control):
+        return _ApplicationResult(False), None
+    trial = position.copy()
+    if isinstance(move, BoardMove):
+        apply_move(trial, move.source, move.destination, promote=move.promote)
+    else:
+        result = _apply_drop_controlled(
+            trial,
+            move.piece_type,
+            move.destination,
+            check_uchi_fuzume=True,
+            control=control,
+        )
+        if not result.completed:
+            return result, None
+    if _stopped(control):
+        return _ApplicationResult(False), None
+    return _ApplicationResult(True), trial

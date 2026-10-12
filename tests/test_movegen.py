@@ -3744,7 +3744,7 @@ class UchiFuzumeTests(unittest.TestCase):
         position.gote_hand.add(BasicPieceType.PAWN)
 
         with patch.object(
-            movegen, "_apply_drop", wraps=movegen._apply_drop
+            movegen, "_apply_drop_controlled", wraps=movegen._apply_drop_controlled
         ) as apply_drop:
             self.assertFalse(movegen._has_legal_move(position, check_uchi_fuzume=False))
 
