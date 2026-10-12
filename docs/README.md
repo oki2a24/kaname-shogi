@@ -54,8 +54,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
-| 時計・停止接続後の実機確認条件 | [学習・レビュー](learning/clock-stop-real-check-conditions.md) | [USI現行仕様](knowledge/usi-engine-response.md) | [条件案](plans/2026-10-12-clock-stop-real-check-conditions.md) | — | [開始背景](handover-clock-stop-real-check-conditions.md) |
-| 通常停止の再確認条件 | — | [USI現行仕様](knowledge/usi-engine-response.md)、[探索停止](knowledge/search-stop.md) | — | — | [開始背景・再開プロンプト](handover-normal-stop-recheck-conditions.md) |
+| 時計・停止接続後の実機確認条件（部分結果・main統合・理解確認完了） | [学習・レビュー](learning/clock-stop-real-check-conditions.md) | [USI現行仕様](knowledge/usi-engine-response.md) | [条件・実績](plans/2026-10-12-clock-stop-real-check-conditions.md) | — | [開始背景](handover-clock-stop-real-check-conditions.md) |
+| 通常停止の再確認条件（直接USI観測・本人受け入れ・理解確認済み、main取り込み待ち） | [学習・レビュー・実施記録](learning/normal-stop-recheck-conditions.md) | [USI現行仕様](knowledge/usi-engine-response.md)、[探索停止](knowledge/search-stop.md)、[時計予算](knowledge/time-budget.md) | [承認済み条件・実施結果](plans/2026-10-13-normal-stop-recheck-conditions.md) | — | [開始背景・再開プロンプト](handover-normal-stop-recheck-conditions.md) |
 | 将棋の全体像（第1回） | [第1回](learning/01-shogi-overview.md) | [将棋の全体像](knowledge/01-shogi-overview.md) | — | — | — |
 | 駒の動きと成り（第2回） | [第2回](learning/02-piece-movement-and-promotion.md) | [駒の動きと成り](knowledge/02-piece-movement-and-promotion.md) | — | — | — |
 | 初期配置と盤上の座標（第3回） | [第3回](learning/03-initial-setup-and-coordinates.md) | [初期配置と盤上の座標](knowledge/03-initial-setup-and-coordinates.md) | — | — | — |
@@ -146,7 +146,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | USI時計受付・設定接続（main統合・理解確認完了） | [学習・レビュー](learning/usi-clock-settings-implementation-plan.md) | — | [承認済み全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [承認済み計画・実績](plans/2026-10-12-usi-clock-settings-implementation-plan.md) | [引き継ぎ](handover-usi-clock-settings-implementation-plan.md) |
 | 探索停止・途中結果（main統合・理解確認済み） | [学習・実装レビュー](learning/search-stop-implementation-plan.md) | [探索部品](knowledge/search-stop.md) | [承認済み全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [承認済み計画・実績](plans/2026-10-12-search-stop-implementation-plan.md) | [開始時引き継ぎ](handover-search-stop-implementation-plan.md) |
 | 入力並行処理・USI接続（main統合・検証・理解確認済み） | [学習・作成記録](learning/input-concurrency-usi-plan.md) | — | [承認済み全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [計画案](plans/2026-10-12-input-concurrency-usi-implementation-plan.md) | [開始時引き継ぎ](handover-input-concurrency-usi-plan.md) |
-| 時計・停止接続後の実機確認条件（選定済み・新セッション開始待ち） | — | — | — | — | [開始時引き継ぎ](handover-clock-stop-real-check-conditions.md) |
+| 時計・停止接続後の実機確認条件（部分結果・main統合・理解確認完了） | [学習・レビュー](learning/clock-stop-real-check-conditions.md) | — | [条件・実績](plans/2026-10-12-clock-stop-real-check-conditions.md) | — | [開始時引き継ぎ](handover-clock-stop-real-check-conditions.md) |
 | CLIの三方式選択（タスク3、新セッション準備のみ） | — | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク3](plans/2026-10-10-two-ply-implementation-plan.md#タスク3cliから三方式を選ぶ) | [引き継ぎ](handover-cli-three-policies.md) |
 
 ## 例外と履歴の読み方

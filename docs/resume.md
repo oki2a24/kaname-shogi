@@ -4,11 +4,11 @@
 
 2026-10-13、更新G2案を本人「ok」で承認・実施。G2は部分結果、物理復帰済み、独立レビューCritical0・Important0・Minor0、本人「ok」で部分結果の記録確定を承認。[条件と実施後状態](plans/2026-10-12-clock-stop-real-check-conditions.md)、[証拠・未達・履歴](learning/clock-stop-real-check-conditions.md)。C1完全一致、go btime0 wtime0 byoyomi8000、目標4500/上限6000ms、4.516秒で合法6f5g+一件・棋譜反映。ただし通常中断操作が間に合わず、人間側8秒切れ負けで終局、G2全条件成功とは扱わない。再試行せず承認済み復帰を完了。
 
-現在はRandom（Rのsetoption確認）、双方10分＋30秒/加算0・Ponder OFF・時間切れありON、全ログOFF/INFOの再起動反映、before-G2.kif平手開始局面、06:52:26稼働各0を確認。今回の最大4起動はS1/G2/S2/R各直前予約、全件close0、go1・bestmove1。新保存先 `/private/tmp/kaname-clock-stop-G2-restart-20261013-cca2681/` に台帳・元棋譜・G2.kif、USIログ `/Users/oki2a24/Library/Logs/electron-shogi/usi-20261013_064743.log`。Rの棋譜だけ保存せず破棄。以前の台帳/違反/総数不確定は履歴を保全。
+2026-10-13、選定テーマ「通常停止の再確認条件だけ」の条件案を作成し、独立レビュー・文書検証を完了。本人の条件承認と別途の実施開始指示を受け、一回の直接USI実施で通常 `stop` 後の合法な一応答と終了コード0を記録した。画面証拠は取得できなかったが、本人がこの一回を受け入れた。最後の理解確認に本人回答があり、補足とともに学習記録へ記載した。ShogiHome実通信・時計期限停止・他局面は未検証。mainへの取り込みは別承認待ち。[条件案・実施結果](plans/2026-10-13-normal-stop-recheck-conditions.md)、[学習・レビュー・実施記録](learning/normal-stop-recheck-conditions.md)。
 
-最後の理解確認に本人が「両方の確認完了前に手が帰ってきたから」と回答し、応答と通常停止の条件を区別した。[回答・補足と実施結果](learning/clock-stop-real-check-conditions.md)。本人が次テーマ「通常停止の再確認条件だけ」を選び、新セッション準備を依頼。[引き継ぎ](handover-normal-stop-recheck-conditions.md)。現テーマは条件作成・独立レビュー・提示まで。エンジン起動・ShogiHome操作・計測・対局・コード/テスト/設定変更は含めず、提示後の実施開始とmain取り込みは別承認。
+案は、過去のG2局面C1・時計・目標/上限・起動数を自動採用せず、未使用だったC2を構造面から再選定した。今回、実エントリポイントで時計引数のない `go` 後にCPU時間の連続増加を確認して通常 `stop` を一度送り、約7.842ms後に合法な `bestmove 3b3a` を受信した。`quit` 後に終了コード0を確認し、再試行していない。ShogiHome操作や設定変更はない。画面証拠は取得できず、本人判断を待つ。既存検査との境界、有限の待機・終了条件、証拠、未検証事項も記録した。
 
-作業場所 `/Users/oki2a24/kaname-shogi`。引き継ぎ準備の文書更新後はmain clean、origin/mainより24コミット先行・未push。準備開始時HEADは95f4609で、main、clean、origin/mainより23コミット先行だった。`.venv/bin/ruff --version` は0.16.10、hooksPathは`.githooks`。本準備では文書のみを更新し、エンジン・GUI・ログ・対局・係数には触れていない。
+今回の実状態: `/Users/oki2a24/kaname-shogi` の `main`、準備開始時clean、`origin/main` より24コミット先行。開始時HEAD `aeedf75`、Ruff `0.16.10`、hooksPath `.githooks`。文書の変更は未コミット。承認後の直接USI観測は本人受け入れ済みで、最後の理解確認も回答・補足を記録済み。コード・テスト・設定・ShogiHome・対局は変更していない。mainへの取り込みは未実施で、本人の別承認待ち。
 
 ## 二手先読み設計の完了
 

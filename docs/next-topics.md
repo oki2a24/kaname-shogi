@@ -2,7 +2,7 @@
 
 ## 現在の選択
 
-2026-10-13、「時計・停止接続後の実機確認条件だけを決める」は部分実機確認・記録・main統合・最後の理解確認まで完了。[実施記録](learning/clock-stop-real-check-conditions.md)、[現在地](resume.md)。G2で秒読み一応答を確認したが通常停止は未達。既定設定・時計・ログ・元棋譜・稼働状態へ復帰済み。本人が次テーマ「通常停止の再確認条件だけ」を選定し、新セッション準備を依頼。[引き継ぎ](handover-normal-stop-recheck-conditions.md)。条件は未作成で、新セッションの再開プロンプト入力を待つ。
+2026-10-13、「時計・停止接続後の実機確認条件だけを決める」は部分実機確認・記録・main統合・最後の理解確認まで完了。[実施記録](learning/clock-stop-real-check-conditions.md)、[現在地](resume.md)。G2で秒読み一応答を確認したが通常停止は未達。本人が次テーマ「通常停止の再確認条件だけ」を選定した。承認済み条件に沿う直接USIプロセス一回を実施し、通常 `stop` 後の合法な一応答と正常終了を観測した。画面証拠は取得できなかったが、本人がこの一回を受け入れた。最後の理解確認の回答・補足も記録済み。[条件・実施結果](plans/2026-10-13-normal-stop-recheck-conditions.md)、[学習記録](learning/normal-stop-recheck-conditions.md)、[開始時引き継ぎ](handover-normal-stop-recheck-conditions.md)。ShogiHome実通信などは未検証で、mainへの取り込みは本人の別承認待ち。
 
 ## 時計・停止接続後の実機確認条件完了後の候補（2026-10-13、候補1選定）
 
