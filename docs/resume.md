@@ -2,17 +2,11 @@
 
 ## 現在地
 
-2026-10-11更新。前テーマ「40手目の長考理由を調べる範囲の設計だけ」は、限定読取り調査、ローカル計測、ShogiHomeでの40手上限／41手上限比較まで、合意された範囲を終えた。40手条件では2回とも応答後に `gameover draw`、41手条件では応答後に局が継続した。応答時間は40手条件が30.141秒・29.700秒、41手条件が29.488秒・29.578秒で、少数回のため長考原因は判定できない。「40手の設定が長考の原因」という仮説は未検証のまま。棋譜破棄は本人の許可に基づき、ShogiHomeの設定・ログは復帰確認済み。詳細は[実施記録](learning/long-think-scope-design.md)を参照。
+2026-10-12、「時計入力を受けて応答を止める仕組みの学習・設計だけ」の設計全体を本人が「承認する」と明示承認。[承認済み設計](plans/2026-10-11-clock-input-time-management-design.md)、[確認範囲・既存ソフト比較](plans/2026-10-12-clock-input-verification-review.md)、[学習・合意記録](learning/clock-input-time-management.md)を参照。監査3残件は個別判断済み、独立再レビューCritical/Important/Minorすべて0。具体方式はmacOS対象、他OS移植箇所を文書と将来コードへ明記する要件あり。実装計画作成・コード/テスト変更・TDDは未承認で未着手。main統合には別承認が必要。統合・取り込み先検証後の最後の理解確認は未実施。
 
-本人が次テーマ「時計入力を受けて応答を止める仕組みの学習・設計だけ」を選び、新セッション準備を完了した。作業場所 `/Users/oki2a24/kaname-shogi`。準備ブランチ `codex/clock-input-time-management-handoff`、開始HEAD `9c31b63`。準備ブランチはmainへ未統合、pushなし。テーマの選定は具体的な設計・実装計画の承認ではない。学習・調査・設計の開始は、本人が[再開用プロンプト](handover-clock-input-time-management.md#再開用プロンプト)を新しいセッションへ入力してからとする。
+開始時HEAD c919594、場所 /Users/oki2a24/kaname-shogi、ブランチ codex/clock-input-time-management-handoff。開始時差分なし、Ruff 0.16.10は固定版一致、hooksPathは.githooks。承認記録を含む文書を作業ブランチでコミットする段階（結果はGitログと学習記録を参照）。main取り込み・pushなし。
 
-- 次テーマはUSI時計入力と探索停止の現行仕様を学び、設計をまとめるところまで。コード・テスト変更、再計測、対局、ShogiHome操作、最適化、棋力比較は含まない。設計を完成して提示した後も実装へは自動継続しない。
-- 以前の上限比較では40手条件と41手条件で終局状態が異なったが、応答時間は両条件とも約30秒だった。「40手上限が長考原因」という仮説は未検証であり、新テーマと混同しない。
-- 準備ブランチの作業開始時、`.venv/bin/ruff --version` は `ruff 0.16.10`、`git config --local --get core.hooksPath` は `.githooks`。新セッションでも実測する。
-
-## 次に読む資料
-
-[次テーマの引き継ぎ](handover-clock-input-time-management.md)、[USI応答の知識メモ](knowledge/usi-engine-response.md)、[プロジェクトの方向性](02-project-direction.md)。40手調査の背景・証拠は[引き継ぎ](handover-long-think-scope.md)、[設計・実施記録](plans/2026-10-11-long-think-scope-design.md)、[学習記録](learning/long-think-scope-design.md)に保存。
+前テーマの40手/41手比較で終局の違いは観測済みだが、長考原因の仮説は未検証。[過去の実施記録](learning/long-think-scope-design.md)と[開始時の引き継ぎ](handover-clock-input-time-management.md)を履歴として参照する。過去の362件成功や計測を今回の検証として扱わない。ShogiHome操作・ログ追加分析・再計測・対局・製品コード・テスト・設定ファイル変更は行っていない。
 
 ## 二手先読み設計の完了
 
