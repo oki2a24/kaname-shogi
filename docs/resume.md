@@ -2,7 +2,7 @@
 
 ## 現在地
 
-2026-10-12、本人がローカルmainへの取り込みを選択。元の作業場所で1235931から3d01687へ早送り統合し、取り込み先検証まで完了。[計画](plans/2026-10-12-time-budget-implementation-plan.md)、[実装・検証・統合記録](learning/time-budget-implementation-plan.md)、[参照メモ](knowledge/time-budget.md)。最後の理解確認を一問提示し、本人回答待ち。次テーマへ進まない。
+2026-10-12、本人がローカルmainへの取り込みを選択。元の作業場所で1235931から3d01687へ早送り統合し、取り込み先検証まで完了。[計画](plans/2026-10-12-time-budget-implementation-plan.md)、[実装・検証・統合記録](learning/time-budget-implementation-plan.md)、[参照メモ](knowledge/time-budget.md)。最後の理解確認に本人が正しく回答し、今回テーマは完了。次候補は[次テーマ候補](next-topics.md)。本人の選定待ちで、新しい調査・学習・計画・実装は開始しない。
 
 場所 /Users/oki2a24/kaname-shogi、現在main。統合時HEAD 3d01687、差分なし。Ruff 0.16.10固定版一致・hooksPath=.githooks。取り込み先全374件、Ruff整形30ファイル・lint、差分検査成功。取り込み文書の相対リンク484件欠落0（アンカー除外）。統合結果の文書保存コミットはGitログ参照。pushなし、作業ブランチは履歴として保持。後続USI組込み・並行入力・探索中断・計測・対局は未着手。
 
