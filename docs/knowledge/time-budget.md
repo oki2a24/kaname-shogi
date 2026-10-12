@@ -2,7 +2,7 @@
 
 [承認済み計画](../plans/2026-10-12-time-budget-implementation-plan.md)、[全体設計](../plans/2026-10-11-clock-input-time-management-design.md)、[実装記録](../learning/time-budget-implementation-plan.md)。
 
-`kaname_shogi.time_management` はJSON設定読込と整数msの予算計算を提供する。USI起動入口からの時計検証・自分側選択・設定保持・予算計算は接続済み。探索の時間停止はまだ働かない。
+`kaname_shogi.time_management` はJSON設定読込と整数msの予算計算を提供する。USI起動入口からの時計検証・自分側選択・設定保持・予算計算は接続済み。計算した予算を各goの探索制御へ渡し、期限判定・探索停止へ接続済み。停止確認点や合法手未確保時の例外があり、時間内応答は保証しない。[接続仕様](usi-engine-response.md)と[探索停止](search-stop.md)を参照。
 
 - `TimeManagementConfig` は時間設定データ、`SearchBudget` は目標/上限期間のデータ。不変で、構築時に型と範囲を検証する。
 - `load_time_management_config` は設定を読む操作。引数省略時はモジュール位置からリポジトリ直下の `config/time-management.json` を読む。明示相対Pathはcwd基準。キャッシュなし。

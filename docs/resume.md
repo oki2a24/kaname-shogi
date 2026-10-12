@@ -2,13 +2,13 @@
 
 ## 現在地
 
-2026-10-12、「時計・停止接続後の実機確認条件だけを決める」を開始。[条件案](plans/2026-10-12-clock-stop-real-check-conditions.md)、[学習・レビュー記録](learning/clock-stop-real-check-conditions.md)。4パターンについて本人は「ok」。速すぎる応答への指摘を受け、公開ベンチマーク2候補と事前選定（最大4起動）を追加し、4例を選定SFENへそろえる改訂案を作成。本人「改訂案を承認する」により改訂全体を承認済み。実施開始指示は未受領、main取り込みは別承認。コード・テスト・設定変更、エンジン起動・アプリ操作・ログ採取・計測・対局は未実施。
+2026-10-13、更新G2案を本人「ok」で承認・実施。G2は部分結果、物理復帰済み、独立レビューCritical0・Important0・Minor0、本人「ok」で部分結果の記録確定を承認。[条件と実施後状態](plans/2026-10-12-clock-stop-real-check-conditions.md)、[証拠・未達・履歴](learning/clock-stop-real-check-conditions.md)。C1完全一致、go btime0 wtime0 byoyomi8000、目標4500/上限6000ms、4.516秒で合法6f5g+一件・棋譜反映。ただし通常中断操作が間に合わず、人間側8秒切れ負けで終局、G2全条件成功とは扱わない。再試行せず承認済み復帰を完了。
 
-時計・探索停止・入力並行処理はmain統合済み。[現行仕様](knowledge/usi-engine-response.md)、[前テーマの記録](learning/input-concurrency-usi-plan.md)。厳密期限・接続後の実機安全性は未検証。手順書・スキルの時計未使用、時間予算メモ冒頭の停止未接続は現行仕様と不一致。条件案に列挙し、実施前の文書整合を開始条件とした。元資料は今回未修正。
+現在はRandom（Rのsetoption確認）、双方10分＋30秒/加算0・Ponder OFF・時間切れありON、全ログOFF/INFOの再起動反映、before-G2.kif平手開始局面、06:52:26稼働各0を確認。今回の最大4起動はS1/G2/S2/R各直前予約、全件close0、go1・bestmove1。新保存先 `/private/tmp/kaname-clock-stop-G2-restart-20261013-cca2681/` に台帳・元棋譜・G2.kif、USIログ `/Users/oki2a24/Library/Logs/electron-shogi/usi-20261013_064743.log`。Rの棋譜だけ保存せず破棄。以前の台帳/違反/総数不確定は履歴を保全。
 
-作業場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/clock-stop-real-check-conditions-handoff`、開始HEAD45a87fd、別worktreeなし。指定4コマンドで開始時clean・Ruff0.16.10・hooksPath=.githooksを確認。今回の文書はmain未統合、pushなし。開始背景は[引き継ぎ](handover-clock-stop-real-check-conditions.md)に保持する。
+次は記録コミット後のmain取り込み承認。独立レビューは指摘なし。追加起動・再試行は行わない。main取り込みは別承認。
 
-初版の独立レビューImportant1件（初期応答待ちの期限不足）は修正・再レビュー全重大度0。事前選定追加後は独立レビューCritical/Important0・Minor2件を修正、文書リンク・差分検証済み。改訂案承認を受領。次は予備確認を含む実施開始指示を待つ。main未統合。実施前には現版・画面・登録・棋譜状態の確認と、必要なログ/設定/保存先/外部ドライバー具体案の別承認が必要。最初の理解確認への回答と補足は学習記録へ保存済み。
+作業場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/clock-stop-real-check-conditions-handoff`、開始HEAD cca2681、別worktreeなし。本人判断を含む6文書を記録確定し最終独立レビュー指摘なし。コミット後はgit logで記録コミットを確認する。製品コード・テスト・係数JSON変更なし。main未統合・pushなし。Ruff0.16.10、hooksPath=.githooks。生ログの共有・削除なし。
 
 ## 二手先読み設計の完了
 

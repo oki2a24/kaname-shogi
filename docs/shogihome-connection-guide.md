@@ -19,7 +19,7 @@ ShogiHomeの画面名は版によって変わることがあります。各項�
 
 ShogiHome 1.28.1の[設定検証](https://github.com/sunfish-shogi/shogihome/blob/24960d39d0557e0109cb48e608d5e62a6cd48dd7/src/common/settings/game.ts#L153)は、持ち時間と秒読みが両方0なら拒否します。第69回でも0＋0の拒否と、その後本人の指示で持ち時間10分・秒読み30秒による一回の開始を確認しました。10分＋30秒はその一回の実測値であり、既定値・推奨値や今後の試験条件ではありません。
 
-このエンジンは時計引数を時間管理に使わず、合法手選択後すぐ応答します（[USI応答知識](knowledge/usi-engine-response.md)）。これはShogiHome側の時計制限がなくなる意味ではありません。「エンジンの時間切れあり」OFFも双方の時間無制限を意味しません。公式1.28.1の[時間切れ処理](https://github.com/sunfish-shogi/shogihome/blob/24960d39d0557e0109cb48e608d5e62a6cd48dd7/src/renderer/game/game.ts#L470)では、OFF時はエンジンへ停止を通知して対局を続けますが、人間側の時間切れ負けは残ります。この固定版の説明を、現在のアプリの版・設定確認や他版の保証に代用しません。
+このエンジンは自分側の時計引数と起動時に一回読んだ設定から時間予算を計算し、探索の停止へ接続しています。目標期限では新候補の開始を止め、上限期限やstopでは確認点で中断します。自然完了が早ければ期限前に応答します。合法手未確保時の通常停止保留、単一処理・OS遅延・出力待ちにより、期限内応答は保証しません（[USI応答知識](knowledge/usi-engine-response.md)、[時間予算](knowledge/time-budget.md)、[探索停止](knowledge/search-stop.md)）。これはShogiHome側の時計制限がなくなる意味ではありません。「エンジンの時間切れあり」OFFも双方の時間無制限を意味しません。公式1.28.1の[時間切れ処理](https://github.com/sunfish-shogi/shogihome/blob/24960d39d0557e0109cb48e608d5e62a6cd48dd7/src/renderer/game/game.ts#L470)では、OFF時はエンジンへ停止を通知して対局を続けますが、人間側の時間切れ負けは残ります。この固定版の説明を、現在のアプリの版・設定確認や他版の保証に代用しません。
 
 ## この手順で守ること
 
