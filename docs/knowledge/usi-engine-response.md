@@ -52,7 +52,7 @@ TimeManagementConfigは不変な設定データで、mainが一回読んで非�
 
 ## 入力・送信・故障回収（2026-10-12接続）
 
-[承認済み接続計画](../plans/2026-10-12-input-concurrency-usi-implementation-plan.md)、[実装・検証記録](../learning/input-concurrency-usi-plan.md)。作業ブランチ実装、main取り込みは別承認待ち。
+[承認済み接続計画](../plans/2026-10-12-input-concurrency-usi-implementation-plan.md)、[実装・検証記録](../learning/input-concurrency-usi-plan.md)。本人承認によりmain取り込み・取り込み先検証済み。
 
 現在threadが命令を管理し、一入力threadとgoごとの一探索threadをQueueで接続する。読取りと入力確定は別。入力確定と最終送信を同じLockで順序付け、先に終了・禁止命令を確定すれば送信しない。先に送信を完了すればその一回は残る。通常stopは抑制にせず、idle stopは持ち越さない。isready/usiは探索中も行単位で送信できる。
 

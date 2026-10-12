@@ -101,3 +101,13 @@ Important対応再レビューは実装Critical/Important/Minor全0、既存USI3
 a11d132の通常コミットは整形・基本検査フック成功。所定review-packageを06e288a..a11d132で生成し、独立レビュアーが実コミット差分との一致と入力源・検査回収補助まで確認した。全ブランチ結論Critical/Important/Minor全0、未対応Minorなし。先の反復テスト結果を流用して追加実行したとせず、パッケージ確認ではテストを反復しなかったことも区別する。
 
 判断辞退の裁定：全OS・全入力デバイス、全競合・全局面、厳密期限・ShogiHome対局安全性は追加実機・負荷確認が必要。有限検査の範囲へ主張を限定する。誤って保証した場合のコストは移植時の停止不能・対局時間切れ。現在の制約表示を維持し、今回のマージ判断と対局実用性の判断を混同しない。作業ブランチは元ディレクトリにあり、mainは53efe10で未取り込み、pushなし。最終の入口・保存段階だけ通常コミットしてcleanを確認する。main承認と取り込み先検証、最後の理解確認は残る。
+
+## main取り込みと取り込み先検証（2026-10-12）
+
+本人「１」は提示した「ローカルでmainにマージする」への明示承認。finishing-a-development-branchに従い元ディレクトリでclean・Ruff0.16.10・.githooksを確認し、mainへ切替、git pull --ff-only（Already up to date）、git merge --ff-only codex/input-concurrency-plan-handoffを実行。mainは53efe10からa9159d4へ進み、実装・検証・記録を取り込み済み。pushは行っていない。
+
+取り込み先で `.venv/bin/ruff format --check .` は38ファイル整形済み、`.venv/bin/ruff check .` 成功。`.venv/bin/python -m unittest discover -s tests -v` は456件成功（9.817秒）。元ディレクトリへの未取り込みはない。別worktreeなし。成功後に取り込み済みブランチを通常削除し、統合記録をmainへ保存する。コードは変更せず、最終独立レビュー済みの実装と同一。
+
+最後の理解確認：探索担当がbestmoveの送信を完了しても、次のgoを始める前にその担当をjoinして回収するのは、なぜでしょうか？
+
+本人回答：未回答。アシスタント補足：回答後に記録する。ここで回答を待ち、新候補の選定や計測・対局には進まない。

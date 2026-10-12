@@ -1,6 +1,6 @@
 # 探索停止と途中結果
 
-2026-10-12、探索部品として実装。USI接続は作業ブランチで実装（main取り込み承認待ち）。仕様は[承認済み計画](../plans/2026-10-12-search-stop-implementation-plan.md)、判断と検証は[実装記録](../learning/search-stop-implementation-plan.md)を参照する。
+2026-10-12、探索部品として実装。USI接続もmain取り込み・取り込み先検証済み。仕様は[承認済み計画](../plans/2026-10-12-search-stop-implementation-plan.md)、判断と検証は[実装記録](../learning/search-stop-implementation-plan.md)を参照する。
 
 ## 制御と結果
 

@@ -2,9 +2,11 @@
 
 ## 現在地
 
-2026-10-12、本人の計画承認「承認する」と「実装開始して下さい」により、[承認済み計画](plans/2026-10-12-input-concurrency-usi-implementation-plan.md)を実施。入力源、探索接続・停止抑制・一回送信、故障通知・回収と実プロセス検証を実装。[記録](learning/input-concurrency-usi-plan.md)、[仕様](knowledge/usi-engine-response.md)。実装a11d132を通常コミット済み。全456件（10.186秒）・Ruff・文書リンク検証成功、コードの独立再レビューCritical/Important/Minor全0。main取り込みは別承認待ち。最後の理解確認は統合・取り込み先検証後に一問ずつ行う。
+2026-10-12、入力並行処理・USI接続の実装・検証・独立再レビューを完了し、本人「１」によりmainへa9159d4までfast-forward統合済み。[実施記録](learning/input-concurrency-usi-plan.md)、[仕様](knowledge/usi-engine-response.md)、[承認済み計画](plans/2026-10-12-input-concurrency-usi-implementation-plan.md)。取り込み先で全456件成功（9.817秒）、Ruff整形38ファイル・lint成功。コードの最終独立レビューCritical/Important/Minor全0。
 
-作業場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/input-concurrency-plan-handoff`、開始HEAD `06e288a`。計画保存d562cfb、入力源e66dc6d、接続・回収・検証a11d132。最終保存段階の文書だけ更新し、実装コードは保存済み。Ruff0.16.10・hooksPath=.githooks一致。別worktreeなし、元ディレクトリで作業。main未統合、pull・pushなし。開始時の経緯は[引き継ぎ](handover-input-concurrency-usi-plan.md)に保持する。計測・対局・係数調整・ShogiHome再確認は未実施、厳密な期限内応答は保証しない。
+作業場所 `/Users/oki2a24/kaname-shogi`、現在main。計画d562cfb、入力源e66dc6d、接続・回収a11d132、実装記録a9159d4を取り込み済み。別worktreeなし。git pull --ff-onlyはAlready up to date、pushなし。Ruff0.16.10・hooksPath=.githooks一致。開始時の経緯は[引き継ぎ](handover-input-concurrency-usi-plan.md)に保持する。計測・対局・係数調整・ShogiHome再確認は未実施、厳密な期限内応答は保証しない。
+
+次は最後の理解確認一問の本人回答を待つ。回答とアシスタント補足を区別して学習記録へ追記・保存してから、README・方向性・next-topicsを見直し次候補を提示する。未回答を完了扱いせず、新テーマには進まない。
 
 ## 二手先読み設計の完了
 
