@@ -2,10 +2,17 @@
 
 import random
 import sys
+from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Callable, Optional
 
-from .model import Position
+from .model import Position, Side
 from .movegen import MoveSelectionPolicy, choose_move, legal_moves
+from .time_management import (
+    SearchBudget,
+    TimeManagementConfig,
+    calculate_search_budget,
+)
 from .usi_move import format_usi_move
 from .usi_position import parse_usi_position
 
@@ -14,6 +21,74 @@ _USI_DIFFICULTY_VALUES = {
     "material": MoveSelectionPolicy.MATERIAL,
     "twoplymaterial": MoveSelectionPolicy.TWO_PLY_MATERIAL,
 }
+
+
+@dataclass(frozen=True)
+class _UsiClock:
+    """解析操作だけが生成する、先後の残り時間と秒読みの非負整数msデータ。"""
+
+    btime_ms: int
+    wtime_ms: int
+    byoyomi_ms: int
+
+
+def _parse_go_clock(arguments: Sequence[str]) -> Optional[_UsiClock]:
+    """goを除くトークン列から時計を読む。時計なしはNone、不正はValueError。"""
+    unsupported = {
+        "searchmoves",
+        "depth",
+        "nodes",
+        "mate",
+        "infinite",
+        "ponder",
+        "movetime",
+    }
+    for token in arguments:
+        if token in unsupported:
+            raise ValueError(f"未対応のgo引数です: {token}")
+    values = {}
+    index = 0
+    while index < len(arguments):
+        key = arguments[index]
+        if key not in {"btime", "wtime", "byoyomi", "binc", "winc"}:
+            index += 1
+            continue
+        if key in values:
+            raise ValueError(f"時計項目が重複しています: {key}")
+        if index + 1 == len(arguments):
+            raise ValueError(f"時計値が欠落しています: {key}")
+        text = arguments[index + 1]
+        digits = text[1:] if text.startswith(("+", "-")) else text
+        if not digits or any(character not in "0123456789" for character in digits):
+            raise ValueError(f"時計値には十進整数msが必要です: {key}")
+        try:
+            value = int(text, 10)
+        except ValueError as error:
+            raise ValueError(
+                f"時計値の整数変換に失敗しました: {key}: {error}"
+            ) from error
+        if value < 0:
+            raise ValueError(f"時計値に負数は使えません: {key}")
+        if key in {"binc", "winc"} and value > 0:
+            raise ValueError(f"正の加算は未対応です: {key}")
+        values[key] = value
+        index += 2
+    if not {"btime", "wtime", "byoyomi"}.intersection(values):
+        return None
+    for key in ("btime", "wtime"):
+        if key not in values:
+            raise ValueError(f"時計ありでは{key}が必須です")
+    return _UsiClock(values["btime"], values["wtime"], values.get("byoyomi", 0))
+
+
+def _prepare_search_budget(
+    clock: Optional[_UsiClock], side_to_move: Side, config: TimeManagementConfig
+) -> Optional[SearchBudget]:
+    """現在手番の時計から期間を準備する。時計なしはNoneで、時刻取得はしない。"""
+    if clock is None:
+        return None
+    remaining = clock.btime_ms if side_to_move == Side.SENTE else clock.wtime_ms
+    return calculate_search_budget(remaining, clock.byoyomi_ms, config)
 
 
 class _UsiEngineState:

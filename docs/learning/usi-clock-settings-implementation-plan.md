@@ -62,3 +62,12 @@ requesting-code-reviewに従い別のレビュアーへ読み取り専用で派�
 ## 実装開始
 
 2026-10-12、本人「では実装を開始して下さい。適切なスキルを使い、進めて下さい」。承認済み計画の実装・検証・レビュー・記録と作業ブランチへの保存を開始。main取り込みは別承認。開始HEAD 9ddc77f、前段の計画文書5件の未コミット差分を保持。Ruff固定版/フック一致、全374件成功を今回再確認。executing-plans・test-driven-development・using-git-worktreesの適用範囲を確認し、現在作業ブランチを再利用。task-startは日本語見出し非対応exit3のため、概要・台帳を手動作成し補完。
+
+
+## タスク1・2：時計解析と予算準備
+
+解析の実行可能なNone返却境界で正常時計3 failuresを確認して最小読込を実装。時計なし・不正・未対応は20 failures/39 errors（KeyError/IndexErrorと誤診断を含む）から、契約のNone/ValueErrorへ修正して5件成功。整数表記の正常例は既存int経路で初回Green。読み込みエラーをRed完了とはしていない。予算準備は実行可能なNone返却から固定予算6 failuresを確認して最小実装、6件成功。全体は今回379件→380件成功。
+
+隔離コピーの誤り注入：重複検査削除5 failures、必須側検査削除3、未知語で解析終了51、先手固定4、明示0をNone扱い3。最終実験はすべてerrorsなし。必須側検査削除の初回に、subTestの外で未生成の例外情報を参照するテスト側AttributeErrorを検出した。systematic-debuggingで原因を追跡し、assertRaisesと後続assertをsubTest内へ揃えて再実験した。元checkoutは誤り注入先にしていない。
+
+Refactor要否：整形とimport元のcollections.abcへの修正のみ、責務の追加分割不要。Ruff import整理・format・check成功。独立レビューはタスク1 Critical/Important 0・Minor 1（診断優先順位の検査不足）。既存未対応テストへ混在例を追加し初回Green、タスク2レビュー時に解消を確認。タスク2と修正後タスク1はCritical/Important/Minor 0。単独6件が解析/選択を検証、既存計算テストが式/設定を補完。run接続・設定寿命・実入口・探索停止はこの段階で未検証。実装保存はタスク1・2をまとめる（段階ごとのRed/Green・独立レビューは分離して実施）。
