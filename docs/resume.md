@@ -2,11 +2,13 @@
 
 ## 現在地
 
-2026-10-12、「時計入力を受けて応答を止める仕組みの学習・設計だけ」の設計全体を本人が「承認する」と明示承認。[承認済み設計](plans/2026-10-11-clock-input-time-management-design.md)、[確認範囲・既存ソフト比較](plans/2026-10-12-clock-input-verification-review.md)、[学習・合意記録](learning/clock-input-time-management.md)を参照。監査3残件は個別判断済み、独立再レビューCritical/Important/Minorすべて0。具体方式はmacOS対象、他OS移植箇所を文書と将来コードへ明記する要件あり。実装計画作成・コード/テスト変更・TDDは未承認で未着手。本人の別承認でmain統合と取り込み先の文書検証を完了。最後の理解確認は本人がAを選択し、未完了Bを採用できない理由を補足して完了。本設計テーマは完了、次テーマの選定待ち。
+2026-10-12、本人が次テーマ「時計設定・時間配分の実装計画だけ」を選び、新セッション準備を依頼。[引き継ぎ](handover-time-budget-implementation-plan.md)へ選定理由・前テーマの判断背景・物理状態・検証と限界・次に読む資料を記録した。人間が[再開用プロンプト](handover-time-budget-implementation-plan.md#再開用プロンプト)を新セッションへ入力するまで、次テーマの学習・調査・計画作成を始めない。
 
-開始時HEAD c919594、場所 /Users/oki2a24/kaname-shogi、ブランチ codex/clock-input-time-management-handoff。開始時差分なし、Ruff 0.16.10は固定版一致、hooksPathは.githooks。設計・承認記録の文書6件を3645144へコミット済み。レビュー・保存結果記録2bce850を含め、本人のok後にmainへ早送り統合済み。取り込み先の差分検査成功、文書7件の相対リンク450件欠落0（アンカー除外）。現在は元の作業場所のmain。取り込み結果記録8791732。最後の回答と次候補の保存結果はGitログと学習記録を参照。pushなし。
+次回は四設定の読込・検証と時間予算計算の実装計画だけ。入力並行処理・USIへの組込み・探索中断を実装しない。計画の選定は完成した計画や実装開始への承認ではなく、作成後の明示承認を待つ。コード・テスト・設定変更、TDD、計測・対局・ShogiHome操作は対象外。main取り込みも別承認。
 
-前テーマの40手/41手比較で終局の違いは観測済みだが、長考原因の仮説は未検証。[過去の実施記録](learning/long-think-scope-design.md)と[開始時の引き継ぎ](handover-clock-input-time-management.md)を履歴として参照する。過去の362件成功や計測を今回の検証として扱わない。ShogiHome操作・ログ追加分析・再計測・対局・製品コード・テスト・設定ファイル変更は行っていない。
+作業場所 /Users/oki2a24/kaname-shogi、準備開始HEAD 1235931、準備ブランチ codex/time-budget-plan-handoff。mainから分岐、準備文書はmain未統合、pushなし。開始時差分なし、Ruff 0.16.10固定版一致・hooksPath=.githooksを確認済み。準備コミット結果はGitログと引き継ぎを参照し、次回は再確認する。
+
+前テーマ「時計入力を受けて応答を止める仕組みの学習・設計だけ」は設計全体承認・独立レビュー・main統合・文書検証・最後の理解確認まで完了。[承認済み設計](plans/2026-10-11-clock-input-time-management-design.md)、[比較と確認範囲](plans/2026-10-12-clock-input-verification-review.md)、[学習記録](learning/clock-input-time-management.md)。設計と記録はmainへ取り込み済み、製品実装・実時間安全性検証は未実施。約28.4秒は一例の許容判断で、他局面・秒読み後は未保証。40手上限と長考原因の仮説も未検証。
 
 ## 二手先読み設計の完了
 
