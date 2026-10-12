@@ -2,7 +2,7 @@
 
 ## 現在の選択
 
-2026-10-12、「時計入力を受けて応答を止める仕組みの学習・設計だけ」は、設計全体承認・独立レビュー・main統合・取り込み先文書検証・最後の理解確認まで完了。[承認済み設計](plans/2026-10-11-clock-input-time-management-design.md)、[比較と確認範囲](plans/2026-10-12-clock-input-verification-review.md)、[学習記録](learning/clock-input-time-management.md)を参照。実装・TDD・実測安全性検証は未実施。40手上限と長考原因の仮説も未検証。以前の調査と選定の経緯は[引き継ぎ](handover-clock-input-time-management.md)と[調査記録](learning/long-think-scope-design.md)に保持。作業状態は[再開案内](resume.md)。main統合済み、pushなし。本人は次テーマ「時計設定・時間配分の実装計画だけ」を選定し、新セッション準備を依頼。[引き継ぎ](handover-time-budget-implementation-plan.md)を作成。新セッションで計画作成を開始し、[計画案](plans/2026-10-12-time-budget-implementation-plan.md)を作成。計画内容の明示承認後、本人の実装開始依頼により設定読込と予算計算を実装・検証。最終レビュー指摘なし、実装・検証・記録済み。main統合は別承認待ち。現在地は再開案内を参照。
+2026-10-12、「時計入力を受けて応答を止める仕組みの学習・設計だけ」は、設計全体承認・独立レビュー・main統合・取り込み先文書検証・最後の理解確認まで完了。[承認済み設計](plans/2026-10-11-clock-input-time-management-design.md)、[比較と確認範囲](plans/2026-10-12-clock-input-verification-review.md)、[学習記録](learning/clock-input-time-management.md)を参照。実装・TDD・実測安全性検証は未実施。40手上限と長考原因の仮説も未検証。以前の調査と選定の経緯は[引き継ぎ](handover-clock-input-time-management.md)と[調査記録](learning/long-think-scope-design.md)に保持。作業状態は[再開案内](resume.md)。main統合済み、pushなし。本人は次テーマ「時計設定・時間配分の実装計画だけ」を選定し、新セッション準備を依頼。[引き継ぎ](handover-time-budget-implementation-plan.md)を作成。新セッションで計画作成を開始し、[計画案](plans/2026-10-12-time-budget-implementation-plan.md)を作成。計画内容の明示承認後、本人の実装開始依頼により設定読込と予算計算を実装・検証。最終レビュー指摘なし。本人の別承認でmain統合・取り込み先検証済み、最後の理解確認の回答待ち。次テーマはまだ選ばない。現在地は再開案内を参照。
 
 ## 設計完了後に提示した候補（候補1を選定）
 

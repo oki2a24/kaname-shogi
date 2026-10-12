@@ -2,11 +2,11 @@
 
 ## 現在地
 
-2026-10-12、本人が承認済み計画に沿う準備と実装開始を依頼。設定読込タスク1をf54e3ebへ保存し、時間予算計算タスク2を実装。[計画](plans/2026-10-12-time-budget-implementation-plan.md)、[実装・検証記録](learning/time-budget-implementation-plan.md)、[参照メモ](knowledge/time-budget.md)。最終独立レビューCritical/Important/Minorすべて0、記録・コミットを完了してmain取り込みの別承認待ち。保存コミットはGitログを参照。
+2026-10-12、本人がローカルmainへの取り込みを選択。元の作業場所で1235931から3d01687へ早送り統合し、取り込み先検証まで完了。[計画](plans/2026-10-12-time-budget-implementation-plan.md)、[実装・検証・統合記録](learning/time-budget-implementation-plan.md)、[参照メモ](knowledge/time-budget.md)。最後の理解確認を一問提示し、本人回答待ち。次テーマへ進まない。
 
-場所 /Users/oki2a24/kaname-shogi、ブランチcodex/time-budget-plan-handoff。実装準備開始HEAD f70fe79、差分なし、Ruff 0.16.10固定版一致・hooksPath=.githooks。ベースライン362件、タスク1全370件、タスク2全374件成功。後続USI組込み・並行入力・探索中断・計測・対局は未着手。最後の理解確認はmain統合・取り込み先検証後。
+場所 /Users/oki2a24/kaname-shogi、現在main。統合時HEAD 3d01687、差分なし。Ruff 0.16.10固定版一致・hooksPath=.githooks。取り込み先全374件、Ruff整形30ファイル・lint、差分検査成功。取り込み文書の相対リンク484件欠落0（アンカー除外）。統合結果の文書保存コミットはGitログ参照。pushなし、作業ブランチは履歴として保持。後続USI組込み・並行入力・探索中断・計測・対局は未着手。
 
-前テーマの[全体設計](plans/2026-10-11-clock-input-time-management-design.md)は承認・main統合・理解確認まで完了。[確認範囲](plans/2026-10-12-clock-input-verification-review.md)、[学習記録](learning/clock-input-time-management.md)。製品実装・実時間安全性検証は未実施。約28.4秒は一例の許容判断で、他局面・秒読み後は未保証。40手上限と長考原因の仮説も未検証。
+前テーマの[全体設計](plans/2026-10-11-clock-input-time-management-design.md)は承認・main統合・理解確認まで完了。[確認範囲](plans/2026-10-12-clock-input-verification-review.md)、[学習記録](learning/clock-input-time-management.md)。時計入力・探索停止全体の実装と実時間安全性検証は未実施（設定読込・予算計算のみ今回実装）。約28.4秒は一例の許容判断で、他局面・秒読み後は未保証。40手上限と長考原因の仮説も未検証。
 
 ## 二手先読み設計の完了
 

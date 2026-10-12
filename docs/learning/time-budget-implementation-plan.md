@@ -65,3 +65,13 @@ Refactor要否: 整形以外の変更は不要。設定読込と計算の責務�
 文書7件の相対リンク477件欠落0（アンカー除外）、git diff --check成功。実装コードは新規モジュールとテスト・設定だけで、USI/探索/既存テストは未変更。タスク1 f54e3eb、タスク2以後の保存結果はGitログを参照。作業場所は元の /Users/oki2a24/kaname-shogi、作業ブランチcodex/time-budget-plan-handoff。main未統合、pushなし。取り込み先検証と最後の理解確認は未実施。
 
 通常権限のgit add/commitはindex.lock作成の権限制約で失敗し、承認された実装保存の範囲として権限昇格でコミット。自動承認レビューの拒否はなし。実装範囲・API・式・許容範囲の変更なし。スキル補助の日本語見出し非対応は手動台帳で補完した。
+
+## main取り込みと取り込み先検証
+
+2026-10-12、本人が統合メニューの「1」（ローカルmainへの取り込み）を選択。元の /Users/oki2a24/kaname-shogi でgit switch main、git merge --ff-only codex/time-budget-plan-handoffを実行、mainを1235931から3d01687へ早送り。準備文書c7da760、計画f70fe79、設定f54e3eb、計算3d01687を含む12ファイル。pushなし。作業ブランチは履歴として保持する。
+
+取り込み先で /usr/bin/python3 -m unittest discover -s tests -v は374件成功（5.357秒）。.venv/bin/ruff format --check . は30ファイル整形済み、ruff check . はAll checks passed。git diff --check 1235931..HEAD成功。取り込み文書の相対リンク484件欠落0（アンカー除外）。統合直後のgit statusはmain、差分なし。
+
+最後の理解確認：今回の設定読込・時間予算計算がmainへ入った時点で、ShogiHomeとの対局でも時間予算に達すると探索が止まるようになったか。理由も含めて一問提示する。本人回答はまだない。次テーマへ進まない。
+
+統合状態更新5文書の独立レビューCritical 0・Important 0・Minor 0。更新5文書の相対リンク444件欠落0（アンカー除外）、git diff --check成功。コード変更がないため状態更新後の単体テスト再実行は不要と判断し、直前の取り込み先374件の実績と区別して記録する。通常コミットで統合結果を保存し、最後の理解確認への本人回答を待つ。
