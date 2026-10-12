@@ -2,9 +2,9 @@
 
 ## 現在地
 
-2026-10-12、本人が[USI時計受付・設定接続計画](plans/2026-10-12-usi-clock-settings-implementation-plan.md)を承認後、実装開始を明示依頼。時計解析・自分側予算・起動設定保持・go接続を実装し、全389件/Ruff/代表変異9種を確認。全タスクとブランチ全体の独立レビュー完了（最終Critical/Important/Minor 0）。[学習・検証記録](learning/usi-clock-settings-implementation-plan.md)。時間停止は未実装。
+2026-10-12、USI時計受付・設定接続は実装・独立レビュー・main統合・取り込み先389件/Ruff検証・最後の理解確認まで完了。[実施記録](learning/usi-clock-settings-implementation-plan.md)。予算計算まで接続済みで、探索停止は未実装。
 
-2026-10-12、本人が選択肢「1」でローカルmainへの取り込みを承認。元ディレクトリ /Users/oki2a24/kaname-shogi のmainへee3cac0から341c106まで早送り統合済み。別worktreeなし、作業ブランチ保持、pushなし。取り込み先で全389件・Ruff整形31ファイル/lintを確認。最後の理解確認で予算計算と探索停止の区別を補足し、本人の再回答「未実装。」を確認して完了。次テーマは未選定で、[候補](next-topics.md)を提示して選定を待つ。後続の並行入力・探索中断・計測対局へ進まない。
+本人が次テーマ「探索停止・途中結果の実装計画だけ」を選定し、新セッション準備を依頼。[引き継ぎ](handover-search-stop-implementation-plan.md#再開用プロンプト)のプロンプトを人間が新セッションへ入力するのを待つ。今回の準備開始はmain 3ddd7c5、現在は同じ場所 /Users/oki2a24/kaname-shogi のcodex/search-stop-plan-handoff。別worktreeなし、準備文書はmain未統合。この準備でpushなし。次テーマの学習・計画作成・実装は未開始。次回も計画作成・レビュー・提示までとし、提示後の明示承認とmain取り込みの別承認を待つ。
 
 設定読込・予算計算の[計画](plans/2026-10-12-time-budget-implementation-plan.md)と実装はmain統合・取り込み先374件/Ruff/文書検証・最後の理解確認まで完了。[実装記録](learning/time-budget-implementation-plan.md)、[参照メモ](knowledge/time-budget.md)。前テーマは部品のみの実装で、現在は本テーマで時計受付・設定保持・予算計算までUSIへ接続済み。時間停止は未実装。
 
