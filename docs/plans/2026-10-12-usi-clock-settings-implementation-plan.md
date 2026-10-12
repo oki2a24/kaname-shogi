@@ -144,7 +144,7 @@ mainは設定読込だけを囲むtryでValueError/OSErrorをstderrの `USIエ�
 - [x] `python3 -m unittest discover -s tests -p test_usi_clock.py -v`、同じ形式のtest_usi_engine.py・test_usi_engine_launcher.py・test_time_management.pyを実行し失敗/エラー0。全体 `python3 -m unittest discover -s tests -v` で回帰確認。
 - [x] 将来の実装記録に契約・固定期待値・検出対象・単独/全体補完・未検証、実コマンドとRed/Green/誤り注入、Refactor判断、Critical/Important/Minorと対応を記す。
 - [x] 利用案内を「時計検証・設定読込・予算計算まで接続、時間停止は未実装」と更新。文書の相対リンク/見出し、git diff --check、差分を確認し、独立最終レビュー後に対象だけステージ・通常コミット。フックを回避しない。
-- [ ] 実装・検証・レビュー・記録がそろった時点で本人へ提示。main取り込みは別承認後、取り込み先検証を行う。最後の理解確認は一問だけ提示して回答を待つ。後続の探索制御を自動開始しない。
+- [x] 実装・検証・レビュー・記録がそろった時点で本人へ提示。main取り込みは別承認後、取り込み先検証を行う。最後の理解確認は一問だけ提示して回答を待つ。後続の探索制御を自動開始しない。
 
 ## 未検証・承認段階
 
@@ -165,3 +165,8 @@ mainは設定読込だけを囲むtryでValueError/OSErrorをstderrの `USIエ�
 2026-10-12、本人回答「1」によりローカルmainへの取り込みを承認。元ディレクトリ /Users/oki2a24/kaname-shogi で `git switch main`、`git merge --ff-only codex/usi-clock-plan-handoff` によりee3cac0から341c106へ早送り統合。作業ブランチ保持、別worktree・pushなし。Git書込みは権限昇格を使用し、自動承認レビューの拒否・フック回避なし。
 
 取り込み先で `.venv/bin/python -m unittest discover -s tests -v` は389件成功（6.018秒）、`.venv/bin/ruff format --check .` は31ファイル整形済み、`.venv/bin/ruff check .` と `git diff --check` 成功。統合後は状態記録のみ更新し、コード変更なしのため全体テストを重複実行しない。上記のmain未承認・未実施は統合前の履歴。最後の理解確認は未回答で、終了ゲートは未完了のまま保持する。
+
+
+## 理解確認完了
+
+2026-10-12、予算計算と探索停止の区別を補足後、本人の再回答「未実装。」を確認。最後の理解確認と終了ゲートを完了。上記の回答待ち・ゲート未完了は当時の履歴。次テーマは未選定で、自動開始しない。
