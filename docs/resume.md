@@ -2,13 +2,13 @@
 
 ## 現在地
 
-2026-10-12、入力並行処理・USI接続はmain取り込み・取り込み先456件/Ruff・独立最終レビュー・最後の理解確認まで完了。[実施記録](learning/input-concurrency-usi-plan.md)、[現行仕様](knowledge/usi-engine-response.md)。実装a11d132、統合記録54fb871、理解確認fe4371dはmainにある。厳密期限・接続後の実機対局安全性は未検証。
+2026-10-12、「時計・停止接続後の実機確認条件だけを決める」を開始。[条件案](plans/2026-10-12-clock-stop-real-check-conditions.md)、[学習・レビュー記録](learning/clock-stop-real-check-conditions.md)。4パターンについて本人は「ok」。速すぎる応答への指摘を受け、公開ベンチマーク2候補と事前選定（最大4起動）を追加し、4例を選定SFENへそろえる改訂案を作成。本人「改訂案を承認する」により改訂全体を承認済み。実施開始指示は未受領、main取り込みは別承認。コード・テスト・設定変更、エンジン起動・アプリ操作・ログ採取・計測・対局は未実施。
 
-本人は「時計・停止接続後の実機確認条件だけを決める」を選定し、新セッション準備を依頼。[引き継ぎ](handover-clock-stop-real-check-conditions.md)に選定理由、背景、物理状態、指定資料、未検証を保存。条件は未作成・未承認。学習・条件検討は新セッションへ本人が入力してから開始する。実機操作・計測・対局・コード/テスト/設定変更は今回範囲外。
+時計・探索停止・入力並行処理はmain統合済み。[現行仕様](knowledge/usi-engine-response.md)、[前テーマの記録](learning/input-concurrency-usi-plan.md)。厳密期限・接続後の実機安全性は未検証。手順書・スキルの時計未使用、時間予算メモ冒頭の停止未接続は現行仕様と不一致。条件案に列挙し、実施前の文書整合を開始条件とした。元資料は今回未修正。
 
-作業場所 `/Users/oki2a24/kaname-shogi`、準備ブランチ `codex/clock-stop-real-check-conditions-handoff`、準備開始HEAD fe4371d。別worktreeなし。mainの実装は統合済み、今回の準備文書はmain未統合。Ruff0.16.10・hooksPath=.githooks一致。pushなし。
+作業場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/clock-stop-real-check-conditions-handoff`、開始HEAD45a87fd、別worktreeなし。指定4コマンドで開始時clean・Ruff0.16.10・hooksPath=.githooksを確認。今回の文書はmain未統合、pushなし。開始背景は[引き継ぎ](handover-clock-stop-real-check-conditions.md)に保持する。
 
-新セッションでは[再開用プロンプト](handover-clock-stop-real-check-conditions.md#再開用プロンプト)を本人が入力する。本文は引き継ぎに一か所保存する。
+初版の独立レビューImportant1件（初期応答待ちの期限不足）は修正・再レビュー全重大度0。事前選定追加後は独立レビューCritical/Important0・Minor2件を修正、文書リンク・差分検証済み。改訂案承認を受領。次は予備確認を含む実施開始指示を待つ。main未統合。実施前には現版・画面・登録・棋譜状態の確認と、必要なログ/設定/保存先/外部ドライバー具体案の別承認が必要。最初の理解確認への回答と補足は学習記録へ保存済み。
 
 ## 二手先読み設計の完了
 
