@@ -2,11 +2,13 @@
 
 ## 現在地
 
-2026-10-12、入力並行処理・USI接続の実装・検証・独立再レビューを完了し、本人「１」によりmainへa9159d4までfast-forward統合済み。[実施記録](learning/input-concurrency-usi-plan.md)、[仕様](knowledge/usi-engine-response.md)、[承認済み計画](plans/2026-10-12-input-concurrency-usi-implementation-plan.md)。取り込み先で全456件成功（9.817秒）、Ruff整形38ファイル・lint成功。コードの最終独立レビューCritical/Important/Minor全0。
+2026-10-12、入力並行処理・USI接続はmain取り込み・取り込み先456件/Ruff・独立最終レビュー・最後の理解確認まで完了。[実施記録](learning/input-concurrency-usi-plan.md)、[現行仕様](knowledge/usi-engine-response.md)。実装a11d132、統合記録54fb871、理解確認fe4371dはmainにある。厳密期限・接続後の実機対局安全性は未検証。
 
-作業場所 `/Users/oki2a24/kaname-shogi`、現在main。計画d562cfb、入力源e66dc6d、接続・回収a11d132、実装記録a9159d4を取り込み済み。別worktreeなし。git pull --ff-onlyはAlready up to date、pushなし。Ruff0.16.10・hooksPath=.githooks一致。開始時の経緯は[引き継ぎ](handover-input-concurrency-usi-plan.md)に保持する。計測・対局・係数調整・ShogiHome再確認は未実施、厳密な期限内応答は保証しない。
+本人は「時計・停止接続後の実機確認条件だけを決める」を選定し、新セッション準備を依頼。[引き継ぎ](handover-clock-stop-real-check-conditions.md)に選定理由、背景、物理状態、指定資料、未検証を保存。条件は未作成・未承認。学習・条件検討は新セッションへ本人が入力してから開始する。実機操作・計測・対局・コード/テスト/設定変更は今回範囲外。
 
-最後の理解確認へ本人「処理プロセスを完了させるため」と回答。スレッド終了をjoinで待ち、探索担当と共有乱数器の重複利用を防ぐ補足と区別して[学習記録](learning/input-concurrency-usi-plan.md)へ保存。今回テーマは完了。次は[候補](next-topics.md)から本人の選定を待ち、新テーマは未開始。
+作業場所 `/Users/oki2a24/kaname-shogi`、準備ブランチ `codex/clock-stop-real-check-conditions-handoff`、準備開始HEAD fe4371d。別worktreeなし。mainの実装は統合済み、今回の準備文書はmain未統合。Ruff0.16.10・hooksPath=.githooks一致。pushなし。
+
+新セッションでは[再開用プロンプト](handover-clock-stop-real-check-conditions.md#再開用プロンプト)を本人が入力する。本文は引き継ぎに一か所保存する。
 
 ## 二手先読み設計の完了
 
