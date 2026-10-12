@@ -55,6 +55,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
 | 時計・停止接続後の実機確認条件 | [学習・レビュー](learning/clock-stop-real-check-conditions.md) | [USI現行仕様](knowledge/usi-engine-response.md) | [条件案](plans/2026-10-12-clock-stop-real-check-conditions.md) | — | [開始背景](handover-clock-stop-real-check-conditions.md) |
+| 通常停止の再確認条件 | — | [USI現行仕様](knowledge/usi-engine-response.md)、[探索停止](knowledge/search-stop.md) | — | — | [開始背景・再開プロンプト](handover-normal-stop-recheck-conditions.md) |
 | 将棋の全体像（第1回） | [第1回](learning/01-shogi-overview.md) | [将棋の全体像](knowledge/01-shogi-overview.md) | — | — | — |
 | 駒の動きと成り（第2回） | [第2回](learning/02-piece-movement-and-promotion.md) | [駒の動きと成り](knowledge/02-piece-movement-and-promotion.md) | — | — | — |
 | 初期配置と盤上の座標（第3回） | [第3回](learning/03-initial-setup-and-coordinates.md) | [初期配置と盤上の座標](knowledge/03-initial-setup-and-coordinates.md) | — | — | — |
