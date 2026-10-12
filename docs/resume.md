@@ -4,11 +4,11 @@
 
 2026-10-12、探索停止・途中結果の部品はmain統合・取り込み先425件/Ruff・文書検証・最後の理解確認まで完了。[実装記録](learning/search-stop-implementation-plan.md)、[確定仕様](knowledge/search-stop.md)。USI/CLIは探索部品へ未接続で、実USIの0予算は従来の通常比較後に応答する。実時間安全性・計測・対局は未検証のまま。
 
-本人は次テーマ「入力並行処理・USI接続の実装計画だけ」を選定し、新セッションの準備を依頼。[引き継ぎ](handover-input-concurrency-usi-plan.md)を作成し、人間による[再開用プロンプト](handover-input-concurrency-usi-plan.md#再開用プロンプト)の入力を待つ。次テーマの学習・計画作成・実装は未開始。対象は計画作成・レビュー・提示まで。具体計画の本人承認、実装開始指示、main取り込み承認はそれぞれ別段階。
+本人の再開プロンプト入力により「入力並行処理・USI接続の実装計画だけ」を開始。[計画案](plans/2026-10-12-input-concurrency-usi-implementation-plan.md)を作成・文書検証・独立再レビュー（Critical/Important/Minor全0）し、提示後、本人「承認する」により計画承認済み。実装開始指示待ち。[学習記録](learning/input-concurrency-usi-plan.md)に原点の確認問題・本人回答と検証・レビューを記録。対象は計画作成・レビュー・提示まで。具体計画の本人承認、実装開始指示、main取り込み承認はそれぞれ別段階。コード・テスト・設定変更、TDD、実装、計測・対局は未開始。
 
-準備場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/input-concurrency-plan-handoff`、開始HEAD `53efe10`（mainの理解確認記録）。別worktreeなし。引き継ぎ・再開案内・候補・索引の文書だけを保存する。今回の準備ブランチはmain未統合、pull・pushなし。前テーマの統合は`522614c`まで、取り込み先検証記録`cf17f62`、回答記録`53efe10`。保存後のHEADは新セッションで現物を確認する。
+作業場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/input-concurrency-plan-handoff`、今回の開始HEAD `06e288a`、開始差分なし。Ruff0.16.10・hooksPath=.githooks一致。別worktreeなし。現在の変更は計画・学習記録と入口の文書だけ、未コミット。準備ブランチはmain未統合、pull・pushなし。前テーマの統合・検証・回答の経緯は[開始時引き継ぎ](handover-input-concurrency-usi-plan.md)に保持する。
 
-次は引き継ぎの順に全体設計・確認範囲・探索部品引渡し・USI現行コードを読む。背景・未検証・具体的な最初のコマンドは引き継ぎ本文に集約した。人間の再開プロンプト入力前に次テーマを開始しない。
+次は本人の実装開始指示を待つ。承認だけで実装開始へ進まない。背景と開始資料は引き継ぎ、実施した確認と未検証は学習記録へ集約する。
 
 ## 二手先読み設計の完了
 
