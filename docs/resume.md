@@ -6,9 +6,9 @@
 
 現在はRandom（Rのsetoption確認）、双方10分＋30秒/加算0・Ponder OFF・時間切れありON、全ログOFF/INFOの再起動反映、before-G2.kif平手開始局面、06:52:26稼働各0を確認。今回の最大4起動はS1/G2/S2/R各直前予約、全件close0、go1・bestmove1。新保存先 `/private/tmp/kaname-clock-stop-G2-restart-20261013-cca2681/` に台帳・元棋譜・G2.kif、USIログ `/Users/oki2a24/Library/Logs/electron-shogi/usi-20261013_064743.log`。Rの棋譜だけ保存せず破棄。以前の台帳/違反/総数不確定は履歴を保全。
 
-本人承認後、2026-10-13にmainへfast-forward統合済み。統合先の相対リンク507件欠落0、show --check/diff --check成功。作業ツリー clean。次は最後の理解確認を一問行い、本人回答を学習記録へ追記してから次候補を見直す。
+最後の理解確認に本人が「両方の確認完了前に手が帰ってきたから」と回答し、応答と通常停止の条件を区別した。[回答・補足と実施結果](learning/clock-stop-real-check-conditions.md)。2026-10-13にmainへfast-forward統合済み。G2は秒読み一応答を確認した部分結果で、通常停止は未達のまま。物理状態はRandom・双方10分＋30秒/加算0・Ponder OFF・全ログOFF/INFO・元棋譜・稼働0へ復帰済み。次テーマ候補を[一覧](next-topics.md)に整理した。本人が選ぶまで新しい学習・実装・実機確認は始めない。
 
-作業場所 `/Users/oki2a24/kaname-shogi`、mainは統合後記録まで反映済み。開始HEAD fe4371dから作業ブランチの3コミットをfast-forward統合。統合先の文書リンク検証507件欠落0、git show --check・diff --check成功。現在の作業ツリーはclean。mainはorigin/mainより22コミット先行、pushしていない。製品コード・テスト・係数JSON変更なし。Ruff0.16.10、hooksPath=.githooks。生ログの共有・削除なし。
+作業場所 `/Users/oki2a24/kaname-shogi`。2026-10-13の記録更新後はmainの作業ツリーclean、origin/mainへ未push。開始HEAD fe4371dから作業ブランチの3コミットをfast-forward統合。取り込み先リンク507件欠落0、記録更新の文書差分検証済み。製品コード・テスト・係数JSON変更なし。Ruff0.16.10、hooksPath=.githooks。生ログの共有・削除なし。
 
 ## 二手先読み設計の完了
 

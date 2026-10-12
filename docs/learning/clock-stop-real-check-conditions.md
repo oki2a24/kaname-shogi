@@ -219,3 +219,8 @@ G2部分結果と復帰の独立レビューCritical0・Important0・Minor0。�
 ## main統合と取り込み先検証
 
 本人「ok」を別途求めていたmain取り込み承認として受領。作業ツリーclean、mainが開始HEAD fe4371dの祖先、作業ブランチが3コミット先行することを確認し、`git switch main && git merge --ff-only codex/clock-stop-real-check-conditions-handoff` を実行。mainは8afddebへfast-forwardし、引き継ぎ準備コミット45a87fdと記録コミットcca2681/8afddebの変更が取り込まれた。取り込み先の相対リンク507件欠落0、`git show --check --oneline HEAD` と `git diff --check main^ main` 成功、作業ツリーclean。origin/mainより21コミット先行のローカルmainで、pushは行っていない。製品コード・テスト・係数JSON変更なし、文書のみのため全体テストなし。最後の理解確認を一問出し、回答後に記録して次テーマ候補を見直す。
+
+
+## 最後の理解確認
+
+本人の回答：「両方の確認完了前に手が帰ってきたから」。補足：4.516秒の合法bestmoveで秒読み条件下の一応答は確認できたが、通常停止を操作する前に探索が完了した。続いて人間側の秒読み切れ負けで終局し、停止操作の成立・応答は観測していない。従って応答確認と停止確認は別の観測条件であり、今回満たしたのは前者だけ。探索が停止した内部因果や、他局面の時間保証も確認していない。
