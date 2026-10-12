@@ -2,7 +2,7 @@
 
 ## 現在の選択
 
-2026-10-12、本人選定の入力並行処理・USI接続は計画承認と実装開始指示を受け、実装・接続検証・レビューを進行中。[計画](plans/2026-10-12-input-concurrency-usi-implementation-plan.md)、[実施記録](learning/input-concurrency-usi-plan.md)、[現在地](resume.md)。main取り込みは別承認。統合・検証・最後の理解確認を終えるまで次テーマは始めない。以下の候補は選定時の履歴として保持する。
+2026-10-12、本人選定の入力並行処理・USI接続は計画承認と実装開始指示を受け、実装・接続検証・独立再レビューを完了しa11d132へ保存済み。[計画](plans/2026-10-12-input-concurrency-usi-implementation-plan.md)、[実施記録](learning/input-concurrency-usi-plan.md)、[現在地](resume.md)。main取り込みは別承認。統合・検証・最後の理解確認を終えるまで次テーマは始めない。以下の候補は選定時の履歴として保持する。
 
 ## 探索部品完了後の候補（小さい順、候補1を選定）
 
