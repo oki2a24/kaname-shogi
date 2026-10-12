@@ -158,3 +158,10 @@ mainは設定読込だけを囲むtryでValueError/OSErrorをstderrの `USIエ�
 ## 実装開始後の現在状態
 
 2026-10-12、本人「では実装を開始して下さい。適切なスキルを使い、進めて下さい」により実装開始。上記の「今回は実行しない」「未実施」「Git保存しない」等は計画作成時の履歴。時計解析・先後選択・起動時設定保持・goへの予算準備を実装し、全389件成功、Ruff成功、代表変異9種を検出。タスク1・2の保存bf3ca1b、計画保存d942386。タスク3・ブランチ全体の独立レビューは最終Critical/Important/Minor 0。タスク3と記録を9fd4f10へ保存し、最終全389件成功（6.185秒）。main取り込みは未承認・未実施。詳細は学習記録。
+
+
+## main統合後の現在状態
+
+2026-10-12、本人回答「1」によりローカルmainへの取り込みを承認。元ディレクトリ /Users/oki2a24/kaname-shogi で `git switch main`、`git merge --ff-only codex/usi-clock-plan-handoff` によりee3cac0から341c106へ早送り統合。作業ブランチ保持、別worktree・pushなし。Git書込みは権限昇格を使用し、自動承認レビューの拒否・フック回避なし。
+
+取り込み先で `.venv/bin/python -m unittest discover -s tests -v` は389件成功（6.018秒）、`.venv/bin/ruff format --check .` は31ファイル整形済み、`.venv/bin/ruff check .` と `git diff --check` 成功。統合後は状態記録のみ更新し、コード変更なしのため全体テストを重複実行しない。上記のmain未承認・未実施は統合前の履歴。最後の理解確認は未回答で、終了ゲートは未完了のまま保持する。

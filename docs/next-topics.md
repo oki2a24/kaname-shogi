@@ -2,7 +2,7 @@
 
 ## 現在の選択
 
-2026-10-12、時計設定・時間配分の計画承認・実装・独立レビュー・main統合・取り込み先検証・最後の理解確認まで完了。[実施記録](learning/time-budget-implementation-plan.md)、[承認済み計画](plans/2026-10-12-time-budget-implementation-plan.md)、現在地は[再開案内](resume.md)。前テーマでは設定読込・予算計算を実装済み。時計受付・設定保持のUSI接続は本テーマで実装し、探索停止・実時間安全性検証は未実施。本人は次候補1「USI時計受付・設定接続の実装計画だけ」を選定し、新セッション準備を依頼。[引き継ぎ](handover-usi-clock-settings-implementation-plan.md)を作成。本人の再開プロンプト入力を受け、[計画案](plans/2026-10-12-usi-clock-settings-implementation-plan.md)を作成・独立レビュー・提示し、本人が「承認する」と回答して計画内容を明示承認。その後、本人の実装開始指示を受け時計検証・設定保持・予算準備の接続を実装し、検証・最終独立レビューを完了。main取り込みは未承認。過去の選定理由と開始状態は[引き継ぎ](handover-time-budget-implementation-plan.md)へ保持する。
+2026-10-12、時計設定・時間配分の計画承認・実装・独立レビュー・main統合・取り込み先検証・最後の理解確認まで完了。[実施記録](learning/time-budget-implementation-plan.md)、[承認済み計画](plans/2026-10-12-time-budget-implementation-plan.md)、現在地は[再開案内](resume.md)。前テーマでは設定読込・予算計算を実装済み。時計受付・設定保持のUSI接続は本テーマで実装し、探索停止・実時間安全性検証は未実施。本人は次候補1「USI時計受付・設定接続の実装計画だけ」を選定し、新セッション準備を依頼。[引き継ぎ](handover-usi-clock-settings-implementation-plan.md)を作成。本人の再開プロンプト入力を受け、[計画案](plans/2026-10-12-usi-clock-settings-implementation-plan.md)を作成・独立レビュー・提示し、本人が「承認する」と回答して計画内容を明示承認。その後、本人の実装開始指示を受け時計検証・設定保持・予算準備の接続を実装し、検証・最終独立レビューを完了。本人が選択肢「1」でmain取り込みを承認し、元ディレクトリのmainへ統合・取り込み先検証を完了。最後の理解確認は本人回答待ちで、次テーマは未選定。過去の選定理由と開始状態は[引き継ぎ](handover-time-budget-implementation-plan.md)へ保持する。
 
 ## 設定・時間配分完了後の候補（小さい順、候補1を選定）
 
