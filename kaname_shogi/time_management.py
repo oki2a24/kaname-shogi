@@ -125,3 +125,71 @@ def load_time_management_config(path: Optional[Path] = None) -> TimeManagementCo
         raise ValueError(f"{source_path}: {error}") from error
     except OSError as error:
         raise OSError(f"{source_path}: {error}") from error
+
+
+@dataclass(frozen=True)
+class SearchBudget:
+    """目標と上限を整数msの期間で持つ不変データ。
+
+    引数:
+        target_ms: 0以上でmaximum_ms以下の目標期間。
+        maximum_ms: 0以上の上限期間。
+    戻り値:
+        構築したSearchBudget。
+    副作用:
+        なし。型・範囲の違反はValueError。boolも拒否する。
+    前提条件・設計理由:
+        絶対期限ではなく期間を保持し、時計原点や探索制御に依存しない。
+        目標と上限の逆転を構築時にも検出する。
+    """
+
+    target_ms: int
+    maximum_ms: int
+
+    def __post_init__(self) -> None:
+        if (
+            type(self.target_ms) is not int
+            or type(self.maximum_ms) is not int
+            or not 0 <= self.target_ms <= self.maximum_ms
+        ):
+            raise ValueError("予算は整数msで0以上、目標は上限以下が必要です")
+
+
+def calculate_search_budget(
+    remaining_ms: int, byoyomi_ms: int, config: TimeManagementConfig
+) -> SearchBudget:
+    """設定と非負の自分側時計から、目標と上限の期間を計算する。
+
+    引数:
+        remaining_ms: 自分側の残り持ち時間、非負整数ms。
+        byoyomi_ms: 秒読み、非負整数ms。なしは0。
+        config: 検証済みの不変なTimeManagementConfig。
+    戻り値:
+        目標と上限を整数msで持つSearchBudget。
+    副作用:
+        なし。時刻取得・入出力・設定変更・手番カウントは行わない。
+    例外:
+        ValueError: 時計が非負整数でない場合。boolも拒否する。
+    前提条件・設計理由:
+        先後に応じた自分側時計の選択は呼出し側の責務。正の持ち時間は固定
+        分母で先に切捨て、0の場合のみ秒読み配分に切替える。分数と整数だけで
+        計算し、1ms未満を切捨てる。結果は応答時間内の完了保証ではない。
+    """
+    for key, value in (("remaining_ms", remaining_ms), ("byoyomi_ms", byoyomi_ms)):
+        if type(value) is not int or value < 0:
+            raise ValueError(f"{key}は非負整数msが必要です")
+    if remaining_ms > 0:
+        basic_target = remaining_ms // config.allocation_turns
+        clock_boundary = max(0, remaining_ms + byoyomi_ms - config.response_margin_ms)
+        maximum = min(
+            (basic_target * config.maximum_multiplier.numerator)
+            // config.maximum_multiplier.denominator,
+            clock_boundary,
+        )
+        target = min(basic_target, maximum)
+    else:
+        maximum = max(0, byoyomi_ms - config.response_margin_ms)
+        target = (
+            maximum * config.byoyomi_target_ratio.numerator
+        ) // config.byoyomi_target_ratio.denominator
+    return SearchBudget(target, maximum)

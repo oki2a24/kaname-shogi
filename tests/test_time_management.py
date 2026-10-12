@@ -195,3 +195,111 @@ class TimeManagementTests(unittest.TestCase):
         with self.assertRaises(ValueError) as caught:
             self.load_text(VALID.replace(":20,", ":0,"))
         self.assertIn("allocation_turns", str(caught.exception))
+
+    def test_calculates_budget_examples(self):
+        """手計算した期間と上限を整数msで返す。
+
+        分岐・切捨て順序・上限制限・float丸め・巨大値の誤計算を検出する。
+        """
+        default = tm.TimeManagementConfig(20, Fraction(2), Fraction(3, 4), 2000)
+        cases = [
+            (default, 600000, 30000, 30000, 60000),
+            (default, 60000, 30000, 3000, 6000),
+            (default, 10000, 30000, 500, 1000),
+            (default, 1, 30000, 0, 0),
+            (default, 0, 30000, 21000, 28000),
+            (default, 0, 1999, 0, 0),
+            (default, 0, 2000, 0, 0),
+            (default, 0, 2001, 0, 1),
+            (default, 0, 0, 0, 0),
+            (default, 100, 0, 0, 0),
+            (default, 100, 1903, 3, 3),
+            (
+                tm.TimeManagementConfig(3, Fraction(3, 2), Fraction(3, 4), 0),
+                11,
+                0,
+                3,
+                4,
+            ),
+            (
+                tm.TimeManagementConfig(1, Fraction(2), Fraction(29, 100), 0),
+                0,
+                100,
+                29,
+                100,
+            ),
+            (
+                tm.TimeManagementConfig(1, Fraction(10**400), Fraction(3, 4), 0),
+                10,
+                0,
+                10,
+                10,
+            ),
+            (
+                tm.TimeManagementConfig(1, Fraction(2), Fraction(3, 4), 0),
+                10**400,
+                0,
+                10**400,
+                10**400,
+            ),
+        ]
+        for config, remaining, byoyomi, target, maximum in cases:
+            with self.subTest(remaining=remaining, byoyomi=byoyomi, config=config):
+                try:
+                    result = tm.calculate_search_budget(remaining, byoyomi, config)
+                except ValueError:
+                    self.fail("正常入力で予算計算が例外になった")
+                self.assertIsNotNone(result)
+                self.assertEqual(
+                    (result.target_ms, result.maximum_ms), (target, maximum)
+                )
+                self.assertIs(type(result.target_ms), int)
+                self.assertIs(type(result.maximum_ms), int)
+
+    def test_rejects_invalid_clock_values(self):
+        """非負整数以外の時計入力をValueErrorで拒否する。
+
+        bool・小数の暗黙利用と負時間の0扱いを検出する。
+        """
+        config = tm.load_time_management_config()
+        for index in (0, 1):
+            for value in (-1, True, 1.0, "1", None):
+                clocks = [100, 100]
+                clocks[index] = value
+                with (
+                    self.subTest(index=index, value=value),
+                    self.assertRaises(ValueError),
+                ):
+                    tm.calculate_search_budget(*clocks, config)
+
+    def test_rejects_invalid_budget_data(self):
+        """不正な予算データを直接構築でも拒否する。
+
+        負予算・目標上限逆転・整数以外の値の流出を検出する。
+        """
+        for fields in [
+            (-1, 0),
+            (0, -1),
+            (2, 1),
+            (True, 1),
+            (0, True),
+            (0.0, 1),
+            (0, 1.0),
+        ]:
+            with self.subTest(fields=fields), self.assertRaises(ValueError):
+                tm.SearchBudget(*fields)
+
+    def test_keeps_allocation_turns_fixed(self):
+        """反復計算でも固定分母と設定を変えない。
+
+        手番カウンタを内部に持ち配分を増やす誤りを検出する。
+        """
+        from dataclasses import FrozenInstanceError
+
+        config = tm.load_time_management_config()
+        for _ in range(3):
+            result = tm.calculate_search_budget(60000, 30000, config)
+            self.assertEqual((result.target_ms, result.maximum_ms), (3000, 6000))
+            self.assertEqual(config.allocation_turns, 20)
+        with self.assertRaises(FrozenInstanceError):
+            result.target_ms = 1

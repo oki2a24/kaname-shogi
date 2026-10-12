@@ -1,6 +1,6 @@
 # 時計設定・時間配分 実装計画
 
-> **AIエージェントへの指示:** 実装には `executing-plans` または `subagent-driven-development` を使用する。本人の明示承認前に実行しない。下記チェックボックスは将来の実装手順であり、今回は未実施。
+> **AIエージェントへの指示:** 実装には `executing-plans` または `subagent-driven-development` を使用する。本人の明示承認前に実行しない。下記は計画作成時に将来手順として記載。2026-10-12、本人の実装開始依頼後の実績をチェックへ反映。
 
 **目標:** 四設定を厳密に読み、承認済みの式から整数msの時間予算を返す小さい単位を作る。
 
@@ -98,29 +98,29 @@ R=0: 上限=max(0,B−S)、目標=floor(上限×q)。分母Nは手番で減ら�
 
 生産API: 上表のTimeManagementConfigとload_time_management_config。ファイル: time_management.py、test_time_management.py、config/time-management.json（すべて上記の完全な予定パス）。
 
-- [ ] 設定の受理・拒否を一振る舞いずつテスト化。`test_loads_provisional_config` は各欄が20、Fraction(2)、Fraction(3,4)、2000に一致することをassertEqual。`test_accepts_config_boundaries` はN=1、S=0、M=1.0000000000000000001、q=0.0000000000000000001および0.9999999999999999999を受理し正確なFractionと照合。1e400も受理。
-- [ ] `test_rejects_invalid_config` で各キーの欠落・重複、未知、トップレベル配列/null、各欄のbool/文字列/null/object/配列、N=0/-1/1.0、S=-1/0.0、M=1/0/-1、q=0/1/-1、非有限・不正JSONを個別subTestにしassertRaises(ValueError)。直接構築の不正も別に確認する。
-- [ ] `test_reports_config_read_errors` で一時ディレクトリの存在しないファイル・ディレクトリ指定はOSError、不正UTF-8はValueError。権限依存のchmod検査は避け、読込OSErrorをmockでも注入し伝達を確認する。パス/理由を例外文字列で照合。
-- [ ] `test_default_path_is_independent_of_cwd` は実装時のGit管理設定を別cwdから読み、四値一致を確認。明示パスは一時ファイルで別の合法値を読み、ファイル更新後の再呼出しは更新値になる（キャッシュなし）。既存返却データは変わらず、frozen違反はFrozenInstanceErrorになることを確認。
-- [ ] `python3 -m unittest discover -s tests -p test_time_management.py -v` でRed確認。未定義による読込エラーは準備段階だけであり、操作ごとに実行可能な最小境界を置いて、受理/拒否のアサーションが意図した理由で失敗することを確認する。
-- [ ] 契約に沿う最小実装と暫定設定を作り、同コマンドでGreen。独自制限・代替値・USI接続を足さない。
-- [ ] 重複検査の除去、bool検査の除去を隔離コピーへ個別注入し、該当アサーションのFAILと復元後Greenを確認。Refactor要否と独立レビューを記録し、Critical/Important解消後に品質検査・差分確認・ステージ・通常コミット。
+- [x] 設定の受理・拒否を一振る舞いずつテスト化。`test_loads_provisional_config` は各欄が20、Fraction(2)、Fraction(3,4)、2000に一致することをassertEqual。`test_accepts_config_boundaries` はN=1、S=0、M=1.0000000000000000001、q=0.0000000000000000001および0.9999999999999999999を受理し正確なFractionと照合。1e400も受理。
+- [x] `test_rejects_invalid_config` で各キーの欠落・重複、未知、トップレベル配列/null、各欄のbool/文字列/null/object/配列、N=0/-1/1.0、S=-1/0.0、M=1/0/-1、q=0/1/-1、非有限・不正JSONを個別subTestにしassertRaises(ValueError)。直接構築の不正も別に確認する。
+- [x] `test_reports_config_read_errors` で一時ディレクトリの存在しないファイル・ディレクトリ指定はOSError、不正UTF-8はValueError。権限依存のchmod検査は避け、読込OSErrorをmockでも注入し伝達を確認する。パス/理由を例外文字列で照合。
+- [x] `test_default_path_is_independent_of_cwd` は実装時のGit管理設定を別cwdから読み、四値一致を確認。明示パスは一時ファイルで別の合法値を読み、ファイル更新後の再呼出しは更新値になる（キャッシュなし）。既存返却データは変わらず、frozen違反はFrozenInstanceErrorになることを確認。
+- [x] `python3 -m unittest discover -s tests -p test_time_management.py -v` でRed確認。未定義による読込エラーは準備段階だけであり、操作ごとに実行可能な最小境界を置いて、受理/拒否のアサーションが意図した理由で失敗することを確認する。
+- [x] 契約に沿う最小実装と暫定設定を作り、同コマンドでGreen。独自制限・代替値・USI接続を足さない。
+- [x] 重複検査の除去、bool検査の除去を隔離コピーへ個別注入し、該当アサーションのFAILと復元後Greenを確認。Refactor要否と独立レビューを記録し、Critical/Important解消後に品質検査・差分確認・ステージ・通常コミット。
 
 ### タスク2: 正確な予算計算
 
 消費API: TimeManagementConfig。生産API: SearchBudgetとcalculate_search_budget。変更はtime_management.pyとtest_time_management.py。
 
-- [ ] `test_calculates_budget_examples` へ期待値表の各行をsubTestとして追加し、戻り値の二欄を固定整数とassertEqual。`test_keeps_allocation_turns_fixed` は複数回の呼出しと設定不変を確認する。
-- [ ] `test_rejects_invalid_clock_values` はR/Bそれぞれの-1、True、1.0、"1"、NoneをValueErrorと確認。SearchBudgetの負・逆転・bool・非整数も直接構築で検査する。
-- [ ] 個別にRed確認→最小実装→Green。読み込みエラーだけをRedにしない。計算に現在時刻や局面・先後・手番数カウンタを持ち込まない。
-- [ ] 隔離コピーへ、R=0分岐の無視、時計境界制限の除去、最終目標minの除去、除算の先行切捨て省略、割合積のfloat化を一つずつ注入。上表の該当ケースが意図したアサーションでFAILすること、復元後Greenを確認する。正常入力の計算呼出しでValueErrorが出た場合は `self.fail("正常入力で予算計算が例外になった")` へ変換する。最終目標min除去はSearchBudgetの不変条件による拒否をこのアサーションで検出し、他の値不一致による検出と区別して記録する。
-- [ ] Refactor要否確認と独立レビュー。Critical/Importantは解消して再検証・再レビュー。結果を学習記録へ残す。
+- [x] `test_calculates_budget_examples` へ期待値表の各行をsubTestとして追加し、戻り値の二欄を固定整数とassertEqual。`test_keeps_allocation_turns_fixed` は複数回の呼出しと設定不変を確認する。
+- [x] `test_rejects_invalid_clock_values` はR/Bそれぞれの-1、True、1.0、"1"、NoneをValueErrorと確認。SearchBudgetの負・逆転・bool・非整数も直接構築で検査する。
+- [x] 個別にRed確認→最小実装→Green。読み込みエラーだけをRedにしない。計算に現在時刻や局面・先後・手番数カウンタを持ち込まない。
+- [x] 隔離コピーへ、R=0分岐の無視、時計境界制限の除去、最終目標minの除去、除算の先行切捨て省略、割合積のfloat化を一つずつ注入。上表の該当ケースが意図したアサーションでFAILすること、復元後Greenを確認する。正常入力の計算呼出しでValueErrorが出た場合は `self.fail("正常入力で予算計算が例外になった")` へ変換する。最終目標min除去はSearchBudgetの不変条件による拒否をこのアサーションで検出し、他の値不一致による検出と区別して記録する。
+- [x] Refactor要否確認と独立レビュー。Critical/Importantは解消して再検証・再レビュー。結果を学習記録へ残す。
 
 ### 終了検証と記録
 
-- [ ] import追加時に `.venv/bin/ruff check --select I --fix .`、続いて `.venv/bin/ruff format .`、`.venv/bin/ruff check .`、差分確認。
-- [ ] 対象テストと `python3 -m unittest discover -s tests -v` を実行し、終了コード0・失敗/エラー0を確認。回帰に含む既存USI合法応答・方針寿命・launcher・CLI・棋譜検査は、新規計算の検証を代替しない。
-- [ ] 記録へ契約/代表ケース/検出対象/既存補完/未検証、実コマンド・結果・Refactor判断・重大度別レビューを記す。JSON知識・利用案内は実装済みの範囲に限定し、USI時間管理が動くとは記載しない。文書リンクとgit diff --checkを確認してステージ・通常コミット。フックを回避しない。
+- [x] import追加時に `.venv/bin/ruff check --select I --fix .`、続いて `.venv/bin/ruff format .`、`.venv/bin/ruff check .`、差分確認。
+- [x] 対象テストと `python3 -m unittest discover -s tests -v` を実行し、終了コード0・失敗/エラー0を確認。回帰に含む既存USI合法応答・方針寿命・launcher・CLI・棋譜検査は、新規計算の検証を代替しない。
+- [x] 記録へ契約/代表ケース/検出対象/既存補完/未検証、実コマンド・結果・Refactor判断・重大度別レビューを記す。JSON知識・利用案内は実装済みの範囲に限定し、USI時間管理が動くとは記載しない。文書リンクとgit diff --checkを確認してステージ・通常コミット。フックを回避しない。
 - [ ] 実装・検証・レビュー・記録がそろったら提示。main取り込みは別承認を得てから行い、取り込み先で検証。最後の理解確認を一問出し回答を待つ。自動的にUSI組込みへ進まない。
 
 ## 検証範囲と残る限界
@@ -132,3 +132,8 @@ R=0: 上限=max(0,B−S)、目標=floor(上限×q)。分母Nは手番で減ら�
 ## 計画の承認段階
 
 2026-10-12作成。今回は文書の作成・レビュー・提示まで。コード・テスト・設定は未変更、TDD未開始。提示後、本人が「承認する」と回答し計画内容を明示承認。今回の作業範囲は計画までのため、実装開始へ自動継続しない。レビュー結果と文書検証は[学習記録](../learning/time-budget-implementation-plan.md)へ記す。その後、本人が計画文書のGit保存を許可。作業ブランチへ保存し、main統合・pushは行わない。
+
+
+## 実装結果
+
+2026-10-12、本人の準備後実装開始の明示依頼を受け、タスク1・2を実装・検証・独立レビュー済み。新規12件/全体374件成功、代表変異7種を検出、最終レビューCritical/Important/Minorすべて0。最後の未完了項目はmain統合の別承認と取り込み先検証・理解確認。詳細は学習記録。上記の「今回は実行しない」等は計画作成時の範囲であり、その後の開始承認と実績は本節が現在状態。
