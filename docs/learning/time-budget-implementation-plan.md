@@ -39,3 +39,13 @@ USI入口接続は後続へ分離。今回は読み込み例外・不変デー�
 本人は計画のGit保存を許可し、実装前に後半への依存確認を依頼した。設定読込はPathからTimeManagementConfig、計算は非負整数R/Bと設定からSearchBudgetへ完結する。後半のSearchControl・スレッド・USI解析・局面に依存せず、一時JSONと固定値で単独検証できる。後半から今回のAPIを使う一方向の依存であり、後半計画は前半実装の前提ではない。
 
 後半は自分側R/Bの選択、起動時一回読込と保持、期間から期限への変換、例外のstderr/非0終了への変換を担当する。前半完成はUSI時間管理の利用完成を意味しない。後半でAPI見直しが必要なら理由と影響を提示して計画を改訂する。今回は確認と保存まで。実装継続の依頼は保持し、main統合は未承認。
+
+## 実装開始の承認とタスク1
+
+本人：「実装準備をして下さい。それが完了したら実装を開始して下さい」。後半依存確認後の実装を明示依頼。追加仕様確認事項なし。executing-plans、test-driven-development、using-git-worktreesの適用範囲を確認し、現在のクリーンな作業ブランチを再利用した。開始HEAD f70fe79。ベースライン全362件成功。
+
+設定読込のRed(None返却)→Green、値拒否の42 failures/6 errors→Green、構造の5 failures/9 errors→Green、IOの2 failures→Greenを確認。TypeError/KeyError等の誤った拒否も含む途中失敗は正常なValueErrorへ修正した。精度境界・再読込・不変性は既存Decimal/frozen経路で初回Greenであり未実装Redとは区別する。最終新規8件、全体370件成功。Ruff import整理、format、lint成功。重複検査除去・bool許容を隔離コピーへ注入し4/2 failures、errorsなしで検出。
+
+Refactor要否：整形のみ実施、追加の構造変更不要。独立レビューCritical 0・Important 0・Minor 0。契約・代表例・独立期待値・既存補完・未検証の区別を確認。診断全文・全欄の代入禁止の個別組合せは未検査、共通境界とfrozen実装を照合。USI接続と実時間安全性は未実施。
+
+実行環境のスキル補助task-startは日本語タスク見出しを解析できずexit 3だったため、計画の該当節をbriefへ保存して台帳を手動追跡。契約・順序の変更なし。

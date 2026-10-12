@@ -1,0 +1,6 @@
+{
+  "allocation_turns": 20,
+  "maximum_multiplier": 2,
+  "byoyomi_target_ratio": 0.75,
+  "response_margin_ms": 2000
+}
