@@ -390,3 +390,252 @@ class ControlledGenerationTests(unittest.TestCase):
                     result.moves,
                     () if suppress else (DropMove(BasicPieceType.PAWN, dest),),
                 )
+
+
+def recapture(side):
+    """歩取り7点、取り返し後-23点、安全手5点の先後教材。"""
+    p = Position(Board(), side)
+    other = Side.GOTE if side == Side.SENTE else Side.SENTE
+
+    def sq(f, r):
+        return Square(f, r) if side == Side.SENTE else Square(10 - f, 10 - r)
+
+    for f, r, t, s in (
+        (9, 9, PieceType.KING, side),
+        (5, 5, PieceType.ROOK, side),
+        (1, 1, PieceType.KING, other),
+        (5, 3, PieceType.GOLD, other),
+        (5, 4, PieceType.PAWN, other),
+    ):
+        p.board.set_piece(sq(f, r), Piece(t, s))
+    return p, BoardMove(sq(5, 5), sq(5, 4), False), BoardMove(sq(5, 5), sq(4, 5), False)
+
+
+def mating(side):
+    p = Position(Board(), side)
+    other = Side.GOTE if side == Side.SENTE else Side.SENTE
+
+    def sq(f, r):
+        return Square(f, r) if side == Side.SENTE else Square(10 - f, 10 - r)
+
+    for f, r, t, s in (
+        (9, 9, PieceType.KING, side),
+        (5, 3, PieceType.ROOK, side),
+        (4, 3, PieceType.GOLD, side),
+        (5, 1, PieceType.KING, other),
+        (4, 1, PieceType.PAWN, other),
+        (6, 1, PieceType.PAWN, other),
+        (4, 2, PieceType.PAWN, other),
+        (6, 2, PieceType.PAWN, other),
+    ):
+        p.board.set_piece(sq(f, r), Piece(t, s))
+    return p, BoardMove(sq(5, 3), sq(5, 2), False)
+
+
+class ControlledEvaluationTests(unittest.TestCase):
+    def test_completed_scores_preserve_policy_and_perspective(self):
+        """先後反転でも一手7/5点、二手-23/5点と詰みの勝敗を維持する。
+
+        駒得は15+1-9=7、取り返し後1-15-9=-23、通常15-9-1=5。
+        詰み勝ち(1,0)・負け(-1,0)を通常駒得へ混ぜる誤りも検出する。
+        """
+        for side in Side:
+            p, capture, safe = recapture(side)
+            for policy, move, score in (
+                (mg.MoveSelectionPolicy.MATERIAL, capture, (0, 7)),
+                (mg.MoveSelectionPolicy.MATERIAL, safe, (0, 5)),
+                (mg.MoveSelectionPolicy.TWO_PLY_MATERIAL, capture, (0, -23)),
+                (mg.MoveSelectionPolicy.TWO_PLY_MATERIAL, safe, (0, 5)),
+            ):
+                with self.subTest(side=side, policy=policy, move=move):
+                    before = snapshot(p)
+                    r = mg._evaluate_candidate(
+                        p, move, policy, control=SearchControl(None, 0)
+                    )
+                    self.assertTrue(r.completed)
+                    self.assertEqual(r.score, score)
+                    self.assertEqual(snapshot(p), before)
+            p, move = mating(side)
+            r = mg._evaluate_candidate(
+                p,
+                move,
+                mg.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+                control=SearchControl(None, 0),
+            )
+            self.assertEqual(r.score, (1, 0))
+            # 相手側の開始視点では、全応手の一つで詰まされるため最悪(-1,0)。
+            other = Side.GOTE if side == Side.SENTE else Side.SENTE
+            r = mg._two_ply_score_controlled(p, other, control=SearchControl(None, 0))
+            self.assertEqual(r.score, (-1, 0))
+            empty = Position(Board(), other)
+            for _ in range(7):
+                (empty.sente_hand if side == Side.SENTE else empty.gote_hand).add(
+                    BasicPieceType.PAWN
+                )
+            r = mg._two_ply_score_controlled(
+                empty, side, control=SearchControl(None, 0)
+            )
+            self.assertEqual(r.score, (0, 7))
+
+    def test_target_allows_current_candidate_to_finish(self):
+        """目標到達だけなら現在候補と応手調査を完了させる。
+
+        評価中に根と同じ目標判定を流用する誤りを検出する。
+        """
+        for policy in (
+            mg.MoveSelectionPolicy.MATERIAL,
+            mg.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+        ):
+            with self.subTest(policy=policy):
+                p, move, _ = recapture(Side.SENTE)
+                now = [0]
+                c = SearchControl(
+                    SearchBudget(10, 20), 0, now_ns=lambda now=now: now[0]
+                )
+                apply = mg.apply_move
+
+                def reach_target(*args, apply=apply, now=now, **kwargs):
+                    apply(*args, **kwargs)
+                    now[0] = 10_000_000
+
+                with patch.object(mg, "apply_move", side_effect=reach_target):
+                    r = mg._evaluate_candidate(p, move, policy, control=c)
+                self.assertTrue(r.completed)
+                self.assertEqual(
+                    r.score,
+                    (0, 7) if policy == mg.MoveSelectionPolicy.MATERIAL else (0, -23),
+                )
+                zero = SearchControl(SearchBudget(0, 1), 0, now_ns=lambda: 0)
+                self.assertTrue(
+                    mg._evaluate_candidate(p, move, policy, control=zero).completed
+                )
+
+    def test_maximum_or_stop_discards_candidate(self):
+        """静的採点の復帰時に上限かstopなら候補を未完了にする。
+
+        計算済みの点でも最終確認前なら完了へ昇格させない境界を検出する。
+        """
+        for stop in (False, True):
+            p, move, _ = recapture(Side.SENTE)
+            now = [0]
+            c = SearchControl(SearchBudget(10, 20), 0, now_ns=lambda now=now: now[0])
+            balance = mg.material_balance
+
+            def expire(*args, balance=balance, stop=stop, c=c, now=now, **kwargs):
+                score = balance(*args, **kwargs)
+                if stop:
+                    c.request_stop()
+                else:
+                    now[0] = 20_000_000
+                return score
+
+            with patch.object(mg, "material_balance", side_effect=expire):
+                r = mg._evaluate_candidate(
+                    p, move, mg.MoveSelectionPolicy.MATERIAL, control=c
+                )
+            self.assertFalse(r.completed)
+            self.assertIsNone(r.score)
+
+    def test_reply_and_mate_interrupt_propagate(self):
+        """応手の先頭・中間・末尾と詰みの防御調査中断を不明のまま伝える。
+
+        部分minや未確定詰みの通常点化を検出し、先後と元局面保存も確認する。
+        """
+        for side in Side:
+            for slot in ("first", "middle", "last"):
+                with self.subTest(side=side, slot=slot):
+                    p, move, _ = recapture(side)
+                    after = mg._position_after_move(p, move)
+                    replies = mg.legal_moves(after)
+                    chosen = replies[
+                        {"first": 0, "middle": len(replies) // 2, "last": -1}[slot]
+                    ]
+                    c = SearchControl(None, 0)
+                    application = mg._position_after_move_controlled
+
+                    def stop_reply(
+                        current,
+                        reply,
+                        *,
+                        control,
+                        chosen=chosen,
+                        c=c,
+                        application=application,
+                    ):
+                        result = application(current, reply, control=control)
+                        if reply == chosen:
+                            c.request_stop()
+                        return result
+
+                    before = snapshot(after)
+                    with patch.object(
+                        mg, "_position_after_move_controlled", side_effect=stop_reply
+                    ):
+                        r = mg._two_ply_score_controlled(after, side, control=c)
+                    self.assertFalse(r.completed)
+                    self.assertIsNone(r.score)
+                    self.assertEqual(snapshot(after), before)
+            p, move = mating(side)
+            c = SearchControl(None, 0)
+            defense = mg._has_legal_move_controlled
+
+            def stop_defense(*args, c=c, defense=defense, **kwargs):
+                c.request_stop()
+                return defense(*args, **kwargs)
+
+            with patch.object(
+                mg, "_has_legal_move_controlled", side_effect=stop_defense
+            ):
+                r = mg._evaluate_candidate(
+                    p, move, mg.MoveSelectionPolicy.TWO_PLY_MATERIAL, control=c
+                )
+            self.assertFalse(r.completed)
+            self.assertIsNone(r.score)
+
+    def test_last_reply_score_must_pass_return_check(self):
+        """最後の応手採点復帰後に停止した候補も捨てる。
+
+        下位呼出しの後の停止確認を省く誤りを、末尾だけの停止で検出する。
+        """
+        p, move, _ = recapture(Side.SENTE)
+        after = mg._position_after_move(p, move)
+        last = mg._position_after_move(after, mg.legal_moves(after)[-1])
+        c = SearchControl(None, 0)
+        balance = mg.material_balance
+
+        def stop_last(current, perspective):
+            score = balance(current, perspective)
+            if snapshot(current) == snapshot(last):
+                c.request_stop()
+            return score
+
+        with patch.object(mg, "material_balance", side_effect=stop_last):
+            r = mg._two_ply_score_controlled(after, Side.SENTE, control=c)
+        self.assertFalse(r.completed)
+        self.assertIsNone(r.score)
+
+    def test_two_ply_keeps_mate_interruption_unknown(self):
+        """二手評価単独でも詰み防御調査の中断を点へ変換しない。
+
+        外側候補評価の停止確認が下位の誤りを隠す不足を補う。
+        """
+        for side in Side:
+            for suppress in (False, True):
+                with self.subTest(side=side, suppress=suppress):
+                    p, move = mating(side)
+                    after = mg._position_after_move(p, move)
+                    c = SearchControl(None, 0)
+                    defense = mg._has_legal_move_controlled
+
+                    def stop_inside(
+                        *args, c=c, suppress=suppress, defense=defense, **kwargs
+                    ):
+                        c.request_stop(suppress_response=suppress)
+                        return defense(*args, **kwargs)
+
+                    with patch.object(
+                        mg, "_has_legal_move_controlled", side_effect=stop_inside
+                    ):
+                        r = mg._two_ply_score_controlled(after, side, control=c)
+                    self.assertFalse(r.completed)
+                    self.assertIsNone(r.score)

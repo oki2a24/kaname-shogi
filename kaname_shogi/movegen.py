@@ -602,19 +602,7 @@ def _two_ply_score(after_move: Position, perspective: Side) -> tuple[int, int]:
     駒得差の大きさで勝敗の優先順位が逆転することを防ぐ。
     詰みでない手なしは静的評価。詰みの防御確認より先の駒得探索はしない。
     """
-    if is_checkmate(after_move):
-        return (1, 0)
-    replies = legal_moves(after_move)
-    if not replies:
-        return (0, material_balance(after_move, perspective))
-    scores = []
-    for reply in replies:
-        leaf = _position_after_move(after_move, reply)
-        score = (
-            (-1, 0) if is_checkmate(leaf) else (0, material_balance(leaf, perspective))
-        )
-        scores.append(score)
-    return min(scores)
+    return _two_ply_score_controlled(after_move, perspective, control=None).score
 
 
 def _choose_two_ply_material_move(
@@ -627,9 +615,13 @@ def _choose_two_ply_material_move(
     """
     if not moves:
         return None
-    perspective = position.side_to_move
     scored_moves = [
-        (move, _two_ply_score(_position_after_move(position, move), perspective))
+        (
+            move,
+            _evaluate_candidate(
+                position, move, MoveSelectionPolicy.TWO_PLY_MATERIAL, control=None
+            ).score,
+        )
         for move in moves
     ]
     best_score = max(score for _, score in scored_moves)
@@ -676,17 +668,10 @@ def choose_move(
     if policy != MoveSelectionPolicy.MATERIAL:
         raise ValueError("未知の一手選択方針です")
 
-    perspective = position.side_to_move
-    scored_moves = []
-    for move in moves:
-        trial = position.copy()
-        if isinstance(move, BoardMove):
-            apply_move(trial, move.source, move.destination, promote=move.promote)
-        elif isinstance(move, DropMove):
-            apply_drop(trial, move.piece_type, move.destination)
-        else:
-            raise TypeError("対応していない一手の型です")
-        scored_moves.append((move, material_balance(trial, perspective)))
+    scored_moves = [
+        (move, _evaluate_candidate(position, move, policy, control=None).score)
+        for move in moves
+    ]
 
     best_score = max(score for _, score in scored_moves)
     best_moves = tuple(move for move, score in scored_moves if score == best_score)
@@ -1467,6 +1452,8 @@ def _position_after_move_controlled(
     trial = position.copy()
     if isinstance(move, BoardMove):
         apply_move(trial, move.source, move.destination, promote=move.promote)
+    elif control is None:
+        apply_drop(trial, move.piece_type, move.destination)
     else:
         result = _apply_drop_controlled(
             trial,
@@ -1480,3 +1467,118 @@ def _position_after_move_controlled(
     if _stopped(control):
         return _ApplicationResult(False), None
     return _ApplicationResult(True), trial
+
+
+@dataclass(frozen=True)
+class CandidateEvaluation:
+    """候補評価の完了状態と比較点、不明Noneのデータ。"""
+
+    completed: bool
+    score: Optional[tuple[int, int]]
+
+
+def _two_ply_score_controlled(
+    after_move: Position,
+    perspective: Side,
+    *,
+    control: Optional[SearchControl],
+) -> CandidateEvaluation:
+    """全応手の最悪点を求める操作。目標は無視し上限/要求の中断は点を渡さない。"""
+
+    def mate(current):
+        return (
+            CheckmateResult(True, is_checkmate(current))
+            if control is None
+            else _is_checkmate_controlled(
+                current, check_uchi_fuzume=True, control=control
+            )
+        )
+
+    if _stopped(control):
+        return CandidateEvaluation(False, None)
+    result = mate(after_move)
+    if not result.completed or _stopped(control):
+        return CandidateEvaluation(False, None)
+    if result.value:
+        return CandidateEvaluation(True, (1, 0))
+    replies = (
+        LegalMovesResult(True, legal_moves(after_move))
+        if control is None
+        else _legal_moves_controlled(
+            after_move, check_uchi_fuzume=True, control=control
+        )
+    )
+    if not replies.completed or _stopped(control):
+        return CandidateEvaluation(False, None)
+    scores = []
+    if not replies.moves:
+        score = (0, material_balance(after_move, perspective))
+    else:
+        for reply in replies.moves:
+            if _stopped(control):
+                return CandidateEvaluation(False, None)
+            if control is None:
+                applied, leaf = (
+                    _ApplicationResult(True),
+                    _position_after_move(after_move, reply),
+                )
+            else:
+                applied, leaf = _position_after_move_controlled(
+                    after_move, reply, control=control
+                )
+            if not applied.completed or _stopped(control):
+                return CandidateEvaluation(False, None)
+            result = mate(leaf)
+            if not result.completed or _stopped(control):
+                return CandidateEvaluation(False, None)
+            score = (
+                (-1, 0) if result.value else (0, material_balance(leaf, perspective))
+            )
+            if _stopped(control):
+                return CandidateEvaluation(False, None)
+            scores.append(score)
+        score = min(scores)
+    if _stopped(control):
+        return CandidateEvaluation(False, None)
+    return CandidateEvaluation(True, score)
+
+
+def _evaluate_candidate(
+    position: Position,
+    move: Move,
+    policy: MoveSelectionPolicy,
+    *,
+    control: Optional[SearchControl],
+) -> CandidateEvaluation:
+    """一候補の適用から採点復帰後確認までを評価完了単位にする操作。
+
+    元局面不変。RANDOM/未知方針はValueError、適用/採点の故障を中断へ変換しない。
+    停止なしの従来評価も同じ処理を使う。目標は候補開始側だけが確認する。
+    """
+    if policy not in (
+        MoveSelectionPolicy.MATERIAL,
+        MoveSelectionPolicy.TWO_PLY_MATERIAL,
+    ):
+        raise ValueError("候補評価に対応していない方針です")
+    if control is None:
+        applied, after = _ApplicationResult(True), _position_after_move(position, move)
+    else:
+        applied, after = _position_after_move_controlled(
+            position, move, control=control
+        )
+    if not applied.completed or _stopped(control):
+        return CandidateEvaluation(False, None)
+    if policy == MoveSelectionPolicy.MATERIAL:
+        score = (0, material_balance(after, position.side_to_move))
+    elif control is None:
+        score = _two_ply_score(after, position.side_to_move)
+    else:
+        result = _two_ply_score_controlled(
+            after, position.side_to_move, control=control
+        )
+        if not result.completed:
+            return result
+        score = result.score
+    if _stopped(control):
+        return CandidateEvaluation(False, None)
+    return CandidateEvaluation(True, score)
