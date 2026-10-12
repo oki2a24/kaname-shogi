@@ -1,10 +1,17 @@
 """USIプロトコルで一手を返すエンジン境界。"""
 
+import codecs
+import io
+import os
 import random
+import selectors
 import sys
+import time
+from collections import deque
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Callable, Optional
+from threading import Lock
+from typing import Callable, Optional, TextIO
 
 from .model import Position, Side
 from .movegen import MoveSelectionPolicy, choose_move, legal_moves
@@ -22,6 +29,108 @@ _USI_DIFFICULTY_VALUES = {
     "material": MoveSelectionPolicy.MATERIAL,
     "twoplymaterial": MoveSelectionPolicy.TWO_PLY_MATERIAL,
 }
+
+
+@dataclass(frozen=True)
+class _InputLine:
+    """完成行と読取り時点の整数nsを保持する不変データ。"""
+
+    text: str
+    read_ns: int
+
+
+class _InputCancelled(Exception):
+    """内部終了通知による読取り解除。EOFや故障とは区別する。"""
+
+
+class _StdinLineSource:
+    """macOSの標準入力と内部終了pipeを同時に待つ入力源。
+
+    借用streamは先読みされていないテキスト標準入力を前提とし、closeしない。
+    入力担当だけがread_lineを呼び、主担当はcancel後に担当を回収してcloseする。
+    自前pipe/selectorを所有し、標準入力のblocking属性を終了後に復元する。
+    他OSへの移植ではfd同時待機、nonblocking read、復号・改行、回収を再点検する。
+    """
+
+    def __init__(self, stream: TextIO):
+        self._fd = stream.fileno()
+        self._blocking = os.get_blocking(self._fd)
+        self._wake_read = self._wake_write = None
+        self._selector = None
+        self._cancel_lock = Lock()
+        self._cancelled = False
+        self._closed = False
+        self._lines = deque()
+        self._pending = ""
+        self._eof = False
+        try:
+            decoder = codecs.getincrementaldecoder(stream.encoding or "utf-8")(
+                errors=stream.errors or "strict"
+            )
+            self._decoder = io.IncrementalNewlineDecoder(decoder, translate=True)
+            self._wake_read, self._wake_write = os.pipe()
+            os.set_blocking(self._wake_write, False)
+            os.set_blocking(self._fd, False)
+            self._selector = selectors.DefaultSelector()
+            self._selector.register(self._fd, selectors.EVENT_READ)
+            self._selector.register(self._wake_read, selectors.EVENT_READ)
+        except BaseException:
+            self.close()
+            raise
+
+    def read_line(self) -> _InputLine:
+        """完成行を時刻付きで返す。EOF・取消・読取り故障は別の例外。"""
+        while True:
+            with self._cancel_lock:
+                if self._cancelled:
+                    self._lines.clear()
+                    self._pending = ""
+                    raise _InputCancelled
+            if self._lines:
+                return self._lines.popleft()
+            if self._eof:
+                raise EOFError
+            ready = self._selector.select()
+            if any(key.fd == self._wake_read for key, _ in ready):
+                raise _InputCancelled
+            if not ready:
+                continue
+            try:
+                chunk = os.read(self._fd, 4096)
+            except BlockingIOError:
+                continue
+            self._eof = not chunk
+            self._pending += self._decoder.decode(chunk, final=self._eof)
+            while "\n" in self._pending:
+                line, self._pending = self._pending.split("\n", 1)
+                self._lines.append(_InputLine(line + "\n", time.monotonic_ns()))
+            if self._eof and self._pending:
+                self._lines.append(_InputLine(self._pending, time.monotonic_ns()))
+                self._pending = ""
+
+    def cancel(self) -> None:
+        """反復可能な内部終了通知。部分行や無言入力の待機も解除する。"""
+        with self._cancel_lock:
+            if self._cancelled or self._closed:
+                return
+            self._cancelled = True
+            os.write(self._wake_write, b"x")
+
+    def close(self) -> None:
+        """入力担当回収後、自前資源を解放し借用stdinの属性を復元する。"""
+        if self._closed:
+            return
+        self._closed = True
+        try:
+            if self._selector is not None:
+                self._selector.close()
+        finally:
+            try:
+                for fd in (self._wake_read, self._wake_write):
+                    if fd is not None:
+                        os.close(fd)
+            finally:
+                os.set_blocking(self._fd, self._blocking)
 
 
 @dataclass(frozen=True)
