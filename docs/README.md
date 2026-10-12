@@ -175,6 +175,6 @@ USI新値後の未知値保持（計画タスク4の1項目のみ、main取り�
 
 40手目の長考調査の[範囲・結果](plans/2026-10-11-long-think-scope-design.md)と[実施記録](learning/long-think-scope-design.md)を参照する。選定・開始時の背景・証拠パスは[引き継ぎ](handover-long-think-scope.md)、現在地は[再開案内](resume.md)を参照する。
 
-本人が選んだ次テーマ「時計入力を受けて応答を止める仕組みの学習・設計だけ」の開始背景・物理状態・再開用プロンプトは[引き継ぎ](handover-clock-input-time-management.md)、現在地は[再開案内](resume.md)を参照する。2026-10-12に設計全体を承認。実装計画作成・実装・main統合は別承認で、まだ行っていない。
+本人が選んだ次テーマ「時計入力を受けて応答を止める仕組みの学習・設計だけ」の開始背景・物理状態・再開用プロンプトは[引き継ぎ](handover-clock-input-time-management.md)、現在地は[再開案内](resume.md)を参照する。2026-10-12に設計全体を承認。実装計画作成・実装は未承認で未着手。main統合は本人の別承認後に完了し、最後の理解確認を待つ。
 
 時計入力の確認方法と比較資料は[確認範囲の抜け漏れ点検](plans/2026-10-12-clock-input-verification-review.md)を参照。
