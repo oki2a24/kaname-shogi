@@ -141,7 +141,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 枝の独立性の確認（指定1項目main統合・検証・理解確認済み） | [学習記録](learning/two-ply-branch-independence.md) | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク2](plans/2026-10-10-two-ply-implementation-plan.md) | [引き継ぎ](handover-two-ply-branch-independence.md) |
 | 時計入力を受けて応答を止める仕組みの学習・設計だけ（設計・main統合・理解確認完了、実装未着手） | [学習・合意](learning/clock-input-time-management.md) | [USI応答](knowledge/usi-engine-response.md) | [承認済み設計](plans/2026-10-11-clock-input-time-management-design.md) | — | [引き継ぎ](handover-clock-input-time-management.md) |
 | 時計設定・時間配分（main統合・検証・理解確認完了） | [学習・確認](learning/time-budget-implementation-plan.md) | [設定・計算](knowledge/time-budget.md) | [全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [計画案](plans/2026-10-12-time-budget-implementation-plan.md) | [引き継ぎ](handover-time-budget-implementation-plan.md) |
-| USI時計受付・設定接続の実装計画だけ | [学習・レビュー](learning/usi-clock-settings-implementation-plan.md) | — | [承認済み全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [計画案](plans/2026-10-12-usi-clock-settings-implementation-plan.md) | [引き継ぎ](handover-usi-clock-settings-implementation-plan.md) |
+| USI時計受付・設定接続 | [学習・レビュー](learning/usi-clock-settings-implementation-plan.md) | — | [承認済み全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [承認済み計画・実績](plans/2026-10-12-usi-clock-settings-implementation-plan.md) | [引き継ぎ](handover-usi-clock-settings-implementation-plan.md) |
 | CLIの三方式選択（タスク3、新セッション準備のみ） | — | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク3](plans/2026-10-10-two-ply-implementation-plan.md#タスク3cliから三方式を選ぶ) | [引き継ぎ](handover-cli-three-policies.md) |
 
 ## 例外と履歴の読み方

@@ -12,6 +12,7 @@ from .time_management import (
     SearchBudget,
     TimeManagementConfig,
     calculate_search_budget,
+    load_time_management_config,
 )
 from .usi_move import format_usi_move
 from .usi_position import parse_usi_position
@@ -116,6 +117,8 @@ def run_usi_engine(
     input_fn: Callable[[], str],
     output_fn: Callable[[str], None],
     rng: Optional[random.Random] = None,
+    *,
+    time_config: Optional[TimeManagementConfig] = None,
 ) -> None:
     """注入された入出力関数でUSIコマンドを処理し、必要な応答を返す。
 
@@ -123,6 +126,8 @@ def run_usi_engine(
         input_fn: 一回につき一行を返す入力関数。入力終了時はEOFErrorを送出する。
         output_fn: 改行を含まないUSI応答一行を受け取る出力関数。
         rng: 手を選ぶ乱数生成器。省略時はこの呼び出しの開始時に一つ作る。
+        time_config: 検証済みの不変な時間設定。省略時は入力受付前に同梱JSONを
+            一回読み、指定時は読まない。mainからは起動時の読込結果を注入する。
 
     戻り値:
         なし。quitまたは入力EOFでコマンド処理を終了する。
@@ -133,35 +138,33 @@ def run_usi_engine(
         一手選択方針の設定も局面状態から分け、一回の実行中に保持する。最初のgoで
         その局の方針を固定し、usinewgame後の次局から新しい設定を適用する。
         乱数生成器は局面・設定状態から分け、一回の実行中に全goで共有する。
+        時間設定も全go・usinewgameで同じ参照を保持する。省略時だけ設定ファイルを読む。
 
     前提条件:
         入力はUSIコマンド一行であり、positionは
         `position startpos moves <1手以上>`、`position sfen <SFEN>`、または
         `position sfen <SFEN> moves <1手以上>` 形式である。SFEN手数はUSI境界で
-        読み取り、検索状態にはPositionだけを渡す。通常のgoは直ちに一手を返し、
-        時計値を使わない。乱数生成器は一回の実行内で全goに共有する。
+        読み取り、検索状態にはPositionだけを渡す。通常のgoは有限比較を完了して一手を返し、
+        時計引数を検証し現在手番の時間予算を計算するが、期限判定・探索停止には
+        まだ使わない。時計なしのNoneと明示0予算を区別し、0でも通常比較を完了する。
+        乱数生成器は一回の実行内で全goに共有する。
 
     例外:
         ValueError: go時に局面が未設定、positionが既存パーサーに拒否された、または
-            searchmoves / depth / nodes / mate / infinite / ponderを含む場合。
+            時計引数や省略時に読む設定が不正、または
+            searchmoves / depth / nodes / mate / infinite / ponder / movetimeを含む場合。
+        OSError: 省略時の設定読込が失敗した場合。診断の出力は呼出し元が担当する。
         EOFError: input_fnが入力終了を表すため送出した場合。この関数内では終了として扱う。
 
     局面再現、合法手列挙、方針別の一手選択、USI一手表記は既存の各責務へ委譲する。
     局面の寿命と手の選択設定・局内固定を別々に保ち、既存CLIや将棋規則を重ねて
     実装せず、USIコマンドと応答の境界に限定する。
     """
+    config = time_config if time_config is not None else load_time_management_config()
     engine_rng = rng if rng is not None else random.Random()
     state = _UsiEngineState()
     configured_policy = MoveSelectionPolicy.RANDOM
     game_policy: Optional[MoveSelectionPolicy] = None
-    unsupported_go_tokens = {
-        "searchmoves",
-        "depth",
-        "nodes",
-        "mate",
-        "infinite",
-        "ponder",
-    }
 
     while True:
         try:
@@ -199,14 +202,12 @@ def run_usi_engine(
         elif command_name == "position":
             state.replace_position(parse_usi_position(command).position)
         elif command_name == "go":
-            unsupported = next(
-                (token for token in tokens[1:] if token in unsupported_go_tokens),
-                None,
-            )
-            if unsupported is not None:
-                raise ValueError(f"未対応のgo引数です: {unsupported}")
-
+            clock = _parse_go_clock(tokens[1:])
             position = state.require_position()
+            # 今回は期間計算まで。期限判定・探索停止への接続は後続で行う。
+            _search_budget = _prepare_search_budget(
+                clock, position.side_to_move, config
+            )
             if game_policy is None:
                 game_policy = configured_policy
             moves = legal_moves(position)
@@ -226,17 +227,20 @@ def main() -> int:
         なし。標準入力・標準出力・標準エラーを使用する。
 
     戻り値:
-        正常終了または入力EOFなら0、USI局面や未対応検索条件のValueErrorなら1。
+        正常終了または入力EOFなら0。設定のValueError/OSError、USI局面・時計・
+        未対応検索条件のValueErrorなら1。
 
     副作用:
         標準入力から一行ずつ読み、USI応答を改行付きで標準出力へ書いて各行を
-        直ちにflushする。ValueErrorの説明だけを標準エラーへ書く。
+        直ちにflushする。設定を入力受付前に一回読み、実行中固定する。
+        設定読込とUSI入力の診断は標準エラーへ書き、設定故障なら入力を読まない。
 
     前提条件:
         テキスト標準ストリームが利用できる実行環境で呼び出す。
 
     入出力の仕方だけをこの入口に置き、コマンド状態と応答処理は
     `run_usi_engine` に委譲することで、関数テストと実プロセスの境界を分ける。
+    設定読込のOSErrorだけを起動診断へ変換し、標準入出力の故障を設定不正と混同しない。
     """
 
     def input_line() -> str:
@@ -250,7 +254,13 @@ def main() -> int:
         sys.stdout.flush()
 
     try:
-        run_usi_engine(input_line, output_line)
+        config = load_time_management_config()
+    except (ValueError, OSError) as error:
+        print(f"USIエンジンエラー: {error}", file=sys.stderr, flush=True)
+        return 1
+
+    try:
+        run_usi_engine(input_line, output_line, time_config=config)
     except ValueError as error:
         print(f"USIエンジンエラー: {error}", file=sys.stderr, flush=True)
         return 1

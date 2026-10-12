@@ -1,6 +1,6 @@
 # USI時計受付・設定接続 実装計画
 
-> **AIエージェントへの指示:** 実装には `executing-plans` または `subagent-driven-development` を使用する。2026-10-12、本人が「承認する」と回答し本計画を承認。今回は作成・レビュー・提示までであり、以下の手順を実行しない。計画承認と実装開始指示、main取り込みの別承認を区別する。
+> **AIエージェントへの指示:** 実装には `executing-plans` または `subagent-driven-development` を使用する。2026-10-12、本人が「承認する」と回答し本計画を承認。計画作成時は提示まで。現在は本人の実装開始指示により手順を実行し、実績は末尾へ記録する。計画承認と実装開始指示、main取り込みの別承認を区別する。
 
 **目標:** USI時計を検証し、現在局面の自分側時計と起動時に固定した設定を、既存の予算計算へ接続する。
 
@@ -107,36 +107,36 @@ mainは設定読込だけを囲むtryでValueError/OSErrorをstderrの `USIエ�
 
 ファイル：usi_engine.py、作成test_usi_clock.py。消費：Sequence[str]。生産：_UsiClock、_parse_go_clock（上表のシグネチャ）。既存go分岐への接続はタスク3。
 
-- [ ] `test_parses_clock_and_omission`：通常/逆順/未知語混在に対して `(c.btime_ms,c.wtime_ms,c.byoyomi_ms)==(600000,120000,30000)`、省略Bは0をassertEqual。
-- [ ] `test_distinguishes_missing_clock_from_zero`：時計なし/加算0のみは `assertIsNone`、明示両0は `assertIsNotNone` と三欄0のassertEqual。
-- [ ] `test_rejects_invalid_known_fields`：上表の五項目ごとの不正・重複・必須不足をsubTestに列挙し `assertRaises(ValueError)`、項目/理由をassertIn。未知語直後の壊れた既知値と後続重複も含める。
-- [ ] `test_rejects_unsupported_go_parameters`：七種の未対応条件、正のbinc/wincを `assertRaises(ValueError)`。`test_accepts_integer_notation_and_large_values`：表記例0・+120000・00120000・10^400を固定整数へassertEqualし、全角数字１２・アラビア数字١٢はassertRaises(ValueError)。
-- [ ] `python3 -m unittest discover -s tests -p test_usi_clock.py -v` で各振る舞いのRed理由を確認し、最小実装後に失敗/エラー0のGreenを確認。
-- [ ] 隔離コピーで重複検査削除・片側必須検査削除・未知語で解析終了を個別注入。該当assertのFAILと復元後Greenを記録。元のcheckoutを誤り注入先にしない。
-- [ ] Refactor要否、独立レビュー、記録、品質検査を済ませ、対象だけステージして通常コミット。
+- [x] `test_parses_clock_and_omission`：通常/逆順/未知語混在に対して `(c.btime_ms,c.wtime_ms,c.byoyomi_ms)==(600000,120000,30000)`、省略Bは0をassertEqual。
+- [x] `test_distinguishes_missing_clock_from_zero`：時計なし/加算0のみは `assertIsNone`、明示両0は `assertIsNotNone` と三欄0のassertEqual。
+- [x] `test_rejects_invalid_known_fields`：上表の五項目ごとの不正・重複・必須不足をsubTestに列挙し `assertRaises(ValueError)`、項目/理由をassertIn。未知語直後の壊れた既知値と後続重複も含める。
+- [x] `test_rejects_unsupported_go_parameters`：七種の未対応条件、正のbinc/wincを `assertRaises(ValueError)`。`test_accepts_integer_notation_and_large_values`：表記例0・+120000・00120000・10^400を固定整数へassertEqualし、全角数字１２・アラビア数字١٢はassertRaises(ValueError)。
+- [x] `python3 -m unittest discover -s tests -p test_usi_clock.py -v` で各振る舞いのRed理由を確認し、最小実装後に失敗/エラー0のGreenを確認。
+- [x] 隔離コピーで重複検査削除・片側必須検査削除・未知語で解析終了を個別注入。該当assertのFAILと復元後Greenを記録。元のcheckoutを誤り注入先にしない。
+- [x] Refactor要否、独立レビュー、記録、品質検査を済ませ、対象だけステージして通常コミット。
 
 ### タスク2：自分側時計の選択と予算準備
 
 ファイル：usi_engine.py、test_usi_clock.py。消費：_UsiClock、Side、既存TimeManagementConfig/calculate_search_budget。生産：_prepare_search_budget（上表）。既存runの変更はタスク3へまとめ、このタスクは純粋な準備操作を独立検証する。
 
-- [ ] `test_selects_budget_for_side_to_move`：上表の先後固定値と省略B/0残時間/独自設定をassertEqual。Noneでは計算spyの `assert_not_called()`、明示両0は `assertEqual(result, SearchBudget(0,0))`。
-- [ ] タスク1と同じ対象コマンドでRed→最小実装→Green。None・明示0・非0を連続して準備操作へ渡して各戻り値を確認する。
-- [ ] 隔離コピーへ自分側を先手固定、0をNone扱いを個別注入。単独検査のFAILと復元後Greenを記録。Refactor要否と独立レビュー、品質検査、記録、通常コミットを行う。
+- [x] `test_selects_budget_for_side_to_move`：上表の先後固定値と省略B/0残時間/独自設定をassertEqual。Noneでは計算spyの `assert_not_called()`、明示両0は `assertEqual(result, SearchBudget(0,0))`。
+- [x] タスク1と同じ対象コマンドでRed→最小実装→Green。None・明示0・非0を連続して準備操作へ渡して各戻り値を確認する。
+- [x] 隔離コピーへ自分側を先手固定、0をNone扱いを個別注入。単独検査のFAILと復元後Greenを記録。Refactor要否と独立レビュー、品質検査、記録、通常コミットを行う。
 
 ### タスク3：go接続・起動時読込・保持・エラー接続
 
 ファイル：usi_engine.py、test_usi_engine.py、test_usi_engine_launcher.py。消費：既存 `load_time_management_config(path: Optional[Path]=None) -> TimeManagementConfig` とタスク1の_parse_go_clock、タスク2の_prepare_search_budget。生産：上表のtime_config注入引数を持つrun_usi_engine、mainの起動時一回読込、固定参照、stderr/終了1。新規CLI引数や環境設定は追加しない。
 
-- [ ] `test_go_prepares_budget_before_move_generation`：実際のprepareをwrapし、現在局面の手番と設定同一性、手計算予算、prepare→legal_moves→choose_moveの順序を確認。SFEN手番反転・同手数、moves適用後の後手を使う。
-- [ ] `test_each_go_uses_only_its_own_clock`：非0→時計なし→明示0→非0の連続goで戻り値が所定予算、None、SearchBudget(0,0)、所定予算になることをassertEqual。各goで通常bestmove一回を確認し、0で停止実装済みとは扱わない。
-- [ ] `test_invalid_go_never_starts_search`：有効positionの後に相手側不正・欠落・未対応条件を入れ `assertRaises(ValueError)`、legal_moves/choose_move/計算は `assert_not_called()`、outputs空を確認。局面なしの既存エラーも維持。
-- [ ] `test_run_loads_config_once_before_input`：loaderとinputの呼出し順を照合し、usi/isready/go/usinewgame/次position/go/quitでもloaderは `assert_called_once_with()`、prepareへ同一オブジェクトを渡す。明示注入時 `assert_not_called()`。別のrun呼出しには別設定を返すmock列を用い、二回目の結果と参照を確認。
-- [ ] `test_main_loads_and_injects_config_once`：mainの実処理を通し、読込一回とrunへのtime_config同一性を確認。run側の再読込も呼出し回数で検出する。
-- [ ] `test_main_rejects_invalid_or_unreadable_config_before_input`：loaderのValueError/OSErrorをそれぞれ注入し、`assertEqual(main(),1)`、stdout空、stderrに接頭辞/パス/理由、stdin未読・run未実行を確認。run直呼びでは同じ例外を伝達し出力しない。
-- [ ] `test_entrypoint_rejects_invalid_clock`：実プロセスで有効position後、不正時計/不足/正加算/movetimeを個別投入。終了1、bestmoveなし、stderrに項目・理由。診断全文には固定しない。
-- [ ] `test_launcher_loads_config_from_other_cwd`：絶対パスlauncherを一時cwdから起動しusi応答列一致、stderr空、終了0。`test_launcher_rejects_bad_config_before_usi`：tempへkaname_shogiパッケージ・launcher・configを配置した隔離コピーで、設定なし、不正JSON、キー欠落、不正UTF-8、設定先がディレクトリを個別検査。stdout空、stderrに対象パス/理由、終了1。元の設定を一時rename/書換えしない。権限依存chmodは使わずOSError伝達を関数テストでも確認する。
-- [ ] タスク3対象のRed→最小実装→Green。実プロセスには既存の有限timeoutとfinallyで回収する手順を使う。探索の時間保証を測る検査にはしない。
-- [ ] 隔離コピーでgoごと再読込、main注入の破棄（run再読込）、設定エラー時の正常終了への変更、go分岐のprepare呼出し削除を個別注入。意図したFAILと復元後Greenを記録。Refactor要否・独立レビューを完了し、品質検査・記録・通常コミット。既存合法手なしresign、局面保存、三方針の局内固定/次局継承、rng共有も回帰確認する。
+- [x] `test_go_prepares_budget_before_move_generation`：実際のprepareをwrapし、現在局面の手番と設定同一性、手計算予算、prepare→legal_moves→choose_moveの順序を確認。SFEN手番反転・同手数、moves適用後の後手を使う。
+- [x] `test_each_go_uses_only_its_own_clock`：非0→時計なし→明示0→非0の連続goで戻り値が所定予算、None、SearchBudget(0,0)、所定予算になることをassertEqual。各goで通常bestmove一回を確認し、0で停止実装済みとは扱わない。
+- [x] `test_invalid_go_never_starts_search`：有効positionの後に相手側不正・欠落・未対応条件を入れ `assertRaises(ValueError)`、legal_moves/choose_move/計算は `assert_not_called()`、outputs空を確認。局面なしの既存エラーも維持。
+- [x] `test_run_loads_config_once_before_input`：loaderとinputの呼出し順を照合し、usi/isready/go/usinewgame/次position/go/quitでもloaderは `assert_called_once_with()`、prepareへ同一オブジェクトを渡す。明示注入時 `assert_not_called()`。別のrun呼出しには別設定を返すmock列を用い、二回目の結果と参照を確認。
+- [x] `test_main_loads_and_injects_config_once`：mainの実処理を通し、読込一回とrunへのtime_config同一性を確認。run側の再読込も呼出し回数で検出する。
+- [x] `test_main_rejects_invalid_or_unreadable_config_before_input`：loaderのValueError/OSErrorをそれぞれ注入し、`assertEqual(main(),1)`、stdout空、stderrに接頭辞/パス/理由、stdin未読・run未実行を確認。run直呼びでは同じ例外を伝達し出力しない。
+- [x] `test_entrypoint_rejects_invalid_clock`：実プロセスで有効position後、不正時計/不足/正加算/movetimeを個別投入。終了1、bestmoveなし、stderrに項目・理由。診断全文には固定しない。
+- [x] `test_launcher_loads_config_from_other_cwd`：絶対パスlauncherを一時cwdから起動しusi応答列一致、stderr空、終了0。`test_launcher_rejects_bad_config_before_usi`：tempへkaname_shogiパッケージ・launcher・configを配置した隔離コピーで、設定なし、不正JSON、キー欠落、不正UTF-8、設定先がディレクトリを個別検査。stdout空、stderrに対象パス/理由、終了1。元の設定を一時rename/書換えしない。権限依存chmodは使わずOSError伝達を関数テストでも確認する。
+- [x] タスク3対象のRed→最小実装→Green。実プロセスには既存の有限timeoutとfinallyで回収する手順を使う。探索の時間保証を測る検査にはしない。
+- [x] 隔離コピーでgoごと再読込、main注入の破棄（run再読込）、設定エラー時の正常終了への変更、go分岐のprepare呼出し削除を個別注入。意図したFAILと復元後Greenを記録。Refactor要否・独立レビューを完了し、品質検査・記録・通常コミット。既存合法手なしresign、局面保存、三方針の局内固定/次局継承、rng共有も回帰確認する。
 
 ### 終了検証・記録・統合ゲート
 
@@ -153,3 +153,8 @@ mainは設定読込だけを囲むtryでValueError/OSErrorをstderrの `USIエ�
 期限比較、並行入力、停止中断、途中評価、一回応答の競合、故障回収、実時間安全性、係数の最適性、全OS、任意サイズ入力の資源耐性は後続または未保証。未実装の範囲を今回のテストで保証しない。
 
 2026-10-12、本人が「承認する」と回答し本書の計画内容を明示承認。今回の依頼は計画提示までなので、承認後も実装開始指示を得るまでコード・テスト・設定変更やTDDへ進まない。Git保存・main取り込み・pushは今回実施しない。[学習・レビュー記録](../learning/usi-clock-settings-implementation-plan.md)を参照する。
+
+
+## 実装開始後の現在状態
+
+2026-10-12、本人「では実装を開始して下さい。適切なスキルを使い、進めて下さい」により実装開始。上記の「今回は実行しない」「未実施」「Git保存しない」等は計画作成時の履歴。時計解析・先後選択・起動時設定保持・goへの予算準備を実装し、全389件成功、Ruff成功、代表変異9種を検出。タスク1・2の保存bf3ca1b、計画保存d942386。タスク3・ブランチ全体の独立レビューは最終Critical/Important/Minor 0。最終保存を進める。main取り込みは未承認・未実施。詳細は学習記録。

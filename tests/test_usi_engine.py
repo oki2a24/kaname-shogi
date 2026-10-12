@@ -904,3 +904,314 @@ class UsiEngineProcessTests(unittest.TestCase):
             reader.close()
             process.stdout.close()
             process.stderr.close()
+
+
+class UsiClockConnectionTests(unittest.TestCase):
+    """時計準備の順序と起動設定の寿命を実処理で確認する。"""
+
+    def config(self, turns=20):
+        from fractions import Fraction
+
+        from kaname_shogi.time_management import TimeManagementConfig
+
+        return TimeManagementConfig(turns, Fraction(2), Fraction(3, 4), 2000)
+
+    def test_go_prepares_budget_before_move_generation(self):
+        """SFENと履歴適用後の手番から、手生成前に予算を準備する。
+
+        手数や開始側で時計を選ぶ誤りと、予算準備を省く接続漏れを検出する。
+        """
+        base = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL"
+        for command, side, expected in (
+            (f"position sfen {base} b - 17", Side.SENTE, (30000, 60000)),
+            (f"position sfen {base} w - 17", Side.GOTE, (6000, 12000)),
+            ("position startpos moves 7g7f", Side.GOTE, (6000, 12000)),
+        ):
+            with self.subTest(command=command):
+                config = self.config()
+                events, budgets, outputs = [], [], []
+                prepare = usi_engine._prepare_search_budget
+                choose = usi_engine.choose_move
+
+                def prepare_spy(
+                    clock,
+                    current_side,
+                    setting,
+                    events=events,
+                    side=side,
+                    config=config,
+                    prepare=prepare,
+                    budgets=budgets,
+                ):
+                    events.append("prepare")
+                    self.assertEqual(current_side, side)
+                    self.assertIs(setting, config)
+                    budget = prepare(clock, current_side, setting)
+                    budgets.append((budget.target_ms, budget.maximum_ms))
+                    return budget
+
+                def generate(position, events=events):
+                    events.append("generate")
+                    return legal_moves(position)
+
+                def select(*args, events=events, choose=choose):
+                    events.append("choose")
+                    return choose(*args)
+
+                with (
+                    patch.object(
+                        usi_engine, "_prepare_search_budget", side_effect=prepare_spy
+                    ),
+                    patch.object(usi_engine, "legal_moves", side_effect=generate),
+                    patch.object(usi_engine, "choose_move", side_effect=select),
+                ):
+                    usi_engine.run_usi_engine(
+                        ScriptedInput(
+                            [
+                                command,
+                                "go btime 600000 wtime 120000 byoyomi 30000",
+                                "quit",
+                            ]
+                        ),
+                        outputs.append,
+                        random.Random(0),
+                        time_config=config,
+                    )
+                self.assertEqual(events, ["prepare", "generate", "choose"])
+                self.assertEqual(budgets, [expected])
+                self.assertEqual(len(outputs), 1)
+                self.assertTrue(outputs[0].startswith("bestmove "))
+
+    def test_each_go_uses_only_its_own_clock(self):
+        """連続goで時計なし・0・非0を流用せず通常応答する。
+
+        前回予算の残留と、未接続段階で0を投了や無応答へ変える誤りを検出する。
+        """
+        from kaname_shogi.time_management import SearchBudget
+
+        budgets, outputs = [], []
+        prepare = usi_engine._prepare_search_budget
+
+        def record(*args):
+            result = prepare(*args)
+            budgets.append(result)
+            return result
+
+        with patch.object(usi_engine, "_prepare_search_budget", side_effect=record):
+            usi_engine.run_usi_engine(
+                ScriptedInput(
+                    [
+                        "position startpos moves 7g7f",
+                        "go btime 600000 wtime 120000 byoyomi 30000",
+                        "go",
+                        "go btime 0 wtime 0",
+                        "go btime 600000 wtime 120000 byoyomi 30000",
+                        "quit",
+                    ]
+                ),
+                outputs.append,
+                time_config=self.config(),
+            )
+        self.assertEqual(
+            budgets,
+            [
+                SearchBudget(6000, 12000),
+                None,
+                SearchBudget(0, 0),
+                SearchBudget(6000, 12000),
+            ],
+        )
+        self.assertEqual(len(outputs), 4)
+        self.assertTrue(
+            all(
+                line.startswith("bestmove ") and line != "bestmove resign"
+                for line in outputs
+            )
+        )
+
+    def test_invalid_go_never_starts_search(self):
+        """相手側不正・不足・未対応条件を探索前に拒否する。
+
+        使う側だけの検査、無制限への読み替え、エラー時bestmoveを検出する。
+        """
+        for command in (
+            "go btime bad wtime 120000",
+            "go wtime 0",
+            "go binc 1",
+            "go movetime 1",
+        ):
+            with self.subTest(command=command):
+                outputs = []
+                with (
+                    patch.object(usi_engine, "legal_moves") as generate,
+                    patch.object(usi_engine, "choose_move") as choose,
+                    patch.object(usi_engine, "calculate_search_budget") as calculate,
+                ):
+                    with self.assertRaises(ValueError):
+                        usi_engine.run_usi_engine(
+                            ScriptedInput(["position startpos moves 7g7f", command]),
+                            outputs.append,
+                            time_config=self.config(),
+                        )
+                    generate.assert_not_called()
+                    choose.assert_not_called()
+                    calculate.assert_not_called()
+                self.assertEqual(outputs, [])
+
+    def test_run_loads_config_once_before_input(self):
+        """各実行の入力前に一回読み、新局でも同じ設定を使う。
+
+        goごと再読込、実行間キャッシュ、注入破棄を検出する。
+        """
+        first, second = self.config(), self.config(4)
+        events, settings, budgets = [], [], []
+        prepare = usi_engine._prepare_search_budget
+
+        def load():
+            events.append("load")
+            return first if events.count("load") == 1 else second
+
+        def record(clock, side, config):
+            settings.append(config)
+            budget = prepare(clock, side, config)
+            budgets.append((budget.target_ms, budget.maximum_ms))
+            return budget
+
+        lines = [
+            "usi",
+            "isready",
+            "position startpos moves 7g7f",
+            "go btime 600000 wtime 120000",
+            "usinewgame",
+            "position startpos moves 7g7f",
+            "go btime 600000 wtime 120000",
+            "quit",
+        ]
+        with (
+            patch.object(
+                usi_engine, "load_time_management_config", side_effect=load
+            ) as loader,
+            patch.object(usi_engine, "_prepare_search_budget", side_effect=record),
+        ):
+            for _ in range(2):
+                scripted = ScriptedInput(lines)
+
+                def read(scripted=scripted):
+                    events.append("input")
+                    return scripted()
+
+                usi_engine.run_usi_engine(read, lambda line: None)
+            self.assertEqual(loader.call_count, 2)
+            self.assertEqual(
+                loader.call_args_list, [unittest.mock.call(), unittest.mock.call()]
+            )
+            self.assertEqual(events[0], "load")
+            self.assertEqual(events[len(lines) + 1], "load")
+            usi_engine.run_usi_engine(
+                ScriptedInput(["quit"]), lambda line: None, time_config=first
+            )
+            self.assertEqual(loader.call_count, 2)
+        self.assertTrue(all(setting is first for setting in settings[:2]))
+        self.assertTrue(all(setting is second for setting in settings[2:]))
+        self.assertEqual(
+            budgets, [(6000, 12000), (6000, 12000), (30000, 60000), (30000, 60000)]
+        )
+
+    def test_main_loads_and_injects_config_once(self):
+        """mainの実行を通して設定を一回だけ読む。
+
+        mainとrunの二重読込、注入設定の置換を検出する。
+        """
+        from io import StringIO
+
+        config = self.config(4)
+        settings = []
+        prepare = usi_engine._prepare_search_budget
+
+        def record(clock, side, setting):
+            settings.append(setting)
+            return prepare(clock, side, setting)
+
+        with (
+            patch.object(
+                usi_engine, "load_time_management_config", return_value=config
+            ) as loader,
+            patch.object(usi_engine, "_prepare_search_budget", side_effect=record),
+            patch.object(
+                sys,
+                "stdin",
+                StringIO(
+                    "position startpos moves 7g7f\ngo btime 600000 wtime 120000\nquit\n"
+                ),
+            ),
+            patch.object(sys, "stdout", StringIO()) as output,
+        ):
+            self.assertEqual(usi_engine.main(), 0)
+            loader.assert_called_once_with()
+            self.assertTrue(output.getvalue().startswith("bestmove "))
+        self.assertEqual(len(settings), 1)
+        self.assertIs(settings[0], config)
+
+    def test_main_rejects_invalid_or_unreadable_config_before_input(self):
+        """設定故障時は入力を読まずstderrと終了1を返す。
+
+        代替値への置換、診断のstdout混入、runの開始を検出する。
+        """
+        from io import StringIO
+        from unittest.mock import Mock
+
+        for error in (
+            ValueError("/settings.json: 不正項目"),
+            OSError("/settings.json: 読込不能"),
+        ):
+            with self.subTest(error=error):
+                stream = Mock(wraps=StringIO("usi\nquit\n"))
+                with (
+                    patch.object(
+                        usi_engine, "load_time_management_config", side_effect=error
+                    ),
+                    patch.object(sys, "stdin", stream),
+                    patch.object(sys, "stdout", StringIO()) as output,
+                    patch.object(sys, "stderr", StringIO()) as diagnostic,
+                ):
+                    self.assertEqual(usi_engine.main(), 1)
+                    self.assertEqual(output.getvalue(), "")
+                    self.assertIn("USIエンジンエラー:", diagnostic.getvalue())
+                    self.assertIn(str(error), diagnostic.getvalue())
+                    stream.readline.assert_not_called()
+                source = ScriptedInput(["usi"])
+                outputs = []
+                with patch.object(
+                    usi_engine, "load_time_management_config", side_effect=error
+                ):
+                    with self.assertRaises(type(error)):
+                        usi_engine.run_usi_engine(source, outputs.append)
+                self.assertEqual(source.calls, 0)
+                self.assertEqual(outputs, [])
+
+    def test_entrypoint_rejects_invalid_clock(self):
+        """実プロセスでも不正時計をbestmoveなし・終了1で診断する。
+
+        関数境界だけ検査し、mainの診断や終了コードへの接続を落とす誤りを検出する。
+        """
+        for command, key in (
+            ("go btime bad wtime 120000", "btime"),
+            ("go wtime 0", "btime"),
+            ("go binc 1", "binc"),
+            ("go movetime 1", "movetime"),
+        ):
+            with self.subTest(command=command):
+                result = subprocess.run(
+                    [sys.executable, "-m", "kaname_shogi.usi_engine"],
+                    cwd=Path(__file__).resolve().parents[1],
+                    input="position startpos moves 7g7f\n" + command + "\nquit\n",
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    timeout=5,
+                    check=False,
+                )
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(result.stdout, "")
+                self.assertIn("USIエンジンエラー:", result.stderr)
+                self.assertIn(key, result.stderr)

@@ -1,10 +1,10 @@
 # USIエンジンの一手応答
 
-更新日：2026-10-11
+更新日：2026-10-12
 
 ## 境界
 
-`kaname_shogi.usi_engine.run_usi_engine(input_fn, output_fn, rng=None)` は注入された一行入出力関数でUSIコマンドを処理する。入力関数はEOF時に `EOFError` を送出し、出力関数には改行なしの応答一行を渡す。標準入出力の入口は `python3 -m kaname_shogi.usi_engine`。日本語CLIとは分離している。
+`kaname_shogi.usi_engine.run_usi_engine(input_fn, output_fn, rng=None, *, time_config=None)` は注入された一行入出力関数でUSIコマンドを処理する。入力関数はEOF時に `EOFError` を送出し、出力関数には改行なしの応答一行を渡す。標準入出力の入口は `python3 -m kaname_shogi.usi_engine`。日本語CLIとは分離している。
 
 ## 局面と一手
 
@@ -31,9 +31,9 @@ option name Difficulty type combo default Random var Random var Material var Two
 
 - `usi` はid行、Difficulty option行、`usiok`を順に返し、`isready` は `readyok` を返す。
 - `gameover`、未知コマンド、未知の `go` トークンは応答せず読み飛ばす。
-- 時計引数は使わず、`go` を受けると合法手選択後すぐ応答する。
-- `searchmoves`、`depth`、`nodes`、`mate`、`infinite`、`ponder` は未対応として `ValueError`。有効なpositionがない `go` と、対応外・不正なpositionも `ValueError`。
-- 実行入口は `ValueError` をstderrへ診断し、非0で終了する。USI応答だけをstdoutに書き、各行をflushする。
+- `go` は時計引数を検証し、現在Position.side_to_moveの自分側時計から予算を計算する。期間計算までの接続で、期限判定・探索停止は未実装。0予算でも通常比較を完了して応答する。
+- `searchmoves`、`depth`、`nodes`、`mate`、`infinite`、`ponder`、`movetime` は未対応として `ValueError`。有効なpositionがない `go` と、対応外・不正なpositionも `ValueError`。
+- 実行入口は入力受付前に同梱JSON設定を一回読む。設定のValueError/OSErrorはstderr診断・終了1、USI入力のValueErrorもstderr診断・終了1。設定読込失敗を代替値で隠さない。USI応答だけをstdoutに書き、各行をflushする。
 - `quit` と入力EOFは正常終了する。
 
 ## コマンド行の表現
@@ -43,3 +43,9 @@ option name Difficulty type combo default Random var Random var Material var Two
 第59〜62回にShogiHome 1.28.1で平手対局・観察を行った記録は[ShogiHome対局の知識メモ](usi-shogihome-gameplay.md)を参照する。第65回はDifficulty選択画面とMaterial設定のUSI送信を確認し、第66回は同じ7手局面でRandomの☖９四歩、Materialの☖８八角成を実機観察し、両方の設定と着手をUSIログで確認した。これは一局面・各設定一局の実例であり、他局面に対する一般性は示さない。詳細は[第66回学習記録](../learning/66-shogihome-material-move-effect.md)を参照する。
 
 第67回で追加した `position sfen` のコード対応は、第69回にShogiHome 1.28.1からの実通信でも確認した。4欄SFENを画面へ貼り付けた後、時計あり（持ち時間10分・秒読み30秒）の一局で `position sfen ...`、時間付き `go`、`bestmove 9a9b` がログに記録され、盤面にも後手の合法手が反映された。画面貼り付けだけでは通信確認にならない。ShogiHomeは持ち時間と秒読みが両方0の設定を「持ち時間と秒読みが両方とも0です」と拒否したため、時計なし対局はこの版・画面では開始できなかった。実測の範囲と後片付けの制約は[第69回学習記録](../learning/69-shogihome-sfen-engine.md)を参照する。
+
+## 時計受付と設定の寿命
+
+時計ありではbtime/wtimeを両方必須とし、byoyomi省略は0。非負整数ms、重複・値欠落・非整数・負を拒否する。半角十進数字と任意の先頭符号、先頭0を許し、-0は0。binc/wincは0のみ受付、正は未対応。時計項目なし・加算0だけは時計なしNone、byoyomiだけは必須時計不足。未知goトークンを読み飛ばしても後続の既知項目を検査する。
+
+TimeManagementConfigは不変な設定データで、mainが一回読んでrunへ注入する。runの省略時だけ同じloaderで一回読み、全go/usinewgameで保持する。局面やDifficultyの寿命とは分離し、別runでは読み直す。SearchBudgetは期間データで停止操作ではない。時計なしNoneと明示時計の0予算を区別し、後続の探索制御へ渡す境界を準備した。[計画・検証範囲](../plans/2026-10-12-usi-clock-settings-implementation-plan.md)、[実施記録](../learning/usi-clock-settings-implementation-plan.md)。時間内応答・探索中入力受付・stop対応はまだ保証しない。
