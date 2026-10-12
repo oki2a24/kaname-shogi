@@ -6,7 +6,7 @@
 
 作業場所 `/Users/oki2a24/kaname-shogi`、現在main。計画d562cfb、入力源e66dc6d、接続・回収a11d132、実装記録a9159d4を取り込み済み。別worktreeなし。git pull --ff-onlyはAlready up to date、pushなし。Ruff0.16.10・hooksPath=.githooks一致。開始時の経緯は[引き継ぎ](handover-input-concurrency-usi-plan.md)に保持する。計測・対局・係数調整・ShogiHome再確認は未実施、厳密な期限内応答は保証しない。
 
-次は最後の理解確認一問の本人回答を待つ。回答とアシスタント補足を区別して学習記録へ追記・保存してから、README・方向性・next-topicsを見直し次候補を提示する。未回答を完了扱いせず、新テーマには進まない。
+最後の理解確認へ本人「処理プロセスを完了させるため」と回答。スレッド終了をjoinで待ち、探索担当と共有乱数器の重複利用を防ぐ補足と区別して[学習記録](learning/input-concurrency-usi-plan.md)へ保存。今回テーマは完了。次は[候補](next-topics.md)から本人の選定を待ち、新テーマは未開始。
 
 ## 二手先読み設計の完了
 
