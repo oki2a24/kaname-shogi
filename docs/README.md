@@ -143,7 +143,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 時計設定・時間配分（main統合・検証・理解確認完了） | [学習・確認](learning/time-budget-implementation-plan.md) | [設定・計算](knowledge/time-budget.md) | [全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [計画案](plans/2026-10-12-time-budget-implementation-plan.md) | [引き継ぎ](handover-time-budget-implementation-plan.md) |
 | USI時計受付・設定接続（main統合・理解確認完了） | [学習・レビュー](learning/usi-clock-settings-implementation-plan.md) | — | [承認済み全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [承認済み計画・実績](plans/2026-10-12-usi-clock-settings-implementation-plan.md) | [引き継ぎ](handover-usi-clock-settings-implementation-plan.md) |
 | 探索停止・途中結果（main統合・理解確認済み） | [学習・実装レビュー](learning/search-stop-implementation-plan.md) | [探索部品](knowledge/search-stop.md) | [承認済み全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [承認済み計画・実績](plans/2026-10-12-search-stop-implementation-plan.md) | [開始時引き継ぎ](handover-search-stop-implementation-plan.md) |
-| 入力並行処理・USI接続（計画承認済み・実装開始指示待ち） | [学習・作成記録](learning/input-concurrency-usi-plan.md) | — | [承認済み全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [計画案](plans/2026-10-12-input-concurrency-usi-implementation-plan.md) | [開始時引き継ぎ](handover-input-concurrency-usi-plan.md) |
+| 入力並行処理・USI接続（実装・最終確認中、main未統合） | [学習・作成記録](learning/input-concurrency-usi-plan.md) | — | [承認済み全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [計画案](plans/2026-10-12-input-concurrency-usi-implementation-plan.md) | [開始時引き継ぎ](handover-input-concurrency-usi-plan.md) |
 | CLIの三方式選択（タスク3、新セッション準備のみ） | — | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク3](plans/2026-10-10-two-ply-implementation-plan.md#タスク3cliから三方式を選ぶ) | [引き継ぎ](handover-cli-three-policies.md) |
 
 ## 例外と履歴の読み方
@@ -185,4 +185,4 @@ USI新値後の未知値保持（計画タスク4の1項目のみ、main取り�
 
 探索停止・途中結果の実装計画だけの開始資料は[新セッション引き継ぎ](handover-search-stop-implementation-plan.md)。引き継ぎは準備時点の履歴。現在の実装・統合承認段階は[再開案内](resume.md)、検証とレビューは[学習・作成記録](learning/search-stop-implementation-plan.md)を参照する。
 
-入力並行処理・USI接続の計画テーマは開始済み。[計画案](plans/2026-10-12-input-concurrency-usi-implementation-plan.md)、[学習・作成記録](learning/input-concurrency-usi-plan.md)、現在の承認段階は[再開案内](resume.md)を参照する。開始時の背景は[引き継ぎ](handover-input-concurrency-usi-plan.md)に保持する。
+入力並行処理・USI接続は計画承認後に実装開始済み。[計画案](plans/2026-10-12-input-concurrency-usi-implementation-plan.md)、[学習・作成記録](learning/input-concurrency-usi-plan.md)、現在の承認段階は[再開案内](resume.md)を参照する。開始時の背景は[引き継ぎ](handover-input-concurrency-usi-plan.md)に保持する。

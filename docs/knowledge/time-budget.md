@@ -16,4 +16,4 @@ R>0では基本目標=R//N、境界=max(0,R+B−S)、上限=min(floor(基本目�
 
 技術根拠: [Python JSON](https://docs.python.org/3.9/library/json.html)、[Decimal](https://docs.python.org/3.9/library/decimal.html)、[Fraction](https://docs.python.org/3.9/library/fractions.html)。
 
-USI時計のNoneは時計なし、SearchBudget(0,0)は明示時計から計算した0期間。現在はどちらも通常の有限比較を完了して返す。期限判定・探索停止への接続は後続。[時計受付・接続計画](../plans/2026-10-12-usi-clock-settings-implementation-plan.md)、[実施記録](../learning/usi-clock-settings-implementation-plan.md)。
+USI時計のNoneは時計なし、SearchBudget(0,0)は明示時計から計算した0期間。USIは各goの新SearchControlへ渡して期限判定・停止へ接続する（作業ブランチ実装、main承認待ち）。0期間は合法予備手確保または手なし確定まで通常停止を保留する。[接続仕様](usi-engine-response.md)を参照。[時計受付・接続計画](../plans/2026-10-12-usi-clock-settings-implementation-plan.md)、[実施記録](../learning/usi-clock-settings-implementation-plan.md)。

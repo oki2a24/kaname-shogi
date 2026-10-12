@@ -212,3 +212,56 @@ assert selector.get_map() is None
 stream.close(); os.close(write_fd)
 """,
         )
+
+    def test_close_failure_still_closes_other_pipe_end(self):
+        """資源解放の一箇所が失敗しても残りの解放と属性復元を試みる。
+
+        一つのclose例外による後続pipe残留を検出する。
+        """
+        run_isolated(
+            self,
+            PRELUDE
+            + r"""
+owned = [source._wake_read, source._wake_write]
+original = os.close
+calls = []
+def failing_close(fd):
+    calls.append(fd)
+    original(fd)
+    if fd == owned[0]: raise OSError("close故障")
+with patch("os.close", side_effect=failing_close):
+    try: source.close()
+    except OSError as error: assert str(error) == "close故障"
+    else: raise AssertionError("解放故障を隠した")
+assert calls == owned, calls
+assert os.get_blocking(read_fd)
+assert not stream.closed
+stream.close(); os.close(write_fd)
+""",
+        )
+
+    def test_initialization_failure_keeps_primary_cause(self):
+        """構築故障とcleanup故障が重なっても最初の原因を保つ。
+
+        後片付け例外で登録失敗を上書きする誤りを検出する。
+        """
+        run_isolated(
+            self,
+            PRELUDE
+            + r"""
+source.close()
+selector = u.selectors.DefaultSelector()
+original_close = selector.close
+def failing_close():
+    original_close()
+    raise OSError("selector解放故障")
+with patch.object(u.selectors, "DefaultSelector", return_value=selector), patch.object(selector, "register", side_effect=ValueError("登録主原因")), patch.object(selector, "close", side_effect=failing_close):
+    try: Source(stream)
+    except ValueError as error:
+        assert str(error) == "登録主原因"
+        assert any("selector解放故障" in str(e) for e in error._usi_cleanup_errors)
+    else: raise AssertionError("主原因を失った")
+assert os.get_blocking(read_fd)
+stream.close(); os.close(write_fd)
+""",
+        )

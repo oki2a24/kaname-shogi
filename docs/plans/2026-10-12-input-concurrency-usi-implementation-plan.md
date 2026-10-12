@@ -1,6 +1,6 @@
 # 入力並行処理・USI接続 実装計画
 
-> **AIエージェントへの指示:** 2026-10-12、本人「承認する」により本計画を承認済み。実装開始指示待ち。本人の実装開始指示までコード・テスト・設定変更、TDD、実装を始めない。実装時は `executing-plans` または本人が選ぶ `subagent-driven-development` を使用する。main取り込みは別承認。
+> **AIエージェントへの指示:** 2026-10-12、本人「承認する」により本計画を承認済み。本人「実装開始して下さい」により実装開始済み。進捗・実績は末尾と学習記録を参照。実装時は `executing-plans` または本人が選ぶ `subagent-driven-development` を使用する。main取り込みは別承認。
 
 **目標:** 完成済み探索停止部品をUSIへ接続し、探索中入力、停止・抑制、一回応答、故障通知、入力待機解除と担当回収を実現する。
 
@@ -107,7 +107,7 @@ Queueは通知の共通受渡し場所。入力担当は規則・局面を解析
 | 原点の遅れ | goを100nsで読み、配送/回収後の現在時刻を進める。SearchControlへ100を渡し期限が既に到達 | 1・2。起動時刻への置換検出。既存制御テストで整数期限計算を補完 |
 | 旧テスト移行による契約喪失 | 三方式・局内固定/次局継承・未知値保持・rng同一性・保存局面と両持駒・先後時計・None/0/非0 | 2・4。sleep待ちへの置換や監視削除を避ける。探索評価は既存探索テストが補完 |
 
-## 実装タスク（すべて承認後、未実施）
+## 実装タスク（承認・開始指示後の実施チェック）
 
 **検査自体の回収規則:** 停止不能な非daemon担当を生み得るケース（部分行取消、故障後終了、共通Lockとの相互待ち、起動途中回収）と、それらの変異実験は、関数テスト・実pipeテストを含め親監視付き子プロセスで実行する。親は有限時間で結果またはタイムアウトを検出し、finallyでterminate→kill→waitして回収する。子の有限joinによるassertion FAILだけではPython終了時の待機を防げないため、同一unittestプロセスへ停止不能スレッドを残さない。正常側では子の結果に全担当非生存・資源閉鎖を含め、親による強制終了を製品の正常回収成功と数えない。
 
@@ -115,49 +115,49 @@ Queueは通知の共通受渡し場所。入力担当は規則・局面を解析
 
 ファイル：usi_engine.py / 新test_usi_input.py。生産：_InputLine、_InputCancelled、_StdinLineSourceの上記3操作。単独で実pipe入力を確認できる単位。
 
-- [ ] `test_partial_line_is_cancelled_without_more_input`：部分バイトだけ投入しcancel、読取りthreadを有限joinして非生存、行配送0をassert。
-- [ ] `test_lines_keep_read_timestamps`：一readの複数行を制御時計100/101で確定、主担当配送を遅らせてもread_nsが100/101のまま。
-- [ ] `test_split_encoding_newlines_and_eof_tail`：UTF-8分割、LF/CRLF/CRの分割、空行、改行なし末尾、空EOFで既存readline相当の順序と一回EOFをassert。不正復号は故障。
-- [ ] `test_cancel_closes_owned_resources_and_restores_flags`：無言入力・初期化途中例外・反復cancel/close、通知pipe/selector閉鎖とstdin生存・blocking属性復元をassert。readエラーも終了通知経路を通す。
-- [ ] 実行 `.venv/bin/python -m unittest discover -s tests -p 'test_usi_input.py' -v`。先に実行可能な停止不能の境界で意図したアサーションFAILを確認する。importエラーだけはRedとしない。
-- [ ] 計画の入力操作を最小実装し同コマンド成功確認。固定sleepで入力状態を推測せず、読み取り待機/部分蓄積の同期点をテスト側で制御する。
-- [ ] Refactor要否・独立レビュー・検出範囲を学習記録へ残し、Ruffと差分確認後に通常コミット。
+- [x] `test_partial_line_is_cancelled_without_more_input`：部分バイトだけ投入しcancel、読取りthreadを有限joinして非生存、行配送0をassert。
+- [x] `test_lines_keep_read_timestamps`：一readの複数行を制御時計100/101で確定、主担当配送を遅らせてもread_nsが100/101のまま。
+- [x] `test_split_encoding_newlines_and_eof_tail`：UTF-8分割、LF/CRLF/CRの分割、空行、改行なし末尾、空EOFで既存readline相当の順序と一回EOFをassert。不正復号は故障。
+- [x] `test_cancel_closes_owned_resources_and_restores_flags`：無言入力・初期化途中例外・反復cancel/close、通知pipe/selector閉鎖とstdin生存・blocking属性復元をassert。readエラーも終了通知経路を通す。
+- [x] 実行 `.venv/bin/python -m unittest discover -s tests -p 'test_usi_input.py' -v`。先に実行可能な停止不能の境界で意図したアサーションFAILを確認する。importエラーだけはRedとしない。
+- [x] 計画の入力操作を最小実装し同コマンド成功確認。固定sleepで入力状態を推測せず、読み取り待機/部分蓄積の同期点をテスト側で制御する。
+- [x] Refactor要否・独立レビュー・検出範囲を学習記録へ残し、Ruffと差分確認後に通常コミット。
 
 ### タスク2：入力と探索の接続・一回応答
 
 ファイル：usi_engine.py / 新test_usi_concurrency.py / test_usi_engine.py。消費：タスク1の_InputLine、既存SearchControl/search_move。生産：_SearchContext、_run_session、_search_and_respond、cancel_input_fn付きrun。
 
-- [ ] `test_go_uses_read_origin_and_new_context`：read_ns=100をassert、コピーは保存局面と別参照で内容同一、goごと制御別参照、rngは同一。None/0/非0を連続応答の後に進め、先後時計を固定予算と照合。
-- [ ] `test_search_results_send_once_or_suppress`：固定合法手のCOMPLETE/INTERRUPTEDは各1、COMPLETE/Noneはresign1、SUPPRESSEDは0。自然完了/stop/上限競合とstop反復でも1。
-- [ ] `test_commands_during_search`：探索開始Eventで止め、isready/usiの応答・setoption次局反映・未知無視・idle stop無視をassert。探索中position/go/usinewgameは各ValueError、送信0。
-- [ ] `test_input_confirmation_orders_suppression_and_send`：送信前Lock取得と入力確定の両順序を作り、quit/EOF/gameover/不正入力の送信0/送信済み1をassert。合法手未確保中も抑制要求を渡す。
-- [ ] `test_next_command_waits_for_previous_worker`：送信済み・終了前の同期点で次position/go/usinewgameを受け、正常処理、最大探索担当数1、後続go原点維持をassert。後片付けが同じLockを使っても終了できる。
-- [ ] `.venv/bin/python -m unittest discover -s tests -p 'test_usi_concurrency.py' -v`で各振る舞いのRedを確認し、接続を最小実装してGreen。既存USI通常応答テストも同期点を移行し成功確認。
-- [ ] Refactor要否・独立レビュー後、Ruff・対象回帰・記録を揃え通常コミット。入力と探索の責務を同じモジュール内で分け、無関係な公開APIは増やさない。
+- [x] `test_go_uses_read_origin_and_new_context`：read_ns=100をassert、コピーは保存局面と別参照で内容同一、goごと制御別参照、rngは同一。None/0/非0を連続応答の後に進め、先後時計を固定予算と照合。
+- [x] `test_search_results_send_once_or_suppress`：固定合法手のCOMPLETE/INTERRUPTEDは各1、COMPLETE/Noneはresign1、SUPPRESSEDは0。自然完了/stop/上限競合とstop反復でも1。
+- [x] `test_commands_during_search`：探索開始Eventで止め、isready/usiの応答・setoption次局反映・未知無視・idle stop無視をassert。探索中position/go/usinewgameは各ValueError、送信0。
+- [x] `test_input_confirmation_orders_suppression_and_send`：送信前Lock取得と入力確定の両順序を作り、quit/EOF/gameover/不正入力の送信0/送信済み1をassert。合法手未確保中も抑制要求を渡す。
+- [x] `test_next_command_waits_for_previous_worker`：送信済み・終了前の同期点で次position/go/usinewgameを受け、正常処理、最大探索担当数1、後続go原点維持をassert。後片付けが同じLockを使っても終了できる。
+- [x] `.venv/bin/python -m unittest discover -s tests -p 'test_usi_concurrency.py' -v`で各振る舞いのRedを確認し、接続を最小実装してGreen。既存USI通常応答テストも同期点を移行し成功確認。
+- [x] Refactor要否・独立レビュー後、Ruff・対象回帰を確認。通常コミット・記録の保存は共通終了経路のためタスク3/4と統合。入力と探索の責務を同じモジュール内で分け、無関係な公開APIは増やさない。
 
 ### タスク3：故障通知・終了回収・main
 
 ファイル：usi_engine.py / test_usi_concurrency.py / test_usi_input.py / test_usi_engine.py。消費：タスク2のsession/context、タスク1のcancel/close。生産：全終了経路の回収とstderr/終了コード。
 
-- [ ] `test_worker_failure_wakes_idle_input`：探索・読取り・出力の例外、探索start失敗を別々に注入。無言/部分行入力で有限回収、全担当非生存、送信失敗時sent=False・再送0、原因保持をassert。
-- [ ] `test_shutdown_and_gameover_have_distinct_lifetimes`：quit/EOFは正常終了・抑制、入力不正/故障は異常、gameoverは抑制回収後isready・次goに応答。次探索へ抑制を持ち越さない。
-- [ ] `test_partial_startup_cleanup_and_primary_error`：入力担当start失敗、入力源構築途中失敗、主担当出力失敗、後片付けの追加失敗で、取得済み資源だけ解放し主原因を失わないことをassert。
-- [ ] 対象2モジュールとtest_usi_engineを実行し振る舞いのFAILを確認、最小の共通finally/故障通知/main診断を実装し成功確認。設定読込は入力源構築前、run直接呼出しの例外伝達は維持。
-- [ ] Refactor要否・独立レビュー後、Ruff・回帰・記録を揃え通常コミット。
+- [x] `test_worker_failure_wakes_idle_input`：探索・読取り・出力の例外、探索start失敗を別々に注入。無言/部分行入力で有限回収、全担当非生存、送信失敗時sent=False・再送0、原因保持をassert。
+- [x] `test_shutdown_and_gameover_have_distinct_lifetimes`：quit/EOFは正常終了・抑制、入力不正/故障は異常、gameoverは抑制回収後isready・次goに応答。次探索へ抑制を持ち越さない。
+- [x] `test_partial_startup_cleanup_and_primary_error`：入力担当start失敗、入力源構築途中失敗、主担当出力失敗、後片付けの追加失敗で、取得済み資源だけ解放し主原因を失わないことをassert。
+- [x] 対象2モジュールとtest_usi_engineを実行し振る舞いのFAILを確認、最小の共通finally/故障通知/main診断を実装し成功確認。設定読込は入力源構築前、run直接呼出しの例外伝達は維持。
+- [x] Refactor要否・独立レビュー後、Ruff・回帰を確認。通常コミット・記録の保存はタスク4と統合。
 
 ### タスク4：既存テスト移行・実プロセス接続確認・最終記録
 
 ファイル：test_usi_engine.py / 必要時test_usi_engine_launcher.py / 文書。消費：接続済み入口。生産：関数・実pipe・実プロセスを区別した裏付け。
 
-- [ ] ScriptedInputを使う通常応答ケースは出力bestmoveのEvent/Conditionを待ってから次go・quit・EOFへ進む入力補助へ移行する。待機する補助にはcancelを必ず用意し、finallyで解除・有限join。goなしの有限入力は従来補助を残す。
-- [ ] choose_move/legal_movesへのpatchはsearch_moveへ移す。固定SearchResultの境界テストと実search_moveの合法応答テストを区別し、実評価・元局面保存の教材を維持。時計順序はprepare→copy/control→search開始を観測。不正goはsearchと予算計算未呼出しを維持。
-- [ ] `test_entrypoint_accepts_sfen_position`のgo直後quitを、reader.read_lineで合法bestmove確認後quitへ移行。他の即EOF/連続goも同じ観点で点検。期限を短くしただけで旧通常応答契約を緩めない。
-- [ ] 実入口プロセスで三方式の合法bestmove・改行/flush・stdout診断分離・終了0/不正1、0予算の合法予備手または手なしresign、時計なしstopの受付を確認する。
-- [ ] 探索中stop/readyok/quit/EOF/gameoverと故障時の入力解除は、子プロセス内で実sessionと実stdin入力源を使い、テスト専用bootstrapからsearch_moveをEventで停止する。別の継承pipeで「探索開始」を親へ知らせ、その後命令を送る。stdoutには試験通知を加えない。製品入口の実探索ケースとは分けて記録し、このbootstrap検証だけを実探索中stopの一般保証と呼ばない。
-- [ ] 実探索の開始/停止部品接続は、探索開始を通知するラッパーが実search_moveを呼ぶ子プロセスでも一系列確認する。速く完了したケースを探索中stop成功と数えず、制御付きbootstrapの結果と区別する。
-- [ ] 全プロセスは有限read/waitとfinallyのterminate→kill→waitで検査失敗時も回収する。部分行中故障、複数行、末尾行は実pipe入力テストで補完。無出力は回収後のstdout残量でassertし、sleep中に何も来なかったことだけで判断しない。
-- [ ] 代表変異を隔離コピーで実行：原点を探索起動時へ置換、送信前抑制確認除去、sent確定を出力前へ移動、joinを共通Lock内へ移動、内部通知無視。停止不能になり得る変異は上記の親監視付き子プロセスで実行する。期待したassertion FAILまたは親の有限待ちFAIL（読み込みエラー除外）と復元後成功を記録する。
-- [ ] `.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、差分確認、`.venv/bin/python -m unittest discover -s tests -v`を実行。契約別の単独検出と既存全体による補完を整理する。
+- [x] ScriptedInputを使う通常応答ケースは出力bestmoveのEvent/Conditionを待ってから次go・quit・EOFへ進む入力補助へ移行する。待機する補助にはcancelを必ず用意し、finallyで解除・有限join。goなしの有限入力は従来補助を残す。
+- [x] choose_move/legal_movesへのpatchはsearch_moveへ移す。固定SearchResultの境界テストと実search_moveの合法応答テストを区別し、実評価・元局面保存の教材を維持。時計順序はprepare→copy/control→search開始を観測。不正goはsearchと予算計算未呼出しを維持。
+- [x] `test_entrypoint_accepts_sfen_position`のgo直後quitを、reader.read_lineで合法bestmove確認後quitへ移行。他の即EOF/連続goも同じ観点で点検。期限を短くしただけで旧通常応答契約を緩めない。
+- [x] 実入口プロセスで三方式の合法bestmove・改行/flush・stdout診断分離・終了0/不正1、0予算の合法予備手または手なしresign、時計なしstopの受付を確認する。
+- [x] 探索中stop/readyok/quit/EOF/gameoverと故障時の入力解除は、子プロセス内で実sessionと実stdin入力源を使い、テスト専用bootstrapからsearch_moveをEventで停止する。別の継承pipeで「探索開始」を親へ知らせ、その後命令を送る。stdoutには試験通知を加えない。製品入口の実探索ケースとは分けて記録し、このbootstrap検証だけを実探索中stopの一般保証と呼ばない。
+- [x] 実探索の開始/停止部品接続は、探索開始を通知するラッパーが実search_moveを呼ぶ子プロセスでも一系列確認する。速く完了したケースを探索中stop成功と数えず、制御付きbootstrapの結果と区別する。
+- [x] 全プロセスは有限read/waitとfinallyのterminate→kill→waitで検査失敗時も回収する。部分行中故障、複数行、末尾行は実pipe入力テストで補完。無出力は回収後のstdout残量でassertし、sleep中に何も来なかったことだけで判断しない。
+- [x] 代表変異を隔離コピーで実行：原点を探索起動時へ置換、送信前抑制確認除去、sent確定を出力前へ移動、joinを共通Lock内へ移動、内部通知無視。停止不能になり得る変異は上記の親監視付き子プロセスで実行する。期待したassertion FAILまたは親の有限待ちFAIL（読み込みエラー除外）と復元後成功を記録する。
+- [x] `.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、差分確認、`.venv/bin/python -m unittest discover -s tests -v`を実行。契約別の単独検出と既存全体による補完を整理する。
 - [ ] 最終独立レビューへ契約・代表ケース・検出対象・補完・未検証を渡し、Critical/Importantを解消して再検証・再レビュー。知識・READMEの未接続表示は実績に沿って更新し文書リンクも確認、通常コミット。main統合は本人の別承認待ち。
 
 ## 限界と承認後の進め方
@@ -165,3 +165,9 @@ Queueは通知の共通受渡し場所。入力担当は規則・局面を解析
 固定sleepで競合を推測せず明示同期を使うが、有限テストで全競合・全局面・全OSを証明しない。出力待ち・単一処理・OS遅延・合法手未確保の通常停止例外による超過リスクは維持する。係数の最適性・厳密な期限内応答・ShogiHome互換性・対局安全性はこの実装検証から主張しない。
 
 今回の文書検証・レビュー結果は[学習記録](../learning/input-concurrency-usi-plan.md)へ記す。承認済みでも本計画を実施済みにしない。計画の明示承認後も実装開始指示を待ち、実装・統合・最後の理解確認を別段階として進める。
+
+## 実施記録（2026-10-12）
+
+本人の計画承認・実装開始指示を受け実施。開始時の現物記述・仕様・合意は上記のまま保持する。入力源e66dc6d、接続・回収と検証は同じ作業ブランチで実施。タスク2/3の共通終了処理は一体なので、個々の振る舞いRedを記録したうえで統合して保存する。実プロセス検査は読みやすさのため新test_usi_process_concurrency.pyへ分離。公開API・製品仕様の追加変更はない。
+
+[学習・実装記録](../learning/input-concurrency-usi-plan.md)にRed/Green、既存テスト移行、隔離変異、契約別検出範囲、独立レビューと未検証を集約する。最後の独立レビューで追加回収診断の欠落Important1件を検出し、再現FAIL後に修正・全456件回帰・再レビュー（コードCritical/Important/Minor全0）完了。文書の保存段階を表すチェック欄も実績へ合わせた。main取り込み、取り込み先検証、最後の理解確認は未実施。計測・対局・係数調整は行っていない。

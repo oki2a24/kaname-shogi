@@ -4,13 +4,13 @@
 
 ## 境界
 
-`kaname_shogi.usi_engine.run_usi_engine(input_fn, output_fn, rng=None, *, time_config=None)` は注入された一行入出力関数でUSIコマンドを処理する。入力関数はEOF時に `EOFError` を送出し、出力関数には改行なしの応答一行を渡す。標準入出力の入口は `python3 -m kaname_shogi.usi_engine`。日本語CLIとは分離している。
+`kaname_shogi.usi_engine.run_usi_engine(input_fn, output_fn, rng=None, *, time_config=None, cancel_input_fn=None)` は注入された一行入出力関数でUSIコマンドを処理する。入力関数はEOF時に `EOFError` を送出し、出力関数には改行なしの応答一行を渡す。標準入出力の入口は `python3 -m kaname_shogi.usi_engine`。日本語CLIとは分離している。待機する注入入力には、別threadから呼ぶcancel_input_fnで必ず返却またはEOFErrorにできることが必要。有限入力は取消省略可。出力は探索担当からも呼ばれるため再入させない。
 
 ## 局面と一手
 
 - `position` は `position startpos moves <1手以上>`、`position sfen <SFEN>`、`position sfen <SFEN> moves <指し手...>` に対応する。`parse_usi_position` が再現した最新 `Position` を非公開 `_UsiEngineState` が保持する。状態オブジェクトは `Position` または未設定の `None` だけを持つ。
 - `replace_position` は局面を置き換え、`clear_position` は未設定へ戻し、`require_position` は局面を返すか未設定時に `ValueError` を送出する。設定値、棋譜、合法手選択、乱数器はこの状態オブジェクトへ入れない。
-- `legal_moves(position)` が合法手を列挙し、共通の `choose_move(position, moves, policy, rng)` が方針別に一手を選び、`format_usi_move` が表記する。選択した手はUSIエンジン内のPositionへ適用しない。
+- 各goで独立Position.copyと新SearchControlを作り、`search_move(position, policy, rng, control)` が停止可能な生成・選択を一回行い、`format_usi_move` が表記する。選択した手はUSIエンジン内のPositionへ適用しない。
 - 合法手がない場合は `bestmove resign` を返す。
 
 ## Difficulty option と局ごとの方針
@@ -30,11 +30,11 @@ option name Difficulty type combo default Random var Random var Material var Two
 ## コマンドとエラー
 
 - `usi` はid行、Difficulty option行、`usiok`を順に返し、`isready` は `readyok` を返す。
-- `gameover`、未知コマンド、未知の `go` トークンは応答せず読み飛ばす。
-- `go` は時計引数を検証し、現在Position.side_to_moveの自分側時計から予算を計算する。期間計算までの接続で、期限判定・探索停止は未実装。0予算でも通常比較を完了して応答する。
+- 未知コマンド、未知の `go` トークンは応答せず読み飛ばす。`gameover` は未送信応答を抑制して探索を回収し、入力受付を継続する。局面・設定寿命はusinewgameに代えない。
+- `go` は時計引数を検証し、現在Position.side_to_moveの自分側時計から予算を計算する。go完成行の読取り時刻を整数nsで制御へ渡し、期限判定・探索停止へ接続する。0予算でも最初の合法手確保または手なし確定まで通常停止を保留する。
 - `searchmoves`、`depth`、`nodes`、`mate`、`infinite`、`ponder`、`movetime` は未対応として `ValueError`。有効なpositionがない `go` と、対応外・不正なpositionも `ValueError`。
 - 実行入口は入力受付前に同梱JSON設定を一回読む。設定のValueError/OSErrorはstderr診断・終了1、USI入力のValueErrorもstderr診断・終了1。設定読込失敗を代替値で隠さない。USI応答だけをstdoutに書き、各行をflushする。
-- `quit` と入力EOFは正常終了する。
+- `quit` と入力EOFは未送信応答を抑制し、入力待機を解除して両担当を回収後、正常終了する。探索・応答未完了中のposition/go/usinewgameは抑制してValueError。送信後の命令は前担当回収後に処理する。
 
 ## コマンド行の表現
 
@@ -48,4 +48,18 @@ option name Difficulty type combo default Random var Random var Material var Two
 
 時計ありではbtime/wtimeを両方必須とし、byoyomi省略は0。非負整数ms、重複・値欠落・非整数・負を拒否する。半角十進数字と任意の先頭符号、先頭0を許し、-0は0。binc/wincは0のみ受付、正は未対応。時計項目なし・加算0だけは時計なしNone、byoyomiだけは必須時計不足。未知goトークンを読み飛ばしても後続の既知項目を検査する。
 
-TimeManagementConfigは不変な設定データで、mainが一回読んでrunへ注入する。runの省略時だけ同じloaderで一回読み、全go/usinewgameで保持する。局面やDifficultyの寿命とは分離し、別runでは読み直す。SearchBudgetは期間データで停止操作ではない。時計なしNoneと明示時計の0予算を区別し、後続の探索制御へ渡す境界を準備した。[計画・検証範囲](../plans/2026-10-12-usi-clock-settings-implementation-plan.md)、[実施記録](../learning/usi-clock-settings-implementation-plan.md)。時間内応答・探索中入力受付・stop対応はまだ保証しない。
+TimeManagementConfigは不変な設定データで、mainが一回読んで非公開sessionへ注入する。runの省略時だけ同じloaderで一回読み、全go/usinewgameで保持する。局面やDifficultyの寿命とは分離し、別runでは読み直す。SearchBudgetは期間データで停止操作ではない。時計なしNoneと明示時計の0予算を区別し、各goの探索制御へ渡す。[計画・検証範囲](../plans/2026-10-12-usi-clock-settings-implementation-plan.md)、[実施記録](../learning/usi-clock-settings-implementation-plan.md)。時間内応答は保証しない。
+
+## 入力・送信・故障回収（2026-10-12接続）
+
+[承認済み接続計画](../plans/2026-10-12-input-concurrency-usi-implementation-plan.md)、[実装・検証記録](../learning/input-concurrency-usi-plan.md)。作業ブランチ実装、main取り込みは別承認待ち。
+
+現在threadが命令を管理し、一入力threadとgoごとの一探索threadをQueueで接続する。読取りと入力確定は別。入力確定と最終送信を同じLockで順序付け、先に終了・禁止命令を確定すれば送信しない。先に送信を完了すればその一回は残る。通常stopは抑制にせず、idle stopは持ち越さない。isready/usiは探索中も行単位で送信できる。
+
+SearchResultは結果データ。COMPLETE/Noneだけresign、INTERRUPTEDは合法手、SUPPRESSEDは無応答。送信直前にも抑制を再確認し、writeとflushが戻ってからsentを確定する。送信完了と担当終了は別なので、次探索前に共通Lock外でjoinする。乱数器は実行内共有だが並行探索へ渡さない。
+
+mainの入力源はmacOSのfdと内部終了pipeをselectorで待ち、非blocking readと逐次復号を使う。LF/CRLF/CR、分割文字、EOF末尾行に対応する。CRのみは次バイトまたはEOFで完成する。完成時刻から受渡し・前担当回収・解析・複製・起動を予算へ含める。借用stdinは閉じず属性を復元し、自前pipe/selectorだけ解放する。標準入力は先読みされていないことが前提。
+
+担当故障はQueueで主担当を起こし、次のGUI入力を待たず取消・抑制・両担当回収へ進む。送信故障は再送しない。構築・後片付け故障でも残る解放を試み、主原因と追加故障をstderrへ診断し終了1。KeyboardInterruptは回収後に再送出する。
+
+実入口・実pipe・制御付き探索と実探索ラッパーを分けて確認した。全競合・全局面・全OSは未証明。OS遅延、単一処理、出力先の詰まり、合法手未確保時の通常停止保留による超過は残る。他OSではfd同時待機・nonblocking・復号改行・取消回収を再点検する。計測・対局・ShogiHomeの再確認は行っていない。

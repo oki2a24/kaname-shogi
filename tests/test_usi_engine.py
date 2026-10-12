@@ -8,6 +8,7 @@ import sys
 import time
 import unittest
 from pathlib import Path
+from threading import Event
 from unittest.mock import patch
 
 from kaname_shogi import usi_engine
@@ -20,10 +21,46 @@ from kaname_shogi.model import (
     Side,
     Square,
 )
-from kaname_shogi.movegen import MoveSelectionPolicy, legal_moves
+from kaname_shogi.movegen import (
+    MoveSelectionPolicy,
+    SearchCompletion,
+    SearchResult,
+    legal_moves,
+)
 from kaname_shogi.sfen import SfenPosition, format_sfen
 from kaname_shogi.usi_move import parse_usi_move
 from kaname_shogi.usi_position import parse_usi_position
+
+
+def _run_engine(input_fn, output_fn, *args, **kwargs):
+    """通常応答テストでは次命令をbestmove後に配送し、異常時は待機解除する。"""
+    completed = Event()
+    cancelled = Event()
+    pending = False
+
+    def read():
+        nonlocal pending
+        if pending:
+            if not completed.wait(5):
+                raise AssertionError("通常応答を待てませんでした")
+            if cancelled.is_set():
+                raise EOFError
+        line = input_fn()
+        pending = bool(line.split() and line.split()[0] == "go")
+        if pending:
+            completed.clear()
+        return line
+
+    def write(line):
+        output_fn(line)
+        if line.startswith("bestmove "):
+            completed.set()
+
+    def cancel():
+        cancelled.set()
+        completed.set()
+
+    usi_engine.run_usi_engine(read, write, *args, cancel_input_fn=cancel, **kwargs)
 
 
 class ScriptedInput:
@@ -133,14 +170,13 @@ class UsiEngineFunctionTests(unittest.TestCase):
         calls = []
         outputs = []
 
-        def choose(position, moves, policy, rng):
+        def choose(position, policy, rng, control):
+            moves = legal_moves(position)
             calls.append((position, moves, policy, rng))
-            return moves[0] if moves else None
+            return SearchResult(SearchCompletion.COMPLETE, moves[0] if moves else None)
 
-        with patch.object(usi_engine, "choose_move", create=True, side_effect=choose):
-            usi_engine.run_usi_engine(
-                ScriptedInput(commands), outputs.append, random.Random(0)
-            )
+        with patch.object(usi_engine, "search_move", side_effect=choose):
+            _run_engine(ScriptedInput(commands), outputs.append, random.Random(0))
         return calls, outputs
 
     def test_answers_usi_with_difficulty_combo_before_usiok(self):
@@ -151,9 +187,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         """
         outputs = []
 
-        usi_engine.run_usi_engine(
-            ScriptedInput(["usi", "isready", "quit"]), outputs.append
-        )
+        _run_engine(ScriptedInput(["usi", "isready", "quit"]), outputs.append)
 
         self.assertEqual(
             outputs,
@@ -173,7 +207,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         """
         outputs = []
 
-        usi_engine.run_usi_engine(
+        _run_engine(
             ScriptedInput(
                 [
                     "setoption name USI_Hash value 32",
@@ -421,7 +455,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         outputs = []
         position_command = "position startpos moves 7g7f"
 
-        usi_engine.run_usi_engine(
+        _run_engine(
             ScriptedInput(
                 [
                     position_command,
@@ -462,7 +496,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         self.assertTrue(expected_moves)
         outputs = []
         observed_positions = []
-        choose_move = usi_engine.choose_move
+        choose_move = usi_engine.search_move
 
         def snapshot(current):
             return (
@@ -482,16 +516,16 @@ class UsiEngineFunctionTests(unittest.TestCase):
 
         expected_state = snapshot(position)
 
-        def record_choose_move(current, moves, policy, rng):
+        def record_choose_move(current, policy, rng, control):
             self.assertEqual(policy, MoveSelectionPolicy.TWO_PLY_MATERIAL)
             self.assertEqual(snapshot(current), expected_state)
             observed_positions.append(current)
-            selected = choose_move(current, moves, policy, rng)
+            selected = choose_move(current, policy, rng, control)
             self.assertEqual(snapshot(current), expected_state)
             return selected
 
-        with patch.object(usi_engine, "choose_move", side_effect=record_choose_move):
-            usi_engine.run_usi_engine(
+        with patch.object(usi_engine, "search_move", side_effect=record_choose_move):
+            _run_engine(
                 ScriptedInput(
                     [
                         "setoption name Difficulty value TwoPlyMaterial",
@@ -506,7 +540,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             )
 
         self.assertEqual(len(observed_positions), 2)
-        self.assertIs(observed_positions[0], observed_positions[1])
+        self.assertIsNot(observed_positions[0], observed_positions[1])
         self.assertEqual(snapshot(observed_positions[0]), expected_state)
         self.assertEqual(len(outputs), 2)
         for response in outputs:
@@ -523,8 +557,8 @@ class UsiEngineFunctionTests(unittest.TestCase):
         expected_state = snapshot(no_move_position)
         outputs = []
         observed_positions = []
-        with patch.object(usi_engine, "choose_move", side_effect=record_choose_move):
-            usi_engine.run_usi_engine(
+        with patch.object(usi_engine, "search_move", side_effect=record_choose_move):
+            _run_engine(
                 ScriptedInput(
                     [
                         "setoption name Difficulty value TwoPlyMaterial",
@@ -558,17 +592,19 @@ class UsiEngineFunctionTests(unittest.TestCase):
             parsed_positions.append(result)
             return result
 
-        def record_legal_moves(position):
+        search = usi_engine.search_move
+
+        def record_legal_moves(position, policy, rng, control):
             observed_positions.append(position)
-            return legal_moves(position)
+            return search(position, policy, rng, control)
 
         with (
             patch.object(
                 usi_engine, "parse_usi_position", side_effect=record_parse_position
             ),
-            patch.object(usi_engine, "legal_moves", side_effect=record_legal_moves),
+            patch.object(usi_engine, "search_move", side_effect=record_legal_moves),
         ):
-            usi_engine.run_usi_engine(
+            _run_engine(
                 ScriptedInput([first_command, latest_command, "go", "quit"]),
                 outputs.append,
                 random.Random(0),
@@ -577,7 +613,11 @@ class UsiEngineFunctionTests(unittest.TestCase):
         latest_position = parsed_positions[1].position
         self.assertEqual(len(parsed_positions), 2)
         self.assertEqual(len(observed_positions), 1)
-        self.assertIs(observed_positions[0], latest_position)
+        self.assertIsNot(observed_positions[0], latest_position)
+        self.assertEqual(
+            format_sfen(SfenPosition(observed_positions[0], 1)),
+            format_sfen(SfenPosition(latest_position, 1)),
+        )
         response = outputs[0].split()
         self.assertEqual(response[0], "bestmove")
         self.assertIn(parse_usi_move(response[1]), legal_moves(latest_position))
@@ -589,8 +629,12 @@ class UsiEngineFunctionTests(unittest.TestCase):
         """
         outputs = []
 
-        with patch.object(usi_engine, "legal_moves", return_value=()):
-            usi_engine.run_usi_engine(
+        with patch.object(
+            usi_engine,
+            "search_move",
+            return_value=SearchResult(SearchCompletion.COMPLETE, None),
+        ):
+            _run_engine(
                 ScriptedInput(["position startpos moves 7g7f", "go", "quit"]),
                 outputs.append,
                 random.Random(0),
@@ -615,7 +659,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         outputs = []
         rng = RecordingRng()
         with patch.object(usi_engine.random, "Random", return_value=rng) as factory:
-            usi_engine.run_usi_engine(
+            _run_engine(
                 ScriptedInput(
                     [
                         "position startpos moves 7g7f",
@@ -641,7 +685,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         outputs = []
 
         with self.assertRaises(ValueError):
-            usi_engine.run_usi_engine(
+            _run_engine(
                 ScriptedInput(
                     [
                         "position startpos moves 7g7f",
@@ -661,9 +705,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         初期局面を暗黙に捏造してbestmoveを返す誤りを検出する。
         """
         with self.assertRaises(ValueError):
-            usi_engine.run_usi_engine(
-                ScriptedInput(["go"]), lambda response: None, random.Random(0)
-            )
+            _run_engine(ScriptedInput(["go"]), lambda response: None, random.Random(0))
 
     def test_rejects_invalid_position_command(self):
         """未対応の初期局面形式や空の手順を拒否する。
@@ -673,7 +715,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         for command in ("position startpos", "position startpos moves"):
             with self.subTest(command=command):
                 with self.assertRaises(ValueError):
-                    usi_engine.run_usi_engine(
+                    _run_engine(
                         ScriptedInput([command]),
                         lambda response: None,
                         random.Random(0),
@@ -694,7 +736,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         ):
             with self.subTest(go_command=go_command):
                 with self.assertRaises(ValueError):
-                    usi_engine.run_usi_engine(
+                    _run_engine(
                         ScriptedInput(["position startpos moves 7g7f", go_command]),
                         lambda response: None,
                         random.Random(0),
@@ -707,7 +749,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         """
         outputs = []
 
-        usi_engine.run_usi_engine(
+        _run_engine(
             ScriptedInput(["position startpos moves 7g7f", "go mystery", "quit"]),
             outputs.append,
             random.Random(0),
@@ -730,11 +772,10 @@ class UsiEngineFunctionTests(unittest.TestCase):
         outputs = []
         quit_input = ScriptedInput(["quit", "usi"])
 
-        usi_engine.run_usi_engine(quit_input, outputs.append)
-        self.assertEqual(quit_input.calls, 1)
+        _run_engine(quit_input, outputs.append)
         self.assertEqual(outputs, [])
 
-        usi_engine.run_usi_engine(ScriptedInput([]), outputs.append)
+        _run_engine(ScriptedInput([]), outputs.append)
         self.assertEqual(outputs, [])
 
 
@@ -835,10 +876,15 @@ class UsiEngineProcessTests(unittest.TestCase):
         try:
             self.send_line(process, position_command)
             self.send_line(process, "go btime 591199 wtime 600000 byoyomi 30000")
+            first_response = reader.read_line()
             self.send_line(process, "quit")
             self.close_stdin(process)
             return_code = process.wait(timeout=2.0)
-            output = reader.read_remaining_after_exit().decode("utf-8")
+            output = (
+                first_response
+                + "\n"
+                + reader.read_remaining_after_exit().decode("utf-8")
+            )
 
             self.assertEqual(return_code, 0)
             responses = output.splitlines()
@@ -931,7 +977,7 @@ class UsiClockConnectionTests(unittest.TestCase):
                 config = self.config()
                 events, budgets, outputs = [], [], []
                 prepare = usi_engine._prepare_search_budget
-                choose = usi_engine.choose_move
+                choose = usi_engine.search_move
 
                 def prepare_spy(
                     clock,
@@ -955,17 +1001,16 @@ class UsiClockConnectionTests(unittest.TestCase):
                     return legal_moves(position)
 
                 def select(*args, events=events, choose=choose):
-                    events.append("choose")
+                    events.append("search")
                     return choose(*args)
 
                 with (
                     patch.object(
                         usi_engine, "_prepare_search_budget", side_effect=prepare_spy
                     ),
-                    patch.object(usi_engine, "legal_moves", side_effect=generate),
-                    patch.object(usi_engine, "choose_move", side_effect=select),
+                    patch.object(usi_engine, "search_move", side_effect=select),
                 ):
-                    usi_engine.run_usi_engine(
+                    _run_engine(
                         ScriptedInput(
                             [
                                 command,
@@ -977,7 +1022,7 @@ class UsiClockConnectionTests(unittest.TestCase):
                         random.Random(0),
                         time_config=config,
                     )
-                self.assertEqual(events, ["prepare", "generate", "choose"])
+                self.assertEqual(events, ["prepare", "search"])
                 self.assertEqual(budgets, [expected])
                 self.assertEqual(len(outputs), 1)
                 self.assertTrue(outputs[0].startswith("bestmove "))
@@ -998,7 +1043,7 @@ class UsiClockConnectionTests(unittest.TestCase):
             return result
 
         with patch.object(usi_engine, "_prepare_search_budget", side_effect=record):
-            usi_engine.run_usi_engine(
+            _run_engine(
                 ScriptedInput(
                     [
                         "position startpos moves 7g7f",
@@ -1043,17 +1088,15 @@ class UsiClockConnectionTests(unittest.TestCase):
             with self.subTest(command=command):
                 outputs = []
                 with (
-                    patch.object(usi_engine, "legal_moves") as generate,
-                    patch.object(usi_engine, "choose_move") as choose,
+                    patch.object(usi_engine, "search_move") as choose,
                     patch.object(usi_engine, "calculate_search_budget") as calculate,
                 ):
                     with self.assertRaises(ValueError):
-                        usi_engine.run_usi_engine(
+                        _run_engine(
                             ScriptedInput(["position startpos moves 7g7f", command]),
                             outputs.append,
                             time_config=self.config(),
                         )
-                    generate.assert_not_called()
                     choose.assert_not_called()
                     calculate.assert_not_called()
                 self.assertEqual(outputs, [])
@@ -1100,16 +1143,15 @@ class UsiClockConnectionTests(unittest.TestCase):
                     events.append("input")
                     return scripted()
 
-                usi_engine.run_usi_engine(read, lambda line: None)
+                begin = len(events)
+                _run_engine(read, lambda line: None)
+                self.assertEqual(events[begin], "load")
             self.assertEqual(loader.call_count, 2)
             self.assertEqual(
                 loader.call_args_list, [unittest.mock.call(), unittest.mock.call()]
             )
             self.assertEqual(events[0], "load")
-            self.assertEqual(events[len(lines) + 1], "load")
-            usi_engine.run_usi_engine(
-                ScriptedInput(["quit"]), lambda line: None, time_config=first
-            )
+            _run_engine(ScriptedInput(["quit"]), lambda line: None, time_config=first)
             self.assertEqual(loader.call_count, 2)
         self.assertTrue(all(setting is first for setting in settings[:2]))
         self.assertTrue(all(setting is second for setting in settings[2:]))
@@ -1118,39 +1160,65 @@ class UsiClockConnectionTests(unittest.TestCase):
         )
 
     def test_main_loads_and_injects_config_once(self):
-        """mainの実行を通して設定を一回だけ読む。
+        """mainは設定一回読込後に入力源を作り共通sessionへ注入する。
 
-        mainとrunの二重読込、注入設定の置換を検出する。
+        二重読込・設定置換・入力源の回収漏れを検出する。
         """
         from io import StringIO
+        from unittest.mock import Mock
 
         config = self.config(4)
-        settings = []
-        prepare = usi_engine._prepare_search_budget
+        source = Mock()
+        events = []
 
-        def record(clock, side, setting):
-            settings.append(setting)
-            return prepare(clock, side, setting)
+        def load():
+            events.append("load")
+            return config
+
+        def make_source(stream):
+            events.append("source")
+            return source
+
+        def session(read, output, rng, setting, cancel):
+            events.append("session")
+            self.assertIs(setting, config)
+            self.assertEqual(read, source.read_line)
+            self.assertEqual(cancel, source.cancel)
+            output("readyok")
 
         with (
             patch.object(
-                usi_engine, "load_time_management_config", return_value=config
+                usi_engine, "load_time_management_config", side_effect=load
             ) as loader,
-            patch.object(usi_engine, "_prepare_search_budget", side_effect=record),
-            patch.object(
-                sys,
-                "stdin",
-                StringIO(
-                    "position startpos moves 7g7f\ngo btime 600000 wtime 120000\nquit\n"
-                ),
-            ),
+            patch.object(usi_engine, "_StdinLineSource", side_effect=make_source),
+            patch.object(usi_engine, "_run_session", side_effect=session),
+            patch.object(sys, "stdin", StringIO("quit\n")),
             patch.object(sys, "stdout", StringIO()) as output,
         ):
             self.assertEqual(usi_engine.main(), 0)
             loader.assert_called_once_with()
-            self.assertTrue(output.getvalue().startswith("bestmove "))
-        self.assertEqual(len(settings), 1)
-        self.assertIs(settings[0], config)
+            self.assertEqual(output.getvalue(), "readyok\n")
+        self.assertEqual(events, ["load", "source", "session"])
+        source.close.assert_called_once_with()
+
+    def test_main_input_source_failure_is_diagnosed(self):
+        """入力源構築の故障をstderrへ出し終了1にする。
+
+        設定故障との混同・stdoutへの診断混入を検出する。
+        """
+        from io import StringIO
+
+        with (
+            patch.object(
+                usi_engine, "_StdinLineSource", side_effect=OSError("入力源故障")
+            ),
+            patch.object(sys, "stdin", StringIO("quit\n")),
+            patch.object(sys, "stdout", StringIO()) as output,
+            patch.object(sys, "stderr", StringIO()) as diagnostic,
+        ):
+            self.assertEqual(usi_engine.main(), 1)
+        self.assertEqual(output.getvalue(), "")
+        self.assertIn("入力源故障", diagnostic.getvalue())
 
     def test_main_rejects_invalid_or_unreadable_config_before_input(self):
         """設定故障時は入力を読まずstderrと終了1を返す。
@@ -1185,7 +1253,7 @@ class UsiClockConnectionTests(unittest.TestCase):
                     usi_engine, "load_time_management_config", side_effect=error
                 ):
                     with self.assertRaises(type(error)):
-                        usi_engine.run_usi_engine(source, outputs.append)
+                        _run_engine(source, outputs.append)
                 self.assertEqual(source.calls, 0)
                 self.assertEqual(outputs, [])
 
@@ -1215,3 +1283,33 @@ class UsiClockConnectionTests(unittest.TestCase):
                 self.assertEqual(result.stdout, "")
                 self.assertIn("USIエンジンエラー:", result.stderr)
                 self.assertIn(key, result.stderr)
+
+    def test_main_reports_all_nested_cleanup_failures(self):
+        """主故障後の入力源解放で重なった故障もすべて診断する。
+
+        入れ子の回収例外を先頭だけ印字して後続原因を失う誤りを検出する。
+        """
+        import io
+        from unittest.mock import Mock
+
+        source = Mock()
+        cleanup = OSError("close-first")
+        cleanup._usi_cleanup_errors = (OSError("close-second"),)
+        source.close.side_effect = cleanup
+        for primary in (None, ValueError("session-primary")):
+            with self.subTest(primary=primary):
+                stderr = io.StringIO()
+                with (
+                    patch.object(usi_engine, "load_time_management_config"),
+                    patch.object(usi_engine, "_StdinLineSource", return_value=source),
+                    patch.object(usi_engine, "_run_session", side_effect=primary),
+                    patch.object(sys, "stderr", stderr),
+                ):
+                    self.assertEqual(usi_engine.main(), 1)
+                diagnostic = stderr.getvalue()
+                self.assertIn("close-first", diagnostic)
+                self.assertIn("close-second", diagnostic)
+                if primary is not None:
+                    self.assertIn("USIエンジンエラー: session-primary", diagnostic)
+                self.assertEqual(diagnostic.count("close-first"), 1)
+                self.assertEqual(diagnostic.count("close-second"), 1)

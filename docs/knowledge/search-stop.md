@@ -1,6 +1,6 @@
 # 探索停止と途中結果
 
-2026-10-12、探索部品として実装。USIへの接続は後続。仕様は[承認済み計画](../plans/2026-10-12-search-stop-implementation-plan.md)、判断と検証は[実装記録](../learning/search-stop-implementation-plan.md)を参照する。
+2026-10-12、探索部品として実装。USI接続は作業ブランチで実装（main取り込み承認待ち）。仕様は[承認済み計画](../plans/2026-10-12-search-stop-implementation-plan.md)、判断と検証は[実装記録](../learning/search-stop-implementation-plan.md)を参照する。
 
 ## 制御と結果
 
@@ -22,6 +22,6 @@
 
 ## 後続接続
 
-現在のUSI/CLIは従来の同期探索を使い、この部品をまだ呼ばない。実USIの0予算も通常比較を完了して応答する。後続は入力受付、go原点の取得と受渡し、新制御・独立局面の準備、stop/抑制要求、共通Lock下の送信前再確認、一回応答・flush、故障通知、入力待機解除・探索担当回収をそろえる。[引渡し契約](../plans/2026-10-12-search-stop-implementation-plan.md#後続の入力並行処理usi接続への引き渡し)を参照する。
+USIは各goの独立局面・新制御からsearch_moveを呼ぶ。go完成行の読取り原点、stopと抑制、一回送信、故障通知、入力待機解除・担当回収を[接続仕様](usi-engine-response.md#入力送信故障回収2026-10-12接続)へまとめた。CLIは従来の同期選択を維持する。[引渡し契約](../plans/2026-10-12-search-stop-implementation-plan.md#後続の入力並行処理usi接続への引き渡し)は当時の記録として保持する。
 
-専用制御Lockは送信同期を代替しない。結果返却直後の抑制競合、実時間安全性、全OSでの受付と回収、計測・対局は今回の検証範囲外。
+専用制御Lockは送信同期を代替しない。接続側の共通Lockで結果返却直後の抑制を再確認する。実時間安全性、全OS・全競合、計測・対局は未検証。
