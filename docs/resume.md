@@ -2,15 +2,15 @@
 
 ## 現在地
 
-2026-10-12、USI時計受付・設定接続は実装・独立レビュー・main統合・取り込み先389件/Ruff検証・最後の理解確認まで完了。[実施記録](learning/usi-clock-settings-implementation-plan.md)。予算計算まで接続済みで、探索停止は未実装。
+2026-10-12、本人の計画承認と実装開始指示を受け、「探索停止・途中結果」の探索部品を実装。期限・通常停止/抑制・合法予備手・完了候補の保持と三方式の最終選択を扱う。[承認済み計画](plans/2026-10-12-search-stop-implementation-plan.md)、[学習・実装記録](learning/search-stop-implementation-plan.md)、[確定仕様](knowledge/search-stop.md)。全425件/Ruff・文書検証成功、独立最終レビューCritical/Important/Minor全0。main取り込みの明示承認は未取得、取り込み先検証・最後の理解確認も未実施。
 
-2026-10-12、人間の再開プロンプト入力により「探索停止・途中結果の実装計画だけ」を開始。[計画案](plans/2026-10-12-search-stop-implementation-plan.md)の作成・独立レビュー・提示を終え、2026-10-12に本人が計画内容を承認。[学習・作成記録](learning/search-stop-implementation-plan.md)。対象は期限・中断・途中結果・0予算の探索部品。入力並行処理・実USI応答への後続接続を分離する案で、具体計画は承認済み。実装開始指示待ち、main取り込みは別承認。
+場所 /Users/oki2a24/kaname-shogi、ブランチcodex/search-stop-plan-handoff、開始HEAD 07d8aad。計画e1787bd、制御d8f7ecc、合法確認eb2e8f4、候補評価5fa98c4を保存済み。根探索と文書も検証・レビュー済みで、最終コミットへ保存する時点。別worktreeなし、元ディレクトリに実装あり、main未統合・pushなし。計測・対局は未実施。開始時の背景と本人回答は[引き継ぎ](handover-search-stop-implementation-plan.md)と実装記録に保持する。
 
-開始時点の場所は /Users/oki2a24/kaname-shogi、ブランチcodex/search-stop-plan-handoff、HEAD 07d8aad、差分なし。別worktreeなし。現在は計画関連文書5件の未コミット差分があり、今回のコミット・main統合・pushなし。コード・テスト・設定変更、TDD、実装、計測・対局は未実施。開始背景は[引き継ぎ](handover-search-stop-implementation-plan.md)に保持する。
+USI時計受付・設定接続はmain統合・取り込み先389件/Ruff検証・理解確認まで前テーマで完了。[実施記録](learning/usi-clock-settings-implementation-plan.md)。現在もUSI/CLIは同期探索で、今回の探索部品へ未接続。実USIの0予算は従来の通常比較後に応答する。入力並行処理、送信同期、一回応答、故障通知、入力待機解除・担当回収は[後続接続](plans/2026-10-12-search-stop-implementation-plan.md#後続の入力並行処理usi接続への引き渡し)に残る。
 
-設定読込・予算計算の[計画](plans/2026-10-12-time-budget-implementation-plan.md)と実装はmain統合・取り込み先374件/Ruff/文書検証・最後の理解確認まで完了。[実装記録](learning/time-budget-implementation-plan.md)、[参照メモ](knowledge/time-budget.md)。前テーマは部品のみの実装で、現在は本テーマで時計受付・設定保持・予算計算までUSIへ接続済み。時間停止は未実装。
+時計と探索停止の[全体設計](plans/2026-10-11-clock-input-time-management-design.md)・[確認範囲](plans/2026-10-12-clock-input-verification-review.md)は承認済み。設定読込・予算計算の[実装記録](learning/time-budget-implementation-plan.md)と[参照メモ](knowledge/time-budget.md)を参照。実時間安全性は未保証。約28.4秒は一例の許容判断で、他局面・秒読み後・40手上限と長考原因の仮説は未検証。
 
-前テーマの[全体設計](plans/2026-10-11-clock-input-time-management-design.md)は承認・main統合・理解確認まで完了。[確認範囲](plans/2026-10-12-clock-input-verification-review.md)、[学習記録](learning/clock-input-time-management.md)。時計入力・探索停止全体の実装と実時間安全性検証は未実施（設定読込・予算計算のみ前テーマで実装済み）。約28.4秒は一例の許容判断で、他局面・秒読み後は未保証。40手上限と長考原因の仮説も未検証。
+作業ブランチへ保存後、main取り込みの明示承認を待つ。統合後の取り込み先検証・最後の理解確認が終わるまで次テーマに進まない。
 
 ## 二手先読み設計の完了
 

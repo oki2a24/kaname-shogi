@@ -142,7 +142,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | 時計入力を受けて応答を止める仕組みの学習・設計だけ（設計・main統合・理解確認完了、実装未着手） | [学習・合意](learning/clock-input-time-management.md) | [USI応答](knowledge/usi-engine-response.md) | [承認済み設計](plans/2026-10-11-clock-input-time-management-design.md) | — | [引き継ぎ](handover-clock-input-time-management.md) |
 | 時計設定・時間配分（main統合・検証・理解確認完了） | [学習・確認](learning/time-budget-implementation-plan.md) | [設定・計算](knowledge/time-budget.md) | [全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [計画案](plans/2026-10-12-time-budget-implementation-plan.md) | [引き継ぎ](handover-time-budget-implementation-plan.md) |
 | USI時計受付・設定接続（main統合・理解確認完了） | [学習・レビュー](learning/usi-clock-settings-implementation-plan.md) | — | [承認済み全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [承認済み計画・実績](plans/2026-10-12-usi-clock-settings-implementation-plan.md) | [引き継ぎ](handover-usi-clock-settings-implementation-plan.md) |
-| 探索停止・途中結果（計画承認済み、実装開始待ち） | [学習・レビュー](learning/search-stop-implementation-plan.md) | — | [承認済み全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [計画案](plans/2026-10-12-search-stop-implementation-plan.md) | [開始時引き継ぎ](handover-search-stop-implementation-plan.md) |
+| 探索停止・途中結果（部品実装、main統合待ち） | [学習・実装レビュー](learning/search-stop-implementation-plan.md) | [探索部品](knowledge/search-stop.md) | [承認済み全体設計](plans/2026-10-11-clock-input-time-management-design.md) | [承認済み計画・実績](plans/2026-10-12-search-stop-implementation-plan.md) | [開始時引き継ぎ](handover-search-stop-implementation-plan.md) |
 | CLIの三方式選択（タスク3、新セッション準備のみ） | — | [選択方針](knowledge/31-weak-move-selection.md) | [承認済み設計](plans/2026-10-10-evaluation-next-stage-design.md) | [承認済み計画タスク3](plans/2026-10-10-two-ply-implementation-plan.md#タスク3cliから三方式を選ぶ) | [引き継ぎ](handover-cli-three-policies.md) |
 
 ## 例外と履歴の読み方
@@ -182,4 +182,4 @@ USI新値後の未知値保持（計画タスク4の1項目のみ、main取り�
 
 時計入力の確認方法と比較資料は[確認範囲の抜け漏れ点検](plans/2026-10-12-clock-input-verification-review.md)を参照。
 
-探索停止・途中結果の実装計画だけの開始資料は[新セッション引き継ぎ](handover-search-stop-implementation-plan.md)。引き継ぎは準備時点の履歴。現在の計画作成・承認段階は[再開案内](resume.md)、検証とレビューは[学習・作成記録](learning/search-stop-implementation-plan.md)を参照する。
+探索停止・途中結果の実装計画だけの開始資料は[新セッション引き継ぎ](handover-search-stop-implementation-plan.md)。引き継ぎは準備時点の履歴。現在の実装・統合承認段階は[再開案内](resume.md)、検証とレビューは[学習・作成記録](learning/search-stop-implementation-plan.md)を参照する。

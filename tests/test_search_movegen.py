@@ -639,3 +639,349 @@ class ControlledEvaluationTests(unittest.TestCase):
                         r = mg._two_ply_score_controlled(after, side, control=c)
                     self.assertFalse(r.completed)
                     self.assertIsNone(r.score)
+
+
+class RootSearchTests(unittest.TestCase):
+    def test_zero_budget_returns_fallback_or_confirmed_no_moves(self):
+        """三方式の0予算と開始前stopは最初の合法手、空盤は確定手なしを返す。
+
+        0を時計なし扱い、未確保を投了、部分一覧の抽選にする誤りを検出する。
+        """
+        for policy in mg.MoveSelectionPolicy:
+            for side in Side:
+                for zero in (False, True):
+                    with self.subTest(policy=policy, side=side, zero=zero):
+                        p = Position(Board(), side)
+                        rank = 7 if side == Side.SENTE else 3
+                        dest = 6 if side == Side.SENTE else 4
+                        for f in (2, 7):
+                            p.board.set_piece(
+                                Square(f, rank), Piece(PieceType.PAWN, side)
+                            )
+                        c = SearchControl(
+                            SearchBudget(0, 0) if zero else None, 0, now_ns=lambda: 0
+                        )
+                        if not zero:
+                            c.request_stop()
+                        rng = RecordingChoice()
+                        before = snapshot(p)
+                        r = mg.search_move(p, policy, rng, c)
+                        self.assertEqual(r.completion, mg.SearchCompletion.INTERRUPTED)
+                        self.assertEqual(
+                            r.move, BoardMove(Square(2, rank), Square(2, dest), False)
+                        )
+                        self.assertEqual(rng.calls, [])
+                        self.assertEqual(snapshot(p), before)
+                        empty = mg.search_move(Position(Board(), side), policy, rng, c)
+                        self.assertEqual(
+                            empty, mg.SearchResult(mg.SearchCompletion.COMPLETE, None)
+                        )
+
+    def test_suppressed_search_has_no_response_move(self):
+        """保護中の抑制も応答手なしの専用結果とし、抽選しない。
+
+        SUPPRESSEDを手なし確定や予備手へ変換する誤りを検出する。
+        """
+        for policy in mg.MoveSelectionPolicy:
+            p = pawns()
+            c = SearchControl(SearchBudget(0, 0), 0, now_ns=lambda: 0)
+            c.request_stop(suppress_response=True)
+            rng = RecordingChoice()
+            r = mg.search_move(p, policy, rng, c)
+            self.assertEqual(r, mg.SearchResult(mg.SearchCompletion.SUPPRESSED, None))
+            self.assertEqual(rng.calls, [])
+
+    def test_root_target_stops_generation_but_reply_target_does_not(self):
+        """根生成は目標到達で予備手へ戻り、応手生成は目標だけでは止まらない。
+
+        根と下位の目標判定の混同を実適用操作で検出する。
+        """
+        now = [0]
+        c = SearchControl(SearchBudget(10, 20), 0, now_ns=lambda: now[0])
+        apply = mg.apply_move
+
+        def target(*args, **kwargs):
+            apply(*args, **kwargs)
+            now[0] = 10_000_000
+
+        rng = RecordingChoice()
+        with patch.object(mg, "apply_move", side_effect=target):
+            r = mg.search_move(pawns(), mg.MoveSelectionPolicy.MATERIAL, rng, c)
+        self.assertEqual(r.move, BoardMove(Square(2, 7), Square(2, 6), False))
+        self.assertEqual(r.completion, mg.SearchCompletion.INTERRUPTED)
+        self.assertEqual(rng.calls, [])
+        p, move, _ = recapture(Side.SENTE)
+        after = mg._position_after_move(p, move)
+        r = mg._two_ply_score_controlled(after, Side.SENTE, control=c)
+        self.assertTrue(r.completed)
+        self.assertEqual(r.score, (0, -23))
+
+    def test_target_prevents_next_candidate(self):
+        """B評価中の目標到達ならBを保持しCを開始しない。
+
+        目標で現在候補を捨てる誤りと新候補開始の確認漏れを検出する。
+        """
+        moves = three_moves()
+        now = [0]
+        c = SearchControl(SearchBudget(10, 20), 0, now_ns=lambda: now[0])
+        seen = []
+
+        def evaluate(p, move, policy, *, control):
+            seen.append(move)
+            if move == moves[1]:
+                now[0] = 10_000_000
+            return mg.CandidateEvaluation(True, (0, 3 if move == moves[0] else 7))
+
+        rng = RecordingChoice()
+        with (
+            patch.object(
+                mg,
+                "_legal_moves_controlled",
+                return_value=mg.LegalMovesResult(True, moves),
+            ),
+            patch.object(mg, "_evaluate_candidate", side_effect=evaluate),
+        ):
+            r = mg.search_move(pawns(), mg.MoveSelectionPolicy.MATERIAL, rng, c)
+        self.assertEqual(seen, list(moves[:2]))
+        self.assertEqual(r, mg.SearchResult(mg.SearchCompletion.INTERRUPTED, moves[1]))
+        self.assertEqual(rng.calls, [(moves[1],)])
+
+    def test_selects_only_completed_best_candidates(self):
+        """完了した最高同点だけ一回抽選し、途中99点を使わない。
+
+        候補順反転、同点、完了0件の対照で先頭固定・部分点採用を検出する。
+        """
+        original = three_moves()
+        for reverse in (False, True):
+            for tie in (False, True):
+                with self.subTest(reverse=reverse, tie=tie):
+                    moves = original[::-1] if reverse else original
+                    c = SearchControl(None, 0)
+
+                    def evaluate(
+                        p, move, policy, *, control, moves=moves, c=c, tie=tie
+                    ):
+                        if move == moves[2]:
+                            c.request_stop()
+                            return mg.CandidateEvaluation(False, (0, 99))
+                        return mg.CandidateEvaluation(
+                            True, (0, 7 if tie or move == moves[1] else 3)
+                        )
+
+                    rng = RecordingChoice()
+                    with (
+                        patch.object(
+                            mg,
+                            "_legal_moves_controlled",
+                            return_value=mg.LegalMovesResult(True, moves),
+                        ),
+                        patch.object(mg, "_evaluate_candidate", side_effect=evaluate),
+                    ):
+                        r = mg.search_move(
+                            pawns(), mg.MoveSelectionPolicy.MATERIAL, rng, c
+                        )
+                    best = moves[:2] if tie else (moves[1],)
+                    self.assertEqual(rng.calls, [best])
+                    self.assertEqual(
+                        r, mg.SearchResult(mg.SearchCompletion.INTERRUPTED, best[-1])
+                    )
+        c = SearchControl(None, 0)
+        rng = RecordingChoice()
+        with patch.object(
+            mg, "_evaluate_candidate", return_value=mg.CandidateEvaluation(False, None)
+        ):
+            try:
+                r = mg.search_move(pawns(), mg.MoveSelectionPolicy.MATERIAL, rng, c)
+            except TypeError:
+                self.fail("未完了のNone点を比較した")
+        self.assertEqual(r.move, BoardMove(Square(2, 7), Square(2, 6), False))
+        self.assertEqual(r.completion, mg.SearchCompletion.INTERRUPTED)
+        self.assertEqual(rng.calls, [])
+
+    def test_maximum_discards_active_candidate(self):
+        """Bの実採点復帰前の上限・stopならBを捨て完了Aを返す。
+
+        完了境界から根選択までの接続を実候補評価で検出する。
+        """
+        for stop in (False, True):
+            with self.subTest(stop=stop):
+                p = pawns()
+                a = BoardMove(Square(2, 7), Square(2, 6), False)
+                now = [0]
+                c = SearchControl(
+                    SearchBudget(10, 20), 0, now_ns=lambda now=now: now[0]
+                )
+                balance = mg.material_balance
+
+                def expire_b(
+                    current, perspective, stop=stop, c=c, now=now, balance=balance
+                ):
+                    score = balance(current, perspective)
+                    if current.board.piece_at(Square(7, 6)) is not None:
+                        if stop:
+                            c.request_stop()
+                        else:
+                            now[0] = 20_000_000
+                    return score
+
+                rng = RecordingChoice()
+                with patch.object(mg, "material_balance", side_effect=expire_b):
+                    r = mg.search_move(p, mg.MoveSelectionPolicy.MATERIAL, rng, c)
+                self.assertEqual(r, mg.SearchResult(mg.SearchCompletion.INTERRUPTED, a))
+                self.assertEqual(rng.calls, [(a,)])
+
+    def test_random_complete_and_interrupted_selection(self):
+        """ランダムの全完了は全合法手を一回抽選、中断は予備手で抽選なし。
+
+        部分一覧の抽選と二重抽選を検出する。
+        """
+        a = BoardMove(Square(2, 7), Square(2, 6), False)
+        b = BoardMove(Square(7, 7), Square(7, 6), False)
+        for budget, completion, move, calls in (
+            (None, mg.SearchCompletion.COMPLETE, b, [(a, b)]),
+            (SearchBudget(0, 0), mg.SearchCompletion.INTERRUPTED, a, []),
+        ):
+            rng = RecordingChoice()
+            r = mg.search_move(
+                pawns(),
+                mg.MoveSelectionPolicy.RANDOM,
+                rng,
+                SearchControl(budget, 0, now_ns=lambda: 0),
+            )
+            self.assertEqual(r, mg.SearchResult(completion, move))
+            self.assertEqual(rng.calls, calls)
+
+    def test_finishes_without_waiting_for_target(self):
+        """期限前に全候補完了したら待機せず完了する。
+
+        目標まで探索を引き延ばす誤りを偽時計のまま検出する。
+        """
+        for policy in mg.MoveSelectionPolicy:
+            with self.subTest(policy=policy):
+                rng = RecordingChoice()
+                r = mg.search_move(
+                    pawns(),
+                    policy,
+                    rng,
+                    SearchControl(SearchBudget(10, 20), 0, now_ns=lambda: 0),
+                )
+                self.assertEqual(r.completion, mg.SearchCompletion.COMPLETE)
+                self.assertEqual(r.move, BoardMove(Square(7, 7), Square(7, 6), False))
+                self.assertEqual(len(rng.calls), 1)
+
+    def test_new_search_preserves_position_and_does_not_reuse_result(self):
+        """三方式の連続探索は元局面を保存し前回の停止と予備手を引き継がない。
+
+        共有結果・制御フラグ・元局面の部分変更を検出する。
+        """
+        for policy in mg.MoveSelectionPolicy:
+            with self.subTest(policy=policy):
+                p = pawns()
+                before = snapshot(p)
+                c = SearchControl(None, 0)
+                c.request_stop()
+                first = mg.search_move(p, policy, RecordingChoice(), c)
+                self.assertEqual(first.completion, mg.SearchCompletion.INTERRUPTED)
+                self.assertEqual(snapshot(p), before)
+                p.board.set_piece(Square(2, 7), None)
+                before = snapshot(p)
+                second = mg.search_move(
+                    p, policy, RecordingChoice(), SearchControl(None, 0)
+                )
+                self.assertEqual(
+                    second,
+                    mg.SearchResult(
+                        mg.SearchCompletion.COMPLETE,
+                        BoardMove(Square(7, 7), Square(7, 6), False),
+                    ),
+                )
+                self.assertEqual(snapshot(p), before)
+
+    def test_search_propagates_unexpected_errors(self):
+        """採点故障・未知手・不合法手は投了や予備手へ変換しない。
+
+        故障を正常停止へ隠す広い例外捕捉を検出する。
+        """
+        c = SearchControl(None, 0)
+        with patch.object(mg, "material_balance", side_effect=RuntimeError("採点故障")):
+            with self.assertRaises(RuntimeError):
+                mg.search_move(
+                    pawns(), mg.MoveSelectionPolicy.MATERIAL, RecordingChoice(), c
+                )
+        for move, error in (
+            (object(), TypeError),
+            (BoardMove(Square(2, 7), Square(2, 5), False), ValueError),
+        ):
+            with patch.object(
+                mg,
+                "_legal_moves_controlled",
+                return_value=mg.LegalMovesResult(True, (move,)),
+            ):
+                with self.assertRaises(error):
+                    mg.search_move(
+                        pawns(), mg.MoveSelectionPolicy.MATERIAL, RecordingChoice(), c
+                    )
+
+    def test_suppression_after_evaluation_prevents_final_choice(self):
+        """最後の評価から復帰した時の抑制でも抽選せず手を渡さない。
+
+        最終結果生成直前の抑制確認漏れを検出する。
+        """
+        c = SearchControl(None, 0)
+        rng = RecordingChoice()
+
+        def suppress(*args, **kwargs):
+            c.request_stop(suppress_response=True)
+            return mg.CandidateEvaluation(True, (0, 7))
+
+        with patch.object(mg, "_evaluate_candidate", side_effect=suppress):
+            r = mg.search_move(pawns(), mg.MoveSelectionPolicy.MATERIAL, rng, c)
+        self.assertEqual(r, mg.SearchResult(mg.SearchCompletion.SUPPRESSED, None))
+        self.assertEqual(rng.calls, [])
+
+
+def three_moves():
+    return tuple(BoardMove(Square(f, 7), Square(f, 6), False) for f in (2, 5, 7))
+
+
+class RecordingChoice:
+    """抽選対象を記録し最後の候補を返すテスト用操作。"""
+
+    def __init__(self):
+        self.calls = []
+
+    def choice(self, moves):
+        self.calls.append(moves)
+        return moves[-1]
+
+
+class ReplyProtectionTests(unittest.TestCase):
+    def test_reply_generation_never_borrows_root_protection(self):
+        """候補評価の応手生成は一手未確保でも通常停止を保護しない。
+
+        外側の停止確認で隠れる、応手生成への根保護の誤適用を直接観測する。
+        """
+        p, move, _ = recapture(Side.SENTE)
+        after = mg._position_after_move(p, move)
+        c = SearchControl(None, 0)
+        apply = mg.apply_move
+        legal = mg._legal_moves_controlled
+        observed = []
+
+        def stop_in_reply(*args, **kwargs):
+            apply(*args, **kwargs)
+            c.request_stop()
+
+        def record(*args, **kwargs):
+            result = legal(*args, **kwargs)
+            observed.append(result)
+            return result
+
+        with (
+            patch.object(mg, "apply_move", side_effect=stop_in_reply),
+            patch.object(mg, "_legal_moves_controlled", side_effect=record),
+        ):
+            result = mg._two_ply_score_controlled(after, Side.SENTE, control=c)
+        self.assertFalse(result.completed)
+        self.assertIsNone(result.score)
+        self.assertEqual(observed, [mg.LegalMovesResult(False, ())])

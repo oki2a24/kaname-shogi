@@ -1582,3 +1582,84 @@ def _evaluate_candidate(
     if _stopped(control):
         return CandidateEvaluation(False, None)
     return CandidateEvaluation(True, score)
+
+
+class SearchCompletion(Enum):
+    """全完了・通常中断・応答抑制の最終状態データ。"""
+
+    COMPLETE = auto()
+    INTERRUPTED = auto()
+    SUPPRESSED = auto()
+
+
+@dataclass(frozen=True)
+class SearchResult:
+    """探索の最終状態と応答候補の一手データ。"""
+
+    completion: SearchCompletion
+    move: Optional[Move]
+
+
+def search_move(
+    position: Position,
+    policy: MoveSelectionPolicy,
+    rng: random.Random,
+    control: SearchControl,
+) -> SearchResult:
+    """根の合法手調査から、完了候補または予備手を選ぶ操作。
+
+    引数:
+        position: 探索開始局面。盤面・両持駒・手番を変更しない。
+        policy: RANDOM/一手駒得/二手駒得の方針データ。
+        rng: 全完了ランダムまたは完了最高同点の一回抽選に使う生成器。
+        control: 読取り原点と予算を持つ一探索専用制御。
+    戻り値:
+        COMPLETEは全調査完了（Noneだけが合法手なし）、INTERRUPTEDは合法手必須、
+        SUPPRESSEDはNoneで応答を抑制する。抑制を投了と解釈しないこと。
+    副作用:
+        抽選時だけrngを進め、入出力・スレッド生成・待機は行わない。
+    前提条件・設計理由:
+        通常停止は根の最初の合法手確保まで保留する。目標は新候補開始を止め、
+        上限/要求は確認点で中断する。完了前の仮点は使わず、完了候補0なら予備手。
+        例外を正常停止へ変換しない。結果返却とUSI送信は原子的でないため、
+        後続の送信担当が共通Lock下で再び抑制を確認する必要がある。
+    """
+    if policy not in tuple(MoveSelectionPolicy):
+        raise ValueError("未知の一手選択方針です")
+    generated = _legal_moves_controlled(
+        position, check_uchi_fuzume=True, control=control, root=True
+    )
+    if control.check() == SearchSignal.SUPPRESS:
+        return SearchResult(SearchCompletion.SUPPRESSED, None)
+    if not generated.completed:
+        return SearchResult(SearchCompletion.INTERRUPTED, generated.moves[0])
+    if not generated.moves:
+        return SearchResult(SearchCompletion.COMPLETE, None)
+    fallback = generated.moves[0]
+    if policy == MoveSelectionPolicy.RANDOM:
+        signal = control.check(include_target=True)
+        if signal == SearchSignal.SUPPRESS:
+            return SearchResult(SearchCompletion.SUPPRESSED, None)
+        if signal == SearchSignal.STOP:
+            return SearchResult(SearchCompletion.INTERRUPTED, fallback)
+        return SearchResult(SearchCompletion.COMPLETE, rng.choice(generated.moves))
+    scored_moves = []
+    completion = SearchCompletion.COMPLETE
+    for move in generated.moves:
+        if control.check(include_target=True) != SearchSignal.CONTINUE:
+            completion = SearchCompletion.INTERRUPTED
+            break
+        evaluated = _evaluate_candidate(position, move, policy, control=control)
+        if not evaluated.completed:
+            completion = SearchCompletion.INTERRUPTED
+            break
+        scored_moves.append((move, evaluated.score))
+    if control.check() == SearchSignal.SUPPRESS:
+        return SearchResult(SearchCompletion.SUPPRESSED, None)
+    if not scored_moves:
+        return SearchResult(SearchCompletion.INTERRUPTED, fallback)
+    best_score = max(score for _, score in scored_moves)
+    best_moves = tuple(move for move, score in scored_moves if score == best_score)
+    if control.check() == SearchSignal.SUPPRESS:
+        return SearchResult(SearchCompletion.SUPPRESSED, None)
+    return SearchResult(completion, rng.choice(best_moves))

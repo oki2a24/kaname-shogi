@@ -134,45 +134,45 @@ SearchControlは短い専用Lockで停止・抑制フラグの書込み/読取�
 
 ファイル：作成search_control.py / test_search_control.py。消費：既存Optional[SearchBudget]と読取り済み整数ns。生産：上表のSearchControl、SearchSignal。
 
-- [ ] `test_deadline_boundaries`：上表の直前/一致/直後に `assertEqual(control.check(include_target=...), expected_signal)`。`test_uses_received_origin`：21msの遅延後でもSTOP。`test_preserves_large_integer_budget`：10^400msで期限直前CONTINUE/一致STOP。
-- [ ] `test_validates_origin_type_without_restricting_sign`：started_nsにTrue/False/1.0/文字列/Noneを渡し `assertRaises(ValueError)`。原点-1,000,000,000ns、予算(10,20)msでは目標-990,000,000nsの直前CONTINUE/一致STOPを `check(include_target=True)` で確認し、負数を拒否する誤りも検出する。
-- [ ] `test_distinguishes_no_budget_and_zero`、`test_protects_only_ordinary_stop`：None/0/目標0上限1を固定期待値へassertEqual。`test_suppression_is_monotonic`：stop→suppress→stop後は保護の有無によらずSUPPRESS。`test_new_control_does_not_inherit_stop`：別インスタンスはCONTINUE。
-- [ ] `.venv/bin/python -m unittest discover -s tests -p test_search_control.py -v` を実行し、境界・0・抑制について期待したRed理由を記録する。
-- [ ] 上表のシグネチャで最小実装し、同コマンドの失敗/エラー0を確認。偽時計はテスト内の整数値で、実時間を待たない。
-- [ ] 隔離コピーで `>=` を `>`、ms→nsを1000倍、原点を構築時へ変更、抑制を通常stopで解除する誤りを個別注入。対応assertのFAILと復元後Greenを記録。
-- [ ] Refactor要否・独立レビュー・品質検査・記録を済ませ、対象だけ通常コミット。
+- [x] `test_deadline_boundaries`：上表の直前/一致/直後に `assertEqual(control.check(include_target=...), expected_signal)`。`test_uses_received_origin`：21msの遅延後でもSTOP。`test_preserves_large_integer_budget`：10^400msで期限直前CONTINUE/一致STOP。
+- [x] `test_validates_origin_type_without_restricting_sign`：started_nsにTrue/False/1.0/文字列/Noneを渡し `assertRaises(ValueError)`。原点-1,000,000,000ns、予算(10,20)msでは目標-990,000,000nsの直前CONTINUE/一致STOPを `check(include_target=True)` で確認し、負数を拒否する誤りも検出する。
+- [x] `test_distinguishes_no_budget_and_zero`、`test_protects_only_ordinary_stop`：None/0/目標0上限1を固定期待値へassertEqual。`test_suppression_is_monotonic`：stop→suppress→stop後は保護の有無によらずSUPPRESS。`test_new_control_does_not_inherit_stop`：別インスタンスはCONTINUE。
+- [x] `.venv/bin/python -m unittest discover -s tests -p test_search_control.py -v` を実行し、境界・0・抑制について期待したRed理由を記録する。
+- [x] 上表のシグネチャで最小実装し、同コマンドの失敗/エラー0を確認。偽時計はテスト内の整数値で、実時間を待たない。
+- [x] 隔離コピーで `>=` を `>`、ms→nsを1000倍、原点を構築時へ変更、抑制を通常stopで解除する誤りを個別注入。対応assertのFAILと復元後Greenを記録。
+- [x] Refactor要否・独立レビュー・品質検査・記録を済ませ、対象だけ通常コミット。
 
 ### タスク2：合法手・手あり・詰み・適用の中断伝播
 
 ファイル：movegen.py / 作成test_search_movegen.py、必要ならtest_movegen.py。消費：タスク1のSearchControl.check。生産：上表のLegalMovesResult / HasLegalMoveResult / CheckmateResult / _ApplicationResultと各controlled操作。一手適用操作もここで用意する。
 
-- [ ] `test_root_generation_stops_after_first_legal_move`：上表の二歩教材、0予算で `assertEqual(result.moves,(A,))`、`assertFalse(result.completed)`。空盤では `assertTrue(result.completed)` と空一覧。生成途中の盤上手・成り・駒打ちに対し `test_keeps_only_confirmed_moves` で手書き期待タプルと照合する。
-- [ ] `test_suppression_breaks_first_move_protection`：最初の合法判定中に抑制→completed=False、未確定手なし。`test_uchi_fuzume_interrupt_is_not_legality`：先後教材の内側防御生成へstop/抑制を投入し、中断結果と歩打ち未追加をassert。保護あり通常stopは合法/違法確定まで続き、抑制は中断する対照も検査。
-- [ ] `test_checkmate_and_move_existence_keep_unknown`：中断は `assertIsNone(value)`、完了側はTrue/False。王手なし・玉なしは完了False。`test_interrupted_application_preserves_position`：適用中断時は全局面snapshot一致、戻り局面None。未知手TypeError/不合法ValueErrorの伝達もassertRaises。
-- [ ] `.venv/bin/python -m unittest discover -s tests -p test_search_movegen.py -v` で各契約のRedを確認。共通規則へ制御付き境界を設け、従来APIは停止なしで共有する最小実装後にGreenを確認。
-- [ ] `.venv/bin/python -m unittest discover -s tests -p test_movegen.py -v` で既存順序・成り・駒取り・駒打ち・打ち歩詰め・保存の通常完了契約を回帰確認。
-- [ ] 隔離コピーで中断を空の完了一覧へ変換、内側中断を詰みFalseへ変換、保護をSUPPRESSにも適用、成り/駒打ち反復の停止確認を削除する誤りを注入。意図したFAILと復元後Greenを確認し、Refactor要否・独立レビュー・品質検査・記録・通常コミット。
+- [x] `test_root_generation_stops_after_first_legal_move`：上表の二歩教材、0予算で `assertEqual(result.moves,(A,))`、`assertFalse(result.completed)`。空盤では `assertTrue(result.completed)` と空一覧。生成途中の盤上手・成り・駒打ちに対し `test_keeps_only_confirmed_moves` で手書き期待タプルと照合する。
+- [x] `test_suppression_breaks_first_move_protection`：最初の合法判定中に抑制→completed=False、未確定手なし。`test_uchi_fuzume_interrupt_is_not_legality`：先後教材の内側防御生成へstop/抑制を投入し、中断結果と歩打ち未追加をassert。保護あり通常stopは合法/違法確定まで続き、抑制は中断する対照も検査。
+- [x] `test_checkmate_and_move_existence_keep_unknown`：中断は `assertIsNone(value)`、完了側はTrue/False。王手なし・玉なしは完了False。`test_interrupted_application_preserves_position`：適用中断時は全局面snapshot一致、戻り局面None。未知手TypeError/不合法ValueErrorの伝達もassertRaises。
+- [x] `.venv/bin/python -m unittest discover -s tests -p test_search_movegen.py -v` で各契約のRedを確認。共通規則へ制御付き境界を設け、従来APIは停止なしで共有する最小実装後にGreenを確認。
+- [x] `.venv/bin/python -m unittest discover -s tests -p test_movegen.py -v` で既存順序・成り・駒取り・駒打ち・打ち歩詰め・保存の通常完了契約を回帰確認。
+- [x] 隔離コピーで中断を空の完了一覧へ変換、内側中断を詰みFalseへ変換、保護をSUPPRESSにも適用、成り/駒打ち反復の停止確認を削除する誤りを注入。意図したFAILと復元後Greenを確認し、Refactor要否・独立レビュー・品質検査・記録・通常コミット。
 
 ### タスク3：候補評価の完了単位
 
 ファイル：movegen.py / test_search_movegen.py、必要ならtest_movegen.py。消費：タスク2の制御付き一手適用・詰み・合法生成。生産：CandidateEvaluation、_evaluate_candidate、_two_ply_score_controlled。従来choose_moveの通常評価を同じ内部処理へ委譲し、公開契約を維持する。
 
-- [ ] `test_target_allows_current_candidate_to_finish`：評価開始後に目標だけ到達→ `assertTrue(result.completed)` と独立固定score。`test_maximum_or_stop_discards_candidate`：復帰後確認で上限/stop→ `assertFalse(result.completed)`、`assertIsNone(result.score)`。目標0/上限1msの制御を候補操作へ直接渡す対照を含む。
-- [ ] `test_reply_and_mate_interrupt_propagate`：実二手教材の応手先頭/中間/末尾と詰み判定内部で停止し、未完了/Noneをassert。`test_completed_scores_preserve_policy_and_perspective`：先後反転・通常/詰み勝ち/詰み負け/非詰み手なしを固定点と比較。既存教材の設定と手計算をテスト本文に記し、製品採点から期待値を作らない。
-- [ ] 対象test_search_movegen.pyでRed→最小実装→Green。test_movegen.pyで既存の同点抽選・勝敗順・二手境界・枝独立性・不合法例外を回帰確認。
-- [ ] 隔離コピーで応手中断時の部分minを採用、最後の復帰後確認を削除、下位詰み中断を通常点へ変換する誤りを個別注入。FAIL/復元Green、Refactor要否、独立レビュー、品質検査、記録、通常コミット。
+- [x] `test_target_allows_current_candidate_to_finish`：評価開始後に目標だけ到達→ `assertTrue(result.completed)` と独立固定score。`test_maximum_or_stop_discards_candidate`：復帰後確認で上限/stop→ `assertFalse(result.completed)`、`assertIsNone(result.score)`。目標0/上限1msの制御を候補操作へ直接渡す対照を含む。
+- [x] `test_reply_and_mate_interrupt_propagate`：実二手教材の応手先頭/中間/末尾と詰み判定内部で停止し、未完了/Noneをassert。`test_completed_scores_preserve_policy_and_perspective`：先後反転・通常/詰み勝ち/詰み負け/非詰み手なしを固定点と比較。既存教材の設定と手計算をテスト本文に記し、製品採点から期待値を作らない。
+- [x] 対象test_search_movegen.pyでRed→最小実装→Green。test_movegen.pyで既存の同点抽選・勝敗順・二手境界・枝独立性・不合法例外を回帰確認。
+- [x] 隔離コピーで応手中断時の部分minを採用、最後の復帰後確認を削除、下位詰み中断を通常点へ変換する誤りを個別注入。FAIL/復元Green、Refactor要否、独立レビュー、品質検査、記録、通常コミット。
 
 ### タスク4：根探索と途中結果の最終選択
 
 ファイル：movegen.py / test_search_movegen.py。消費：タスク1〜3。生産：SearchCompletion、SearchResult、search_move。USI呼出し先は変更しない。
 
-- [ ] `test_zero_budget_returns_fallback_or_confirmed_no_moves`：三方式×先後反転の最初の合法手を手書きで特定し `assertEqual(result.move,A)`、INTERRUPTED、抽選0回。空盤はCOMPLETE/None。`test_suppressed_search_has_no_response_move`：保護中もSUPPRESSED/None、抽選0回。
-- [ ] `test_root_target_stops_generation_but_reply_target_does_not`：根生成の目標到達→予備手。評価中の下位応手生成は目標では止めず完了。`test_target_prevents_next_candidate`：B評価中目標→B保持/C評価未呼出し。`test_maximum_discards_active_candidate`：B中断→A保持。
-- [ ] `test_selects_only_completed_best_candidates`：上表のA/B完了・C途中99点→抽選引数 `(B,)`、同点対照は最高同点二手のみ、`assertEqual(choice.call_count,1)`。完了0ならAと抽選0。候補順を反転しても途中候補を選ばない。
-- [ ] `test_random_complete_and_interrupted_selection`：全完了は全合法手タプルへ一回choice、中断は最初の手へ抽選0。`test_finishes_without_waiting_for_target`：偽時計が期限前でもCOMPLETEを返す。`test_new_search_preserves_position_and_does_not_reuse_result`：三方式/中断点ごとの81マス・両持駒・手番一致、連続呼出しで結果と停止状態を継承しない。
-- [ ] `test_search_propagates_unexpected_errors`：実評価の例外を `assertRaises(RuntimeError)`、不合法/未知型は既存TypeError/ValueErrorで確認。投了や予備手へ変換しない。
-- [ ] test_search_movegen.pyの各振る舞いでRed→最小実装→Green。隔離コピーで途中候補を追加、予備手を常に優先、Random中断時の部分抽選、下位応手へ根保護を適用、0を期限なし扱いする誤りを個別注入し、意図したFAIL/復元Greenを記録。
-- [ ] 全体 `.venv/bin/python -m unittest discover -s tests -v`、import変更時の `.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、差分確認、必要な再検証を行う。Refactor要否・独立最終レビュー・文書リンク検証・git diff --check・実績記録後に通常コミット。フック回避なし。
+- [x] `test_zero_budget_returns_fallback_or_confirmed_no_moves`：三方式×先後反転の最初の合法手を手書きで特定し `assertEqual(result.move,A)`、INTERRUPTED、抽選0回。空盤はCOMPLETE/None。`test_suppressed_search_has_no_response_move`：保護中もSUPPRESSED/None、抽選0回。
+- [x] `test_root_target_stops_generation_but_reply_target_does_not`：根生成の目標到達→予備手。評価中の下位応手生成は目標では止めず完了。`test_target_prevents_next_candidate`：B評価中目標→B保持/C評価未呼出し。`test_maximum_discards_active_candidate`：B中断→A保持。
+- [x] `test_selects_only_completed_best_candidates`：上表のA/B完了・C途中99点→抽選引数 `(B,)`、同点対照は最高同点二手のみ、`assertEqual(choice.call_count,1)`。完了0ならAと抽選0。候補順を反転しても途中候補を選ばない。
+- [x] `test_random_complete_and_interrupted_selection`：全完了は全合法手タプルへ一回choice、中断は最初の手へ抽選0。`test_finishes_without_waiting_for_target`：偽時計が期限前でもCOMPLETEを返す。`test_new_search_preserves_position_and_does_not_reuse_result`：三方式/中断点ごとの81マス・両持駒・手番一致、連続呼出しで結果と停止状態を継承しない。
+- [x] `test_search_propagates_unexpected_errors`：実評価の例外を `assertRaises(RuntimeError)`、不合法/未知型は既存TypeError/ValueErrorで確認。投了や予備手へ変換しない。
+- [x] test_search_movegen.pyの各振る舞いでRed→最小実装→Green。隔離コピーで途中候補を追加、予備手を常に優先、Random中断時の部分抽選、下位応手へ根保護を適用、0を期限なし扱いする誤りを個別注入し、意図したFAIL/復元Greenを記録。
+- [x] 全体 `.venv/bin/python -m unittest discover -s tests -v`、import変更時の `.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、差分確認、必要な再検証を行う。Refactor要否・独立最終レビュー・文書リンク検証・git diff --check・実績記録後に通常コミット。フック回避なし。
 
 ## 後続の入力並行処理・USI接続への引き渡し
 
@@ -207,3 +207,10 @@ SearchControlは短い専用Lockで停止・抑制フラグの書込み/読取�
 ## 実装開始後の状態
 
 2026-10-12、本人の実装開始指示により手順を開始。上記の「今回は計画だけ」「未実行」「開始指示待ち」「コミットなし」は計画作成時の履歴。実績と裁定は学習記録へ追記する。main取り込みは別承認。
+
+
+## 実装・最終レビューの実績（2026-10-12）
+
+本人の開始指示後、上記4タスクを実装・検証・独立レビュー。全425件成功、Ruff成功、文書リンク497件・見出し14件欠落0、差分検査成功。最終独立レビューはCritical/Important/Minor全0。手ありの早期確定には共通生成のprivate `_first_only` を追加した。実績・Red/Green・変異の補強・裁定・未検証範囲は[学習記録](../learning/search-stop-implementation-plan.md)、確定仕様は[知識メモ](../knowledge/search-stop.md)へ記録した。
+
+元の作業ディレクトリの作業ブランチへ保存する段階。main統合の承認・取り込み先検証・最後の理解確認は未実施。USI接続・計測・対局は今回実施していない。
