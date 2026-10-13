@@ -4,7 +4,9 @@
 
 2026-10-13、「時計・停止接続後の実機確認条件だけを決める」は部分実機確認・記録・main統合・最後の理解確認まで完了。[実施記録](learning/clock-stop-real-check-conditions.md)、[現在地](resume.md)。G2では合法な一応答を確認したが、探索中の通常停止は未達。その後、直接USIプロセス一回で通常 `stop` 後の合法な一応答と正常終了を観測し、画面証拠がない制約も含めて本人が受け入れた。最後の理解確認の回答・補足を記録し、関連文書をmainへ取り込み済み。[直接USI条件・実施結果](plans/2026-10-13-normal-stop-recheck-conditions.md)、[学習記録](learning/normal-stop-recheck-conditions.md)、[開始時引き継ぎ](handover-normal-stop-recheck-conditions.md)。ShogiHome経路は未検証。
 
-本人が次テーマ「ShogiHomeで通常停止を観測する条件だけ」を選び、新セッション準備を依頼した。新セッションではShogiHome操作からUSI通常 `stop` が送られ、返った合法手を棋譜・盤面に反映して対局を続けられる経路を中心に条件案を作成する。現時点では条件案も実施承認もない。背景と再開プロンプトは[新テーマ引き継ぎ](handover-shogihome-normal-stop-conditions.md)を参照する。
+前テーマ「ShogiHomeで通常停止を観測する条件だけ」は本人が条件案と実施開始を承認したが、画面操作による通常 `stop` の経路を確認できず、実施条件は成立しなかった。本人がこの結論の記録を指示した。[結論・承認・事前確認](learning/shogihome-normal-stop-conditions.md)、[当初条件案の履歴](plans/2026-10-13-shogihome-normal-stop-conditions.md)。
+
+本人は「ShogiHomeの時計期限による停止の条件だけ」を選び、条件案・実施開始と具体的設定変更/ログ採取/保全/再起動を承認した。一局・一goで合法応答と反映を確認したが、ShogiHome発stopは未観測。対局設定は、対局開始を伴わない復元経路が見つからなかったため、別途本人承認を得た一度の復帰対局で元値へ戻し、保存値を画面確認した。本人は結果を受け入れ、最後の理解確認にも回答した。main取り込みは未承認のため、新テーマや時計期限の再試行へ進まない。[実施・復帰・理解確認記録](learning/shogihome-clock-deadline-conditions.md)、[当初の条件案履歴](plans/2026-10-13-shogihome-clock-deadline-conditions.md)。対局中断の観測、内部期限停止の直接USI確認、Python更新・構成調査は保留。以下は過去の選定履歴であり、現在の開始指示ではない。
 
 ## 通常停止の再確認条件完了後の候補（2026-10-13、候補1選定）
 
