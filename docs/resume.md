@@ -2,7 +2,7 @@
 
 ## 現在地
 
-本人は「直接USIで時計期限停止を確認する条件だけ」の条件案と一回の実施を承認し、外部stopなしの時計付きgo後7.5428秒の合法応答を受け入れた。[条件・実施記録](plans/2026-10-13-direct-usi-clock-deadline-conditions.md)、[学習記録](learning/direct-usi-clock-deadline-conditions.md)。独立レビュー最終結論はCritical 0 / Important 0 / Minor 0。5文書のローカルリンク494件に欠落なし、`git diff --check`成功。main取り込み承認待ちで、理解確認は未提示・未回答。テスト実行・コード/テスト/設定変更・ShogiHome操作はしていない。生証拠は `/private/tmp/kaname-direct-clock-deadline-20261013-2003JST/`。選定時の背景と開始プロンプトは[引き継ぎ](handover-direct-usi-clock-deadline-conditions-handoff.md)を参照。
+「直接USIで時計期限停止を確認する条件だけ」は、一回の観測結果を本人が受け入れ、2026-10-13にmainへfast-forward統合済み（統合先HEAD `5cc6595`）。統合後に6文書のローカルリンク498件に欠落がないこと、`git diff --check`成功を確認した。独立レビュー最終結論はCritical 0 / Important 0 / Minor 0。最後の理解確認は未提示・未回答。テスト実行・コード/テスト/設定変更・ShogiHome操作はしていない。生証拠は `/private/tmp/kaname-direct-clock-deadline-20261013-2003JST/`。[条件・実施・統合記録](plans/2026-10-13-direct-usi-clock-deadline-conditions.md)、[学習記録](learning/direct-usi-clock-deadline-conditions.md)。選定時の背景と開始プロンプトは[引き継ぎ](handover-direct-usi-clock-deadline-conditions-handoff.md)を参照。
 
 前テーマ「ShogiHomeの時計期限による停止」は、一局・一goで2.316秒後に合法な `bestmove 3c2c` と盤面・棋譜への反映を確認したが、ShogiHome発の `stop` は0件で時計期限停止は未観測。本人は結果を受け入れ、理解確認に「stop を送る前に bestmove が返ってくる場合があるため」と回答した。別途承認を得た一度の復帰対局で元設定と棋譜を復帰・画面確認済み。[実施記録](learning/shogihome-clock-deadline-conditions.md)。
 
