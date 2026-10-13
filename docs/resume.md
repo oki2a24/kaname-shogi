@@ -2,13 +2,11 @@
 
 ## 現在地
 
-「直接USIで時計期限停止を確認する条件だけ」は、一回の観測結果を本人が受け入れ、本人の別承認後に2026-10-13、ローカルmainへfast-forward統合済み。独立レビュー最終結論はCritical 0 / Important 0 / Minor 0。最後の理解確認に本人が回答し、補足を学習記録へ追記済み。回答記録後に6文書のローカルリンク500件に欠落がないこと、`git diff --check`成功を確認した。テスト実行・コード/テスト/設定変更・ShogiHome操作はしていない。生証拠は `/private/tmp/kaname-direct-clock-deadline-20261013-2003JST/`。[条件・実施・統合記録](plans/2026-10-13-direct-usi-clock-deadline-conditions.md)、[学習記録](learning/direct-usi-clock-deadline-conditions.md)。選定時の背景と開始プロンプトは[引き継ぎ](handover-direct-usi-clock-deadline-conditions-handoff.md)を参照。次テーマは未選定。
+本人は二手先読みと時計の両テーマを「学習・実装テーマの区切りとしては完了」とし、ShogiHomeの実機挙動や一般的な時間保証は未確認のまま保持する整理を選んだ。次のテーマは「ShogiHomeの『対局中断』経路を資料から整理する条件だけ」。選定理由、現状、再開プロンプトは[引き継ぎ](handover-shogihome-interruption-conditions.md)に記録した。テーマの資料調査・条件案作成はまだ始めていない。本人が引き継ぎ内の再開プロンプトを新セッションへ入力した後に始める。
+
+前テーマ「直接USIで時計期限停止を確認する条件だけ」は、一回の観測結果を本人が受け入れ、本人の別承認後にローカルmainへfast-forward統合した。最後の理解確認に本人が回答し、補足を[学習記録](learning/direct-usi-clock-deadline-conditions.md)へ追記済み。回答記録後に6文書のローカルリンク500件に欠落がないこと、`git diff --check`成功を確認した。独立レビュー最終結論はCritical 0 / Important 0 / Minor 0。テスト実行・コード/テスト/設定変更・ShogiHome操作はしていない。生証拠は `/private/tmp/kaname-direct-clock-deadline-20261013-2003JST/`。[条件・実施・統合記録](plans/2026-10-13-direct-usi-clock-deadline-conditions.md)。
 
 前テーマ「ShogiHomeの時計期限による停止」は、一局・一goで2.316秒後に合法な `bestmove 3c2c` と盤面・棋譜への反映を確認したが、ShogiHome発の `stop` は0件で時計期限停止は未観測。本人は結果を受け入れ、理解確認に「stop を送る前に bestmove が返ってくる場合があるため」と回答した。別途承認を得た一度の復帰対局で元設定と棋譜を復帰・画面確認済み。[実施記録](learning/shogihome-clock-deadline-conditions.md)。
-
-今回の条件案では、前回のShogiHome局面・時計値・上限・起動数・再試行条件を自動採用していない。
-
-2026-10-13の引き継ぎ作成開始時は `/Users/oki2a24/kaname-shogi` のmain、HEAD `9b51d43`、`origin/main` より29コミット先行、clean。Ruff `0.16.10`、hooksPath `.githooks`。専用ブランチ `codex/direct-usi-clock-deadline-conditions-handoff` はこのHEADから作成した。再開時は現物のGit状態とハンドオフブランチを確認する。
 
 ## 二手先読み設計の完了
 
