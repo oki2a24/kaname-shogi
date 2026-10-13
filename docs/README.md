@@ -54,7 +54,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
-| 直接USIで時計期限停止を確認する条件（実施一回・結果受け入れ・main統合済み、理解確認待ち） | [学習・受け入れ記録](learning/direct-usi-clock-deadline-conditions.md) | [時計予算](knowledge/time-budget.md)、[探索停止](knowledge/search-stop.md)、[USI応答](knowledge/usi-engine-response.md) | [条件・実施記録](plans/2026-10-13-direct-usi-clock-deadline-conditions.md) | — | [開始背景・再開プロンプト](handover-direct-usi-clock-deadline-conditions-handoff.md) |
+| 直接USIで時計期限停止を確認する条件（実施・結果受け入れ・理解確認・main統合済み） | [学習・受け入れ・理解確認記録](learning/direct-usi-clock-deadline-conditions.md) | [時計予算](knowledge/time-budget.md)、[探索停止](knowledge/search-stop.md)、[USI応答](knowledge/usi-engine-response.md) | [条件・実施記録](plans/2026-10-13-direct-usi-clock-deadline-conditions.md) | — | [開始背景・再開プロンプト](handover-direct-usi-clock-deadline-conditions-handoff.md) |
 | ShogiHomeで通常停止を観測する条件（経路未確認・実施条件不成立） | [結論・承認・事前確認](learning/shogihome-normal-stop-conditions.md) | [USI応答](knowledge/usi-engine-response.md)、[探索停止](knowledge/search-stop.md)、[時計予算](knowledge/time-budget.md) | — | [当初条件案の履歴](plans/2026-10-13-shogihome-normal-stop-conditions.md) | [開始背景](handover-shogihome-normal-stop-conditions.md) |
 | ShogiHome時計期限による停止（外部stop未観測・結果受け入れ・理解確認・main取り込み済み・設定復帰済み） | [実施・証拠・復帰・理解確認](learning/shogihome-clock-deadline-conditions.md) | [時計予算](knowledge/time-budget.md)、[探索停止](knowledge/search-stop.md) | — | [当初の条件案](plans/2026-10-13-shogihome-clock-deadline-conditions.md) | — |
 | 時計・停止接続後の実機確認条件（部分結果・main統合・理解確認完了） | [学習・レビュー](learning/clock-stop-real-check-conditions.md) | [USI現行仕様](knowledge/usi-engine-response.md) | [条件・実績](plans/2026-10-12-clock-stop-real-check-conditions.md) | — | [開始背景](handover-clock-stop-real-check-conditions.md) |

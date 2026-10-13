@@ -8,7 +8,15 @@
 
 本人は「ShogiHomeの時計期限による停止の条件だけ」を選び、条件案・実施開始と具体的設定変更/ログ採取/保全/再起動を承認した。一局・一goで合法応答と反映を確認したが、ShogiHome発stopは未観測。対局設定は、対局開始を伴わない復元経路が見つからなかったため、別途本人承認を得た一度の復帰対局で元値へ戻し、保存値を画面確認した。本人は結果を受け入れ、最後の理解確認にも回答した。文書はmainの `ae5d558` に取り込み済み。[実施・復帰・理解確認記録](learning/shogihome-clock-deadline-conditions.md)、[当初の条件案履歴](plans/2026-10-13-shogihome-clock-deadline-conditions.md)。
 
-本人は次テーマ「直接USIで時計期限停止を確認する条件だけ」の条件案と一回の実施を承認した。外部stopを送らず、clock付きgoから7.5428秒後に合法bestmoveを一度受信し、結果を受け入れた。2026-10-13にmainへfast-forward統合し、取り込み先文書を検証済み。最後の理解確認は未提示・未回答。[条件・実施記録](plans/2026-10-13-direct-usi-clock-deadline-conditions.md)、[学習記録](learning/direct-usi-clock-deadline-conditions.md)、[引き継ぎ](handover-direct-usi-clock-deadline-conditions-handoff.md)、[現在地](resume.md)。
+本人は次テーマ「直接USIで時計期限停止を確認する条件だけ」の条件案と一回の実施を承認した。外部stopを送らず、clock付きgoから7.5428秒後に合法bestmoveを一度受信し、結果を受け入れた。2026-10-13にmainへfast-forward統合し、取り込み先文書を検証済み。最後の理解確認への本人回答・補足も記録し、このテーマは完了した。[条件・実施記録](plans/2026-10-13-direct-usi-clock-deadline-conditions.md)、[学習記録](learning/direct-usi-clock-deadline-conditions.md)、[引き継ぎ](handover-direct-usi-clock-deadline-conditions-handoff.md)、[現在地](resume.md)。
+
+## 直接USI時計期限条件の完了後に選べる候補（2026-10-13、小さい順）
+
+1. **ShogiHomeの「対局中断」経路を資料から整理する条件だけ**：対局中断と時計切れ・解析中断の関係を現行資料から確認し、画面操作とUSI終了・中断の対応、観測可能性、未確定点を整理する。実機操作は含めない。資料照合に限定でき、現在未検証のホスト側経路を次に切り分けられるため、最小の候補として推薦する。
+2. **Python更新の影響調査・移行案だけ**：着手時にPython公式のサポート状況と候補版を確認し、依存ツール、開発環境、実行入口、検査への影響を整理する。版の決定や更新は含めず、以前からの保留希望を調査する。
+3. **三つの選択方式の構成調査だけ**：一様ランダム・一手後の駒得・二手先読みの責務、共通処理、依存関係、検査境界を調べ、現状維持と構成変更を比較する。ファイル分割やリファクタリングは含めない。
+
+READMEと[プロジェクトの方向性](02-project-direction.md)、保留候補を見直した。未検証のShogiHome経路を資料だけで小さく確認できる候補1を推薦する。本人が次テーマを選ぶまで、新しい学習・実装は始めない。
 
 ### 選定時に提示した候補（2026-10-13、候補1選定）
 
