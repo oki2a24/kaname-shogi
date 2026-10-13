@@ -55,7 +55,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
 | 時計・停止接続後の実機確認条件（部分結果・main統合・理解確認完了） | [学習・レビュー](learning/clock-stop-real-check-conditions.md) | [USI現行仕様](knowledge/usi-engine-response.md) | [条件・実績](plans/2026-10-12-clock-stop-real-check-conditions.md) | — | [開始背景](handover-clock-stop-real-check-conditions.md) |
-| 通常停止の再確認条件（直接USI観測・本人受け入れ・理解確認済み、main取り込み待ち） | [学習・レビュー・実施記録](learning/normal-stop-recheck-conditions.md) | [USI現行仕様](knowledge/usi-engine-response.md)、[探索停止](knowledge/search-stop.md)、[時計予算](knowledge/time-budget.md) | [承認済み条件・実施結果](plans/2026-10-13-normal-stop-recheck-conditions.md) | — | [開始背景・再開プロンプト](handover-normal-stop-recheck-conditions.md) |
+| 通常停止の再確認条件（直接USI観測・本人受け入れ・理解確認済み、main統合済み） | [学習・レビュー・実施・統合記録](learning/normal-stop-recheck-conditions.md) | [USI現行仕様](knowledge/usi-engine-response.md)、[探索停止](knowledge/search-stop.md)、[時計予算](knowledge/time-budget.md) | [承認済み条件・実施・統合結果](plans/2026-10-13-normal-stop-recheck-conditions.md) | — | [開始背景・再開プロンプト](handover-normal-stop-recheck-conditions.md) |
 | 将棋の全体像（第1回） | [第1回](learning/01-shogi-overview.md) | [将棋の全体像](knowledge/01-shogi-overview.md) | — | — | — |
 | 駒の動きと成り（第2回） | [第2回](learning/02-piece-movement-and-promotion.md) | [駒の動きと成り](knowledge/02-piece-movement-and-promotion.md) | — | — | — |
 | 初期配置と盤上の座標（第3回） | [第3回](learning/03-initial-setup-and-coordinates.md) | [初期配置と盤上の座標](knowledge/03-initial-setup-and-coordinates.md) | — | — | — |
