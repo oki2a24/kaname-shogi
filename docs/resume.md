@@ -2,11 +2,11 @@
 
 ## 現在地
 
-本人は「直接USIで時計期限停止を確認する条件だけ」を選び、新セッションの準備を依頼した。**条件調査・案作成はまだ始めていない。** 再開用プロンプトは[引き継ぎ](handover-direct-usi-clock-deadline-conditions-handoff.md)に記録する。本人が新セッションへプロンプトを入力するまで、新テーマの調査・学習・実装・実行を始めない。
+本人は「直接USIで時計期限停止を確認する条件だけ」の条件案と一回の実施を承認し、外部stopなしの時計付きgo後7.5428秒の合法応答を受け入れた。[条件・実施記録](plans/2026-10-13-direct-usi-clock-deadline-conditions.md)、[学習記録](learning/direct-usi-clock-deadline-conditions.md)。独立レビュー最終結論はCritical 0 / Important 0 / Minor 0。5文書のローカルリンク494件に欠落なし、`git diff --check`成功。main取り込み承認待ちで、理解確認は未提示・未回答。テスト実行・コード/テスト/設定変更・ShogiHome操作はしていない。生証拠は `/private/tmp/kaname-direct-clock-deadline-20261013-2003JST/`。選定時の背景と開始プロンプトは[引き継ぎ](handover-direct-usi-clock-deadline-conditions-handoff.md)を参照。
 
 前テーマ「ShogiHomeの時計期限による停止」は、一局・一goで2.316秒後に合法な `bestmove 3c2c` と盤面・棋譜への反映を確認したが、ShogiHome発の `stop` は0件で時計期限停止は未観測。本人は結果を受け入れ、理解確認に「stop を送る前に bestmove が返ってくる場合があるため」と回答した。別途承認を得た一度の復帰対局で元設定と棋譜を復帰・画面確認済み。[実施記録](learning/shogihome-clock-deadline-conditions.md)。
 
-新テーマは条件作成・独立レビュー・文書検証・条件案提示まで。コード・テスト・設定を変えず、テスト実行、エンジン起動、時計計測、ログ採取、ShogiHome操作をしない。条件案承認後の実施開始とmain取り込みも別承認を待つ。前回の局面・時計・上限・起動数・再試行条件を今回の案へ自動採用しない。
+今回の条件案では、前回のShogiHome局面・時計値・上限・起動数・再試行条件を自動採用していない。
 
 2026-10-13の引き継ぎ作成開始時は `/Users/oki2a24/kaname-shogi` のmain、HEAD `9b51d43`、`origin/main` より29コミット先行、clean。Ruff `0.16.10`、hooksPath `.githooks`。専用ブランチ `codex/direct-usi-clock-deadline-conditions-handoff` はこのHEADから作成した。再開時は現物のGit状態とハンドオフブランチを確認する。
 

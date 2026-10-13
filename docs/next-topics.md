@@ -8,7 +8,7 @@
 
 本人は「ShogiHomeの時計期限による停止の条件だけ」を選び、条件案・実施開始と具体的設定変更/ログ採取/保全/再起動を承認した。一局・一goで合法応答と反映を確認したが、ShogiHome発stopは未観測。対局設定は、対局開始を伴わない復元経路が見つからなかったため、別途本人承認を得た一度の復帰対局で元値へ戻し、保存値を画面確認した。本人は結果を受け入れ、最後の理解確認にも回答した。文書はmainの `ae5d558` に取り込み済み。[実施・復帰・理解確認記録](learning/shogihome-clock-deadline-conditions.md)、[当初の条件案履歴](plans/2026-10-13-shogihome-clock-deadline-conditions.md)。
 
-本人は次テーマ「直接USIで時計期限停止を確認する条件だけ」を選び、新セッション準備を依頼した。これは条件作成テーマの選定であり、条件案承認・実施開始・main取り込み承認ではない。**現在は再開プロンプトの入力待ち。** 条件調査・テスト・コード変更・実行環境操作はまだ開始していない。[引き継ぎと再開プロンプト](handover-direct-usi-clock-deadline-conditions-handoff.md)、[現在地](resume.md)。
+本人は次テーマ「直接USIで時計期限停止を確認する条件だけ」の条件案と一回の実施を承認した。外部stopを送らず、clock付きgoから7.5428秒後に合法bestmoveを一度受信し、結果を受け入れた。main取り込み承認と理解確認は未完了。[条件・実施記録](plans/2026-10-13-direct-usi-clock-deadline-conditions.md)、[学習記録](learning/direct-usi-clock-deadline-conditions.md)、[引き継ぎ](handover-direct-usi-clock-deadline-conditions-handoff.md)、[現在地](resume.md)。
 
 ### 選定時に提示した候補（2026-10-13、候補1選定）
 
