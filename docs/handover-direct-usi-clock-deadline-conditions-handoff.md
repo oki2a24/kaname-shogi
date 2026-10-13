@@ -34,7 +34,7 @@
 - 分岐元mainのHEAD: `9b51d43`（`docs: finalize ShogiHome clock stop record`）。分岐直前にmainは `origin/main` より29コミット先行し、cleanだった（2026-10-13確認）。
 - 分岐前の環境確認: `.venv/bin/ruff --version` は `ruff 0.16.10`、`git config --local --get core.hooksPath` は `.githooks`。
 - mainには `ae5d558` と `9b51d43` があり、前テーマの受け入れ結果・理解確認・復帰・文書検証が記録済み。この引き継ぎブランチはmainへ未統合であり、統合承認も得ていない。
-- 引き継ぎ作成中のこのブランチでは、コード・テスト・設定の変更はなく、ShogiHomeの現物操作もしていない。引き継ぎ文書4ファイルは未コミット。直近の `git diff --check` は成功し、ローカル文書リンク検証は4ファイル・490リンクを確認して欠落0件。独立レビュー初回はCritical 0・Important 0・Minor 2で、指摘を反映済み。最終レビューはCritical 0・Important 0・Minor 0。引き継ぎ文書をこの作業ブランチへコミットし、本人へ再開プロンプトを提示する。新セッションではここに書いた状態を盲信せず、指定コマンドで現物を確認する。
+- コード・テスト・設定の変更はなく、ShogiHomeの現物操作もしていない。引き継ぎ文書4ファイルは専用ブランチにコミット済み（初回コミット `f85d727`）。通常フックはRuff整形確認38ファイルと基本検査に成功。文書リンク検証は4ファイル・490件で欠落0件、`git diff --check` 成功。独立レビュー初回はCritical 0・Important 0・Minor 2で指摘を反映し、最終レビューはCritical 0・Important 0・Minor 0。mainへの取り込みはしていない。新セッションではここに書いた状態を盲信せず、指定コマンドで現物を確認する。
 - 作成・更新対象: `docs/handover-direct-usi-clock-deadline-conditions-handoff.md`、`docs/resume.md`、`docs/next-topics.md`、`docs/README.md`。
 
 ## 次セッションで読む資料と照合範囲
