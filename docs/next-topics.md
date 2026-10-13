@@ -10,7 +10,7 @@
 
 本人は次テーマ「直接USIで時計期限停止を確認する条件だけ」の条件案と一回の実施を承認した。外部stopを送らず、clock付きgoから7.5428秒後に合法bestmoveを一度受信し、結果を受け入れた。2026-10-13にmainへfast-forward統合し、取り込み先文書を検証済み。最後の理解確認への本人回答・補足も記録し、このテーマは完了した。[条件・実施記録](plans/2026-10-13-direct-usi-clock-deadline-conditions.md)、[学習記録](learning/direct-usi-clock-deadline-conditions.md)、[引き継ぎ](handover-direct-usi-clock-deadline-conditions-handoff.md)、[現在地](resume.md)。
 
-本人は二手先読みと時計の両テーマを、学習・実装の区切りとして完了と扱い、ShogiHomeの実機挙動と一般的な時間保証は未確認のまま保持する整理を了承した。次のテーマに「ShogiHomeの『対局中断』経路を資料から整理する条件だけ」を選び、新セッションの準備を依頼した。この条件案作成はまだ始めていない。[引き継ぎ](handover-shogihome-interruption-conditions.md)、[現在地](resume.md)。
+本人は二手先読みと時計の両テーマを、学習・実装の区切りとして完了と扱い、ShogiHomeの実機挙動と一般的な時間保証は未確認のまま保持する整理を了承した。次のテーマに「ShogiHomeの『対局中断』経路を資料から整理する条件だけ」を選び、新セッションの準備を依頼した。条件案を作成し、2026-10-13に本人が明示承認した。観測目的の三局では探索中の対局中断を確認できず、研究済み39手目局面での最後の自然応答後持将棋終局を本人は未達結果として受け入れた。その後、本人の別承認を得て復帰専用対局を一度行い、秒読みを30秒へ戻して保存・再確認し、元棋譜とセッション0も確認した。探索中断は未達のまま。main取り込みは別承認待ち、理解確認は未実施。[条件案](plans/2026-10-13-shogihome-interruption-conditions.md)、[実施記録](learning/shogihome-interruption-conditions.md)、[引き継ぎ](handover-shogihome-interruption-conditions.md)、[現在地](resume.md)。
 
 ## 直接USI時計期限条件の完了後に選んだ候補（2026-10-13、小さい順）
 
