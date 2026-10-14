@@ -44,7 +44,7 @@ ShogiHome 1.28.1の[設定検証](https://github.com/sunfish-shogi/shogihome/blo
 
 ### 起動ファイルを確認する
 
-このリポジトリにある起動ランチャーは `kaname-shogi-usi` です。macOS/Linuxではスクリプトのシバンと実行権限が必要です。ShogiHome公式の[スクリプト・インタプリタ型エンジンの注意](https://github.com/sunfish-shogi/shogihome/wiki/%E3%82%B7%E3%82%A7%E3%83%AB%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%97%E3%83%88%E3%82%84%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%97%E3%83%AA%E3%82%BF%E5%9E%8B%E8%A8%80%E8%AA%9E%E3%81%A7%E3%82%A8%E3%83%B3%E3%82%B8%E3%83%B3%E3%82%92%E5%AE%9F%E8%A1%8C%E3%81%97%E3%81%9F%E3%81%84%E6%96%B9%E3%81%B8)を参照してください。
+このリポジトリにある起動ランチャーは `kaname-shogi-usi` です。macOS/Linux用のPOSIX shellスクリプトで、スクリプト自身の場所からcloneを特定し、そのcloneの `.venv/bin/python` でUSIエンジンを起動します。Python 3.14以上の `.venv` が必要です。ShogiHomeのGUIプロセスがHomebrewの `PATH` を継承するかには依存しません。登録前に[READMEの開発環境セットアップ](../README.md#別pcでの開発環境セットアップ)を行い、シバンと実行権限も確認してください。ShogiHome公式の[スクリプト・インタプリタ型エンジンの注意](https://github.com/sunfish-shogi/shogihome/wiki/%E3%82%B7%E3%82%A7%E3%83%AB%E3%82%B9%E3%82%AF%E3%83%AA%E3%83%97%E3%83%88%E3%82%84%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%97%E3%83%AA%E3%82%BF%E5%9E%8B%E8%A8%80%E8%AA%9E%E3%81%A7%E3%82%A8%E3%83%B3%E3%82%B8%E3%83%B3%E3%82%92%E5%AE%9F%E8%A1%8C%E3%81%97%E3%81%9F%E3%81%84%E6%96%B9%E3%81%B8)を参照してください。このプロセス境界はテストしていますが、今回ShogiHome GUIからの実起動・対局は行っていません。
 
 登録先は、現在使うチェックアウト内の実ファイルにします。2026-10-04に確認した登録パスは次のとおりです。
 

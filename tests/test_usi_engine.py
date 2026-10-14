@@ -424,7 +424,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             MoveSelectionPolicy.MATERIAL,
         ]
         for go_number, (call, expected) in enumerate(
-            zip(calls, expected_policies), start=1
+            zip(calls, expected_policies, strict=True), start=1
         ):
             with self.subTest(go_number=go_number):
                 self.assertEqual(call[2], expected)

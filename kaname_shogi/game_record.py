@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
 
 from .model import BasicPieceType, Board, Hand, Piece, PieceType, Position, Side, Square
 from .movegen import apply_drop, apply_move
@@ -111,7 +110,7 @@ class GameRecord:
                 apply_drop(position, move.piece_type, move.destination)
         return position
 
-    def save(self, path: Union[str, Path]) -> None:
+    def save(self, path: str | Path) -> None:
         """開始局面と成功手を専用JSONファイルへ保存する。
 
         引数:
@@ -134,7 +133,7 @@ class GameRecord:
             output.write("\n")
 
     @classmethod
-    def load(cls, path: Union[str, Path]) -> GameRecord:
+    def load(cls, path: str | Path) -> GameRecord:
         """専用JSONを検証して、新しい対局記録として読み込む。
 
         引数:
@@ -252,7 +251,7 @@ def _position_to_payload(position: Position) -> dict:
     }
 
 
-def _move_to_payload(move: Union[RecordedMove, RecordedDrop]) -> dict:
+def _move_to_payload(move: RecordedMove | RecordedDrop) -> dict:
     """履歴の一手をJSON保存用の辞書へ変換する。"""
     if isinstance(move, RecordedMove):
         return {
@@ -335,7 +334,7 @@ def _payload_to_position(payload: object) -> Position:
     return Position(board, side, hands["SENTE"], hands["GOTE"])
 
 
-def _payload_to_move(payload: object) -> Union[RecordedMove, RecordedDrop]:
+def _payload_to_move(payload: object) -> RecordedMove | RecordedDrop:
     """JSONの履歴一件を検証してRecordedMoveまたはRecordedDropへ変換する。"""
     _require_dict(payload, "履歴")
     kind = payload.get("kind")

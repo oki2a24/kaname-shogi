@@ -400,7 +400,7 @@ class InitialPositionTests(unittest.TestCase):
         )
         position = create_initial_position()
         for rank, row in enumerate(rows, start=1):
-            for file, symbol in zip(range(9, 0, -1), row):
+            for file, symbol in zip(range(9, 0, -1), row, strict=True):
                 expected = None
                 if symbol != ".":
                     side = Side.SENTE if symbol.isupper() else Side.GOTE

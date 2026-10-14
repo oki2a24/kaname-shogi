@@ -2,7 +2,7 @@
 
 ## 現行設定
 
-Ruff 0.16.10をプロジェクト内の `.venv` に導入し、Python 3.9を対象に、Pythonファイルだけを整形・検査する。行長は88を目安とし、行長違反E501は有効にしない。
+Ruff 0.16.10をプロジェクト内の `.venv` に導入し、Python 3.14以上（`py314`）を対象に、Pythonファイルだけを整形・検査する。行長は88を目安とし、行長違反E501は有効にしない。移行実測はmacOS arm64のCPython 3.14.8と3.15.0で行った。Linuxは未実測。
 
 `pyproject.toml` の `lint.select` は `E4,E7,E9,F,B,I,UP,PIE,RUF024,RUF026,RUF100`。基本ルールに加え、Bはflake8-bugbear由来の気付きにくい誤りを検査する。Iはimportのグループ分け・並び順・重複整理を確認する。I002（必須importの検査）も選択されるが、必須importの指定は追加していない。
 
@@ -10,7 +10,7 @@ Ruff 0.16.10をプロジェクト内の `.venv` に導入し、Python 3.9を対�
 - B008：既定引数の関数呼び出しが定義時に一度だけ実行されることによる誤りを検査する。例外もあり、関数呼び出しすべてを禁止する意味ではない。
 - 既定引数は関数定義時に評価される。毎回新しいリストを使う場合は、既定値をNoneにし、関数内で生成する。
 
-UPは対応Pythonで使える表記への統一、PIEは重複定義や不要な処理を検査する。RUF024は `dict.fromkeys` の可変値共有、RUF026は `defaultdict` の引数誤り、RUF100は不要な `noqa` を検出する。`lint.pyupgrade.keep-runtime-typing=true` により、Python 3.9で実行時に評価できないunion表記への変更を避ける。safeとunsafeは修正の分類であり、違反の重大度ではない。unsafe修正は一括適用しない。
+UPは対応Pythonで使える表記への統一、PIEは重複定義や不要な処理を検査する。RUF024は `dict.fromkeys` の可変値共有、RUF026は `defaultdict` の引数誤り、RUF100は不要な `noqa` を検出する。`lint.pyupgrade.keep-runtime-typing=true` は設定として維持するが、Ruffでは対象版が3.10未満のときだけPEP 604書換えを抑制する。`py314`ではこの設定は書換えを抑制せず、`Optional`/`Union`注釈を `|` 形式にする診断が有効になる。Python 3.14以上を最低対応範囲と決めたため、この移行で必要な注釈を更新した。safeとunsafeは修正の分類であり、違反の重大度ではない。unsafe修正は一括適用しない。
 
 リンターは型検査・単体テスト・コードレビューの代替ではない。Ruffの更新や追加ルールの有効化は、影響確認と検証を行う。
 
@@ -19,11 +19,13 @@ UPは対応Pythonで使える表記への統一、PIEは重複定義や不要な
 現在の設定を基準とし、厳格化はいったんここで区切る。すべての誤りを防げるという意味ではなく、学習目的に対する追加の効果と保守負担を比較した判断である。
 
 - 実際の不具合、繰り返すレビュー指摘、用途変更があったときに、対応する個別ルールを再検討する。ルール数や診断0件だけを採用理由にしない。
-- 採用前に、検出したい誤り、現コードの診断、誤検出や例外、Python 3.9と日本語への影響を確認する。代表例で検出を確認し、変更に見合うテストとレビューを行う。
+- 採用前に、検出したい誤り、現コードの診断、誤検出や例外、最低対応Python 3.14と日本語への影響を確認する。代表例で検出を確認し、変更に見合うテストとレビューを行う。
 - `ALL` やpreview、ルール群全体を目的なく有効化しない。将棋の正しさはテストとレビューで確認する。
-- Ruff更新は専用の変更として、リリース情報を確認し、`requirements-dev.txt` と `required-version` を同じ版へ更新する。READMEに従い `python3 scripts/setup_dev.py` を再実行し、作業ブランチの仮想環境への新版導入とフック設定を確認する。その後、整形検査・lintを実行し、新しい診断と整形差分を評価する。Python 3.9での動作、全体テスト、コミット前検査、別PCセットアップも確認してから取り込む。新しい診断を単に消すために一括修正や除外を追加しない。
+- Ruff更新は専用の変更として、リリース情報を確認し、`requirements-dev.txt` と `required-version` を同じ版へ更新する。READMEに従い、Python 3.14以上と確認した実行ファイルを使って `scripts/setup_dev.py` を再実行する。既存 `.venv` はPythonを切り替えないため、版を変えるときは削除せず退避してから作り直す。その後、整形検査・lintを実行し、新しい診断と整形差分を評価する。Python 3.14と移行先版での動作、全体テスト、コミット前検査、別PCセットアップも確認してから取り込む。新しい診断を単に消すために一括修正や除外を追加しない。
 
 根拠：[公式のルール選択指針](https://docs.astral.sh/ruff/linter/#rule-selection)、[フォーマッタとの競合](https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules)、[バージョニング](https://docs.astral.sh/ruff/versioning/)。プロジェクト固有の比較と停止判断は[追加検査の記録](../learning/ruff-practical-rules.md#厳格化の区切りと運用方針)を参照する。
+
+Python 3.14を対象にした注釈構文とRuffの設定判断は[Python移行の学習・実施記録](../learning/python-upgrade-impact.md)、[Ruffの`keep-runtime-typing`設定](https://docs.astral.sh/ruff/settings/#lintpyupgradekeep-runtime-typing)、[UP045](https://docs.astral.sh/ruff/rules/non-pep604-annotation-optional/)、[UP007](https://docs.astral.sh/ruff/rules/non-pep604-annotation-union/)を参照する。
 
 ## 操作
 

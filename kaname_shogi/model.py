@@ -11,7 +11,6 @@ docs/learning/04-first-implementation-design.md。
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Optional
 
 
 class Side(Enum):
@@ -239,7 +238,7 @@ class Hand:
             raise ValueError("指定した駒は持ち駒にありません")
         self._counts[piece_type] = self.count(piece_type) - 1
 
-    def copy(self) -> "Hand":
+    def copy(self) -> Hand:
         """持ち駒の枚数を複製した、独立したHandを返す。
 
         戻り値:
@@ -268,9 +267,9 @@ class Board:
         [None] * 81は不変のNoneを並べるだけで、可変な行の共有は起こらない。
         平手の40枚が必要ならcreate_initial_positionを使う。
         """
-        self._cells: list[Optional[Piece]] = [None] * 81
+        self._cells: list[Piece | None] = [None] * 81
 
-    def piece_at(self, square: Square) -> Optional[Piece]:
+    def piece_at(self, square: Square) -> Piece | None:
         """squareの駒を返し、空ならNoneを返す。盤面は変更しない。
 
         引数は検証済みのSquare。例: board.piece_at(Square(9, 9))。
@@ -278,7 +277,7 @@ class Board:
         """
         return self._cells[square.to_index()]
 
-    def set_piece(self, square: Square, piece: Optional[Piece]) -> None:
+    def set_piece(self, square: Square, piece: Piece | None) -> None:
         """squareの内容をpieceで上書きする。Noneなら空にし、戻り値はない。
 
         引数はSquareとPieceまたはNone。既存の駒もそのまま置き換える。
@@ -288,7 +287,7 @@ class Board:
         """
         self._cells[square.to_index()] = piece
 
-    def copy(self) -> "Board":
+    def copy(self) -> Board:
         """81マスの配置を複製した、独立したBoardを返す。
 
         戻り値:
@@ -320,7 +319,7 @@ class Position:
     sente_hand: Hand = field(default_factory=Hand)
     gote_hand: Hand = field(default_factory=Hand)
 
-    def copy(self) -> "Position":
+    def copy(self) -> Position:
         """盤・先後の持ち駒・手番を独立に複製した局面を返す。
 
         戻り値:

@@ -26,7 +26,7 @@ def main() -> int:
         else:
             move_selection_policy = choose_move_selection_policy()
             run_game(mode=mode, move_selection_policy=move_selection_policy)
-    except (EOFError, KeyboardInterrupt):
+    except EOFError, KeyboardInterrupt:
         print("入力を終了しました。")
     return 0
 

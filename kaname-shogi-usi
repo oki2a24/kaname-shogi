@@ -1,8 +1,16 @@
-#!/usr/bin/python3
-"""ShogiHomeから既存のUSIエンジンを直接起動する。"""
+#!/bin/sh
 
-from kaname_shogi.usi_engine import main
+SCRIPT_DIR=$(CDPATH= cd "$(dirname "$0")" && pwd)
+PYTHON="$SCRIPT_DIR/.venv/bin/python"
 
+if [ ! -x "$PYTHON" ]; then
+    printf '開発環境のPythonがありません: %s\nREADMEの開発環境セットアップ手順を確認してください。\n' "$PYTHON" >&2
+    exit 1
+fi
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+if ! "$PYTHON" -c 'import sys; raise SystemExit(sys.version_info < (3, 14))'; then
+    printf 'Python 3.14以上の開発環境を作成してください。READMEの開発環境セットアップ手順を確認してください。\n' >&2
+    exit 1
+fi
+
+PYTHONPATH="$SCRIPT_DIR${PYTHONPATH:+:$PYTHONPATH}" exec "$PYTHON" -m kaname_shogi.usi_engine

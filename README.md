@@ -34,7 +34,7 @@ ShogiHome 1.28.2では、TwoPlyMaterialを指定した平手対局一例で20回
 
 ## 実行方法
 
-動作確認環境はmacOS、Python 3.9.6です。リポジトリ直下で次を実行します。
+Python 3.14以上で実行できます。2026-10-14の実測環境はmacOS 27.0.1 arm64、CPython 3.14.8と3.15.0です。リポジトリ直下で、Python 3.14以上の `python3` を選んで次を実行します。
 
 ```sh
 python3 -m kaname_shogi
@@ -48,7 +48,7 @@ USIエンジンを標準入出力で起動する場合は、専用の実行入�
 python3 -m kaname_shogi.usi_engine
 ```
 
-この入口はUSIコマンドを読み、応答を標準出力へ返します。ShogiHomeで利用する場合は、リポジトリ直下の `kaname-shogi-usi` を実行ファイルとして登録します。接続・開始条件は[ShogiHome接続手順書](docs/shogihome-connection-guide.md)を参照してください。
+この入口はUSIコマンドを読み、応答を標準出力へ返します。ShogiHomeで利用する場合は、先に下記の手順でこのcloneの `.venv` を作成し、リポジトリ直下の `kaname-shogi-usi` を実行ファイルとして登録します。ランチャーは登録済みパスからcloneを特定し、そのcloneの `.venv/bin/python` でUSIエンジンを起動します。接続・開始条件は[ShogiHome接続手順書](docs/shogihome-connection-guide.md)を参照してください。
 
 ## CLI操作
 
@@ -120,10 +120,10 @@ python3 -m unittest discover -s tests -v
 
 ## 別PCでの開発環境セットアップ
 
-Python 3.9以上（`venv`・`pip`を利用可能な環境）、Git、初回パッケージ取得用のインターネット接続が必要です。セットアップはmacOS/Linux向けです。実測環境はmacOS・Python 3.9.6で、LinuxとWindowsネイティブは未実測です。Windowsと別Git worktreeへの導入は今回の対応範囲に含みません。
+Python 3.14以上（`venv`・`pip`を利用可能な環境）、Git、初回パッケージ取得用のインターネット接続が必要です。セットアップ対象OSはmacOS/Linuxです。実測環境はmacOS 27.0.1 arm64・CPython 3.14.8と3.15.0で、LinuxとWindowsネイティブは未実測です。Windowsと別Git worktreeへの導入は今回の対応範囲に含みません。
 
 ```sh
-python3 --version
+python3 --version  # 3.14以上であることを確認
 git --version
 git clone https://github.com/oki2a24/kaname-shogi.git
 cd kaname-shogi
@@ -135,7 +135,14 @@ python3 -m unittest discover -s tests -v
 
 すでにcloneしている場合は、そのリポジトリへ移動してセットアップコマンドから実行します。スクリプトは `.venv` の作成、`requirements-dev.txt` に固定したRuffの導入、バージョン確認、`git config --local core.hooksPath .githooks` を行います。グローバルのPython環境やGit設定は変更しません。既存フックとの競合は上書きせず停止します。依存関係の取得に失敗した場合も、フックを新たに有効化しません。
 
-`.venv` とローカルGit設定はcloneで引き継がれません。PCごと・cloneごとに実行してください。`.venv` を別PCへコピーせず、同じ手順で作成します。セットアップは再実行可能で、依存関係の固定版が更新されたときも再実行します。
+セットアップに使う `python3` がPython 3.14以上か、実行前に必ず確認してください。HomebrewのCPython 3.15を選ぶ場合は、実行ファイルを明示できます。
+
+```sh
+"$(brew --prefix python@3.15)/bin/python3.15" --version
+"$(brew --prefix python@3.15)/bin/python3.15" scripts/setup_dev.py
+```
+
+`.venv` とローカルGit設定はcloneで引き継がれません。PCごと・cloneごとに実行してください。`.venv` を別PCへコピーせず、同じ手順で作成します。セットアップは再実行可能ですが、既存の `.venv` のPythonは切り替えません。Pythonを更新するときは、旧 `.venv` を削除せずclone外または別名へ退避し、選ぶ版の実行ファイルからセットアップを行います。失敗時は新しい `.venv` を別名へ退避して旧環境を元の `.venv` へ戻します。移行中は `/usr/bin/python3`、全体PATH、ShogiHomeの保存済み登録設定を変更しません。
 
 ### 日常の整形・検査とコミット
 
@@ -148,7 +155,7 @@ python3 -m unittest discover -s tests -v
 # 内容を確認して対象をgit addし、git commitする
 ```
 
-Ruffの対象はPythonファイルです。行長88・Python 3.9を対象とし、リンターは `E4,E7,E9,F,B,I,UP,PIE,RUF024,RUF026,RUF100` を有効にしています。`B` はflake8-bugbear由来の、既定引数のリスト共有など気付きにくい誤りを検査するルール群です。型検査や将棋ルールの正しさの保証ではありません。B追加の理由と検証は[Bの学習記録](docs/learning/ruff-bugbear-rules.md)、import順序を統一するIの追加は[Iの学習記録](docs/learning/ruff-import-order.md)を参照してください。importの自動整理は整形の前に実行し、差分を確認します。追加ルールの選定とPython 3.9への配慮は[追加検査の記録](docs/learning/ruff-practical-rules.md)を参照してください。unsafeな自動修正は一括適用せず、指摘の意図と影響を個別に確認します。
+Ruffの対象はPythonファイルです。行長88・Python 3.14（`py314`）を対象とし、リンターは `E4,E7,E9,F,B,I,UP,PIE,RUF024,RUF026,RUF100` を有効にしています。`B` はflake8-bugbear由来の、既定引数のリスト共有など気付きにくい誤りを検査するルール群です。型検査や将棋ルールの正しさの保証ではありません。B追加の理由と検証は[Bの学習記録](docs/learning/ruff-bugbear-rules.md)、import順序を統一するIの追加は[Iの学習記録](docs/learning/ruff-import-order.md)を参照してください。importの自動整理は整形の前に実行し、差分を確認します。追加ルールの選定は[追加検査の記録](docs/learning/ruff-practical-rules.md)を参照してください。unsafeな自動修正は一括適用せず、指摘の意図と影響を個別に確認します。
 
 Ruffの厳格化はいったんここで区切り、現設定を基準として維持します。実際の不具合、繰り返すレビュー指摘、用途変更があった場合に、対応するルールを個別に検討します。Ruff更新時は診断と整形差分を確認します。判断理由と更新手順は[品質検査の運用方針](docs/knowledge/python-quality-checks.md#ルール追加と更新の方針)を参照してください。
 

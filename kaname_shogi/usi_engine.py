@@ -8,11 +8,11 @@ import selectors
 import sys
 import time
 from collections import deque
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from queue import Queue
 from threading import Lock, Thread
-from typing import Callable, Optional, TextIO
+from typing import TextIO
 
 from .model import Position, Side
 from .movegen import MoveSelectionPolicy, SearchCompletion, search_move
@@ -156,7 +156,7 @@ class _UsiClock:
     byoyomi_ms: int
 
 
-def _parse_go_clock(arguments: Sequence[str]) -> Optional[_UsiClock]:
+def _parse_go_clock(arguments: Sequence[str]) -> _UsiClock | None:
     """goを除くトークン列から時計を読む。時計なしはNone、不正はValueError。"""
     unsupported = {
         "searchmoves",
@@ -206,8 +206,8 @@ def _parse_go_clock(arguments: Sequence[str]) -> Optional[_UsiClock]:
 
 
 def _prepare_search_budget(
-    clock: Optional[_UsiClock], side_to_move: Side, config: TimeManagementConfig
-) -> Optional[SearchBudget]:
+    clock: _UsiClock | None, side_to_move: Side, config: TimeManagementConfig
+) -> SearchBudget | None:
     """現在手番の時計から期間を準備する。時計なしはNoneで、時刻取得はしない。"""
     if clock is None:
         return None
@@ -219,7 +219,7 @@ class _UsiEngineState:
     """最新のPositionまたは未設定を保持する、モジュール内の状態データ。"""
 
     def __init__(self) -> None:
-        self._position: Optional[Position] = None
+        self._position: Position | None = None
 
     def replace_position(self, position: Position) -> None:
         """現在局面を受け取ったPositionへ置き換える。複製はしない。"""
@@ -253,7 +253,7 @@ class _WorkerFailed:
 class _SearchFinished:
     """送信完了とは別の、探索担当終了の通知データ。"""
 
-    context: "_SearchContext"
+    context: _SearchContext
 
 
 @dataclass
@@ -263,11 +263,11 @@ class _SearchContext:
     position: Position
     policy: MoveSelectionPolicy
     control: SearchControl
-    thread: Optional[Thread] = None
+    thread: Thread | None = None
     suppressed: bool = False
     sent: bool = False
     finished: bool = False
-    error: Optional[BaseException] = None
+    error: BaseException | None = None
 
     def suppress(self) -> None:
         """共通Lock保持中に呼ぶ、応答抑制付き停止操作。"""
@@ -458,10 +458,10 @@ def _run_session(read_line, output_fn, rng, config, cancel_input) -> None:
 def run_usi_engine(
     input_fn: Callable[[], str],
     output_fn: Callable[[str], None],
-    rng: Optional[random.Random] = None,
+    rng: random.Random | None = None,
     *,
-    time_config: Optional[TimeManagementConfig] = None,
-    cancel_input_fn: Optional[Callable[[], None]] = None,
+    time_config: TimeManagementConfig | None = None,
+    cancel_input_fn: Callable[[], None] | None = None,
 ) -> None:
     """注入した一行入出力で、探索中もUSI入力を処理する。
 

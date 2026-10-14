@@ -11,7 +11,7 @@ def main(root=None):
     """開発環境を構築し、成功時0、停止時1を返す。
 
     rootは通常のcloneのルートPath（省略時はスクリプトの親の親）。macOS/Linux、
-    Python 3.9以上、Gitとパッケージ取得の通信環境を前提とする。リポジトリ内の
+    Python 3.14以上、Gitとパッケージ取得の通信環境を前提とする。リポジトリ内の
     .venvとローカルGit設定だけを変更する。再実行は既存環境を再利用するが、
     壊れた環境を削除しない。既存フックを無効にせず、依存導入成功後だけ新しい
     フックを有効化する順序により、不完全な構築を成功扱いにしない。
@@ -19,8 +19,8 @@ def main(root=None):
     root = Path(root) if root is not None else Path(__file__).resolve().parents[1]
     root = root.resolve()
     try:
-        if os.name != "posix" or sys.version_info < (3, 9):
-            raise ValueError("macOS/LinuxとPython 3.9以上が必要です。")
+        if os.name != "posix" or sys.version_info < (3, 14):
+            raise ValueError("macOS/LinuxとPython 3.14以上が必要です。")
         if not (root / ".git").is_dir():
             raise ValueError(
                 "通常のclone内で実行してください。別worktreeは今回の対象外です。"
@@ -66,7 +66,7 @@ def main(root=None):
             [
                 str(python),
                 "-c",
-                "import sys; assert sys.version_info >= (3, 9); "
+                "import sys; assert sys.version_info >= (3, 14); "
                 "assert sys.prefix != sys.base_prefix",
             ],
             cwd=root,

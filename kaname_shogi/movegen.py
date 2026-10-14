@@ -16,9 +16,9 @@ docs/design/14-hand-drops.md。
 """
 
 import random
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Callable, Optional
 
 from .model import BasicPieceType, Board, Piece, PieceType, Position, Side, Square
 from .move import BoardMove, DropMove, Move
@@ -134,7 +134,7 @@ def _opponent_side(side: Side) -> Side:
     return Side.GOTE if side == Side.SENTE else Side.SENTE
 
 
-def _find_king_square(board: Board, side: Side) -> Optional[Square]:
+def _find_king_square(board: Board, side: Side) -> Square | None:
     """指定側の玉のマスを探し、なければNoneを返す非公開の読み取り操作。"""
     for file in range(1, 10):
         for rank in range(1, 10):
@@ -521,7 +521,7 @@ def legal_moves(position: Position) -> tuple[Move, ...]:
     return _legal_moves(position, check_uchi_fuzume=True)
 
 
-def choose_weak_move(moves: tuple[Move, ...], rng: random.Random) -> Optional[Move]:
+def choose_weak_move(moves: tuple[Move, ...], rng: random.Random) -> Move | None:
     """合法手一覧から、指定された乱数生成器で一手を選ぶ。
 
     引数:
@@ -607,7 +607,7 @@ def _two_ply_score(after_move: Position, perspective: Side) -> tuple[int, int]:
 
 def _choose_two_ply_material_move(
     position: Position, moves: tuple[Move, ...], rng: random.Random
-) -> Optional[Move]:
+) -> Move | None:
     """各候補の最悪応手評価を比較し、最高候補だけを一回抽選する非公開操作。
 
     movesはpositionの合法手を前提とする。空ならNone。開始側視点を固定し、
@@ -634,7 +634,7 @@ def choose_move(
     moves: tuple[Move, ...],
     policy: MoveSelectionPolicy,
     rng: random.Random,
-) -> Optional[Move]:
+) -> Move | None:
     """方針に従い、渡された合法手から一手を選ぶ。
 
     引数:
@@ -1235,7 +1235,7 @@ class HasLegalMoveResult:
     """手あり調査の完了状態と真偽、不明Noneのデータ。"""
 
     completed: bool
-    value: Optional[bool]
+    value: bool | None
 
 
 @dataclass(frozen=True)
@@ -1243,7 +1243,7 @@ class CheckmateResult:
     """詰み調査の完了状態と真偽、不明Noneのデータ。"""
 
     completed: bool
-    value: Optional[bool]
+    value: bool | None
 
 
 @dataclass(frozen=True)
@@ -1254,7 +1254,7 @@ class _ApplicationResult:
 
 
 def _stopped(
-    control: Optional[SearchControl],
+    control: SearchControl | None,
     *,
     include_target: bool = False,
     protect_first_legal: bool = False,
@@ -1273,7 +1273,7 @@ def _legal_moves_controlled(
     position: Position,
     *,
     check_uchi_fuzume: bool,
-    control: Optional[SearchControl],
+    control: SearchControl | None,
     root: bool = False,
     protect_first_legal: bool = False,
     _first_only: bool = False,
@@ -1345,7 +1345,7 @@ def _has_legal_move_controlled(
     position: Position,
     *,
     check_uchi_fuzume: bool,
-    control: Optional[SearchControl],
+    control: SearchControl | None,
     protect_first_legal: bool = False,
 ) -> HasLegalMoveResult:
     """全調査の真偽と中断の不明を分ける。局面は変更しない。"""
@@ -1365,7 +1365,7 @@ def _is_checkmate_controlled(
     position: Position,
     *,
     check_uchi_fuzume: bool,
-    control: Optional[SearchControl],
+    control: SearchControl | None,
     protect_first_legal: bool = False,
 ) -> CheckmateResult:
     """王手でなければ確定False、防御調査中断は不明として返す操作。"""
@@ -1395,7 +1395,7 @@ def _apply_drop_controlled(
     destination: Square,
     *,
     check_uchi_fuzume: bool,
-    control: Optional[SearchControl],
+    control: SearchControl | None,
     protect_first_legal: bool = False,
 ) -> _ApplicationResult:
     """試し打ちと打ち歩詰め確認が完了した場合だけ元局面を変更する操作。
@@ -1439,8 +1439,8 @@ def _position_after_move_controlled(
     position: Position,
     move: Move,
     *,
-    control: Optional[SearchControl],
-) -> tuple[_ApplicationResult, Optional[Position]]:
+    control: SearchControl | None,
+) -> tuple[_ApplicationResult, Position | None]:
     """独立複製へ適用する操作。中断時は部分局面を渡さず元局面を保存する。
 
     未知型TypeError、違法ValueError、故障はそのまま呼出し側へ伝える。
@@ -1474,14 +1474,14 @@ class CandidateEvaluation:
     """候補評価の完了状態と比較点、不明Noneのデータ。"""
 
     completed: bool
-    score: Optional[tuple[int, int]]
+    score: tuple[int, int] | None
 
 
 def _two_ply_score_controlled(
     after_move: Position,
     perspective: Side,
     *,
-    control: Optional[SearchControl],
+    control: SearchControl | None,
 ) -> CandidateEvaluation:
     """全応手の最悪点を求める操作。目標は無視し上限/要求の中断は点を渡さない。"""
 
@@ -1548,7 +1548,7 @@ def _evaluate_candidate(
     move: Move,
     policy: MoveSelectionPolicy,
     *,
-    control: Optional[SearchControl],
+    control: SearchControl | None,
 ) -> CandidateEvaluation:
     """一候補の適用から採点復帰後確認までを評価完了単位にする操作。
 
@@ -1597,7 +1597,7 @@ class SearchResult:
     """探索の最終状態と応答候補の一手データ。"""
 
     completion: SearchCompletion
-    move: Optional[Move]
+    move: Move | None
 
 
 def search_move(

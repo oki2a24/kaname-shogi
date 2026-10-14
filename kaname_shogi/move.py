@@ -6,7 +6,6 @@
 """
 
 from dataclasses import dataclass
-from typing import Union
 
 from .model import BasicPieceType, Square
 
@@ -58,5 +57,5 @@ class DropMove:
     destination: Square
 
 
-Move = Union[BoardMove, DropMove]
+Move = BoardMove | DropMove
 """合法手一覧に含められる盤上移動または駒打ちの型。"""

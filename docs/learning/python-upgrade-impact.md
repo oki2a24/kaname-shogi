@@ -47,3 +47,40 @@
 ## 振り返りと次回への問い
 
 実行時Python、仮想環境、Ruffの構文対象を別々に考える必要があることを確認し、移行先と最低対応版を確定した。実施時にはHomebrewが提供する正確なパッチ版とShogiHomeランチャーの実行パスを確認し、別途、移行実施の明示承認を得る。
+
+## 移行実施記録（2026-10-14事後記録）
+
+本人は調査・計画の後に「移行実施」と指示し、事前承認済み計画に沿う変更を `codex/python-315-migration` で開始した。候補版・下限は選定済み方針を維持し、Ruffと開発依存の更新、ShogiHome GUI操作、main統合は行わない範囲とした。
+
+### 実環境
+
+- Homebrew CPython 3.15.0 (`/opt/homebrew/bin/python3.15`) を開発用 `.venv` に使用し、CPython 3.14.8 (`/opt/homebrew/bin/python3.14`) を最低版検証に使った。OSはmacOS 27.0.1 arm64。
+- `.venv` はCPython 3.15.0、Ruffは固定版0.16.10、`core.hooksPath` は `.githooks`。元のPython 3.9.6環境は削除せず `/private/tmp/kaname-shogi-venv-python39-20261014` に退避した。
+- 3.14.8のテスト環境は `/private/tmp/kaname-shogi-venv-python314-test-20261014` に作成し、全件検証後に削除した。Homebrew側の依存としてmpdecimal 4.0.1が入った。OS付属Python、全体PATH、ShogiHomeの保存済み登録は変えていない。
+
+### 変更と理由
+
+- `scripts/setup_dev.py` はホストPythonと既存 `.venv` の両方で3.14以上を要求するようにした。ホストが3.14でも、古い3.13 `.venv` を誤再利用しないことをテストで確認する。
+- `pyproject.toml` のRuff `target-version` を `py314` に変更した。Ruff 0.16.10、`requirements-dev.txt`、`required-version`、選択ルール、`keep-runtime-typing=true` は維持した。
+- `py314`の診断で、`Optional`/`Union`をPEP 604形式へ更新し、古い文字列前方参照を除き、`Callable`を `collections.abc` から読み込む箇所を整理した。Python 3.14で遅延評価注釈の仕様が導入されていることを踏まえ、3.14と3.15双方で実行した。`except EOFError, KeyboardInterrupt` はPython 3.14のPEP 758構文である。
+- `target-version`切替直後の診断は合計51件（UP045が32、UP007が7、UP035が4、UP037が4、B905が4）。診断の意味と移行先を照合し、既存のルールや除外を増やさず対応した。
+- B905の `zip` 4か所に意図を明示した。対応する長さが一致する3か所は `strict=True`、13種類の駒を79マスへ対応させる意図的な不一致1か所は `strict=False` とコメントを付けた。
+- `kaname-shogi-usi` はPOSIX shellランチャーへ変更し、clone内 `.venv/bin/python` でモジュールを起動する。これによりShogiHomeのプロセスがHomebrewのPATHを引き継ぐかに依存せず、別cwdからもclone設定を読み込める。3.13は起動拒否、3.14は受理、cwd維持もテストした。ShogiHome GUIでの接続は今回確認していない。
+- README、ShogiHome接続手順、Python品質検査の現行案内と、再開案内・索引・計画を更新した。過去の調査時点や当時の確認問題の回答は履歴として保持した。
+
+### TDDとRefactorの確認
+
+境界テストを先に作成し、旧実装ではsetupが3.13を通すこと、ShogiHomeランチャーがclone内 `.venv` を使わないことをRedとして確認してから、下限チェックとランチャーを変更した。後から追加した既存3.13仮想環境テストは依存導入前の停止を、launcherの偽Pythonテストは3.13拒否・3.14受理を確認する。Refactor要否を見直し、追加の整理は行わなかった。レビュー後にcwd検査のパス正規化差を修正した際も、失敗と修正後の該当テスト通過を確認している。
+
+根拠となる一次資料は、[Python 3.14の遅延評価注釈（PEP 649/749）](https://docs.python.org/3.14/whatsnew/3.14.html#pep-649--pep-749-deferred-evaluation-of-annotations)、[複数例外の括弧省略（PEP 758）](https://peps.python.org/pep-0758/)、[Ruffの`keep-runtime-typing`](https://docs.astral.sh/ruff/settings/#lintpyupgradekeep-runtime-typing)、[UP045](https://docs.astral.sh/ruff/rules/non-pep604-annotation-optional/)、[UP007](https://docs.astral.sh/ruff/rules/non-pep604-annotation-union/)、[B905](https://docs.astral.sh/ruff/rules/zip-without-explicit-strict/)。
+
+### 検証結果
+
+- `.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff format --check .`、`.venv/bin/ruff check .` は成功した（最終時点で38ファイル整形済み、診断なし）。
+- CPython 3.15.0の `.venv/bin/python -m unittest discover -s tests -v` と、CPython 3.14.8の一時環境で同じ全体テストを個別に実行し、各463テストが成功した。
+- cwd保持テストの初回はmacOS一時パス `/var/...` と `/private/var/...` の別名を比較して失敗した。`Path.resolve()` 後の比較へ修正し、該当テストと両Pythonの全体テストが成功することを確認した。これはテストのパス正規化差で、起動cwdが変わった動作不良ではなかった。
+- 独立レビューはコード・テスト・移行案内を確認し、最終結果はCritical 0・Important 0・Minor 0。初回レビューで挙がったREADME案内先とcwdテスト期待値は、README更新と実パスの正規化比較で解消し、再レビューで確認した。最終レビュー担当はテストやRuffを再実行していない。通常のcommit前hookは通常コミット時に確認する。
+
+### 未確認範囲と復帰
+
+Linux、Windows、free-threaded版、ShogiHome実機の起動・対局は対象外で未確認。Homebrew Pythonは他用途の可能性があるため削除しない。復帰時は新 `.venv` を別名へ退避し、退避したPython 3.9 `.venv` を元の位置へ戻せる。コードと設定はブランチに留め、mainへ統合するには別の明示承認を待つ。二手先読みと時計は「学習・実装テーマとしては完了。ShogiHome実機挙動と一般的な時間保証は未確認のまま」。

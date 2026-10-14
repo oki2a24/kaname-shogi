@@ -1,9 +1,9 @@
 """探索の期限と停止要求を扱う。"""
 
 import time
+from collections.abc import Callable
 from enum import Enum, auto
 from threading import Lock
-from typing import Callable, Optional
 
 from .time_management import SearchBudget
 
@@ -35,7 +35,7 @@ class SearchControl:
 
     def __init__(
         self,
-        budget: Optional[SearchBudget],
+        budget: SearchBudget | None,
         started_ns: int,
         *,
         now_ns: Callable[[], int] = time.monotonic_ns,

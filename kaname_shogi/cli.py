@@ -1,9 +1,9 @@
 """指し手入力の解析と、標準入出力による対局進行を扱う。"""
 
 import random
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Optional, Union
 
 from .display import render_position
 from .game_record import GameRecord
@@ -271,9 +271,9 @@ class HelpCommand:
 
 
 # Commandは解析済みの6種類の指示のいずれかを表す公開の型別名である。
-Command = Union[
-    MoveCommand, DropCommand, ResignCommand, SaveCommand, LoadCommand, HelpCommand
-]
+Command = (
+    MoveCommand | DropCommand | ResignCommand | SaveCommand | LoadCommand | HelpCommand
+)
 
 
 # 駒打ちで入力・表示する基本駒の型と日本語名を、この順序で対応付ける。
@@ -345,9 +345,7 @@ def parse_command(text: str) -> Command:
     raise ValueError(FORMAT_ERROR)
 
 
-def _apply_command(
-    record: GameRecord, command: Union[MoveCommand, DropCommand]
-) -> None:
+def _apply_command(record: GameRecord, command: MoveCommand | DropCommand) -> None:
     """解析済みの指示を対局記録の操作へ一度だけ渡す。
 
     引数:
@@ -435,7 +433,7 @@ def run_game(
     *,
     input_fn: Callable[[], str] = input,
     output_fn: Callable[[str], None] = print,
-    rng: Optional[random.Random] = None,
+    rng: random.Random | None = None,
     mode: GameMode = GameMode.HUMAN_VS_COMPUTER,
     move_selection_policy: MoveSelectionPolicy = MoveSelectionPolicy.RANDOM,
 ) -> GameRecord:
@@ -512,6 +510,6 @@ def run_game(
                 output_fn("エラー：" + str(error))
                 continue
             output_fn(render_position(record.current_position))
-    except (EOFError, KeyboardInterrupt):
+    except EOFError, KeyboardInterrupt:
         output_fn("入力を終了しました。")
         return record

@@ -3226,7 +3226,8 @@ class MaterialEvaluationTests(unittest.TestCase):
             PieceType.DRAGON: 17,
         }
         self.assertEqual(sum(board_values.values()), 130)
-        for square, piece_type in zip(squares, board_values):
+        # 置く駒は13枚だけなので、残りの候補マスは空のままにする。
+        for square, piece_type in zip(squares, board_values, strict=False):
             position.board.set_piece(square, Piece(piece_type, Side.SENTE))
         for piece_type in BasicPieceType:
             if piece_type != BasicPieceType.KING:
@@ -3793,7 +3794,7 @@ class TwoPlyMaterialSelectionTests(unittest.TestCase):
         original_moves = tuple(moves)
         references = {}
         after_states = {}
-        expected_scores = dict(zip(moves, ((0, 33), (0, 31), (0, -31))))
+        expected_scores = dict(zip(moves, ((0, 33), (0, 31), (0, -31)), strict=True))
         for move in moves:
             self.assertIn(move, movegen.legal_moves(position))
             after = position.copy()

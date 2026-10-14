@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from decimal import Decimal
 from fractions import Fraction
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -70,7 +69,7 @@ def _reject_constant(value):
     raise ValueError(f"非有限数は使えません: {value}")
 
 
-def load_time_management_config(path: Optional[Path] = None) -> TimeManagementConfig:
+def load_time_management_config(path: Path | None = None) -> TimeManagementConfig:
     """UTF-8 JSONを検証し、新しい時間設定データを返す。
 
     引数:
