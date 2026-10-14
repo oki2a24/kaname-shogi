@@ -9,7 +9,7 @@
 
 - 現在できることと使い方を知る：ルートの [README](../README.md)
 - ShogiHomeへの接続・対局手順を知る：[ShogiHome接続手順書](shogihome-connection-guide.md)
-- 作業を再開する：[AGENTS.md](../AGENTS.md)、ルートの [README](../README.md)、[再開案内](resume.md)、現在の実装計画、現在のGit状態。引き継ぎはテーマ開始時点の背景として読む
+- 作業を再開する：現在のGit状態と[再開案内](resume.md)を照合する。必要な仕様・計画・知識・学習記録はこの索引から現在テーマに応じて選ぶ。ルートの [README](../README.md) は機能・使い方・開発環境を確認するときに読む。引き継ぎはテーマ開始時点の背景として読む
 - 現在の確定仕様を調べる：下のテーマ別索引から対応する知識メモ
 - 判断理由や学習の経緯を調べる：対応する学習記録
 - 実装する：承認済みの設計仕様、実装計画、関連コード、関連テスト
@@ -22,7 +22,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | --- | --- | --- | --- | --- | --- |
 | ルートの `README.md` | 現在の概要と利用方法 | 初めて訪れた人、利用者 | 最初 | 利用方法または主要機能が変わったとき | 現在情報 |
 | `docs/README.md` | 文書の地図と選択的な読み方 | 人間、AI | 詳細文書を探すとき | 各テーマの完了時 | 現在の入口と履歴への索引 |
-| `docs/resume.md` | 現在の作業を再開する短い入口 | 人間、AI | セッション再開時 | テーマ完了時、次テーマを選び引き継ぐとき | 現在情報 |
+| `docs/resume.md` | 現在の作業を再開する短い入口 | 人間、AI | セッション再開時 | 現在地・承認段階・未完了事項が変わったとき | 現在情報 |
 | `docs/handover-*.md` | 対応テーマ開始時点の物理状態と再開手順 | 作業を引き継ぐ人、AI | 対応テーマの再開時、経緯確認時 | 次テーマを新しいセッションへ引き継ぐとき | 作成時点の情報 |
 | `docs/knowledge/` | 現在の確定知識と実装上の参照事項 | 実装・保守を行う人、AI | 現在仕様を確認するとき | 確定知識が追加・変更されたとき | 現在の確定知識 |
 | `docs/learning/` | 回答、合意、実施、レビュー、振り返り | 学習者、判断経緯を調べる人、AI | なぜその判断になったか調べるとき | 各学習回の進行時と完了時 | 学習と判断の履歴 |
@@ -35,7 +35,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-[再開案内](resume.md)で現在の作業状態と次に読む資料を確認する。選定済みの「三つの選択方式の構成調査だけ」は[調査記録](learning/three-policy-architecture.md)と[開始時点の引き継ぎ](handover-three-policy-architecture.md)を参照する。Python移行の実施・統合・理解確認は[実装計画と結果](plans/2026-10-14-python-315-migration-implementation-plan.md)と[学習記録](learning/python-upgrade-impact.md)に記録した。細かな進捗はこの索引に重複させない。
+[再開案内](resume.md)で現在の作業状態と次に読む資料を確認する。文書運用の合意範囲・調査根拠・実施タスクは[文書活用計画](plans/2026-10-14-documentation-practices-implementation-plan.md)に記録する。直近の完了テーマである三方式の構成調査は[学習記録](learning/three-policy-architecture.md)、Python移行の実施・統合・理解確認は[計画と結果](plans/2026-10-14-python-315-migration-implementation-plan.md)と[学習記録](learning/python-upgrade-impact.md)を参照する。現在状態をこの索引に複写しない。
 
 完了した設計の学習・合意は[次段階設計の記録](learning/evaluation-next-stage.md)、今回の実装計画は[計画案](plans/2026-10-10-two-ply-implementation-plan.md)と[合意記録](learning/two-ply-implementation-plan.md)、計画テーマ開始時点の背景は[引き継ぎ](handover-two-ply-implementation-plan.md)、通常二手比較の実装は[学習記録](learning/two-ply-basic-comparison.md)、開始背景は[引き継ぎ](handover-two-ply-basic-comparison.md)を参照する。
 
@@ -54,7 +54,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
-| 三つの選択方式の構成調査（本人確認済み・現行構成維持、次テーマ未選定） | [構成調査記録](learning/three-policy-architecture.md) | [一手選択と駒得評価](knowledge/31-weak-move-selection.md) | — | — | [開始時点の背景・再開プロンプト](handover-three-policy-architecture.md) |
+| 文書活用・共同作業の文書整理（実施中） | [学習・実施記録](learning/documentation-practices.md) | — | — | [承認済み計画](plans/2026-10-14-documentation-practices-implementation-plan.md) | — |
+| 三つの選択方式の構成調査（完了・次の強化エンジンでは方式別分離を希望） | [構成調査記録](learning/three-policy-architecture.md) | [一手選択と駒得評価](knowledge/31-weak-move-selection.md) | — | — | [開始時点の背景・再開プロンプト](handover-three-policy-architecture.md) |
 | Python更新（3.15移行実装・検証・レビュー・main統合・理解確認完了） | [学習・実施記録](learning/python-upgrade-impact.md)、[影響調査・移行案](plans/2026-10-14-python-upgrade-impact.md) | [Python品質検査の運用](knowledge/python-quality-checks.md) | — | [計画・事後結果](plans/2026-10-14-python-315-migration-implementation-plan.md) | [開始時点の背景](handover-python-upgrade-impact.md) |
 | ShogiHome「対局中断」経路を資料から整理する条件（学習・記録・理解確認完了、探索中断の観測は未達） | [学習・作成記録](learning/shogihome-interruption-conditions.md) | — | [資料整理・条件案](plans/2026-10-13-shogihome-interruption-conditions.md) | — | [開始背景・再開プロンプト](handover-shogihome-interruption-conditions.md) |
 | 直接USIで時計期限停止を確認する条件（実施・結果受け入れ・理解確認・main統合済み） | [学習・受け入れ・理解確認記録](learning/direct-usi-clock-deadline-conditions.md) | [時計予算](knowledge/time-budget.md)、[探索停止](knowledge/search-stop.md)、[USI応答](knowledge/usi-engine-response.md) | [条件・実施記録](plans/2026-10-13-direct-usi-clock-deadline-conditions.md) | — | [開始背景・再開プロンプト](handover-direct-usi-clock-deadline-conditions-handoff.md) |
