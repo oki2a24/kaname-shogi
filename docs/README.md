@@ -35,7 +35,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-[再開案内](resume.md)で承認・作業状態と次に読む資料を確認する。Python 3.15への移行実装・検証・レビューと統合待ちの状態は[実装計画と結果](plans/2026-10-14-python-315-migration-implementation-plan.md)、本人回答・実施記録は[学習記録](learning/python-upgrade-impact.md)を参照する。細かな進捗はこの索引に重複させない。
+[再開案内](resume.md)で現在の作業状態と次に読む資料を確認する。選定済みの「三つの選択方式の構成調査だけ」は[開始時点の引き継ぎ](handover-three-policy-architecture.md)を参照する。Python移行の実施・統合・理解確認は[実装計画と結果](plans/2026-10-14-python-315-migration-implementation-plan.md)と[学習記録](learning/python-upgrade-impact.md)に記録した。細かな進捗はこの索引に重複させない。
 
 完了した設計の学習・合意は[次段階設計の記録](learning/evaluation-next-stage.md)、今回の実装計画は[計画案](plans/2026-10-10-two-ply-implementation-plan.md)と[合意記録](learning/two-ply-implementation-plan.md)、計画テーマ開始時点の背景は[引き継ぎ](handover-two-ply-implementation-plan.md)、通常二手比較の実装は[学習記録](learning/two-ply-basic-comparison.md)、開始背景は[引き継ぎ](handover-two-ply-basic-comparison.md)を参照する。
 
@@ -54,7 +54,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
-| Python更新（3.15移行実装・検証・レビュー完了、main統合承認待ち） | [学習・実施記録](learning/python-upgrade-impact.md)、[影響調査・移行案](plans/2026-10-14-python-upgrade-impact.md) | [Python品質検査の運用](knowledge/python-quality-checks.md) | — | [計画・事後結果](plans/2026-10-14-python-315-migration-implementation-plan.md) | [開始時点の背景](handover-python-upgrade-impact.md) |
+| 三つの選択方式の構成調査（選定済み・未着手、新セッション入力待ち） | — | [一手選択と駒得評価](knowledge/31-weak-move-selection.md) | — | — | [開始時点の背景・再開プロンプト](handover-three-policy-architecture.md) |
+| Python更新（3.15移行実装・検証・レビュー・main統合・理解確認完了） | [学習・実施記録](learning/python-upgrade-impact.md)、[影響調査・移行案](plans/2026-10-14-python-upgrade-impact.md) | [Python品質検査の運用](knowledge/python-quality-checks.md) | — | [計画・事後結果](plans/2026-10-14-python-315-migration-implementation-plan.md) | [開始時点の背景](handover-python-upgrade-impact.md) |
 | ShogiHome「対局中断」経路を資料から整理する条件（学習・記録・理解確認完了、探索中断の観測は未達） | [学習・作成記録](learning/shogihome-interruption-conditions.md) | — | [資料整理・条件案](plans/2026-10-13-shogihome-interruption-conditions.md) | — | [開始背景・再開プロンプト](handover-shogihome-interruption-conditions.md) |
 | 直接USIで時計期限停止を確認する条件（実施・結果受け入れ・理解確認・main統合済み） | [学習・受け入れ・理解確認記録](learning/direct-usi-clock-deadline-conditions.md) | [時計予算](knowledge/time-budget.md)、[探索停止](knowledge/search-stop.md)、[USI応答](knowledge/usi-engine-response.md) | [条件・実施記録](plans/2026-10-13-direct-usi-clock-deadline-conditions.md) | — | [開始背景・再開プロンプト](handover-direct-usi-clock-deadline-conditions-handoff.md) |
 | ShogiHomeで通常停止を観測する条件（経路未確認・実施条件不成立） | [結論・承認・事前確認](learning/shogihome-normal-stop-conditions.md) | [USI応答](knowledge/usi-engine-response.md)、[探索停止](knowledge/search-stop.md)、[時計予算](knowledge/time-budget.md) | — | [当初条件案の履歴](plans/2026-10-13-shogihome-normal-stop-conditions.md) | [開始背景](handover-shogihome-normal-stop-conditions.md) |
