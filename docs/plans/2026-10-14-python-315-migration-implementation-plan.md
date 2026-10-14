@@ -117,4 +117,4 @@ Linux、Windows、free-threaded Python、ShogiHome GUIからの実起動・接�
 
 新 `.venv` に問題があれば、まず新環境を別名へ退避し、`/private/tmp/kaname-shogi-venv-python39-20261014` をclone内の `.venv` へ戻す。HomebrewのPythonは他用途の可能性があるため自動削除しない。実施時はコード・設定の変更を作業ブランチに留め、統合前に復帰する計画だった。
 
-その後、本人の明示承認を受けて2026-10-14にコミット `358f4ac` をmainへfast-forward統合し、取り込み先で全463テスト、Ruff lint、整形確認を再実行して成功した。統合後HEADは `358f4ac`。pushはしていない。最後の理解確認を一問提示し、回答と補足を学習記録へ追記するまで次テーマを開始しない。
+その後、本人の明示承認を受けて2026-10-14にコミット `358f4ac` をmainへfast-forward統合し、取り込み先で全463テスト、Ruff lint、整形確認を再実行して成功した。統合後HEADは `358f4ac`。pushはしていない。最後の理解確認は一問実施し、本人の回答とアシスタントの補足を[学習記録](../learning/python-upgrade-impact.md)へ追記した。Python移行テーマは完了し、次テーマは未選定である。

@@ -6,7 +6,7 @@
 
 Ruff `target-version` は `py314`。`scripts/setup_dev.py` はホストと既存 `.venv` の双方でPython 3.14以上を確認し、ShogiHome用ランチャーはclone内 `.venv/bin/python` を使う。CPython 3.14.8と3.15.0で全テストを実行し、Ruffの整形検査・lintも通過した。LinuxとShogiHome GUIからの実接続・対局は未検証。二手先読みと時計は「学習・実装テーマとしては完了。ShogiHome実機挙動と一般的な時間保証は未確認のまま」。
 
-mainへの統合と取り込み先検証は完了した。現在は最後の理解確認への回答待ちであり、回答と補足を学習記録へ追記するまで次テーマを選定・開始しない。移行時の開始状態は[開始時点の引き継ぎ](handover-python-upgrade-impact.md)に履歴として残す。
+mainへの統合、取り込み先検証、最後の理解確認と回答記録は完了した。Python移行テーマは完了し、次テーマは未選定である。[候補と推薦理由](next-topics.md)から本人が選ぶまで、新しい学習・実装を開始しない。移行時の開始状態は[開始時点の引き継ぎ](handover-python-upgrade-impact.md)に履歴として残す。
 
 前テーマ「ShogiHomeの『対局中断』経路を資料から整理する条件だけ」は、資料整理・実機観測・結果受け入れ・復帰・理解確認まで記録してmainへ統合済み。探索中断は未達、秒読み30秒への復帰は完了。二手先読みと時計の学習・実装テーマは完了扱いだが、ShogiHome実機挙動と一般的な時間保証は未確認のまま。詳細は[実施記録](learning/shogihome-interruption-conditions.md)。
 
