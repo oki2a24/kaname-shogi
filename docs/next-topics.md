@@ -2,7 +2,7 @@
 
 ## 現在の選択
 
-本人は2026-10-14、次テーマに「Python更新の影響調査・移行案だけ」を選定し、再開用プロンプトを入力した。調査と移行案の提示まで完了。Python 3.14.8と3.15.0を比較材料として確認したが、移行版・最低対応版は未決定。Python/Ruff/依存の導入・更新、コード・設定変更、テスト実行、移行実施は含めていない。確認問題への回答は[学習記録](learning/python-upgrade-impact.md)に記録済み。現在は移行版・最低対応版の選定と、移行実施に進む場合の明示承認を待つ。[調査・移行案](plans/2026-10-14-python-upgrade-impact.md)、[学習記録](learning/python-upgrade-impact.md)、[開始時の引き継ぎ](handover-python-upgrade-impact.md)。
+本人は2026-10-14、次テーマに「Python更新の影響調査・移行案だけ」を選定し、再開用プロンプトを入力した。調査・移行案の提示と確認問題は完了。移行先をHomebrewの通常版CPython 3.15系、最低対応版をPython 3.14系、Ruff構文対象を`py314`、free-threaded版を対象外とする方針が確定した。Python/Ruff/依存の導入・更新、コード・設定変更、テスト実行、移行実施は含めていない。移行実施の明示承認を待つ。[調査・移行案](plans/2026-10-14-python-upgrade-impact.md)、[学習記録](learning/python-upgrade-impact.md)、[開始時の引き継ぎ](handover-python-upgrade-impact.md)。
 
 ### 選定時に提示した候補（2026-10-14、小さい順）
 
