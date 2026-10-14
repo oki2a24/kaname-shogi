@@ -54,7 +54,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
-| 文書活用・共同作業の文書整理（main統合・理解確認完了、README追加磨き中） | [学習・実施記録](learning/documentation-practices.md) | — | — | [実施計画・結果](plans/2026-10-14-documentation-practices-implementation-plan.md) | — |
+| 次のエンジン強化段階を設計する（選択済み・開始前） | [選定・引き継ぎ準備](learning/documentation-practices.md#次テーマ選定と引き継ぎ準備2026-10-14) | [一手選択と駒得評価](knowledge/31-weak-move-selection.md) | — | — | [次セッション用引き継ぎ](handover-engine-improvement-stage-design.md) |
+| 文書活用・共同作業の文書整理（main統合・理解確認完了、README追加磨きmain統合済み） | [学習・実施記録](learning/documentation-practices.md) | — | — | [実施計画・結果](plans/2026-10-14-documentation-practices-implementation-plan.md) | — |
 | 三つの選択方式の構成調査（完了・次の強化エンジンでは方式別分離を希望） | [構成調査記録](learning/three-policy-architecture.md) | [一手選択と駒得評価](knowledge/31-weak-move-selection.md) | — | — | [開始時点の背景・再開プロンプト](handover-three-policy-architecture.md) |
 | Python更新（3.15移行実装・検証・レビュー・main統合・理解確認完了） | [学習・実施記録](learning/python-upgrade-impact.md)、[影響調査・移行案](plans/2026-10-14-python-upgrade-impact.md) | [Python品質検査の運用](knowledge/python-quality-checks.md) | — | [計画・事後結果](plans/2026-10-14-python-315-migration-implementation-plan.md) | [開始時点の背景](handover-python-upgrade-impact.md) |
 | ShogiHome「対局中断」経路を資料から整理する条件（学習・記録・理解確認完了、探索中断の観測は未達） | [学習・作成記録](learning/shogihome-interruption-conditions.md) | — | [資料整理・条件案](plans/2026-10-13-shogihome-interruption-conditions.md) | — | [開始背景・再開プロンプト](handover-shogihome-interruption-conditions.md) |

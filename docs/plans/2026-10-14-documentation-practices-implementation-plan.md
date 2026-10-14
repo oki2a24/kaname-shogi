@@ -163,4 +163,4 @@ README・`docs/02-project-direction.md`・既存の再開案内は現状を監�
 
 ## 追記：READMEの追加磨き
 
-初回計画の完了・main取り込み後、本人の希望でREADMEの追加整理を始めた。初回計画の「READMEと方向性は監査し、変更しなかった」は、その時点の合意範囲と結果を示す。追加作業の対象読者、承認範囲、変更、検証、レビューは[学習記録](../learning/documentation-practices.md#readmeの追加磨き2026-10-14)に追記する。
+初回計画の完了・main取り込み後、本人の希望でREADMEの追加整理を始めた。初回計画の「READMEと方向性は監査し、変更しなかった」は、その時点の合意範囲と結果を示す。追加磨きは初めて使う人向けに起動案内、機能、制約、詳細記録への参照を整理し、レビュー・リンク検査を行った。本人の承認後 `dacdced docs: READMEの利用案内と次テーマ記録を整理` としてコミットし、`main` へfast-forward統合した。続く候補2「次のエンジン強化段階を設計する」の選定と引き継ぎ準備は、[学習記録](../learning/documentation-practices.md#次テーマ選定と引き継ぎ準備2026-10-14)と[引き継ぎ文書](../handover-engine-improvement-stage-design.md)を参照する。
