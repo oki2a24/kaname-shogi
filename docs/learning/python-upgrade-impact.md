@@ -79,8 +79,18 @@
 - `.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff format --check .`、`.venv/bin/ruff check .` は成功した（最終時点で38ファイル整形済み、診断なし）。
 - CPython 3.15.0の `.venv/bin/python -m unittest discover -s tests -v` と、CPython 3.14.8の一時環境で同じ全体テストを個別に実行し、各463テストが成功した。
 - cwd保持テストの初回はmacOS一時パス `/var/...` と `/private/var/...` の別名を比較して失敗した。`Path.resolve()` 後の比較へ修正し、該当テストと両Pythonの全体テストが成功することを確認した。これはテストのパス正規化差で、起動cwdが変わった動作不良ではなかった。
-- 独立レビューはコード・テスト・移行案内を確認し、最終結果はCritical 0・Important 0・Minor 0。初回レビューで挙がったREADME案内先とcwdテスト期待値は、README更新と実パスの正規化比較で解消し、再レビューで確認した。最終レビュー担当はテストやRuffを再実行していない。通常のcommit前hookは通常コミット時に確認する。
+- 独立レビューはコード・テスト・移行案内を確認し、最終結果はCritical 0・Important 0・Minor 0。初回レビューで挙がったREADME案内先とcwdテスト期待値は、README更新と実パスの正規化比較で解消し、再レビューで確認した。最終レビュー担当はテストやRuffを再実行していない。通常のコミット前hookは通常の `git commit` で実行され、「38 files already formatted」「All checks passed!」を確認した。
+
+### main統合と取り込み先検証（2026-10-14事後記録）
+
+実装コミット `358f4ac` の後、本人の明示承認を受けて `/Users/oki2a24/kaname-shogi` の `main` を `1c148bd` から `358f4ac` へfast-forwardした。pushはしていない。取り込み先の `main` で `.venv/bin/python -m unittest discover -s tests -q` を実行し、463件成功した。`.venv/bin/ruff check .` と `.venv/bin/ruff format --check .` も成功し、38ファイルが整形済みだった。検査fixture由来の標準エラー出力はあったが、テスト全体の終了コードは0である。
 
 ### 未確認範囲と復帰
 
-Linux、Windows、free-threaded版、ShogiHome実機の起動・対局は対象外で未確認。Homebrew Pythonは他用途の可能性があるため削除しない。復帰時は新 `.venv` を別名へ退避し、退避したPython 3.9 `.venv` を元の位置へ戻せる。コードと設定はブランチに留め、mainへ統合するには別の明示承認を待つ。二手先読みと時計は「学習・実装テーマとしては完了。ShogiHome実機挙動と一般的な時間保証は未確認のまま」。
+Linux、Windows、free-threaded版、ShogiHome実機の起動・対局は対象外で未確認。Homebrew Pythonは他用途の可能性があるため削除しない。復帰時は新 `.venv` を別名へ退避し、退避したPython 3.9 `.venv` を元の位置へ戻せる。Git上の変更はコミット `358f4ac` としてmainに統合済みであるため、問題があれば原因を調査し、修正コミットまたは明示的なrevertで復帰する。
+
+main統合と取り込み先での検証は完了した。最後の理解確認として、次の一問だけを提示し、本人の回答を待つ。回答と補足は受領後にこの記録へ追記する。二手先読みと時計は「学習・実装テーマとしては完了。ShogiHome実機挙動と一般的な時間保証は未確認のまま」。本人の回答を記録するまで次テーマを選定・開始しない。
+
+**最後の理解確認：** この移行で、実行時Pythonの最低対応版を3.14にし、開発用の実行環境を3.15にし、Ruffの`target-version`を`py314`にした理由を、それぞれ何に影響する設定・選択かに触れて説明してください。
+
+**本人の回答：** 未回答。

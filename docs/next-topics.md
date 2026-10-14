@@ -2,7 +2,7 @@
 
 ## 現在のテーマと状態
 
-本人は2026-10-14に選定したPython更新テーマについて、移行先をHomebrew CPython 3.15系、最低対応版をPython 3.14系、Ruff構文対象を`py314`として確定し、その後「移行実施」を明示した。計画に沿う実装・検証・独立レビュー・記録を作業ブランチで完了した。mainへの統合承認はまだないため、取り込み先の検証と最後の理解確認は未完了。別の次テーマは統合と取り込み先検証、最後の理解確認が終わるまで選定しない。[実装計画と結果](plans/2026-10-14-python-315-migration-implementation-plan.md)、[学習・実施記録](learning/python-upgrade-impact.md)、[開始時の引き継ぎ](handover-python-upgrade-impact.md)。
+本人は2026-10-14に選定したPython更新テーマについて、移行先をHomebrew CPython 3.15系、最低対応版をPython 3.14系、Ruff構文対象を`py314`として確定し、その後「移行実施」を明示した。実装・検証・独立レビュー・記録を作業ブランチで完了し、本人の承認後に `358f4ac` をmainへfast-forward統合した。取り込み先で全463テスト、Ruff lint、整形確認が成功した。最後の理解確認への回答待ちであり、回答と補足を記録するまで別の次テーマを選定・開始しない。[実装計画と結果](plans/2026-10-14-python-315-migration-implementation-plan.md)、[学習・実施記録](learning/python-upgrade-impact.md)、[開始時の引き継ぎ](handover-python-upgrade-impact.md)。
 
 ### 選定時に提示した候補（2026-10-14、小さい順・履歴）
 

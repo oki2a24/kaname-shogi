@@ -85,7 +85,7 @@ ShogiHome実アプリからの起動・対局はこの検証に含めない。�
 
 ## 移行実施結果（2026-10-14事後記録）
 
-本人の「移行実施」という明示指示と、事前提示した本計画への承認に基づき、作業ブランチ `codex/python-315-migration` で実施した。mainへの統合は本計画の対象外であり、行っていない。
+本人の「移行実施」という明示指示と、事前提示した本計画への承認に基づき、作業ブランチ `codex/python-315-migration` で実施した。実施時はmain統合を計画の対象外とし、後日、別の明示承認を得て統合した。取り込み結果は末尾に事後記録する。
 
 ### 環境
 
@@ -109,12 +109,12 @@ ShogiHome実アプリからの起動・対局はこの検証に含めない。�
 - `.venv/bin/python -m unittest discover -s tests -v` はCPython 3.15.0で463件成功した。
 - `/private/tmp/kaname-shogi-venv-python314-test-20261014/bin/python -m unittest discover -s tests -v` はCPython 3.14.8で463件成功した。
 - cwd検査の初回はmacOSの `/var` と `/private/var` の別名を文字列比較して失敗した。同じパスを `Path.resolve()` で比較するテストに直し、該当単体テストと両版の全463件を再実行して成功した。ランチャーがcwdを変更した不具合ではない。
-- 2026-10-14の独立レビュー最終結果はCritical 0・Important 0・Minor 0。初回レビューのREADME案内先とcwd検査に関する指摘を修正し、再レビューで解消を確認した。最終レビューは検査を再実行していない。テスト・Ruff・リンク確認の実行結果は上記のとおり。通常のcommit前hookは、変更をステージした後の通常コミットで実行する。
+- 2026-10-14の独立レビュー最終結果はCritical 0・Important 0・Minor 0。初回レビューのREADME案内先とcwd検査に関する指摘を修正し、再レビューで解消を確認した。最終レビューは検査を再実行していない。テスト・Ruff・リンク確認の実行結果は上記のとおり。通常の `git commit` でcommit前hookを実行し、「38 files already formatted」「All checks passed!」を確認した。
 
 Linux、Windows、free-threaded Python、ShogiHome GUIからの実起動・接続・対局は未検証。ローカルプロセス起動とUSI入出力のテストはShogiHome実アプリとの互換性保証ではない。
 
 ### 復帰と次の承認段階
 
-新 `.venv` に問題があれば、まず新環境を別名へ退避し、`/private/tmp/kaname-shogi-venv-python39-20261014` をclone内の `.venv` へ戻す。Git上のコード・文書は本ブランチに留め、必要ならコミットを戻すかブランチを破棄する。HomebrewのPythonは他用途の可能性があるため自動削除しない。
+新 `.venv` に問題があれば、まず新環境を別名へ退避し、`/private/tmp/kaname-shogi-venv-python39-20261014` をclone内の `.venv` へ戻す。HomebrewのPythonは他用途の可能性があるため自動削除しない。実施時はコード・設定の変更を作業ブランチに留め、統合前に復帰する計画だった。
 
-このブランチの実施・検証・レビュー・記録を確定してコミットした後、mainへの統合について本人の明示承認を待つ。承認後に取り込み先で検証し、その後、最後の理解確認を一問だけ行う。統合と理解確認が終わるまで次テーマへ進まない。
+その後、本人の明示承認を受けて2026-10-14にコミット `358f4ac` をmainへfast-forward統合し、取り込み先で全463テスト、Ruff lint、整形確認を再実行して成功した。統合後HEADは `358f4ac`。pushはしていない。最後の理解確認を一問提示し、回答と補足を学習記録へ追記するまで次テーマを開始しない。
