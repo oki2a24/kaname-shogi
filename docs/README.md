@@ -35,9 +35,11 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
+次エンジン強化段階の[学習記録](learning/engine-improvement-stage-design.md)と[承認済み設計](plans/2026-10-17-engine-search-comparison-design.md)を参照する。設計全体は承認済みで、[実装計画案](plans/2026-10-17-engine-search-comparison-implementation-plan.md)は本人レビュー待ち。
+
 [再開案内](resume.md)で現在の作業状態と次に読む資料を確認する。文書運用の合意範囲・調査根拠・実施タスクは[文書活用計画](plans/2026-10-14-documentation-practices-implementation-plan.md)に記録する。直近の完了テーマである三方式の構成調査は[学習記録](learning/three-policy-architecture.md)、Python移行の実施・統合・理解確認は[計画と結果](plans/2026-10-14-python-315-migration-implementation-plan.md)と[学習記録](learning/python-upgrade-impact.md)を参照する。現在状態をこの索引に複写しない。
 
-完了した設計の学習・合意は[次段階設計の記録](learning/evaluation-next-stage.md)、今回の実装計画は[計画案](plans/2026-10-10-two-ply-implementation-plan.md)と[合意記録](learning/two-ply-implementation-plan.md)、計画テーマ開始時点の背景は[引き継ぎ](handover-two-ply-implementation-plan.md)、通常二手比較の実装は[学習記録](learning/two-ply-basic-comparison.md)、開始背景は[引き継ぎ](handover-two-ply-basic-comparison.md)を参照する。
+完了した設計の学習・合意は[次段階設計の記録](learning/evaluation-next-stage.md)、二手先読みの実装計画は[計画](plans/2026-10-10-two-ply-implementation-plan.md)と[合意記録](learning/two-ply-implementation-plan.md)、計画テーマ開始時点の背景は[引き継ぎ](handover-two-ply-implementation-plan.md)、通常二手比較の実装は[学習記録](learning/two-ply-basic-comparison.md)、開始背景は[引き継ぎ](handover-two-ply-basic-comparison.md)を参照する。
 
 ## よく参照する現行資料
 
@@ -54,7 +56,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
-| 次のエンジン強化段階を設計する（選択済み・開始前） | [選定・引き継ぎ準備](learning/documentation-practices.md#次テーマ選定と引き継ぎ準備2026-10-14) | [一手選択と駒得評価](knowledge/31-weak-move-selection.md) | — | — | [次セッション用引き継ぎ](handover-engine-improvement-stage-design.md) |
+| 次のエンジン強化段階を設計する（設計承認済み、実装計画レビュー待ち） | [学習・合意記録](learning/engine-improvement-stage-design.md) | — | [承認済み設計](plans/2026-10-17-engine-search-comparison-design.md) | [計画案](plans/2026-10-17-engine-search-comparison-implementation-plan.md) | [開始時引き継ぎ](handover-engine-improvement-stage-design.md) |
 | 文書活用・共同作業の文書整理（main統合・理解確認完了、README追加磨きmain統合済み） | [学習・実施記録](learning/documentation-practices.md) | — | — | [実施計画・結果](plans/2026-10-14-documentation-practices-implementation-plan.md) | — |
 | 三つの選択方式の構成調査（完了・次の強化エンジンでは方式別分離を希望） | [構成調査記録](learning/three-policy-architecture.md) | [一手選択と駒得評価](knowledge/31-weak-move-selection.md) | — | — | [開始時点の背景・再開プロンプト](handover-three-policy-architecture.md) |
 | Python更新（3.15移行実装・検証・レビュー・main統合・理解確認完了） | [学習・実施記録](learning/python-upgrade-impact.md)、[影響調査・移行案](plans/2026-10-14-python-upgrade-impact.md) | [Python品質検査の運用](knowledge/python-quality-checks.md) | — | [計画・事後結果](plans/2026-10-14-python-315-migration-implementation-plan.md) | [開始時点の背景](handover-python-upgrade-impact.md) |

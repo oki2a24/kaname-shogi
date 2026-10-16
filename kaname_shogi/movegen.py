@@ -20,6 +20,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum, auto
 
+from .evaluation import material_balance as _material_balance
 from .model import BasicPieceType, Board, Piece, PieceType, Position, Side, Square
 from .move import BoardMove, DropMove, Move
 from .search_control import SearchControl, SearchSignal
@@ -31,34 +32,6 @@ class MoveSelectionPolicy(Enum):
     RANDOM = auto()
     MATERIAL = auto()
     TWO_PLY_MATERIAL = auto()
-
-
-# 谷川浩司さんの参考値。成駒を含め、盤上にある駒種ごとの値を記録する。
-# https://ocw.hokudai.ac.jp/wp-content/uploads/2016/01/IntelligentInformationProcessing-2005-Note-06.pdf
-_TANIGAWA_PIECE_VALUES = {
-    PieceType.PAWN: 1,  # 歩
-    PieceType.PRO_PAWN: 12,  # と金
-    PieceType.LANCE: 5,  # 香
-    PieceType.PRO_LANCE: 10,  # 成香
-    PieceType.KNIGHT: 6,  # 桂
-    PieceType.PRO_KNIGHT: 10,  # 成桂
-    PieceType.SILVER: 8,  # 銀
-    PieceType.PRO_SILVER: 9,  # 成銀
-    PieceType.GOLD: 9,  # 金
-    PieceType.BISHOP: 13,  # 角
-    PieceType.HORSE: 15,  # 馬
-    PieceType.ROOK: 15,  # 飛
-    PieceType.DRAGON: 17,  # 竜
-}
-_TANIGAWA_HAND_VALUES = {
-    BasicPieceType.PAWN: 1,  # 歩
-    BasicPieceType.LANCE: 5,  # 香
-    BasicPieceType.KNIGHT: 6,  # 桂
-    BasicPieceType.SILVER: 8,  # 銀
-    BasicPieceType.GOLD: 9,  # 金
-    BasicPieceType.BISHOP: 13,  # 角
-    BasicPieceType.ROOK: 15,  # 飛
-}
 
 
 _DROP_PIECE_TYPES = (
@@ -546,42 +519,12 @@ def choose_weak_move(moves: tuple[Move, ...], rng: random.Random) -> Move | None
 
 
 def material_balance(position: Position, perspective: Side) -> int:
-    """盤上と持ち駒の参考点を合算し、指定側から見た駒得差を返す。
+    """指定側の駒得差を共有評価へ委ねて返す互換操作。
 
-    引数:
-        position: 評価する盤面・手番・先後の持ち駒を持つ局面。変更しない。
-        perspective: 得点を正として見る先手または後手。
-
-    戻り値:
-        指定側の非玉駒の合計から相手側の非玉駒の合計を引いた整数。盤上は成駒を
-        その駒種の値で数え、持ち駒は基本駒種の値で数える。
-
-    副作用:
-        局面と持ち駒を変更しない。
-
-    前提条件:
-        Positionの盤面・持ち駒が表す現在状態を評価する。谷川浩司さんの参考値を
-        教材用の局面比較に使う。これは通常対局の勝敗規則でも、持将棋・入玉時の
-        規則上の点数計算でもない。
+    positionは変更せず、perspective側の非玉駒合計から相手側を引く。
+    駒価値の正本はevaluationに置き、従来の呼出入口を維持する。
     """
-    totals = {Side.SENTE: 0, Side.GOTE: 0}
-    for file in range(1, 10):
-        for rank in range(1, 10):
-            piece = position.board.piece_at(Square(file, rank))
-            if piece is not None:
-                totals[piece.side] += _TANIGAWA_PIECE_VALUES.get(piece.piece_type, 0)
-
-    for side, hand in (
-        (Side.SENTE, position.sente_hand),
-        (Side.GOTE, position.gote_hand),
-    ):
-        totals[side] += sum(
-            hand.count(piece_type) * value
-            for piece_type, value in _TANIGAWA_HAND_VALUES.items()
-        )
-
-    opponent = _opponent_side(perspective)
-    return totals[perspective] - totals[opponent]
+    return _material_balance(position, perspective)
 
 
 def _position_after_move(position: Position, move: Move) -> Position:
@@ -1663,3 +1606,13 @@ def search_move(
     if control.check() == SearchSignal.SUPPRESS:
         return SearchResult(SearchCompletion.SUPPRESSED, None)
     return SearchResult(completion, rng.choice(best_moves))
+
+
+def position_after_move(position: Position, move: Move) -> Position:
+    """合法手を独立複製へ適用した局面を返す公開操作。
+
+    引数は元のpositionと、その局面の合法手move。元局面と別枝を変更せず、
+    新しいPositionを返す。未知の手の型はTypeError、不合法手はValueError。
+    既存の停止なし適用へ委譲し、新探索と従来方式で規則を重複実装しない。
+    """
+    return _position_after_move(position, move)
