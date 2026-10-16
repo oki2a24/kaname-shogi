@@ -16,13 +16,23 @@ def search[N, M](
     depthはboolを除く0以上の整数。不正な深さはValueError。
     各訪問で局面調査を一度行い、終端評価を深さ打切りより優先する。
     操作の非破壊契約を前提とし、例外を隠さない。計数は実行ごとに独立。
+    pruning=Trueでは未設定境界をNoneで表し、上下限が交差したら省略する。
+    内部の返却値は境界の場合があるが、無境界で開始した根の値は確定する。
+    同値で先行最善手を上書きせず、境界値を候補の確定値として公開しない。
     """
     if type(depth) is not int or depth < 0:
         raise ValueError("深さは0以上の整数で指定してください")
     visits = 0
     root_scores: list[tuple[M, Score]] = []
 
-    def visit(current: N, remaining: int, *, root: bool = False):
+    def visit(
+        current: N,
+        remaining: int,
+        lower: Score | None = None,
+        upper: Score | None = None,
+        *,
+        root: bool = False,
+    ) -> tuple[Score, M | None]:
         nonlocal visits
         visits += 1
         inspected = operations.inspect(current)
@@ -33,13 +43,22 @@ def search[N, M](
         best: Score | None = None
         selected: M | None = None
         for move in inspected.moves:
-            value, _ = visit(operations.advance(current, move), remaining - 1)
-            if root:
+            value, _ = visit(
+                operations.advance(current, move), remaining - 1, lower, upper
+            )
+            if root and not pruning:
                 root_scores.append((move, value))
             if best is None or (value > best if inspected.maximizing else value < best):
                 best, selected = value, move
+            if pruning:
+                if inspected.maximizing:
+                    lower = best if lower is None else max(lower, best)
+                else:
+                    upper = best if upper is None else min(upper, best)
+                if lower is not None and upper is not None and lower >= upper:
+                    break
         assert best is not None, "非終端の局面調査は一つ以上の手を返す必要があります"
         return best, selected
 
     score, move = visit(node, depth, root=True)
-    return SearchResult(score, move, visits, tuple(root_scores))
+    return SearchResult(score, move, visits, None if pruning else tuple(root_scores))

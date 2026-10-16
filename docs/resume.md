@@ -10,7 +10,7 @@
 
 合意範囲は二・三・四手の全幅／αβ比較、駒得と詰み優先、評価値と最善候補への所属の一致、訪問回数、同じ探索順、最初の同点最善手。SFEN入力、USI表記と日本語の併記、開発用比較まで。Random（最弱・既定）・一手駒得・現行二手先読みを維持し、新探索と必要な共通処理だけを分割する。
 
-実装計画は本人承認済み。GPT-6.1 Solでネイティブ実行中。タスク1（評価抽出・公開適用）とタスク2（全幅探索）は検証・独立レビュー完了。次はタスク3のαβ枝刈り。詳細とRed/Greenは学習記録、ライブ台帳は `.superpowers/sdd/2026-10-17-engine-search-comparison-implementation-plan/progress.md`。main統合は未承認。
+実装計画は本人承認済み。GPT-6.1 Solでネイティブ実行中。タスク1〜3（共有化・全幅探索・αβ枝刈り）は検証・独立レビュー完了。次はタスク4の将棋接続。詳細とRed/Greenは学習記録、ライブ台帳は `.superpowers/sdd/2026-10-17-engine-search-comparison-implementation-plan/progress.md`。main統合は未承認。
 
 ## Gitと検証の状態
 
