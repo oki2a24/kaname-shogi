@@ -2,7 +2,7 @@
 
 ## 現在のテーマと状態
 
-本人が新セッションへ再開指示を入力し、選定済みの「次のエンジン強化段階を設計する」を開始した。現在は、駒得評価を固定した全幅読みとαβ枝刈りの開発用比較を設計中。2026-10-17に設計全体を承認済み。実装計画案は本人レビューと実行方法の選択待ち。現在の物理状態と次の行動は[再開案内](resume.md)、対話・合意・訂正は[学習記録](learning/engine-improvement-stage-design.md)、具体案は[承認済み設計](plans/2026-10-17-engine-search-comparison-design.md)を参照する。
+本人が新セッションへ再開指示を入力し、選定済みの「次のエンジン強化段階を設計する」を開始した。現在は、駒得評価を固定した全幅読みとαβ枝刈りの開発用比較を設計中。2026-10-17に設計全体を承認済み。実装計画も承認済みで、開発用比較の実装・検証を実施した。main統合は本人承認待ち。現在の物理状態と次の行動は[再開案内](resume.md)、対話・合意・訂正は[学習記録](learning/engine-improvement-stage-design.md)、具体案は[承認済み設計](plans/2026-10-17-engine-search-comparison-design.md)を参照する。
 
 前テーマの文書整理・README磨き・引き継ぎの統合経緯は[文書整理記録](learning/documentation-practices.md)、開始時点の背景は[引き継ぎ](handover-engine-improvement-stage-design.md)に保持する。
 

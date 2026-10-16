@@ -10,12 +10,14 @@
 
 合意範囲は二・三・四手の全幅／αβ比較、駒得と詰み優先、評価値と最善候補への所属の一致、訪問回数、同じ探索順、最初の同点最善手。SFEN入力、USI表記と日本語の併記、開発用比較まで。Random（最弱・既定）・一手駒得・現行二手先読みを維持し、新探索と必要な共通処理だけを分割する。
 
-実装計画は本人承認済み。GPT-6.1 Solでネイティブ実行中。タスク1〜4（共有化・全幅・αβ・将棋接続）は検証・独立レビュー完了。次はタスク5の比較コマンドと最終回帰。詳細とRed/Greenは学習記録、ライブ台帳は `.superpowers/sdd/2026-10-17-engine-search-comparison-implementation-plan/progress.md`。main統合は未承認。
+実装計画は本人承認済み。GPT-6.1 Solでタスク1〜5を実行し、各段階の独立レビューとブランチ全体の最終レビューを完了。Critical/Important/Minorなし。全体490件とRuffが成功。次は本人のmain統合承認を得て、取り込み先で検証し、最後の理解確認を一問出す。まだテーマ完了ではない。
+
+利用は[探索比較メモ](knowledge/search-comparison.md)、実績・誤り注入・計画との差分は学習記録。OSからのSIGINT配送、棋力・全局面の速度・履歴終局は未検証。通常対局の三方式は維持。
 
 ## Gitと検証の状態
 
-作業場所は `/Users/oki2a24/kaname-shogi`、ブランチは `codex/engine-search-comparison-design`。文書作業開始HEADは `1af87d8`（開始時mainとorigin/main）。現在は文書の未コミット変更を作成中。mainへの統合は未実施。再開時に `git status --short --branch` と直近ログで照合する。
+作業場所は `/Users/oki2a24/kaname-shogi`、ブランチは `codex/engine-search-comparison-design`。文書作業開始HEADは `1af87d8`（開始時mainとorigin/main）。実装と文書の変更をタスクごとに作業ブランチへコミットする。最新コミットと未コミットの有無はGitで確認する。mainへの統合は未実施。再開時に `git status --short --branch` と直近ログで照合する。
 
-既存操作による局面の局所検算は学習記録を参照。新探索は未実装で、製品テスト成功の主張はない。文書検証とレビューの最新状態も同記録へ記す。
+既存操作による局面の局所検算は学習記録を参照。新探索は実装済みで、全体490件成功と玉だけ局面の実測を学習記録へ保存。文書検証とレビューの最新状態も同記録へ記す。
 
 入口更新前の固有情報は[再開案内の履歴](resume-history.md)に保全した。文書の置き場所は[文書更新ガイド](documentation-guide.md)、索引は[文書案内](README.md)。
