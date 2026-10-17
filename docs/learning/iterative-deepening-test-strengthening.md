@@ -62,6 +62,12 @@
 
 別レビュー担当による未コミット差分の独立レビュー結果：Criticalなし、Importantなし、Minorなし。二つのテストの期待値、呼出し順、対象実装、文書記述に不整合はないとの報告を受けた。レビューによるコード・テスト変更はないため、レビュー前の検証証拠は維持される。レビュー後にローカル文書リンク525件と `git diff --check` も成功した。
 
-レビュー後に `.venv/bin/python -m unittest discover -s tests -q` を実行し、全513件が成功した。`.venv/bin/ruff format .` は59ファイル変更なし、`.venv/bin/ruff check .` 成功。ローカル文書リンク525件と `git diff --check` も成功した。テストと実装記録を `7f32f3e` (`test: strengthen iterative deepening regression coverage`) として作業ブランチへコミットした。続く現在地・コミット結果の記録はdocsコミットに保存する。main未統合・未pushであり、統合は別途本人の承認を待つ。後続テーマ「反復深化の停止と既存時間制御の接続を学び設計する」は今回開始しない。
+レビュー後に `.venv/bin/python -m unittest discover -s tests -q` を実行し、全513件が成功した。`.venv/bin/ruff format .` は59ファイル変更なし、`.venv/bin/ruff check .` 成功。ローカル文書リンク525件と `git diff --check` も成功した。テストと実装記録を `7f32f3e` (`test: strengthen iterative deepening regression coverage`)、続くコミット記録を `54fc53a` (`docs: record iterative test strengthening review`) として作業ブランチへ保存した。
 
-次の文書更新は、作業ブランチへのコミット後に実施する。
+## main統合と取り込み先検証（2026-10-17）
+
+main統合は別承認として本人へ確認し、「統合してよい」と回答を得た。統合前は作業ツリーがcleanで、`main` が作業ブランチの祖先、作業ブランチが2コミット先行していることを確認。ローカル `main` へfast-forwardし、統合後に `.venv/bin/python -m unittest discover -s tests -q` を実行して513件成功、`.venv/bin/ruff format .` は59ファイル変更なし、`.venv/bin/ruff check .` 成功。統合後に作業ブランチ `codex/iterative-deepening-test-strengthening` を削除した。統合・検証・ブランチ削除はいずれもローカルのみで、pushしていない。
+
+mainの実装コミットは `7f32f3e`、統合とブランチ記録の先端は `54fc53a`。最後の理解確認は未実施で、次の応答で一問だけ尋ねる。本人はその後に「反復深化の停止と既存時間制御の接続を学び設計する」へ進む希望を既に示しているが、今回の記録・確認が終わるまで後続テーマを開始しない。
+
+次の文書更新は最後の理解確認への本人回答を記録する時点。

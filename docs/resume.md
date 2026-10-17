@@ -2,16 +2,16 @@
 
 ## 現在地
 
-2026-10-17更新。選定済みテーマ「反復深化で留保したテスト2件を補強する」はテスト変更・代表変異・全体513件・Ruff・独立レビューを終え、作業ブランチへコミットした。現在はmain統合の本人承認待ち。回答と実績は[学習記録](learning/iterative-deepening-test-strengthening.md)、計画と結果は[実装計画](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md)に記録した。
+2026-10-17更新。選定済みテーマ「反復深化で留保したテスト2件を補強する」はmainへ統合し、取り込み後の全体513件・Ruff検査まで完了した。現在は最後の理解確認待ち。回答と実績は[学習記録](learning/iterative-deepening-test-strengthening.md)、計画と結果は[実装計画](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md)に記録した。
 
 - 今回の対象と承認段階：[実装計画案](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md)、[回答と進行記録](learning/iterative-deepening-test-strengthening.md)、[開始時の引き継ぎ](handover-iterative-deepening-test-strengthening.md)。
 - 前テーマの探索仕様：[探索比較メモ](knowledge/search-comparison.md)、[承認済み設計](plans/2026-10-17-iterative-deepening-design.md)、[実装計画と結果参照](plans/2026-10-17-iterative-deepening-implementation-plan.md)、[学習・実装記録](learning/iterative-deepening-design.md)。
 
 本人は[次テーマ候補](next-topics.md)の1を選び、その後に2「反復深化の停止と既存時間制御の接続を学び設計する」へ進みたいと希望した。後続2は今回開始しない。
 
-現在は `/Users/oki2a24/kaname-shogi` の `codex/iterative-deepening-test-strengthening`。実装・テスト・レビュー記録は `7f32f3e`。main未統合・未push。独立レビューはCritical・Important・Minorなし。二つの代表変異は対象テスト単独・全体の双方で狙った一件だけが失敗した。Ruff 0.16.10は固定版と一致し、hooksPathは `.githooks`。モデルはGPT-6 Luna Mediumを想定。続くコミット結果の記録は現在の文書変更を保存するdocsコミットに含める。
+現在は `/Users/oki2a24/kaname-shogi` の `main`。テスト補強コミット `7f32f3e` と記録コミット `54fc53a` をfast-forwardで統合し、作業ブランチは削除済み。mainはローカル統合済み、未push。取り込み後の全体513件とRuff両検査が成功。独立レビューはCritical・Important・Minorなし。最後の理解確認を一問ずつ行い、本人の回答を待つ。
 
-今回の候補は独立ストリームの前回手混在と単独αβ段階のValueError隠蔽を対象にしたテスト補強のみ。Random（最弱・既定）、一手駒得、現行二手先読みを維持する。停止・既存時間制御との接続や通常対局への接続は今回扱わない。
+今回の範囲は独立ストリームの前回手混在と単独αβ段階のValueError隠蔽を検出するテスト補強のみ。Random（最弱・既定）、一手駒得、現行二手先読みを維持した。停止・既存時間制御との接続や通常対局への接続は今回扱っていない。本人は後続テーマ「反復深化の停止と既存時間制御の接続を学び設計する」を希望しているが、理解確認の回答を記録してから新しいセッションへの引き継ぎを準備する。
 
 ## 前テーマのGitと検証記録
 
