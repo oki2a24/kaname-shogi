@@ -1,4 +1,4 @@
-# 全幅読みとαβ探索の開発用比較
+# 指定深さ探索と反復深化の開発用比較
 
 ## 利用方法
 
@@ -27,10 +27,35 @@
 
 結果は標準出力、診断は標準エラー。各方式の完了行を逐次表示し、中断した方式は未完了。内部故障を入力誤りへ変換しない。
 
+## 反復深化の比較
+
+```sh
+.venv/bin/python -m kaname_shogi.search.compare_iterative --sfen "8k/9/9/9/9/9/9/9/K8 b - 1"
+```
+
+深さ1〜4を順に探索する。各深さで、反復結果を保持→同じ深さの全幅→元の順序の単独αβ→比較表示の順。正しさは全幅との評価一致・最善候補所属で確認し、同点の別手を許容する。不一致でも次の深さを続け、最後に1を返す。
+
+前回最善手は開始局面の先頭へ移すだけで、他候補の相対順・子局面の順序は保つ。同じ開始局面で一手を選ぶ間の再利用であり、実際に指した後の再利用ではない。優先なしは従来順序。不在の優先手は根の調査後、子へ進む前にValueError（深さ0・手なしでも照合）。
+
+各深さの完了時に、深さ・既存SearchResult・累計をfrozenのIterationResultとして新規作成する。以前の記録は変更せず、最新の参照だけを切り替える。Pythonのyieldで結果を一件ずつ渡し、次の要求で次の探索を行う。上限検査は呼出し時で、boolを除く1以上の整数。ジェネレーター内の状態を保存する仕組みはPythonの言語機能であり、他言語では深さ・前回手・累計を明示保持するIterator等へ置き換えられる。
+
+| 玉だけ局面の深さ | 単独αβ訪問 | 反復今回訪問 | 反復累計 |
+| --- | --- | --- | --- |
+| 1 | 4 | 4 | 4 |
+| 2 | 9 | 9 | 13 |
+| 3 | 29 | 29 | 42 |
+| 4 | 64 | 64 | 106 |
+
+2026-10-17の実測。全幅の確認用探索・単独αβ・中断反復の訪問は反復累計に加算しない。訪問回数削減は合格条件ではなく、改善しない例も正常である。
+
+手なしは深さ1の完了記録を比較して終了し、0は「実行した比較がすべて一致」の意味となる。中断は130で不一致より優先。反復途中なら直前の完了結果を残し、確認用探索の途中なら「反復深化は深さNまで完了／深さNの比較は未完了」と分ける。完了前なら完了結果なし。内部故障は入力誤りへ変換しない。
+
 ## 構成と限界
 
-`search/minimax.py` と `search/alpha_beta.py` が方式入口、`core.py` が共通探索、`contracts.py` と `result.py` がデータ、`shogi.py` が将棋接続、`compare.py` が入出力。評価の正本は `evaluation.py`、既存 `movegen.material_balance` の入口も維持。複製適用の公開操作 `movegen.position_after_move` は既存適用へ委譲する。
+`search/minimax.py` と `search/alpha_beta.py` が方式入口、`core.py` が共通探索、`contracts.py` と `result.py` がデータ、`shogi.py` が将棋接続、`compare.py` が指定深さ比較の入出力。反復管理は `iterative_deepening.py`、その比較入口は `compare_iterative.py`、入力・整形・一致判定の共通処理は `comparison.py`。評価の正本は `evaluation.py`、既存 `movegen.material_balance` の入口も維持。複製適用の公開操作 `movegen.position_after_move` は既存適用へ委譲する。
 
-反復深化、時間制御、置換表、定跡、新評価項目、通常対局への新方式追加は今回含まない。合法手が多い局面の四手探索は長時間かかり得る。局面例・数値木・回帰の成功は棋力向上や全入力の証明ではない。OSからのSIGINT配送の実プロセス試験は未実施で、中断の捕捉と表示は操作境界で確認。
+時間制御、置換表、定跡、新評価項目、通常対局への新方式追加は含まない。合法手が多い局面の四手探索は長時間かかり得る。局面例・数値木・回帰の成功は棋力向上や全入力の証明ではない。OSからのSIGINT配送の実プロセス試験は未実施で、中断の捕捉と表示は操作境界で確認。
 
 根拠と履歴：[承認済み設計](../plans/2026-10-17-engine-search-comparison-design.md)、[実装計画](../plans/2026-10-17-engine-search-comparison-implementation-plan.md)、[実装・学習記録](../learning/engine-improvement-stage-design.md)。
+
+反復深化の根拠：[承認済み設計](../plans/2026-10-17-iterative-deepening-design.md)、[実装計画](../plans/2026-10-17-iterative-deepening-implementation-plan.md)、[学習・実装記録](../learning/iterative-deepening-design.md)。

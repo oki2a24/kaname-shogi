@@ -19,3 +19,18 @@ class SearchResult[M]:
     move: M | None
     visited_nodes: int
     root_scores: tuple[tuple[M, Score], ...] | None
+
+
+@dataclass(frozen=True)
+class IterationResult[M]:
+    """一つの深さの探索完了と、それまでの累計を保持するデータ。
+
+    depthは完了した深さ、resultは今回の探索結果そのもの、
+    total_visited_nodesは完了反復の訪問数の和。比較用や未完了分は含めない。
+    フィールドは変更不可。任意の手型Mの中身まで凍結せず、呼出し側も
+    手を変更しないことを前提とする。過去記録を最新の探索から独立させる。
+    """
+
+    depth: int
+    result: SearchResult[M]
+    total_visited_nodes: int

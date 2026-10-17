@@ -92,3 +92,85 @@ class AlphaBetaTests(unittest.TestCase):
         for bad in (-1, True, 1.5):
             with self.assertRaises(ValueError):
                 alpha_beta.search(depth_tree(), bad, operations())
+
+    def test_preferred_move_reorders_only_root(self):
+        """優先手だけを根の先頭へ移し、残りと子の順序を保つ。
+
+        優先無視・候補除外・子への伝播・入力書換えを検出する。
+        """
+        branches = tuple(
+            (
+                name,
+                TreeNode(
+                    name,
+                    maximizing=False,
+                    children=(
+                        ("X", TreeNode(name + "X", (0, 0))),
+                        ("Y", TreeNode(name + "Y", (0, 1))),
+                        ("Z", TreeNode(name + "Z", (0, 2))),
+                    ),
+                ),
+            )
+            for name in "ABCD"
+        )
+        root = TreeNode("root", children=branches)
+        seen = []
+        r = alpha_beta.search(root, 2, operations(seen), preferred_move="C")
+        self.assertEqual(r.move, "C")
+        self.assertEqual(
+            seen, ["root", "C", "CX", "CY", "CZ", "A", "AX", "B", "BX", "D", "DX"]
+        )
+        self.assertEqual(root.children, branches)
+
+    def test_preferred_move_at_first_last_and_minimizing_root(self):
+        """先頭・末尾と最大最小の両側で同点の優先手を選ぶ。
+
+        末尾欠落・最大側専用の並べ替えを検出する。
+        """
+        for maximizing in (True, False):
+            for preferred in ("A", "D"):
+                root = TreeNode(
+                    "root",
+                    maximizing=maximizing,
+                    children=tuple((m, TreeNode(m, (0, 1))) for m in "ABCD"),
+                )
+                seen = []
+                r = alpha_beta.search(
+                    root, 1, operations(seen), preferred_move=preferred
+                )
+                self.assertEqual(
+                    (r.move, r.score, r.visited_nodes), (preferred, (0, 1), 5)
+                )
+                self.assertEqual(
+                    seen, ["root", preferred] + [m for m in "ABCD" if m != preferred]
+                )
+
+    def test_invalid_preferred_move_checks_root_before_children(self):
+        """不在手は深さ0・終端でも子の探索前に拒否する。
+
+        早期returnによる検査漏れ・二重調査を検出する。
+        """
+        for root in (two_level([1], [2]), TreeNode("end", terminal_score=(-1, 0))):
+            for depth in (0, 2):
+                seen = []
+                with self.assertRaises(ValueError):
+                    alpha_beta.search(
+                        root, depth, operations(seen), preferred_move="missing"
+                    )
+                self.assertEqual(seen, [root.label])
+        seen = []
+        r = alpha_beta.search(
+            two_level([1], [2]), 0, operations(seen), preferred_move="B"
+        )
+        self.assertEqual((r.move, r.score, r.visited_nodes), (None, (0, 0), 1))
+        self.assertEqual(seen, ["root"])
+
+    def test_preferred_move_preserves_exact_best_at_equal_bound(self):
+        """並べ替え後も同点の境界値で真の最善手を上書きしない。
+
+        優先手の後に得た不確定な同値を選ぶ誤りを検出する。
+        """
+        root = two_level([3, 5], [3, -2])
+        root = replace(root, children=tuple(reversed(root.children)))
+        r = alpha_beta.search(root, 2, operations(), preferred_move="A")
+        self.assertEqual((r.score, r.move, r.visited_nodes), ((0, 3), "A", 6))
