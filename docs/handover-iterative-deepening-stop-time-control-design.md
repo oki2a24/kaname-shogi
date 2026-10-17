@@ -56,6 +56,8 @@
 
 > `/Users/oki2a24/kaname-shogi` のkaname-shogiプロジェクトで、選定済みテーマ「反復深化の停止と既存時間制御の接続を学び設計する」を新しいセッションで始めます。
 >
+> 使用モデルはGPT-6 Luna、推論強度Mediumを想定します。
+>
 > まず `git status --short --branch`、`git log -3 --oneline --decorate`、`git branch --show-current` を実行し、`AGENTS.md`、`docs/resume.md`、`docs/handover-iterative-deepening-stop-time-control-design.md` を現在のGit状態と照合してください。次に `docs/README.md` と本書の案内に沿って確定知識・学習記録を読み、既存時計予算・停止処理・反復完了記録の契約と未検証事項をコードと照らしてください。
 >
 > 学習は一回一テーマで進め、確認は一問ずつ出して私の回答を待ってください。最初に実装案を決めず、既存方式を理解した後に設計範囲・責務境界・表現・確認方法をまとめて提示してください。設計を明示承認するまでは、実装計画・TDD・コード変更・テスト変更を始めないでください。今回の選定は学習・設計までで、実装や通常対局への接続、時間保証は承認していません。Random（最弱・既定）、一手駒得、現行二手先読みは維持してください。
