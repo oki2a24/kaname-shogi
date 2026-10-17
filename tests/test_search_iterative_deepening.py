@@ -109,24 +109,45 @@ class IterativeDeepeningTests(unittest.TestCase):
     def test_records_are_immutable_and_streams_independent(self):
         """過去記録を変更せず、二つの反復の状態を混ぜない。
 
-        オブジェクト書換え・共有累計・結果の不要な複製を検出する。
+        オブジェクト書換え・共有累計・前回最善手の共有・結果の不要な複製を検出する。
         """
         real = alpha_beta.search
         returned = []
+        calls = []
+        first_root = changing_tree()
+        second_root = depth_tree()
+        second_root = replace(
+            second_root,
+            children=(
+                ("A", replace(second_root.children[0][1], score=(0, 0))),
+                ("B", replace(second_root.children[1][1], score=(0, 1))),
+            ),
+        )
 
         def observed(*args, **kwargs):
+            stream = "first" if args[0] is first_root else "second"
+            calls.append((stream, args[1], kwargs["preferred_move"]))
             result = real(*args, **kwargs)
             returned.append(result)
             return result
 
         with patch.object(alpha_beta, "search", side_effect=observed):
-            first = iterative_deepening.search(changing_tree(), 2, operations())
-            second = iterative_deepening.search(depth_tree(), 2, operations())
+            first = iterative_deepening.search(first_root, 2, operations())
+            second = iterative_deepening.search(second_root, 2, operations())
             one = next(first)
             self.assertIs(one.result, returned[0])
             other = next(second)
             two = next(first)
             other_two = next(second)
+        self.assertEqual(
+            calls,
+            [
+                ("first", 1, None),
+                ("second", 1, None),
+                ("first", 2, "A"),
+                ("second", 2, "B"),
+            ],
+        )
         self.assertEqual(
             (one.depth, one.result.move, one.total_visited_nodes), (1, "A", 3)
         )
@@ -134,8 +155,13 @@ class IterativeDeepeningTests(unittest.TestCase):
             (two.depth, two.result.move, two.total_visited_nodes), (2, "B", 10)
         )
         self.assertEqual(
-            (other.depth, other.total_visited_nodes, other_two.total_visited_nodes),
-            (1, 3, 8),
+            (
+                other.depth,
+                other.result.move,
+                other.total_visited_nodes,
+                other_two.total_visited_nodes,
+            ),
+            (1, "B", 3, 8),
         )
         self.assertIsNot(one, two)
         self.assertIsNot(one.result, two.result)

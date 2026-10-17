@@ -210,7 +210,7 @@ class CompareIterativeTests(unittest.TestCase):
     def test_input_and_internal_errors(self):
         """入力誤りだけを終了2とし、探索内の故障を伝える。
 
-        SFEN不正での探索開始・広すぎる例外捕捉を検出する。
+        SFEN不正での探索開始・単独αβの例外隠蔽・広すぎる例外捕捉を検出する。
         """
         for args in ([], ["--sfen", "invalid"], ["--sfen", KINGS, "--depth", "3"]):
             with patch.object(
@@ -227,11 +227,27 @@ class CompareIterativeTests(unittest.TestCase):
         for module in (
             compare_iterative.iterative_deepening,
             compare_iterative.minimax,
-            compare_iterative.alpha_beta,
         ):
             with patch.object(module, "search", side_effect=ValueError("内部故障")):
                 with self.assertRaisesRegex(ValueError, "内部故障"):
                     self.invoke(["--sfen", KINGS])
+
+        real_alpha_beta = compare_iterative.alpha_beta.search
+        calls = []
+
+        def fail_standalone(node, depth, operations, **kwargs):
+            if "preferred_move" in kwargs:
+                calls.append(("反復", depth))
+                return real_alpha_beta(node, depth, operations, **kwargs)
+            calls.append(("単独", depth))
+            raise ValueError("単独探索の内部故障")
+
+        with patch.object(
+            compare_iterative.alpha_beta, "search", side_effect=fail_standalone
+        ):
+            with self.assertRaisesRegex(ValueError, "単独探索の内部故障"):
+                self.invoke(["--sfen", KINGS])
+        self.assertEqual(calls, [("反復", 1), ("単独", 1)])
 
     def test_real_process_entrypoint(self):
         """実プロセスが成功・入力エラー・ヘルプの終了値を伝える。

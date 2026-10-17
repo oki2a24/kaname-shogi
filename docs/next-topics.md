@@ -2,7 +2,7 @@
 
 ## 現在のテーマと状態
 
-「反復深化を学び、次段階を設計する」は、学習・設計・実装・検証・独立レビュー・本人承認後のmain統合・取り込み先検証・最後の理解確認まで完了した。[学習・実装記録](learning/iterative-deepening-design.md)、[承認済み設計](plans/2026-10-17-iterative-deepening-design.md)、現在のGit状態は[再開案内](resume.md)を参照する。本人は次に1「留保したテスト2件の補強」、その後に2「停止と既存時間制御の接続設計」の順を選択した。現在は[新セッション用引き継ぎ](handover-iterative-deepening-test-strengthening.md)の準備までで、次テーマは未開始。
+「反復深化を学び、次段階を設計する」は、学習・設計・実装・検証・独立レビュー・本人承認後のmain統合・取り込み先検証・最後の理解確認まで完了した。[学習・実装記録](learning/iterative-deepening-design.md)、[承認済み設計](plans/2026-10-17-iterative-deepening-design.md)を参照する。本人は次に1「留保したテスト2件の補強」、その後に2「停止と既存時間制御の接続設計」の順を選択した。現在は1の実装・検証・独立レビューが完了し、作業ブランチへコミットする段階。[実装計画と結果](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md)、回答と進行は[学習記録](learning/iterative-deepening-test-strengthening.md)、Git状態は[再開案内](resume.md)を参照する。
 
 ## 反復深化完了後の次テーマ候補（2026-10-17、小さい順）
 

@@ -35,7 +35,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-反復深化の[学習・設計記録](learning/iterative-deepening-design.md)と[承認済み設計](plans/2026-10-17-iterative-deepening-design.md)を参照する。土台となる全幅／αβ比較の仕様は[承認済み設計](plans/2026-10-17-engine-search-comparison-design.md)、実績は[前テーマの学習記録](learning/engine-improvement-stage-design.md)にある。現在の承認段階と次の行動は[再開案内](resume.md)を正本とする。
+現在の承認段階と次の行動は[再開案内](resume.md)を正本とする。選定済みのテスト補強は[学習記録](learning/iterative-deepening-test-strengthening.md)、[計画案](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md)、[開始時の引き継ぎ](handover-iterative-deepening-test-strengthening.md)を参照する。前テーマの探索仕様・実績は[学習・設計記録](learning/iterative-deepening-design.md)、[承認済み設計](plans/2026-10-17-iterative-deepening-design.md)、[実装計画](plans/2026-10-17-iterative-deepening-implementation-plan.md)にある。
 
 [再開案内](resume.md)で現在の作業状態と次に読む資料を確認する。文書運用の合意範囲・調査根拠・実施タスクは[文書活用計画](plans/2026-10-14-documentation-practices-implementation-plan.md)に記録する。三方式の構成調査は[学習記録](learning/three-policy-architecture.md)、Python移行の実施・統合・理解確認は[計画と結果](plans/2026-10-14-python-315-migration-implementation-plan.md)と[学習記録](learning/python-upgrade-impact.md)を参照する。現在状態をこの索引に複写しない。
 
@@ -56,7 +56,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
-| 反復深化で留保したテスト2件の補強（選定済み・新セッション準備のみ） | [選定記録](learning/iterative-deepening-design.md#次テーマの選定と引き継ぎ準備2026-10-17) | — | — | — | [引き継ぎ](handover-iterative-deepening-test-strengthening.md) |
+| 反復深化で留保したテスト2件の補強（実装・検証・独立レビュー完了、作業ブランチのコミット前） | [学習記録](learning/iterative-deepening-test-strengthening.md) | [検出力の点検手順](knowledge/test-coverage-review.md) | — | [実装計画と結果](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md) | [開始時の引き継ぎ](handover-iterative-deepening-test-strengthening.md) |
 | 反復深化を学び次段階を設計する（main統合・検証・最後の理解確認完了） | [学習・実装記録](learning/iterative-deepening-design.md) | [探索比較](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-17-iterative-deepening-design.md) | [承認済み計画](plans/2026-10-17-iterative-deepening-implementation-plan.md) | [開始前の引き継ぎ](handover-iterative-deepening-design.md) |
 | 次のエンジン強化段階を設計する（main統合・検証・最後の理解確認完了） | [学習・実装記録](learning/engine-improvement-stage-design.md) | [探索比較](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-17-engine-search-comparison-design.md) | [計画案](plans/2026-10-17-engine-search-comparison-implementation-plan.md) | [開始時引き継ぎ](handover-engine-improvement-stage-design.md) |
 | 文書活用・共同作業の文書整理（main統合・理解確認完了、README追加磨きmain統合済み） | [学習・実施記録](learning/documentation-practices.md) | — | — | [実施計画・結果](plans/2026-10-14-documentation-practices-implementation-plan.md) | — |
