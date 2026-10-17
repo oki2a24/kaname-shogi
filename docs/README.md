@@ -35,9 +35,9 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-次エンジン強化段階の[学習記録](learning/engine-improvement-stage-design.md)と[承認済み設計](plans/2026-10-17-engine-search-comparison-design.md)を参照する。設計・[実装計画](plans/2026-10-17-engine-search-comparison-implementation-plan.md)は承認済み。実装・検証・独立レビューと本人承認後のmain統合・取り込み先検証が完了し、最後の理解確認・回答記録まで完了。
+反復深化の[学習・設計記録](learning/iterative-deepening-design.md)と[設計草案](plans/2026-10-17-iterative-deepening-design.md)を参照する。土台となる全幅／αβ比較の仕様は[承認済み設計](plans/2026-10-17-engine-search-comparison-design.md)、実績は[前テーマの学習記録](learning/engine-improvement-stage-design.md)にある。現在の承認段階と次の行動は[再開案内](resume.md)を正本とする。
 
-[再開案内](resume.md)で現在の作業状態と次に読む資料を確認する。文書運用の合意範囲・調査根拠・実施タスクは[文書活用計画](plans/2026-10-14-documentation-practices-implementation-plan.md)に記録する。直近の完了テーマである三方式の構成調査は[学習記録](learning/three-policy-architecture.md)、Python移行の実施・統合・理解確認は[計画と結果](plans/2026-10-14-python-315-migration-implementation-plan.md)と[学習記録](learning/python-upgrade-impact.md)を参照する。現在状態をこの索引に複写しない。
+[再開案内](resume.md)で現在の作業状態と次に読む資料を確認する。文書運用の合意範囲・調査根拠・実施タスクは[文書活用計画](plans/2026-10-14-documentation-practices-implementation-plan.md)に記録する。三方式の構成調査は[学習記録](learning/three-policy-architecture.md)、Python移行の実施・統合・理解確認は[計画と結果](plans/2026-10-14-python-315-migration-implementation-plan.md)と[学習記録](learning/python-upgrade-impact.md)を参照する。現在状態をこの索引に複写しない。
 
 完了した設計の学習・合意は[次段階設計の記録](learning/evaluation-next-stage.md)、二手先読みの実装計画は[計画](plans/2026-10-10-two-ply-implementation-plan.md)と[合意記録](learning/two-ply-implementation-plan.md)、計画テーマ開始時点の背景は[引き継ぎ](handover-two-ply-implementation-plan.md)、通常二手比較の実装は[学習記録](learning/two-ply-basic-comparison.md)、開始背景は[引き継ぎ](handover-two-ply-basic-comparison.md)を参照する。
 
@@ -56,7 +56,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
-| 反復深化を学び次段階を設計する（選択済み・次セッション準備のみ） | [選定記録](learning/engine-improvement-stage-design.md#次テーマの選定と引き継ぎ準備2026-10-17) | — | — | — | [開始前の引き継ぎ](handover-iterative-deepening-design.md) |
+| 反復深化を学び次段階を設計する（設計草案の確認待ち） | [学習・設計記録](learning/iterative-deepening-design.md) | — | [設計草案](plans/2026-10-17-iterative-deepening-design.md) | — | [開始前の引き継ぎ](handover-iterative-deepening-design.md) |
 | 次のエンジン強化段階を設計する（main統合・検証・最後の理解確認完了） | [学習・実装記録](learning/engine-improvement-stage-design.md) | [探索比較](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-17-engine-search-comparison-design.md) | [計画案](plans/2026-10-17-engine-search-comparison-implementation-plan.md) | [開始時引き継ぎ](handover-engine-improvement-stage-design.md) |
 | 文書活用・共同作業の文書整理（main統合・理解確認完了、README追加磨きmain統合済み） | [学習・実施記録](learning/documentation-practices.md) | — | — | [実施計画・結果](plans/2026-10-14-documentation-practices-implementation-plan.md) | — |
 | 三つの選択方式の構成調査（完了・次の強化エンジンでは方式別分離を希望） | [構成調査記録](learning/three-policy-architecture.md) | [一手選択と駒得評価](knowledge/31-weak-move-selection.md) | — | — | [開始時点の背景・再開プロンプト](handover-three-policy-architecture.md) |
