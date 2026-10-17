@@ -2,22 +2,23 @@
 
 ## 現在地
 
-2026-10-17更新。選定済みテーマ「反復深化で留保したテスト2件を補強する」は、main統合・取り込み後の検証・最後の理解確認まで完了した。本人が次に希望した「反復深化の停止と既存時間制御の接続を学び設計する」は新セッション用の引き継ぎを準備済み。次テーマは未開始で、本人が再開プロンプトを新しいセッションへ入力するのを待つ。今回の回答と実績は[学習記録](learning/iterative-deepening-test-strengthening.md)、次テーマの開始資料は[引き継ぎ](handover-iterative-deepening-stop-time-control-design.md)を参照する。
+2026-10-18更新。「反復深化の停止と既存時間制御の接続を学び設計する」の学習・全体設計を本人が承認した。文書全体への確認に「yes」と回答し、型名・引数・配置・共通処理の利用境界も承認対象に含む。[承認済み設計](plans/2026-10-18-iterative-deepening-stop-time-control-design.md)、[学習記録](learning/iterative-deepening-stop-time-control-design.md)を参照する。
 
-- 完了した今回の対象・回答・結果：[実装計画と結果](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md)、[学習記録](learning/iterative-deepening-test-strengthening.md)、[開始時の引き継ぎ](handover-iterative-deepening-test-strengthening.md)。
-- 次テーマの背景と再開用プロンプト：[引き継ぎ](handover-iterative-deepening-stop-time-control-design.md)。
-- 前テーマの探索仕様：[探索比較メモ](knowledge/search-comparison.md)、[承認済み設計](plans/2026-10-17-iterative-deepening-design.md)、[実装計画と結果参照](plans/2026-10-17-iterative-deepening-implementation-plan.md)、[学習・実装記録](learning/iterative-deepening-design.md)。
+次は作業ブランチの設計・学習文書のmain取り込みについて本人の別承認を得る。取り込み後の文書検証と最後の理解確認は未実施。独立レビュー・製品テストも未実施であり、文書の自己点検とリンク検査を製品検証とは扱わない。
 
-本人は次に「反復深化の停止と既存時間制御の接続を学び設計する」ことを希望した。引き継ぎ文書と再開用プロンプトを準備済み。本人が新しいセッションに入力するまで後続テーマを始めない。
+今回の範囲は学習・設計まで。実装計画、TDD、コード・テスト変更、通常対局接続、時間保証は承認されていない。Random（最弱・既定）、一手駒得、現行二手先読みを維持する。
 
-現在は `/Users/oki2a24/kaname-shogi` の `main`。テスト補強コミット `7f32f3e`、記録コミット `54fc53a` をfast-forwardで統合し、統合記録は `0e4d079`。作業ブランチは削除済み。mainはローカル統合済みで未push。取り込み後の全体513件とRuff両検査が成功。独立レビューはCritical・Important・Minorなし。現在の文書コミットまで保存後、次セッションではGit状態を再取得する。
+作業場所は `/Users/oki2a24/kaname-shogi`、ブランチは `codex/iterative-deepening-stop-time-control-design`、開始HEADは `d041382`。別worktreeなし。承認済み文書をこのブランチへ保存する段階で、mainには未取り込み。保存後のハッシュとclean状態はGitで確認する。Ruff 0.16.10は固定版と一致、hooksPathは.githooks。これまでの回答と判断経緯は学習記録に保全している。
 
-今回の範囲は独立ストリームの前回手混在と単独αβ段階のValueError隠蔽を検出するテスト補強のみ。Random（最弱・既定）、一手駒得、現行二手先読みを維持した。停止・既存時間制御との接続や通常対局への接続は今回扱っていない。次テーマの学習・設計・実装は未開始。
+## 参照先と履歴
+
+- 今回の回答・現物照合・未決事項：[学習記録](learning/iterative-deepening-stop-time-control-design.md)。
+- 開始時点の背景：[引き継ぎ](handover-iterative-deepening-stop-time-control-design.md)。新セッション開始待ちという記述は当時の状態。
+- 現行契約：[探索停止](knowledge/search-stop.md)、[時計予算](knowledge/time-budget.md)、[USI応答](knowledge/usi-engine-response.md)、[探索比較](knowledge/search-comparison.md)。
+- 前テーマの探索設計：[承認済み設計](plans/2026-10-17-iterative-deepening-design.md)、[学習・実装記録](learning/iterative-deepening-design.md)。
 
 ## 前テーマのGitと検証記録
 
-前テーマの実装は `4253c77`、main統合の記録は `1e43f4b`、最後の理解確認は `fceea8d`。前テーマの作業ブランチは統合・検証後に削除済み。
+反復深化の実装は `4253c77`、統合記録は `1e43f4b`、最後の理解確認は `fceea8d`。留保Minor2件のテスト補強は `7f32f3e` と `54fc53a`、main統合記録は `0e4d079`。いずれもmain統合・取り込み先検証・理解確認まで完了、作業ブランチ削除済み。補強の全体513件成功とCritical・Important・Minorなしは過去の結果であり、今回の検証ではない。[補強の学習記録](learning/iterative-deepening-test-strengthening.md)、[計画・結果](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md)を参照。
 
-前テーマの取り込み後mainでは全体513件・Ruff両検査・新比較コマンドが成功。独立レビューはCritical/Importantなし、今回補強するMinor2件を理由付きで留保した。これらは過去の結果であり、今回の検証として扱わない。
-
-文書の置き場所は[文書更新ガイド](documentation-guide.md)、参照先は[文書案内](README.md)。以前の現在欄の背景・回答・判断は上記学習記録に保全している。
+文書の置き場所は[文書更新ガイド](documentation-guide.md)、参照先は[文書案内](README.md)。
