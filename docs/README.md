@@ -56,7 +56,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
-| 反復深化を学び次段階を設計する（実装・検証・レビュー済み、main統合待ち） | [学習・実装記録](learning/iterative-deepening-design.md) | [探索比較](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-17-iterative-deepening-design.md) | [承認済み計画](plans/2026-10-17-iterative-deepening-implementation-plan.md) | [開始前の引き継ぎ](handover-iterative-deepening-design.md) |
+| 反復深化を学び次段階を設計する（main統合・検証済み、最後の理解確認待ち） | [学習・実装記録](learning/iterative-deepening-design.md) | [探索比較](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-17-iterative-deepening-design.md) | [承認済み計画](plans/2026-10-17-iterative-deepening-implementation-plan.md) | [開始前の引き継ぎ](handover-iterative-deepening-design.md) |
 | 次のエンジン強化段階を設計する（main統合・検証・最後の理解確認完了） | [学習・実装記録](learning/engine-improvement-stage-design.md) | [探索比較](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-17-engine-search-comparison-design.md) | [計画案](plans/2026-10-17-engine-search-comparison-implementation-plan.md) | [開始時引き継ぎ](handover-engine-improvement-stage-design.md) |
 | 文書活用・共同作業の文書整理（main統合・理解確認完了、README追加磨きmain統合済み） | [学習・実施記録](learning/documentation-practices.md) | — | — | [実施計画・結果](plans/2026-10-14-documentation-practices-implementation-plan.md) | — |
 | 三つの選択方式の構成調査（完了・次の強化エンジンでは方式別分離を希望） | [構成調査記録](learning/three-policy-architecture.md) | [一手選択と駒得評価](knowledge/31-weak-move-selection.md) | — | — | [開始時点の背景・再開プロンプト](handover-three-policy-architecture.md) |
