@@ -204,3 +204,11 @@ final_review担当がタスク5の未追跡ファイルも含め、開始HEAD1af
 繰り越したMinor指摘はない。新規知識メモは[探索比較](../knowledge/search-comparison.md)。main統合と取り込み先検証、最後の理解確認はまだ実施していない。本人の統合承認を待つ。
 
 最終文書確認：開始HEADとの差分に含まれる文書と新規知識メモのローカルリンク574件を簡易検査し、参照先・見出しの問題0件。Ruff check、format --check、git diff --checkも成功。実装承認後のタスク1〜4は1d53157、c597079、d060b97、9bf975dでコミット済み。タスク5はこの記録と合わせて通常フックを通してコミットする。
+
+## main統合と取り込み先検証（2026-10-17）
+
+本人が統合オプション「1」（ローカルmainへ取り込み、取り込み先で検証）を選択した。作業ディレクトリ `/Users/oki2a24/kaname-shogi` で変更なしを確認し、`git switch main`、`git merge --ff-only codex/engine-search-comparison-design` を実行。mainを1af87d8からecc1c73へfast-forwardした。別worktreeは使用していない。
+
+取り込み先mainで `.venv/bin/ruff check .`、`.venv/bin/ruff format --check .`、`git diff --check` が成功。`.venv/bin/python -m unittest discover -s tests -v` は490件、17.909秒、OK（終了0）。作業ブランチの過去実績ではなく、取り込み先で今回実行した結果である。リモートへのpushは未実施。
+
+次は最後の理解確認を一問だけ出し、本人回答を待つ。未回答を完了扱いにせず、回答・補足の記録後に方向性・README・次候補を見直す。次の文書更新はその回答を受けた時点。
