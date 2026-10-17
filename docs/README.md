@@ -35,7 +35,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-現在の承認段階と次の行動は[再開案内](resume.md)を正本とする。選定済みのテスト補強は[学習記録](learning/iterative-deepening-test-strengthening.md)、[計画案](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md)、[開始時の引き継ぎ](handover-iterative-deepening-test-strengthening.md)を参照する。前テーマの探索仕様・実績は[学習・設計記録](learning/iterative-deepening-design.md)、[承認済み設計](plans/2026-10-17-iterative-deepening-design.md)、[実装計画](plans/2026-10-17-iterative-deepening-implementation-plan.md)にある。
+現在の承認段階と次の行動は[再開案内](resume.md)を正本とする。完了したテスト補強の[学習記録](learning/iterative-deepening-test-strengthening.md)と[計画・結果](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md)、次の選定テーマ「停止と既存時間制御の接続を学び設計する」の[新セッション用引き継ぎ](handover-iterative-deepening-stop-time-control-design.md)を参照する。前テーマの探索仕様・実績は[学習・設計記録](learning/iterative-deepening-design.md)、[承認済み設計](plans/2026-10-17-iterative-deepening-design.md)、[実装計画](plans/2026-10-17-iterative-deepening-implementation-plan.md)にある。
 
 [再開案内](resume.md)で現在の作業状態と次に読む資料を確認する。文書運用の合意範囲・調査根拠・実施タスクは[文書活用計画](plans/2026-10-14-documentation-practices-implementation-plan.md)に記録する。三方式の構成調査は[学習記録](learning/three-policy-architecture.md)、Python移行の実施・統合・理解確認は[計画と結果](plans/2026-10-14-python-315-migration-implementation-plan.md)と[学習記録](learning/python-upgrade-impact.md)を参照する。現在状態をこの索引に複写しない。
 
@@ -56,7 +56,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
-| 反復深化で留保したテスト2件の補強（main統合・取り込み先検証完了、最後の理解確認待ち） | [学習記録](learning/iterative-deepening-test-strengthening.md) | [検出力の点検手順](knowledge/test-coverage-review.md) | — | [実装計画と結果](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md) | [開始時の引き継ぎ](handover-iterative-deepening-test-strengthening.md) |
+| 反復深化で留保したテスト2件の補強（main統合・取り込み先検証・最後の理解確認完了） | [学習記録](learning/iterative-deepening-test-strengthening.md) | [検出力の点検手順](knowledge/test-coverage-review.md) | — | [実装計画と結果](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md) | [開始時の引き継ぎ](handover-iterative-deepening-test-strengthening.md) |
+| 反復深化の停止と既存時間制御の接続を学び設計する（選定済み・新セッション開始待ち） | — | [探索停止](knowledge/search-stop.md)、[時計予算](knowledge/time-budget.md)、[USI応答](knowledge/usi-engine-response.md) | — | — | [新セッション用引き継ぎ](handover-iterative-deepening-stop-time-control-design.md) |
 | 反復深化を学び次段階を設計する（main統合・検証・最後の理解確認完了） | [学習・実装記録](learning/iterative-deepening-design.md) | [探索比較](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-17-iterative-deepening-design.md) | [承認済み計画](plans/2026-10-17-iterative-deepening-implementation-plan.md) | [開始前の引き継ぎ](handover-iterative-deepening-design.md) |
 | 次のエンジン強化段階を設計する（main統合・検証・最後の理解確認完了） | [学習・実装記録](learning/engine-improvement-stage-design.md) | [探索比較](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-17-engine-search-comparison-design.md) | [計画案](plans/2026-10-17-engine-search-comparison-implementation-plan.md) | [開始時引き継ぎ](handover-engine-improvement-stage-design.md) |
 | 文書活用・共同作業の文書整理（main統合・理解確認完了、README追加磨きmain統合済み） | [学習・実施記録](learning/documentation-practices.md) | — | — | [実施計画・結果](plans/2026-10-14-documentation-practices-implementation-plan.md) | — |
