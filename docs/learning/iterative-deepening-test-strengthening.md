@@ -62,6 +62,6 @@
 
 別レビュー担当による未コミット差分の独立レビュー結果：Criticalなし、Importantなし、Minorなし。二つのテストの期待値、呼出し順、対象実装、文書記述に不整合はないとの報告を受けた。レビューによるコード・テスト変更はないため、レビュー前の検証証拠は維持される。レビュー後にローカル文書リンク525件と `git diff --check` も成功した。
 
-レビュー後に `.venv/bin/python -m unittest discover -s tests -q` を実行し、全513件が成功した。`.venv/bin/ruff format .` は59ファイル変更なし、`.venv/bin/ruff check .` 成功。ローカル文書リンク525件と `git diff --check` も成功した。mainへの統合は今回の作業ブランチ完了後に別途本人の承認を得る。後続テーマ「反復深化の停止と既存時間制御の接続を学び設計する」は今回開始しない。
+レビュー後に `.venv/bin/python -m unittest discover -s tests -q` を実行し、全513件が成功した。`.venv/bin/ruff format .` は59ファイル変更なし、`.venv/bin/ruff check .` 成功。ローカル文書リンク525件と `git diff --check` も成功した。テストと実装記録を `7f32f3e` (`test: strengthen iterative deepening regression coverage`) として作業ブランチへコミットした。続く現在地・コミット結果の記録はdocsコミットに保存する。main未統合・未pushであり、統合は別途本人の承認を待つ。後続テーマ「反復深化の停止と既存時間制御の接続を学び設計する」は今回開始しない。
 
 次の文書更新は、作業ブランチへのコミット後に実施する。
