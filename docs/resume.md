@@ -4,11 +4,11 @@
 
 2026-10-18更新。本人の計画明示承認後、時間制御付き反復深化のタスク1〜5を実装・検証・各段階の独立レビューまで完了した。最終のブランチ全体レビューと結果は[学習・実施記録](learning/iterative-deepening-stop-time-control-implementation.md)、手順・進捗は[計画と結果](plans/2026-10-18-iterative-deepening-stop-time-control-implementation-plan.md)を参照する。
 
-次はmain取り込みへの本人の別承認を待つ。承認後に元ディレクトリで統合し、取り込み先検証を行い、最後の理解確認を一問だけ出して回答を待つ。現在mainへは未取り込み。通常三方式・予算式を維持し、通常対局/USI/CLIへの新方式接続と時間保証は対象外。
+本人の別承認「yes」を受けてmainへ取り込み、取り込み先検証まで完了。次は最後の理解確認の回答を待つ。[出題と回答欄](learning/iterative-deepening-stop-time-control-implementation.md#最後の理解確認回答待ち)を参照する。回答・補足の記録後に次候補を見直し、本人が選ぶまで新テーマへ進まない。
 
-作業場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/iterative-deepening-stop-time-control-implementation`。別worktreeなし。開始mainは6418379、計画25c3eb9、実装ca59b63・8d4ced6・73a0264・db31d03・30fe837。最終文書保存後のHEADはGitで再確認する。pushなし。
+作業場所 `/Users/oki2a24/kaname-shogi`、main。6418379から80e3db0へfast-forwardで統合した。統合済み作業ブランチは通常削除済み、別worktreeなし、pushなし。統合記録保存後のHEADはGitで再確認する。実装5コミットと作業ブランチの検証履歴は学習記録へ保存済み。
 
-作業ブランチ30fe837で最終全体546件31.419秒OK、Ruff63ファイル整形確認・check、差分検査成功。代表変異11件のassert FAILと復元後成功を確認。これらは今回の作業ブランチの実測であり、main取り込み先の結果ではない。
+取り込み先80e3db0の実測は全体546件30.083秒OK、Ruff63ファイル整形確認・check、差分検査成功。文書の相対リンク581件・見出し9件・空白/末尾改行問題0件。代表変異11件の検出・復元と独立全体レビューは取り込み前に実施済みで、その履歴を取り込み先での再実施と扱わない。通常三方式・予算式を維持し、通常対局/USI/CLIへの新方式接続と時間保証は対象外。
 
 ## 次に読むもの
 
