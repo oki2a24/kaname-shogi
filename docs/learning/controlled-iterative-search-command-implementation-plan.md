@@ -93,3 +93,11 @@ Critical 0 / Important 0 / Minor 0。全振る舞いでテストと対象asserti
 - Green確認は二テスト2/2成功。対象ファイル全体は5/5成功。`.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .` が成功し、formatterは1ファイル整形・64ファイル変更なし、説明修正後は65ファイル変更なしだった。
 - 独立レビュー初回はCritical 0 / Important 0 / Minor 1。`_run_search` のdocstringが操作セット生成も予算に含むように読めたため、仕様どおり「操作セット生成後に計時開始、探索内部の合法予備手準備は予算に含む」と修正した。テストdocstringも検出対象を「操作セット生成前の原点取得」に明確化した。レビュー担当の読み取り専用再確認でCritical 0 / Important 0 / Minor 0となった。
 - 時計の取り込み接続は今回のモックテストで確認した。実際のSearchControl期限境界は既存制御テストに委ね、このTask 2テスト単独では時間計算や実時間性能を確認しない。例外境界はTask 4、コマンド全体は以降のタスクで実装する。
+
+## Task 3 実装記録（2026-10-18）
+
+- `_format_result` を追加し、条件行、終了状態、選択手、手の由来、完了記録の順に表示する。COMPLETE/STOPPEDの手と記録、NO_LEGAL_MOVE/SUPPRESSEDの手なし表示を分け、記録のない深さ・評価・訪問数・累計を生成しない。STOPPEDの理由やNO_LEGAL_MOVEの意味も推測しない。手と評価は既存の `comparison.format_move` / `format_score` を使う。
+- 表示テスト4件は独立した行リストを期待値にし、COMPLETEとNO_LEGAL_MOVE、STOPPEDの記録有無、SUPPRESSEDの記録有無、後手視点・既存表記を確認する。初回Redのformatterテストは空出力に対する添字アクセスで `IndexError` となったため、行全体の比較へ直した。修正後のRedは四テストすべてが対象の行比較assertionで失敗し、読み込みエラーをRedに数えていない。
+- 実装後、四つの表示テストは4/4成功し、専用テストファイル全体は9/9成功した。`.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .` が成功し、`git diff --check` にエラーはなかった。
+- Refactor確認では、表示の条件分岐と記録項目の組み立てを一関数内に保つ現在の形が契約を追いやすく、追加抽象化は不要と判断した。独立レビューは読み取り専用で、Critical 0 / Important 0 / Minor 0。状態・選択手・記録の分離、順序、既存formatter再利用を確認し、修正事項はなかった。
+- このテストは結果オブジェクトからの表示を検査し、実時間での深さ・期限・全局面の性質は検証しない。`main`、例外境界、実プロセス入口はTask 4に残る。

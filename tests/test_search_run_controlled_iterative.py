@@ -7,12 +7,20 @@ from unittest.mock import patch, sentinel
 
 from kaname_shogi.model import Side
 from kaname_shogi.search import run_controlled_iterative
+from kaname_shogi.search.result import (
+    ControlledCompletion,
+    ControlledSearchResult,
+    IterationResult,
+    SearchResult,
+)
 from kaname_shogi.search.run_controlled_iterative import (
+    _format_result,
     _make_parser,
     _prepare_inputs,
     _run_search,
 )
 from kaname_shogi.time_management import SearchBudget
+from kaname_shogi.usi_move import parse_usi_move
 
 
 class RunControlledIterativeTests(unittest.TestCase):
@@ -230,3 +238,183 @@ class RunControlledIterativeTests(unittest.TestCase):
             position, 4, sentinel.operations, sentinel.control
         )
         self.assertIs(result, sentinel.result)
+
+    def test_format_complete_and_no_legal_move(self):
+        """完了記録を順に表示し、手なし状態に記録を作らない。
+
+        指定深さとの混同、行順の崩れ、深さ/評価の捏造や投了断定を検出する。
+        """
+        sfen = "8k/9/9/9/9/9/9/9/K8 b - 1"
+        position, budget = _prepare_inputs(sfen, 3, 31, 47)
+        move = parse_usi_move("7g7f")
+        complete = ControlledSearchResult(
+            ControlledCompletion.COMPLETE,
+            move,
+            IterationResult(3, SearchResult((0, 2), move, 7, None), 12),
+        )
+        actual = _format_result(sfen, position, 3, budget, complete).splitlines()
+        self.assertEqual(
+            actual,
+            [
+                f"入力SFEN: {sfen}",
+                "評価視点: 先手",
+                "指定上限深さ: 3",
+                "目標期間(ms): 31",
+                "上限期間(ms): 47",
+                "終了状態: COMPLETE（指定上限深さまで完了）",
+                "選択手: 7g7f（7七→7六）",
+                "手の由来: 完了結果",
+                "完了記録: あり",
+                "完了深さ: 3",
+                "完了深さの評価: ＋2",
+                "完了深さの訪問回数: 7",
+                "反復累計（完了した深さまで）: 12",
+            ],
+        )
+
+        no_legal_move = ControlledSearchResult(
+            ControlledCompletion.NO_LEGAL_MOVE, None, None
+        )
+        actual = _format_result(sfen, position, 3, budget, no_legal_move).splitlines()
+        self.assertEqual(
+            actual,
+            [
+                f"入力SFEN: {sfen}",
+                "評価視点: 先手",
+                "指定上限深さ: 3",
+                "目標期間(ms): 31",
+                "上限期間(ms): 47",
+                "終了状態: NO_LEGAL_MOVE（合法手なし）",
+                "選択手: なし",
+                "手の由来: 該当なし",
+                "完了記録: なし（評価なし）",
+            ],
+        )
+        self.assertNotIn("投了", "\n".join(actual))
+        self.assertNotIn("詰み", "\n".join(actual))
+
+    def test_format_stopped_with_and_without_record(self):
+        """通常停止では予備手と最後の完了記録を分けて表示する。
+
+        予備手へ評価を付ける誤り、指定深さの誤表示、未完了分の集計を検出する。
+        """
+        sfen = "8k/9/9/9/9/9/9/9/K8 b - 1"
+        position, budget = _prepare_inputs(sfen, 3, 31, 47)
+        move = parse_usi_move("7g7f")
+        without_record = ControlledSearchResult(
+            ControlledCompletion.STOPPED, move, None
+        )
+        self.assertEqual(
+            _format_result(sfen, position, 3, budget, without_record).splitlines(),
+            [
+                f"入力SFEN: {sfen}",
+                "評価視点: 先手",
+                "指定上限深さ: 3",
+                "目標期間(ms): 31",
+                "上限期間(ms): 47",
+                "終了状態: STOPPED（通常停止）",
+                "選択手: 7g7f（7七→7六）",
+                "手の由来: 合法予備手",
+                "完了記録: なし（評価なし）",
+            ],
+        )
+
+        with_record = ControlledSearchResult(
+            ControlledCompletion.STOPPED,
+            move,
+            IterationResult(2, SearchResult((0, 1), move, 7, None), 10),
+        )
+        self.assertEqual(
+            _format_result(sfen, position, 3, budget, with_record).splitlines(),
+            [
+                f"入力SFEN: {sfen}",
+                "評価視点: 先手",
+                "指定上限深さ: 3",
+                "目標期間(ms): 31",
+                "上限期間(ms): 47",
+                "終了状態: STOPPED（通常停止）",
+                "選択手: 7g7f（7七→7六）",
+                "手の由来: 完了結果",
+                "完了記録: あり",
+                "完了深さ: 2",
+                "完了深さの評価: ＋1",
+                "完了深さの訪問回数: 7",
+                "反復累計（完了した深さまで）: 10",
+            ],
+        )
+
+    def test_format_suppressed_never_restores_move(self):
+        """抑制時は記録の有無によらず選択手を表示しない。
+
+        last_completedの手の復活、なしと記録ありの混同を検出する。
+        """
+        sfen = "8k/9/9/9/9/9/9/9/K8 b - 1"
+        position, budget = _prepare_inputs(sfen, 3, 31, 47)
+        move = parse_usi_move("7g7f")
+        record = IterationResult(2, SearchResult((0, 1), move, 7, None), 10)
+        for last_completed, record_lines in (
+            (None, ["完了記録: なし（評価なし）"]),
+            (
+                record,
+                [
+                    "完了記録: あり",
+                    "完了深さ: 2",
+                    "完了深さの評価: ＋1",
+                    "完了深さの訪問回数: 7",
+                    "反復累計（完了した深さまで）: 10",
+                ],
+            ),
+        ):
+            result = ControlledSearchResult(
+                ControlledCompletion.SUPPRESSED, None, last_completed
+            )
+            with self.subTest(recorded=last_completed is not None):
+                actual = _format_result(sfen, position, 3, budget, result).splitlines()
+                self.assertEqual(
+                    actual[:8],
+                    [
+                        f"入力SFEN: {sfen}",
+                        "評価視点: 先手",
+                        "指定上限深さ: 3",
+                        "目標期間(ms): 31",
+                        "上限期間(ms): 47",
+                        "終了状態: SUPPRESSED（応答抑制）",
+                        "選択手: なし",
+                        "手の由来: 該当なし",
+                    ],
+                )
+                self.assertEqual(actual[8:], record_lines)
+                self.assertNotIn("7g7f", "\n".join(actual))
+
+    def test_format_uses_existing_move_and_score_formatters(self):
+        """後手視点と既存の手/評価表記を実行条件・記録に出す。
+
+        視点固定や独自・反転した手と正の評価表記を検出する。
+        """
+        sfen = "8k/9/9/9/9/9/9/9/K8 w - 1"
+        position, budget = _prepare_inputs(sfen, 3, 31, 47)
+        move = parse_usi_move("7g7f")
+        result = ControlledSearchResult(
+            ControlledCompletion.STOPPED,
+            move,
+            IterationResult(2, SearchResult((0, 1), move, 7, None), 10),
+        )
+        actual = _format_result(sfen, position, 3, budget, result).splitlines()
+        self.assertEqual(
+            actual,
+            [
+                f"入力SFEN: {sfen}",
+                "評価視点: 後手",
+                "指定上限深さ: 3",
+                "目標期間(ms): 31",
+                "上限期間(ms): 47",
+                "終了状態: STOPPED（通常停止）",
+                "選択手: 7g7f（7七→7六）",
+                "手の由来: 完了結果",
+                "完了記録: あり",
+                "完了深さ: 2",
+                "完了深さの評価: ＋1",
+                "完了深さの訪問回数: 7",
+                "反復累計（完了した深さまで）: 10",
+            ],
+        )

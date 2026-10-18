@@ -25,7 +25,7 @@
 
 ## 承認段階
 
-本人は2026-10-18に本書の計画全体を「yes」と明示承認した。計画承認は設計全体への過去の承認と区別して記録する。本人は順次実装方式と、現在のcheckout内に作業ブランチを作る方式を選択済み。`codex/controlled-iterative-search-command` を承認記録コミット `f8429f8` から作成し、計画固有の作業場所 `.superpowers/sdd/2026-10-18-controlled-iterative-search-command-implementation-plan/` を準備した。Task 1・2のTDDと独立レビューが完了し、Task 3へ進む。
+本人は2026-10-18に本書の計画全体を「yes」と明示承認した。計画承認は設計全体への過去の承認と区別して記録する。本人は順次実装方式と、現在のcheckout内に作業ブランチを作る方式を選択済み。`codex/controlled-iterative-search-command` を承認記録コミット `f8429f8` から作成し、計画固有の作業場所 `.superpowers/sdd/2026-10-18-controlled-iterative-search-command-implementation-plan/` を準備した。Task 1〜3のTDDと独立レビューが完了し、Task 4へ進む。
 
 ## 範囲と成功条件
 
@@ -151,14 +151,14 @@ def main(argv: list[str] | None = None) -> int:
 
 **生産:** `_format_result(sfen: str, position: Position, max_depth: int, budget: SearchBudget, result: ControlledSearchResult[Move]) -> str`。人向けの最終表示を作る非公開処理。
 
-- [ ] **テスト:** `test_format_complete_and_no_legal_move` を追加。COMPLETEの記録ありは最後の記録深さ・評価・訪問・累計を表示し、条件/結果/記録の行が設計どおりの順序であることをassertする。NO_LEGAL_MOVEは手なし・記録なしとし、完了深さ・評価・訪問回数・反復累計の全行を出さず、投了/詰みを断定する行もないことをassertする。
-- [ ] **テスト:** `test_format_stopped_with_and_without_record` を追加。記録なしは合法予備手・評価なしで四つの完了記録行すべてを出さず、記録ありは深さ2・評価1・訪問7・累計10の独立データを使い、それらを同じ深さ2から表示することをassertする。
-- [ ] **テスト:** `test_format_suppressed_never_restores_move` を追加。last_completedに手がある結果でも選択手は「なし」、由来は該当なしとし、記録の有無だけに応じて記録項目を出すことをassertする。
-- [ ] **テスト:** `test_format_uses_existing_move_and_score_formatters` を追加。後手の視点、既存 `format_move` の手表記と `format_score` の評価表記がそのまま実行条件/記録へ出ることをassertする。
-- [ ] **Red確認:** 空文字列を返すだけの `_format_result` 骨格を使い、四つの表示テストで行順・状態ごとの手/記録・既存整形に関する対象assertionが失敗することを確認する。関数やテストの読み込みエラーだけはRedに数えない。
-- [ ] **最小実装:** 状態ラベル・手の由来・完了記録の各組合せを承認済み表に対応させ、設計で定めた項目順を保つ。評価と手は既存整形へ委譲する。合法手なしを詰み/投了と断定せず、STOPPED理由を推測しない。
-- [ ] **Green確認:** `PYTHONPATH=tests .venv/bin/python -m unittest test_search_run_controlled_iterative.RunControlledIterativeTests.test_format_complete_and_no_legal_move test_search_run_controlled_iterative.RunControlledIterativeTests.test_format_stopped_with_and_without_record test_search_run_controlled_iterative.RunControlledIterativeTests.test_format_suppressed_never_restores_move test_search_run_controlled_iterative.RunControlledIterativeTests.test_format_uses_existing_move_and_score_formatters -v` が成功する。
-- [ ] **Refactor・独立レビュー:** 状態ごとに「選択手」と「完了記録」の情報源が混ざっていないこと、完了項目を架空に出していないことを確認し、レビュー結果を記録する。
+- [x] **テスト:** `test_format_complete_and_no_legal_move` を追加。COMPLETEの記録ありは最後の記録深さ・評価・訪問・累計を表示し、条件/結果/記録の行が設計どおりの順序であることをassertする。NO_LEGAL_MOVEは手なし・記録なしとし、完了深さ・評価・訪問回数・反復累計の全行を出さず、投了/詰みを断定する行もないことをassertする。
+- [x] **テスト:** `test_format_stopped_with_and_without_record` を追加。記録なしは合法予備手・評価なしで四つの完了記録行すべてを出さず、記録ありは深さ2・評価1・訪問7・累計10の独立データを使い、それらを同じ深さ2から表示することをassertする。
+- [x] **テスト:** `test_format_suppressed_never_restores_move` を追加。last_completedに手がある結果でも選択手は「なし」、由来は該当なしとし、記録の有無だけに応じて記録項目を出すことをassertする。
+- [x] **テスト:** `test_format_uses_existing_move_and_score_formatters` を追加。後手の視点、既存 `format_move` の手表記と `format_score` の評価表記がそのまま実行条件/記録へ出ることをassertする。
+- [x] **Red確認:** 空文字列を返すだけの `_format_result` 骨格を使い、四つの表示テストで行順・状態ごとの手/記録・既存整形に関する対象assertionが失敗することを確認する。関数やテストの読み込みエラーだけはRedに数えない。
+- [x] **最小実装:** 状態ラベル・手の由来・完了記録の各組合せを承認済み表に対応させ、設計で定めた項目順を保つ。評価と手は既存整形へ委譲する。合法手なしを詰み/投了と断定せず、STOPPED理由を推測しない。
+- [x] **Green確認:** `PYTHONPATH=tests .venv/bin/python -m unittest test_search_run_controlled_iterative.RunControlledIterativeTests.test_format_complete_and_no_legal_move test_search_run_controlled_iterative.RunControlledIterativeTests.test_format_stopped_with_and_without_record test_search_run_controlled_iterative.RunControlledIterativeTests.test_format_suppressed_never_restores_move test_search_run_controlled_iterative.RunControlledIterativeTests.test_format_uses_existing_move_and_score_formatters -v` が成功する。
+- [x] **Refactor・独立レビュー:** 状態ごとに「選択手」と「完了記録」の情報源が混ざっていないこと、完了項目を架空に出していないことを確認し、レビュー結果と対応を記録する。最終Critical 0 / Important 0 / Minor 0。
 
 ### タスク4：main・例外境界・プロセス入口をつなぐ
 
@@ -201,4 +201,4 @@ def main(argv: list[str] | None = None) -> int:
 
 最終の独立レビューはCritical 0 / Important 0 / Minor 0。SystemExit(0)/(2)と入力ValueErrorの境界、各振る舞いのRed順、表示契約、docstring、回帰コマンド、範囲と承認境界の維持を確認済み。レビューは読み取り専用で、コード・テスト・文書を変更せず、製品テストも実行していない。
 
-計画全体の明示承認済み。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。`codex/controlled-iterative-search-command` を `f8429f8` から作成し、計画用ワークスペースと共有インターフェースのプリフライトを完了した。Task 1・2のTDD・レビューを完了し、Task 3を次に始める。通常対局・USIへの新方式接続、予算式変更、時間保証は引き続き対象外。
+計画全体の明示承認済み。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。`codex/controlled-iterative-search-command` を `f8429f8` から作成し、計画用ワークスペースと共有インターフェースのプリフライトを完了した。Task 1〜3のTDD・レビューを完了し、Task 4を次に始める。通常対局・USIへの新方式接続、予算式変更、時間保証は引き続き対象外。
