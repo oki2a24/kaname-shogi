@@ -2,9 +2,11 @@
 
 ## 現在のテーマと状態
 
-反復深化と留保テスト2件の補強はmain統合・検証・理解確認まで完了。選定済みの「反復深化の停止と既存時間制御の接続を学び設計する」を新セッションで開始した。2026-10-18に設計全体を本人が承認した。文書のmain取り込み・取り込み先検証・最後の理解確認まで完了した。次テーマは「承認済み設計から実装計画を作り、計画の明示承認後に、段階的に実装・検証・独立レビューまで進める」に選定済み。今回の独立設計レビューはCritical・Important・Minorすべて0で補完済み。[新セッション用引き継ぎ](handover-iterative-deepening-stop-time-control-implementation.md)を準備した。実装計画・コード・テスト変更は今回の対象外。[学習記録](learning/iterative-deepening-stop-time-control-design.md)、現在地は[再開案内](resume.md)を参照する。
+選定済みテーマは「承認済み設計から実装計画を作り、計画の明示承認後に、段階的に実装・検証・独立レビューまで進める」。2026-10-18に新セッションで開始した。[実装計画](plans/2026-10-18-iterative-deepening-stop-time-control-implementation-plan.md)と[今回の学習記録](learning/iterative-deepening-stop-time-control-implementation.md)を参照する。現在の承認段階と次の行動は[再開案内](resume.md)を正本とする。開始前の設計承認・main統合・理解確認・独立レビュー補完の経緯は[設計学習記録](learning/iterative-deepening-stop-time-control-design.md)、開始時状態は[引き継ぎ](handover-iterative-deepening-stop-time-control-implementation.md)へ保存済み。
 
 ## 次テーマの選定（2026-10-18）
+
+以下は前セッションの選定時点の履歴であり、現在の指示ではない。
 
 本人は候補2を拡張し、計画の明示承認後に段階的実装・検証・独立レビューまで進めるテーマを選んだ。現セッションでは設計の独立レビューを補完し、新セッション用引き継ぎまで行う。計画はまだ作成せず、選定を計画への承認と扱わない。
 
