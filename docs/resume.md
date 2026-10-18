@@ -2,19 +2,21 @@
 
 ## 現在地
 
-2026-10-18更新。選定済みテーマ「承認済みの時間制御付き反復の開発用コマンド設計から実装計画を作る」の[計画案](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)は独立レビュー後、本人が明示承認した。最終レビューはCritical 0 / Important 0 / Minor 0。[作成・レビュー・承認記録](learning/controlled-iterative-search-command-implementation-plan.md)を参照する。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。
+2026-10-18更新。選定済みテーマ「承認済みの時間制御付き反復の開発用コマンド設計から実装計画を作る」の[計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)は独立レビュー後、本人が明示承認した。本人は順次実装と現在のcheckout内の作業ブランチを選択した。[作成・承認・実施記録](learning/controlled-iterative-search-command-implementation-plan.md)に経緯を保存する。
 
-作業ブランチ `codex/controlled-iterative-search-command` を `f8429f8` から作成した。Task 1の必須引数・入力検査、Task 2の時計原点・一回探索接続、Task 3の四状態表示、Task 4の`main`・例外境界・実プロセス入口が完了した。TaskごとのTDD、専用テスト14件、Ruff、独立レビューが完了。Task 4では初回レビューのImportant 1 / Minor 1をテスト補強で解消し、最終Critical 0 / Important 0 / Minor 0。次はTask 5で専用/既存/全体テスト、代表変異、独立ブランチレビュー、最終記録を行う。[実施記録](learning/controlled-iterative-search-command-implementation-plan.md)と[承認済み計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)を参照する。通常対局・USIへの新方式接続、予算式変更、時間保証は対象外。
+作業ブランチ `codex/controlled-iterative-search-command` でTask 1〜5を完了した。TaskごとのTDDと独立レビュー、最終検出力補強を行い、未知引数ケース追加後の専用テスト14/14、関連テスト68/68、全体テスト560/560、Ruff format/checkが成功した。代表変異8件を隔離コピーで対象assertionにより検出し、最終独立ブランチレビューはCritical 0 / Important 0 / Minor 0。初回最終レビューのMinor 1は、未知引数を専用経路で拒否するケースを追加して解消した。詳細は[実施記録](learning/controlled-iterative-search-command-implementation-plan.md)と[承認済み計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)を参照する。
 
-作業場所 `/Users/oki2a24/kaname-shogi`。計画作成時の開始状態はmain、HEAD `c4751e7`、clean、origin/mainより18コミット先。計画案とレビュー記録は `c61318d`、本人の承認と実行方式の記録は `f8429f8` で保存した。実装開始時は作業ブランチ `codex/controlled-iterative-search-command` を現物確認し、Ruff 0.16.10とhooksPath `.githooks` を再確認した。これらは開始時点の状態で、直近の検証結果ではない。
+実装・検証・記録は作業ブランチ上で完了し、mainには未統合。mainへの取り込みは別承認が必要。本人の最後の理解確認を一問提示して回答待ちにする。回答を得るまで次テーマへ進まない。通常対局・USIへの新方式接続、予算式変更、時間保証は対象外のまま維持した。
+
+作業場所 `/Users/oki2a24/kaname-shogi`。計画作成時の開始状態はmain、HEAD `c4751e7`、clean、origin/mainより18コミット先。計画案とレビュー記録は `c61318d`、本人の承認と実行方式の記録は `f8429f8` で保存した。実装開始時は作業ブランチ `codex/controlled-iterative-search-command` を現物確認し、Ruff 0.16.10とhooksPath `.githooks` を再確認した。これらは開始時点の状態で、現在のHEADや検証結果ではない。
 
 ## 完了した開発用コマンド設計
 
 学習・設計・独立レビュー・本人による[設計全体](plans/2026-10-18-controlled-iterative-search-command-design.md)の明示承認と、最後の理解確認まで完了。[学習記録](learning/controlled-iterative-search-command-design.md)に個別選択・承認・レビュー・初回誤答と再確認正解を区別して保存した。設計承認0e5ea66、理解確認/候補8d29088。独立レビューの初回Minor 1は記録更新で解消、最終Critical/Important/Minorすべて0。
 
-専用コマンドで一回探索。SFEN・上限深さ・目標/上限msは必須。操作セット生成後の探索直前から計時し、探索内部の合法予備手準備を含む。Task 1〜4として入力検査、一回探索接続、四状態表示、`main`・例外境界・実プロセス入口まで実装・レビュー済み。専用テスト14/14、Ruff成功。Task 5の既存/全体検証・変異確認・独立ブランチレビューは未完了。既存三方式と比較入口を維持し、通常対局・USIへの新方式接続、予算式変更、時間保証は対象外。
+専用コマンドで一回探索。SFEN・上限深さ・目標/上限msは必須。操作セット生成後の探索直前から計時し、探索内部の合法予備手準備を含む。Task 1〜5として入力検査、一回探索接続、四状態表示、`main`・例外境界・実プロセス入口、全体検証を完了。最終専用テスト14/14、関連68/68、全体560/560、Ruff成功。代表変異8件と最終独立ブランチレビューCritical 0 / Important 0 / Minor 0。既存三方式と比較入口を維持し、通常対局・USIへの新方式接続、予算式変更、時間保証は対象外。
 
-今回の設計セッションで製品テストは実行していない。文書検査と通常フックの成功のみ。過去の探索部品546件成功などを今回の実測とは扱わない。新コマンド動作、実時間性能・期限内応答、SIGINT実プロセス、USI競合、全局面/OS、棋力などは未検証。
+計画作成時点では製品テスト未実行だった。その後の実装テスト結果は上記Task 1〜5の今回実測に限る。過去の探索部品546件成功などを今回の実測とは扱わない。実時間性能・期限内応答、SIGINT実プロセス配送、USI競合、全局面/OS、棋力などは未検証。
 
 ## 完了した前テーマ
 

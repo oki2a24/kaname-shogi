@@ -2,7 +2,7 @@
 
 ## 現在のテーマと状態
 
-開発用コマンド設計から作成した[実装計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)は独立レビュー後に本人が明示承認し、順次実装と現在のcheckout内の作業ブランチを選択した。現在は `codex/controlled-iterative-search-command` でTask 1〜4を完了し、Task 5の全体検証・変異確認・独立ブランチレビューに進む。[作成・レビュー・承認・実施記録](learning/controlled-iterative-search-command-implementation-plan.md)に経緯を保存する。現在地の正本は[再開案内](resume.md)。
+開発用コマンド設計から作成した[実装計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)は独立レビュー後に本人が明示承認し、順次実装と現在のcheckout内の作業ブランチを選択した。`codex/controlled-iterative-search-command` でTask 1〜5、全体検証、最終独立レビューまで完了し、mainには未統合。現在は最後の理解確認を本人へ一問提示する段階であり、回答後にREADME・方向性・候補一覧を見直す。回答を得るまで次テーマの候補追加・選定・学習へ進まない。[作成・レビュー・承認・実施記録](learning/controlled-iterative-search-command-implementation-plan.md)に経緯を保存する。現在地の正本は[再開案内](resume.md)。
 
 ## 選定時の候補（開発用コマンド設計完了後、2026-10-18）
 

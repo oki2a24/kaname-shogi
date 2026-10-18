@@ -423,9 +423,9 @@ class RunControlledIterativeTests(unittest.TestCase):
         )
 
     def test_main_invalid_inputs_do_not_start_search(self):
-        """入力誤りと解析エラーを終了値へ変換し探索前で止める。
+        """入力不正・不足値・未知引数を終了値にして探索前で止める。
 
-        入力ValueErrorの誤変換、argparse終了値の伝播、入力エラー後の副作用を検出する。
+        入力ValueErrorの誤変換、未知引数の受理、argparse終了値の伝播、探索前の副作用を検出する。
         """
         valid_sfen = "8k/9/9/9/9/9/9/9/K8 b - 1"
         invalid_arguments = (
@@ -502,6 +502,44 @@ class RunControlledIterativeTests(unittest.TestCase):
 
         self.assertEqual(exit_code, 2)
         self.assertIn("usage:", error_output.getvalue())
+        self.assertNotIn("入力エラー:", error_output.getvalue())
+        self.assertEqual(output.getvalue(), "")
+        operations_mock.assert_not_called()
+        clock_mock.assert_not_called()
+        search_mock.assert_not_called()
+
+        unknown_arguments = [
+            "--sfen",
+            valid_sfen,
+            "--max-depth",
+            "1",
+            "--target-ms",
+            "0",
+            "--maximum-ms",
+            "0",
+            "--unknown",
+        ]
+        with (
+            patch.object(
+                run_controlled_iterative.shogi,
+                "make_controlled_operations",
+            ) as operations_mock,
+            patch.object(run_controlled_iterative.time, "monotonic_ns") as clock_mock,
+            patch.object(
+                run_controlled_iterative.iterative_deepening, "search_controlled"
+            ) as search_mock,
+            contextlib.redirect_stdout(io.StringIO()) as output,
+            contextlib.redirect_stderr(io.StringIO()) as error_output,
+        ):
+            clock_mock.return_value = 123456789
+            search_mock.return_value = ControlledSearchResult(
+                ControlledCompletion.NO_LEGAL_MOVE, None, None
+            )
+            exit_code = run_controlled_iterative.main(unknown_arguments)
+
+        self.assertEqual(exit_code, 2)
+        self.assertIn("usage:", error_output.getvalue())
+        self.assertIn("unrecognized arguments: --unknown", error_output.getvalue())
         self.assertNotIn("入力エラー:", error_output.getvalue())
         self.assertEqual(output.getvalue(), "")
         operations_mock.assert_not_called()

@@ -25,7 +25,7 @@
 
 ## 承認段階
 
-本人は2026-10-18に本書の計画全体を「yes」と明示承認した。計画承認は設計全体への過去の承認と区別して記録する。本人は順次実装方式と、現在のcheckout内に作業ブランチを作る方式を選択済み。`codex/controlled-iterative-search-command` を承認記録コミット `f8429f8` から作成し、計画固有の作業場所 `.superpowers/sdd/2026-10-18-controlled-iterative-search-command-implementation-plan/` を準備した。Task 1〜4のTDDと独立レビューが完了し、Task 5の全体検証へ進む。
+本人は2026-10-18に本書の計画全体を「yes」と明示承認した。計画承認は設計全体への過去の承認と区別して記録する。本人は順次実装方式と、現在のcheckout内に作業ブランチを作る方式を選択済み。`codex/controlled-iterative-search-command` を承認記録コミット `f8429f8` から作成し、計画固有の作業場所 `.superpowers/sdd/2026-10-18-controlled-iterative-search-command-implementation-plan/` を準備した。Task 1〜5の実装・検証・独立レビューまで完了した。
 
 ## 範囲と成功条件
 
@@ -74,7 +74,7 @@ def main(argv: list[str] | None = None) -> int:
 
 | 対象契約 | 代表ケースと独立期待値 | 検出したい誤り | 新テストと既存補完 |
 | --- | --- | --- | --- |
-| 必須引数・標準解析 | 四引数が揃った整数値。いずれか一つの不足、小数、未知引数は2。`--help`は0 | 深さ/予算の既定値混入、int以外の受理、未知引数の成功扱い | `test_parser_requires_explicit_values`、`test_parser_keeps_argparse_duplicate_and_abbreviation_rules`。argparse標準の同一オプション最終値と一意な省略形を確認 |
+| 必須引数・標準解析 | 四引数が揃った整数値。いずれか一つの不足、小数、未知引数は2。`--help`は0 | 深さ/予算の既定値混入、int以外の受理、未知引数の成功扱い | `test_parser_requires_explicit_values`、`test_parser_keeps_argparse_duplicate_and_abbreviation_rules`、`test_main_invalid_inputs_do_not_start_search`。未知引数は必須値一式に`--unknown`を追加し、終了2・argparse診断・stdout空・探索前を確認 |
 | 深さ・予算・SFEN境界 | 深さ0、負の目標、目標>上限、整数変換失敗、不正SFENは2。0/0と目標=上限は有効 | 独自の予算計算、0の時計なし化、探索前でない検査 | `test_prepare_inputs_rejects_invalid_depth_budget_and_sfen`、`test_main_invalid_inputs_do_not_start_search`。`test_time_management.py`は予算型/計算を補うが、CLIの入力境界は補わない |
 | 入力失敗の副作用 | 上記不正入力でstdout空、時計・操作セット・探索呼出しなし | 不正入力後の部分実行、準備時間と探索時間の混同 | `test_main_invalid_inputs_do_not_start_search`。既存比較CLIテストのSFEN不正確認は新引数を検査しない |
 | 直接予算の引渡し | 目標31ms・上限47msの異なる値と深さ4を使い、`SearchBudget(31, 47)`と4を確認 | 予算欄の入替、ms換算の混入、`calculate_search_budget`接続 | `test_search_uses_direct_budget_and_one_control`。SearchBudget自身の範囲検査は既存`test_time_management.py`が補う |
@@ -179,13 +179,13 @@ def main(argv: list[str] | None = None) -> int:
 
 ## 全体の検証・完了条件（承認後のみ）
 
-- [ ] `PYTHONPATH=tests .venv/bin/python -m unittest discover -s tests -p test_search_run_controlled_iterative.py -v` を実行する。
-- [ ] `PYTHONPATH=tests .venv/bin/python -m unittest test_search_control test_search_controlled_result test_search_alpha_beta_controlled test_search_shogi_controlled test_search_iterative_deepening_controlled test_search_comparison test_search_compare test_search_compare_iterative test_time_management -v` と全体 `.venv/bin/python -m unittest discover -s tests -v` を実行し、既存制御・結果・整形・旧比較入口・予算契約を確認する。件数は合否基準にしない。
-- [ ] 隔離コピーでリスクに見合う誤りを一件ずつ注入し、意図したassertionのFAIL、復元後の成功を確かめる。対象は予算値の入替/再計算、時計原点の前倒し・再取得、STOPPED記録なしの深さ1/評価0捏造、SUPPRESSED手復活、内部ValueErrorの2変換、main戻り値のSystemExit未接続。読込みエラーは検出成功に数えない。
-- [ ] 文書・コード差分とRefactorの要否を確認し、変更後は該当検証を再実行する。
-- [ ] Ruff import整理が必要なら `.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .` を行う。`git diff --check` と対象差分確認も行う。
-- [ ] 新鮮な独立レビュアーへ承認済み設計・本計画・実差分・検証・未検証事項を渡す。Critical/Importantを修正して再検証・再レビューし、Minorの採否も学習記録に残す。
-- [ ] 実施内容、実際のRed/Green、代表変異、既存テストの補完、独立レビュー、限界を学習記録へ記録する。学習記録・索引・再開案内を確認してから通常コミットする。main取り込みは別承認後に行う。
+- [x] `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=tests .venv/bin/python -m unittest discover -s tests -p test_search_run_controlled_iterative.py -v` を実行し、14件成功した。
+- [x] 関連テストを実行し68件成功、全体 `.venv/bin/python -m unittest discover -s tests -v` を実行し560件成功した。既存制御・結果・整形・旧比較入口・予算契約を確認した。件数自体を合否基準とはしていない。
+- [x] 隔離コピーで代表誤りを注入し、対象assertionのFAILを確認した。予算最大値の縮小、時計原点前倒し/再取得、STOPPED記録なしでの深さ1・評価0捏造、SUPPRESSED手復活、内部ValueErrorの2変換、`SystemExit(main())`未接続に加え、未知引数を無視する`parse_known_args`変異を検出した。未知引数の変異は`AssertionError: 0 != 2`で失敗し、読込みエラーは検出成功に数えていない。
+- [x] 文書・コード差分とRefactorの要否を確認し、未知引数ケース追加後に専用テストを再実行した。テスト補強以外の製品コード変更はなかった。
+- [x] `.venv/bin/ruff format .` と `.venv/bin/ruff check .` が成功した。`git diff --check` と最終差分確認はコミット前に行う。
+- [x] 新鮮な独立レビュアーへ承認済み設計・本計画・実差分・検証・未検証事項を渡した。初回レビューのMinor 1（未知引数ケース不足）を追加テストと隔離変異で解消し、更新後の最終レビューはCritical 0 / Important 0 / Minor 0。レビュー担当は読み取り専用で、製品テストを実行していない。
+- [x] 実施内容、実際のRed/Green、代表変異、既存テストの補完、独立レビュー、限界を学習記録へ記録した。学習記録・索引・再開案内、相対リンク/見出し参照、最終差分を確認した。Task 5の成果を現在の作業ブランチへ通常コミットで保存する。main取り込みは別承認後に行う。
 
 ### 既存テストと今回の作業だけでは確認しない範囲
 
@@ -201,4 +201,13 @@ def main(argv: list[str] | None = None) -> int:
 
 最終の独立レビューはCritical 0 / Important 0 / Minor 0。SystemExit(0)/(2)と入力ValueErrorの境界、各振る舞いのRed順、表示契約、docstring、回帰コマンド、範囲と承認境界の維持を確認済み。レビューは読み取り専用で、コード・テスト・文書を変更せず、製品テストも実行していない。
 
-計画全体の明示承認済み。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。`codex/controlled-iterative-search-command` を `f8429f8` から作成し、計画用ワークスペースと共有インターフェースのプリフライトを完了した。Task 1〜4のTDD・レビューを完了し、Task 5で全体検証・変異確認・学習記録・独立ブランチレビューを行う。通常対局・USIへの新方式接続、予算式変更、時間保証は引き続き対象外。
+計画全体の明示承認済み。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。`codex/controlled-iterative-search-command` を `f8429f8` から作成し、計画用ワークスペースと共有インターフェースのプリフライトを完了した。Task 1〜5の実装・検証・独立レビューを完了し、Task 5の記録を通常コミットで保存する。main取り込みは別承認の対象。通常対局・USIへの新方式接続、予算式変更、時間保証は引き続き対象外。
+
+## Task 5 全体検証記録（2026-10-18）
+
+- 専用テスト14/14、関連テスト68/68、全体テスト560/560が成功した。いずれもTask 5で今回のcheckoutに対して再実行した結果で、以前の引き継ぎや設計段階のテスト件数を今回の実測へ転用していない。
+- 代表変異は隔離コピーで7件を検出し、更新後に未知引数を受理する変異を追加して8件になった。全件、意図した振る舞いassertionの失敗であり、import/読込み失敗を成功に数えていない。未知引数ケースでは `parse_args` を `parse_known_args(...)[0]` に変えると終了値の `AssertionError: 0 != 2` が発生した。変異コピー以外のcheckout製品コードは変えていない。
+- 初回の未知引数変異試行は時計mockが整数を返さず `SearchControl` 構築で `ValueError` になったため検出と数えなかった。テストで固定整数値を明示して隔離変異を再実行し、期待する終了値assertionのFAILを確認した。
+- Ruff整形は65ファイル変更なし、Ruff check成功。更新後の専用テストは14件成功。関連テスト68件は14.150秒、全体560件は31.342秒で成功した。これらはテストスイート所要時間で、探索の実時間性能や上限ms内の応答を示すものではない。
+- 独立ブランチレビューは初回Critical 0 / Important 0 / Minor 1（未知引数を専用ケースで拒否していない）だった。追加テストは必須引数一式＋未知引数を送り、終了値2、argparse診断、stdout空、操作生成・時計・探索なしを確認する。隔離変異検出後の再レビューはCritical 0 / Important 0 / Minor 0。両レビューとも読み取り専用で、テストを実行したのは主担当である。
+- 不正入力後に探索を開始しない、未知引数を拒否する、既存探索契約を保つ範囲は今回のテストで確認した。実時間応答、期限保証、全SFEN/OS、実プロセスSIGINT配送、棋力、新方式USI/通常対局接続は未検証であり、承認済み範囲にも追加していない。
