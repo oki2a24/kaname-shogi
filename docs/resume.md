@@ -2,11 +2,13 @@
 
 ## 現在地
 
-2026-10-18更新。選定済みテーマ「承認済み設計から実装計画を作り、計画の明示承認後に、段階的に実装・検証・独立レビューまで進める」を開始した。[実装計画](plans/2026-10-18-iterative-deepening-stop-time-control-implementation-plan.md)を作成し、独立レビュー・Minor 1件の補強・再確認を完了した。未解決Critical 0・Important 0・Minor 0。本人が「承認する。段階的な実装を進めて」と明示承認した。タスク1から実装・検証・各段階の独立レビューを進める。
+2026-10-18更新。本人の計画明示承認後、時間制御付き反復深化のタスク1〜5を実装・検証・各段階の独立レビューまで完了した。最終のブランチ全体レビューと結果は[学習・実施記録](learning/iterative-deepening-stop-time-control-implementation.md)、手順・進捗は[計画と結果](plans/2026-10-18-iterative-deepening-stop-time-control-implementation-plan.md)を参照する。
 
-承認前にTDD・コード・テスト変更を開始しない。main取り込みは別承認。中断は完了と中断の別型をユニオン型で返す。既存時間管理と三方式を維持し、通常対局・USI・CLIへの新方式接続、予算式変更、時間保証は対象外。
+次はmain取り込みへの本人の別承認を待つ。承認後に元ディレクトリで統合し、取り込み先検証を行い、最後の理解確認を一問だけ出して回答を待つ。現在mainへは未取り込み。通常三方式・予算式を維持し、通常対局/USI/CLIへの新方式接続と時間保証は対象外。
 
-作業場所は `/Users/oki2a24/kaname-shogi`、ブランチ `codex/iterative-deepening-stop-time-control-implementation`。開始HEADは `6418379`。mainから同じディレクトリで作業ブランチを作成し、別worktreeなし。計画・記録は内容確認と文書検証後にこのブランチへ保存する。main未取り込み、pushなし。現在の差分とHEADは再開時に再取得する。
+作業場所 `/Users/oki2a24/kaname-shogi`、ブランチ `codex/iterative-deepening-stop-time-control-implementation`。別worktreeなし。開始mainは6418379、計画25c3eb9、実装ca59b63・8d4ced6・73a0264・db31d03・30fe837。最終文書保存後のHEADはGitで再確認する。pushなし。
+
+作業ブランチ30fe837で最終全体546件31.419秒OK、Ruff63ファイル整形確認・check、差分検査成功。代表変異11件のassert FAILと復元後成功を確認。これらは今回の作業ブランチの実測であり、main取り込み先の結果ではない。
 
 ## 次に読むもの
 
@@ -22,4 +24,4 @@
 
 反復深化実装4253c77、統合記録1e43f4b、理解確認fceea8d、テスト補強7f32f3e・54fc53a、統合記録0e4d079は過去の履歴。[補強記録](learning/iterative-deepening-test-strengthening.md)と[計画・結果](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md)を参照。過去の全体513件成功、設計統合時のRuff・文書検査を今回の実測として扱わない。
 
-今回、製品テストは未実施。文書のみの計画段階であり、新入口は未実装・未検証。文書全体の参照先は[索引](README.md)。
+全局面・全競合・実時間性能・期限内応答・USIへ新方式を接続した競合・実機対局・棋力は未検証。文書全体の参照先は[索引](README.md)。

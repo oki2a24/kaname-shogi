@@ -54,8 +54,15 @@
 
 `search/minimax.py` と `search/alpha_beta.py` が方式入口、`core.py` が共通探索、`contracts.py` と `result.py` がデータ、`shogi.py` が将棋接続、`compare.py` が指定深さ比較の入出力。反復管理は `iterative_deepening.py`、その比較入口は `compare_iterative.py`、入力・整形・一致判定の共通処理は `comparison.py`。評価の正本は `evaluation.py`、既存 `movegen.material_balance` の入口も維持。複製適用の公開操作 `movegen.position_after_move` は既存適用へ委譲する。
 
-時間制御、置換表、定跡、新評価項目、通常対局への新方式追加は含まない。合法手が多い局面の四手探索は長時間かかり得る。局面例・数値木・回帰の成功は棋力向上や全入力の証明ではない。OSからのSIGINT配送の実プロセス試験は未実施で、中断の捕捉と表示は操作境界で確認。
+これらの比較コマンドは時間制御、置換表、定跡、新評価項目、通常対局への新方式追加を含まない。合法手が多い局面の四手探索は長時間かかり得る。局面例・数値木・回帰の成功は棋力向上や全入力の証明ではない。OSからのSIGINT配送の実プロセス試験は未実施で、中断の捕捉と表示は操作境界で確認。
 
 根拠と履歴：[承認済み設計](../plans/2026-10-17-engine-search-comparison-design.md)、[実装計画](../plans/2026-10-17-engine-search-comparison-implementation-plan.md)、[実装・学習記録](../learning/engine-improvement-stage-design.md)。
 
 反復深化の根拠：[承認済み設計](../plans/2026-10-17-iterative-deepening-design.md)、[実装計画](../plans/2026-10-17-iterative-deepening-implementation-plan.md)、[学習・実装記録](../learning/iterative-deepening-design.md)。
+
+
+## 制御付き探索入口との区別
+
+2026-10-18に探索部品として `iterative_deepening.search_controlled` と `alpha_beta.search_controlled` を追加した。比較コマンドは従来の停止なし入口を使い続ける。停止なし反復は遅延取得で完了記録を一件ずつ渡し、手なしでも深さ1の記録を一件渡す。制御付き反復は準備を含めて同期実行し、最終終了結果を一件返す。準備の手なしは完了記録なしで終了する。
+
+反復・再帰・優先手順序・完了累計の本体を共有する。準備と中断反復は累計に含めず、中断時は最新完了記録または予備手を使う。詳細は[探索停止](search-stop.md)、[承認済み設計](../plans/2026-10-18-iterative-deepening-stop-time-control-design.md)、[実装・検証記録](../learning/iterative-deepening-stop-time-control-implementation.md)を参照。比較コマンドへの時計オプションや通常対局への新方式接続は追加していない。
