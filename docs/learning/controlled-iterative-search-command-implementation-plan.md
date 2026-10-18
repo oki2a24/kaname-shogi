@@ -84,3 +84,12 @@ Critical 0 / Important 0 / Minor 0。全振る舞いでテストと対象asserti
 - `.venv/bin/ruff format .` は1ファイルを整形し、64ファイルは変更なし。`.venv/bin/ruff check .` は成功。追加後の対象コマンドは `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=tests .venv/bin/python -m unittest tests/test_search_run_controlled_iterative.py -v` で3件成功した。
 - 独立再レビューはCritical 0 / Important 0 / Minor 0。初回指摘の検出力ギャップが解消され、必須引数・標準argparse動作・深さ境界・既存SFEN解析・直接予算構築を確認した。再レビュアーは読み取り専用で、テストや変異実験は実行せず、ここに記した実行結果は主担当の実測である。
 - 現時点で実装したのは入力引数と入力準備までで、時計原点・探索呼出し・四状態表示・main・プロセス入口は未実装・未検証。実時間や期限内応答の保証も主張しない。Task 2の開始前である。
+
+## Task 2 実装記録（2026-10-18）
+
+- `_run_search` で開始側の `make_controlled_operations` を一度生成し、その後 `time.monotonic_ns` 関数を保持して原点を一度取得、同じ時計関数を `SearchControl` に渡し、指定深さと制御で `search_controlled` を一度呼ぶ形にした。例外捕捉・予算再計算・再探索は加えていない。
+- 二つのテストで固定原点123456789ns、操作→時計→探索の順、操作生成/時計/制御/探索の各呼出し回数、予算31/47・深さ4・同じ制御と時計の引渡し、後手の `Side.GOTE` 視点、探索結果同一性を確認する。
+- import可能な中立 `_run_search` 骨格に対する最初の実行では、両テストが中立戻り値との同一性assertionで失敗した。計画が求める呼出し順・後手視点の失敗を直接表示するためassert順を調整し、再度のRedで前者はイベント列が空、後者は `make_controlled_operations(Side.GOTE)` が未呼出しという対象assertion失敗を確認してから実装した。
+- Green確認は二テスト2/2成功。対象ファイル全体は5/5成功。`.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .` が成功し、formatterは1ファイル整形・64ファイル変更なし、説明修正後は65ファイル変更なしだった。
+- 独立レビュー初回はCritical 0 / Important 0 / Minor 1。`_run_search` のdocstringが操作セット生成も予算に含むように読めたため、仕様どおり「操作セット生成後に計時開始、探索内部の合法予備手準備は予算に含む」と修正した。テストdocstringも検出対象を「操作セット生成前の原点取得」に明確化した。レビュー担当の読み取り専用再確認でCritical 0 / Important 0 / Minor 0となった。
+- 時計の取り込み接続は今回のモックテストで確認した。実際のSearchControl期限境界は既存制御テストに委ね、このTask 2テスト単独では時間計算や実時間性能を確認しない。例外境界はTask 4、コマンド全体は以降のタスクで実装する。

@@ -3,9 +3,15 @@
 import contextlib
 import io
 import unittest
+from unittest.mock import patch, sentinel
 
 from kaname_shogi.model import Side
-from kaname_shogi.search.run_controlled_iterative import _make_parser, _prepare_inputs
+from kaname_shogi.search import run_controlled_iterative
+from kaname_shogi.search.run_controlled_iterative import (
+    _make_parser,
+    _prepare_inputs,
+    _run_search,
+)
 from kaname_shogi.time_management import SearchBudget
 
 
@@ -132,3 +138,95 @@ class RunControlledIterativeTests(unittest.TestCase):
                     (budget.target_ms, budget.maximum_ms), (target_ms, maximum_ms)
                 )
                 self.assertEqual(budget, SearchBudget(target_ms, maximum_ms))
+
+    def test_search_uses_direct_budget_and_one_control(self):
+        """操作生成後に同じ時計原点と制御を一探索へ渡す。
+
+        操作セット生成前の原点取得、原点/制御の再生成、予算値変更、複数探索を検出する。
+        """
+        position, budget = _prepare_inputs("8k/9/9/9/9/9/9/9/K8 b - 1", 4, 31, 47)
+        events = []
+
+        def make_operations(perspective):
+            events.append("operations")
+            return sentinel.operations
+
+        def read_clock():
+            events.append("clock")
+            return 123456789
+
+        def search_controlled(node, max_depth, operations, control):
+            events.append("search")
+            return sentinel.result
+
+        with (
+            patch.object(
+                run_controlled_iterative.shogi,
+                "make_controlled_operations",
+                side_effect=make_operations,
+            ) as make_operations_mock,
+            patch.object(
+                run_controlled_iterative.time,
+                "monotonic_ns",
+                side_effect=read_clock,
+            ) as clock_mock,
+            patch.object(
+                run_controlled_iterative,
+                "SearchControl",
+                return_value=sentinel.control,
+            ) as control_mock,
+            patch.object(
+                run_controlled_iterative.iterative_deepening,
+                "search_controlled",
+                side_effect=search_controlled,
+            ) as search_mock,
+        ):
+            result = _run_search(position, 4, budget)
+
+        self.assertEqual(events, ["operations", "clock", "search"])
+        make_operations_mock.assert_called_once_with(Side.SENTE)
+        clock_mock.assert_called_once_with()
+        self.assertEqual(budget, SearchBudget(31, 47))
+        control_mock.assert_called_once_with(budget, 123456789, now_ns=clock_mock)
+        search_mock.assert_called_once_with(
+            position, 4, sentinel.operations, sentinel.control
+        )
+        self.assertIs(result, sentinel.result)
+
+    def test_search_uses_gote_as_perspective(self):
+        """後手局面の開始側を制御操作の評価視点に使う。
+
+        先手固定、予算/深さ/制御の欠落、探索結果の置換を検出する。
+        """
+        position, budget = _prepare_inputs("8k/9/9/9/9/9/9/9/K8 w - 1", 4, 31, 47)
+        with (
+            patch.object(
+                run_controlled_iterative.shogi,
+                "make_controlled_operations",
+                return_value=sentinel.operations,
+            ) as make_operations_mock,
+            patch.object(
+                run_controlled_iterative.time,
+                "monotonic_ns",
+                return_value=123456789,
+            ) as clock_mock,
+            patch.object(
+                run_controlled_iterative,
+                "SearchControl",
+                return_value=sentinel.control,
+            ) as control_mock,
+            patch.object(
+                run_controlled_iterative.iterative_deepening,
+                "search_controlled",
+                return_value=sentinel.result,
+            ) as search_mock,
+        ):
+            result = _run_search(position, 4, budget)
+
+        make_operations_mock.assert_called_once_with(Side.GOTE)
+        clock_mock.assert_called_once_with()
+        control_mock.assert_called_once_with(budget, 123456789, now_ns=clock_mock)
+        search_mock.assert_called_once_with(
+            position, 4, sentinel.operations, sentinel.control
+        )
+        self.assertIs(result, sentinel.result)

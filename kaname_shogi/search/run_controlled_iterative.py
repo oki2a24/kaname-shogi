@@ -1,10 +1,14 @@
 """時間制御付き反復探索を一回実行する開発用コマンド。"""
 
 import argparse
+import time
 
 from ..model import Position
+from ..move import Move
+from ..search_control import SearchControl
 from ..time_management import SearchBudget
-from . import comparison
+from . import comparison, iterative_deepening, shogi
+from .result import ControlledSearchResult
 
 
 def _make_parser() -> argparse.ArgumentParser:
@@ -40,3 +44,23 @@ def _prepare_inputs(
     position = comparison.parse_position(sfen)
     budget = SearchBudget(target_ms, maximum_ms)
     return position, budget
+
+
+def _run_search(
+    position: Position, max_depth: int, budget: SearchBudget
+) -> ControlledSearchResult[Move]:
+    """開始側の制御操作と同じ原点・時計を使い、一回探索する操作。
+
+    引数は検査済み開始局面、1以上の最大深さ、直接指定された予算。
+    戻り値は既存の制御付き反復探索が返す一件の終了結果。
+    副作用として操作セットを作り、時計を一度読み、探索を同期的に一回呼ぶ。
+    前提・設計理由: 入力検査後に操作セット生成を終え、探索内部の合法予備手準備は
+    制限時間に含めるため、原点を探索直前に取得して同じ時計をSearchControlへ渡す。
+    """
+    operations = shogi.make_controlled_operations(position.side_to_move)
+    clock = time.monotonic_ns
+    started_ns = clock()
+    control = SearchControl(budget, started_ns, now_ns=clock)
+    return iterative_deepening.search_controlled(
+        position, max_depth, operations, control
+    )

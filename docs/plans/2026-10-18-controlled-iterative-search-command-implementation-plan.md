@@ -25,7 +25,7 @@
 
 ## 承認段階
 
-本人は2026-10-18に本書の計画全体を「yes」と明示承認した。計画承認は設計全体への過去の承認と区別して記録する。本人は順次実装方式と、現在のcheckout内に作業ブランチを作る方式を選択済み。`codex/controlled-iterative-search-command` を承認記録コミット `f8429f8` から作成し、計画固有の作業場所 `.superpowers/sdd/2026-10-18-controlled-iterative-search-command-implementation-plan/` を準備した。Task 1のTDDと独立レビューが完了し、Task 2へ進む。
+本人は2026-10-18に本書の計画全体を「yes」と明示承認した。計画承認は設計全体への過去の承認と区別して記録する。本人は順次実装方式と、現在のcheckout内に作業ブランチを作る方式を選択済み。`codex/controlled-iterative-search-command` を承認記録コミット `f8429f8` から作成し、計画固有の作業場所 `.superpowers/sdd/2026-10-18-controlled-iterative-search-command-implementation-plan/` を準備した。Task 1・2のTDDと独立レビューが完了し、Task 3へ進む。
 
 ## 範囲と成功条件
 
@@ -137,11 +137,11 @@ def main(argv: list[str] | None = None) -> int:
 
 **生産:** `_run_search(position: Position, max_depth: int, budget: SearchBudget) -> ControlledSearchResult[Move]`。入力検査済みの一回探索を行う非公開処理。
 
-- [ ] **テスト:** `test_search_uses_direct_budget_and_one_control` と `test_search_uses_gote_as_perspective` を追加する。前者は時計を固定値123456789nsに置き換え、イベント順を「操作セット作成→時計取得→探索呼出し」とassertする。`SearchBudget(31, 47)`、指定深さ4、同じ時計関数、同じSearchControl、探索一回をassertする。後者は後手SFENから `make_controlled_operations(Side.GOTE)` となること、予算・深さ・制御を引き渡すことをassertする。
-- [ ] **Red確認:** import可能な骨格を使い、二テストを実行する。読み込みエラーではなく、時計回数/順序、後手視点、または探索へ渡す引数についての対象assertionが失敗することを確認する。
-- [ ] **最小実装:** 開始側の `position.side_to_move` から制御操作を一度生成し、その後に一つの単調時計を原点として読み、同じ時計をSearchControlへ明示して一度の同期探索を呼ぶ。
-- [ ] **Green確認:** `PYTHONPATH=tests .venv/bin/python -m unittest test_search_run_controlled_iterative.RunControlledIterativeTests.test_search_uses_direct_budget_and_one_control test_search_run_controlled_iterative.RunControlledIterativeTests.test_search_uses_gote_as_perspective -v` が成功する。
-- [ ] **Refactor・独立レビュー:** 原点より前/後の仕事と制御再利用の範囲を読み直す。時計や探索のValueErrorを入力エラーへ包んでいないことを確認し、レビュー結論と対応を記録する。
+- [x] **テスト:** `test_search_uses_direct_budget_and_one_control` と `test_search_uses_gote_as_perspective` を追加する。前者は時計を固定値123456789nsに置き換え、イベント順を「操作セット作成→時計取得→探索呼出し」とassertする。`SearchBudget(31, 47)`、指定深さ4、同じ時計関数、同じSearchControl、探索一回をassertする。後者は後手SFENから `make_controlled_operations(Side.GOTE)` となること、予算・深さ・制御を引き渡すことをassertする。
+- [x] **Red確認:** import可能な骨格を使い、二テストを実行する。読み込みエラーではなく、時計回数/順序、後手視点、または探索へ渡す引数についての対象assertionが失敗することを確認する。
+- [x] **最小実装:** 開始側の `position.side_to_move` から制御操作を一度生成し、その後に一つの単調時計を原点として読み、同じ時計をSearchControlへ明示して一度の同期探索を呼ぶ。
+- [x] **Green確認:** `PYTHONPATH=tests .venv/bin/python -m unittest test_search_run_controlled_iterative.RunControlledIterativeTests.test_search_uses_direct_budget_and_one_control test_search_run_controlled_iterative.RunControlledIterativeTests.test_search_uses_gote_as_perspective -v` が成功する。
+- [x] **Refactor・独立レビュー:** 原点より前/後の仕事と制御再利用の範囲を読み直す。時計や探索のValueErrorを入力エラーへ包んでいないことを確認し、レビュー結論と対応を実装記録へ記す。初回Minorの説明誤りは修正・再レビューし、最終Critical 0 / Important 0 / Minor 0。
 
 ### タスク3：四状態と表示項目を対応させる
 
@@ -201,4 +201,4 @@ def main(argv: list[str] | None = None) -> int:
 
 最終の独立レビューはCritical 0 / Important 0 / Minor 0。SystemExit(0)/(2)と入力ValueErrorの境界、各振る舞いのRed順、表示契約、docstring、回帰コマンド、範囲と承認境界の維持を確認済み。レビューは読み取り専用で、コード・テスト・文書を変更せず、製品テストも実行していない。
 
-計画全体の明示承認済み。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。`codex/controlled-iterative-search-command` を `f8429f8` から作成し、計画用ワークスペースと共有インターフェースのプリフライトを完了した。Task 1のTDD・レビューを完了し、Task 2を次に始める。通常対局・USIへの新方式接続、予算式変更、時間保証は引き続き対象外。
+計画全体の明示承認済み。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。`codex/controlled-iterative-search-command` を `f8429f8` から作成し、計画用ワークスペースと共有インターフェースのプリフライトを完了した。Task 1・2のTDD・レビューを完了し、Task 3を次に始める。通常対局・USIへの新方式接続、予算式変更、時間保証は引き続き対象外。
