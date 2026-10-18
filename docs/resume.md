@@ -6,7 +6,7 @@
 
 作業ブランチ `codex/controlled-iterative-search-command` でTask 1〜5を完了した。TaskごとのTDDと独立レビュー、最終検出力補強を行い、未知引数ケース追加後の専用テスト14/14、関連テスト68/68、全体テスト560/560、Ruff format/checkが成功した。代表変異8件を隔離コピーで対象assertionにより検出し、最終独立ブランチレビューはCritical 0 / Important 0 / Minor 0。初回最終レビューのMinor 1は、未知引数を専用経路で拒否するケースを追加して解消した。詳細は[実施記録](learning/controlled-iterative-search-command-implementation-plan.md)と[承認済み計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)を参照する。
 
-実装・検証・記録は作業ブランチ上で完了し、mainには未統合。mainへの取り込みは別承認が必要。本人の最後の理解確認を一問提示して回答待ちにする。回答を得るまで次テーマへ進まない。通常対局・USIへの新方式接続、予算式変更、時間保証は対象外のまま維持した。
+実装・検証・記録は作業ブランチ上で完了し、mainには未統合。mainへの取り込みは別承認が必要。最後の理解確認は回答済みで、本人回答と補足を[学習記録](learning/controlled-iterative-search-command-implementation-plan.md)に区別して保存した。次テーマは未選択であり、候補と推薦理由は[次テーマ候補](next-topics.md)に記録した。通常対局・USIへの新方式接続、予算式変更、時間保証は対象外のまま維持した。
 
 作業場所 `/Users/oki2a24/kaname-shogi`。計画作成時の開始状態はmain、HEAD `c4751e7`、clean、origin/mainより18コミット先。計画案とレビュー記録は `c61318d`、本人の承認と実行方式の記録は `f8429f8` で保存した。実装開始時は作業ブランチ `codex/controlled-iterative-search-command` を現物確認し、Ruff 0.16.10とhooksPath `.githooks` を再確認した。これらは開始時点の状態で、現在のHEADや検証結果ではない。
 
