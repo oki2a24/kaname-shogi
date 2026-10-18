@@ -62,3 +62,7 @@ SearchInterruptedと四状態の最終結果、準備・正常遷移・制御付
 指定深さの制御付き入口を追加し、旧入口と再帰・採点・枝刈りを一つに共有。固定結果を返す宣言に対して新規7テストすべてのアサーションFAILを観測し、入力検査・中断伝播・操作前後と根最終確認・故障伝播を実装して成功した。αβ関連16件・全幅4件、全体529件27.353秒OK。Refactorは共有本体への整理で完了し追加不要。独立レビューはCritical 0・Important 0・Minor 0。
 
 代表変異を2件先行実施。隔離コピーのcore.pyで深さ内のinclude_target=True、根最終確認削除を一つずつ入れ、対応テストのassert FAILと復元後成功を確認した。目標誤適用の初回はscore参照のAttributeErrorであり検出成功に数えず、完了型のassertIsInstanceを先行して意図したFAILへ補強した。製品修正は不要だった。systematic-debuggingで原因を確認し、同型の正常確認テストと比較した。検査補助・ログは `/tmp/kaname-mutation-check.py` と `/var/folders/n4/7_s3s4k55151g86czn9bt7b80000gn/T/kaname-mutation-ntfllsil` に保存（永続仕様ではない）。補強後のαβ16件・Ruff・差分検査成功。残りの代表変異と反復接続は後続で実施する。
+
+## タスク4：将棋用の制御付き操作
+
+準備・調査・適用・評価を既存規則へつなぎ、将棋側completedから探索側の別型へ変換。同じ制御を明示し、未完了を再確認で継続へ戻さず抑制を優先する。新規5テストは依存名宣言後に全てassert FAILを確認してから実装（先のpatch対象名不足エラー2件はRedに数えない）。既存含む12件1.723秒と全体534件28.684秒OK。Refactorでは旧/新の評価・終端決定を共有し、関連12件1.829秒OK。独立レビュー初回Critical 0・Important 0・Minor 1。Minorは別枝の独立性検査で後手持駒を変更していない点で、one.gote_hand.add(PAWN)も行う補強を採用した。補強後の関連12件1.738秒OK、独立再確認でMinor解消、未解決Critical/Important/Minor 0/0/0。Ruff両検査成功。代表変異と制御付き反復は後続。
