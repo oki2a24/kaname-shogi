@@ -66,3 +66,29 @@ SearchInterruptedと四状態の最終結果、準備・正常遷移・制御付
 ## タスク4：将棋用の制御付き操作
 
 準備・調査・適用・評価を既存規則へつなぎ、将棋側completedから探索側の別型へ変換。同じ制御を明示し、未完了を再確認で継続へ戻さず抑制を優先する。新規5テストは依存名宣言後に全てassert FAILを確認してから実装（先のpatch対象名不足エラー2件はRedに数えない）。既存含む12件1.723秒と全体534件28.684秒OK。Refactorでは旧/新の評価・終端決定を共有し、関連12件1.829秒OK。独立レビュー初回Critical 0・Important 0・Minor 1。Minorは別枝の独立性検査で後手持駒を変更していない点で、one.gote_hand.add(PAWN)も行う補強を採用した。補強後の関連12件1.738秒OK、独立再確認でMinor解消、未解決Critical/Important/Minor 0/0/0。Ruff両検査成功。代表変異と制御付き反復は後続。
+
+## タスク5：共有反復と最終結果
+
+準備一回、四状態の終了選択、同一制御・原点での深さ開始判断、完了累計と前回優先手を共有する反復を追加。宣言stubへの新規11テストは初回NameErrorを除き修正再実行で全件assert FAIL（故障のsubTest含む15FAIL）を確認してから実装した。旧入口も含む19件6.526秒OK。search全体116件19.975秒、全体545件30.775秒OK。Refactorは反復共通化に含み追加不要。独立レビューCritical 0・Important 0・Minor 0。
+
+確認点ダブルだけに依存しないため、実SearchControlへの通常停止/抑制を調査・適用・評価の復帰時に要求し、後続操作を始めない履歴を確認する補足を追加した。これは既存の新再帰に対する初回Greenであり、Red実績へ加えない。補足後の制御付きαβ8件OK、Ruff成功。最終全体回帰とブランチ全体の新鮮な独立レビューを行う。
+
+### 代表変異の検出力
+
+`/tmp/kaname-mutation-check.py` が製品・testsだけを隔離コピーし、元ディレクトリの仮想環境Pythonを絶対指定、cwd/PYTHONPATHをコピー先として各変異を単独実行。コードを復元して同じテストが成功することも確認した。ログ保存先は `/var/folders/n4/7_s3s4k55151g86czn9bt7b80000gn/T/kaname-mutation-19eoiflw`。次表は全てassert FAIL・復元後OK（エラーは検出成功に数えない）。
+
+| 変異名・対象 | 単独で検出したテスト |
+| --- | --- |
+| inside-target：core深さ内で目標適用 | test_target_is_ignored_but_maximum_stops_inside_depth |
+| root-final：core根最終確認削除 | test_stop_at_each_operation_boundary |
+| maximum-boundary：上限>=を> | test_target_is_ignored_but_maximum_stops_inside_depth |
+| target-boundary：目標>=を> | test_target_stops_next_depth_without_discarding_current |
+| restart-protection：将棋inspectで保護True | test_protection_does_not_restart_and_control_is_reused |
+| lose-pawn-protection：prepareの下位保護をFalse | test_public_pawn_defense_interruption_reaches_adapter |
+| incomplete-empty：未完了一覧を空の完了調査へ変換 | test_incomplete_generation_and_application_keep_reason |
+| incomplete-application：未完了適用を正常遷移へ変換 | test_incomplete_generation_and_application_keep_reason |
+| partial-result：根最終確認中断時に途中の結果を返す | test_incomplete_deeper_search_keeps_latest_record |
+| unfinished-total：中断時に完了累計へ1加算 | test_incomplete_deeper_search_keeps_latest_record |
+| return-suppression：外側の最終抑制確認削除 | test_final_boundary_distinguishes_stop_and_suppression |
+
+実行形は `隔離前の絶対Python -m unittest <module>.Controlled...Tests.<表中メソッド> -v`。αβはtest_search_alpha_beta_controlled、将棋はtest_search_shogi_controlled、反復はtest_search_iterative_deepening_controlledを使用し、スクリプトに各引数を保存した。これらの単独検出に加え、既存のSearchControl境界・通常三方式・全幅/αβ・旧反復/比較テストが部品契約を補完する。有限の変異例で全誤り・全局面の証明とはしない。

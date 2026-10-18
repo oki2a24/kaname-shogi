@@ -237,3 +237,64 @@ class ControlledAlphaBetaTests(unittest.TestCase):
                         root, 0 if phase == "evaluate" else 1, ops, c
                     )
                 self.assertIs(caught.exception, fault)
+
+    def test_real_stop_after_inspection_application_and_evaluation(self):
+        """実制御への停止要求を操作の復帰後に検出する。
+
+        確認点ダブルに加え通常停止・抑制の単調な要求経路と後続未実行を確認する。
+        """
+
+        def run_case(phase, suppress):
+            root = TreeNode(
+                "root",
+                children=(
+                    ("A", TreeNode("A", (0, 7), children=(("next", TreeNode("end")),))),
+                ),
+            )
+            c = SearchControl(None, 0)
+            base = controlled_operations()
+            seen = []
+
+            def inspected(node, control):
+                seen.append(("inspect", node.label))
+                value = base.inspect(node, control)
+                if phase == "inspect":
+                    c.request_stop(suppress_response=suppress)
+                return value
+
+            def advanced(node, move, control):
+                seen.append(("advance", node.label))
+                value = base.advance(node, move, control)
+                if phase == "advance":
+                    c.request_stop(suppress_response=suppress)
+                return value
+
+            def evaluated(node):
+                seen.append(("evaluate", node.label))
+                value = base.evaluate(node)
+                c.request_stop(suppress_response=suppress)
+                return value
+
+            r = alpha_beta.search_controlled(
+                root,
+                1,
+                replace(base, inspect=inspected, advance=advanced, evaluate=evaluated),
+                c,
+            )
+            self.assertEqual(
+                r,
+                SearchInterrupted(
+                    SearchSignal.SUPPRESS if suppress else SearchSignal.STOP
+                ),
+            )
+            expected = [("inspect", "root")]
+            if phase != "inspect":
+                expected.append(("advance", "root"))
+            if phase == "evaluate":
+                expected.extend([("inspect", "A"), ("evaluate", "A")])
+            self.assertEqual(seen, expected)
+
+        for phase in ("inspect", "advance", "evaluate"):
+            for suppress in (False, True):
+                with self.subTest(phase=phase, suppress=suppress):
+                    run_case(phase, suppress)
