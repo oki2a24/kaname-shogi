@@ -138,3 +138,14 @@ Critical 0 / Important 0 / Minor 0。全振る舞いでテストと対象asserti
 - この開発用コマンドでのCtrl+Cは`KeyboardInterrupt`として別に処理され、指定診断と終了値130になる。`SUPPRESSED`状態と同一視しない。
 
 理解確認への回答と補足を記録した。次テーマは未選択であり、選ばれるまで新しい学習・設計・実装には進まない。
+
+## main統合後の実測と次テーマ選定（2026-10-18）
+
+- 本人は「1。main に統合して良い」と明示し、作業ブランチ`codex/controlled-iterative-search-command`をローカルmainへ取り込むことを許可した。統合前のmain `f8429f8`から、作業ブランチの7コミットをfast-forwardし、統合時HEADは`f0f4027`となった。pushはしていない。
+- 統合後のmainで今回実行した全体テストは `env PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m unittest discover -s tests`。560 tests in 35.310s、OK。
+- 統合後のmainで今回実行した`.venv/bin/ruff format --check .`は65 files already formatted、`.venv/bin/ruff check .`はAll checks passed。
+- 統合検証時のGit状態は`main`、`origin/main`より27コミット先、未追跡`.antigravity/tasks/`のみ。タスク記録を削除・ステージ・コミットしない。
+- 本人は次候補1「開発用コマンドを小さいSFENで試し、出力を読む」を選んだ。最後の理解確認は既に記録した本人回答と補足を完了記録として使うとの本人確認があった。再提示した追加質問には回答を受けていないため回答を追加しない。
+- 次テーマ開始のため[新セッション用引き継ぎ](../handover-controlled-iterative-search-command-output-reading.md)を作成し、再開案内と次テーマ候補を更新する。この文書更新中には新テーマの探索コマンドを実行しておらず、README例のSFENと条件も今回の実測ではない。
+- 引き継ぎと入口の5文書は独立読み取り専用レビューでCritical 0 / Important 0 / Minor 0。統合時点の履歴値と再開時の現物確認を区別し、次テーマを一回の出力観察に限定し、未回答を回答として記録していないことを確認した。レビュー担当はテストを実行していない。
+- 文書リンク検査では更新5文書のローカルMarkdownリンク572件のリンク先がすべて存在した。`git diff --check`も成功。文書のみの変更のため、製品テストは実行していない。

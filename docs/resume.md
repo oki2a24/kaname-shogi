@@ -2,13 +2,11 @@
 
 ## 現在地
 
-2026-10-18更新。選定済みテーマ「承認済みの時間制御付き反復の開発用コマンド設計から実装計画を作る」の[計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)は独立レビュー後、本人が明示承認した。本人は順次実装と現在のcheckout内の作業ブランチを選択した。[作成・承認・実施記録](learning/controlled-iterative-search-command-implementation-plan.md)に経緯を保存する。
+2026-10-18更新。承認済み[実装計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)に沿うTask 1〜5、TDD、検出力補強、独立レビュー、理解確認を作業ブランチで完了した後、本人の明示許可を得て`codex/controlled-iterative-search-command`をローカル`main`へfast-forward統合した。統合後のmainでこのターンに全体テスト560件（35.310秒）、`.venv/bin/ruff format --check .`（65ファイル）、`.venv/bin/ruff check .`が成功した。詳細は[作成・承認・実施・統合記録](learning/controlled-iterative-search-command-implementation-plan.md)を参照する。
 
-作業ブランチ `codex/controlled-iterative-search-command` でTask 1〜5を完了した。TaskごとのTDDと独立レビュー、最終検出力補強を行い、未知引数ケース追加後の専用テスト14/14、関連テスト68/68、全体テスト560/560、Ruff format/checkが成功した。代表変異8件を隔離コピーで対象assertionにより検出し、最終独立ブランチレビューはCritical 0 / Important 0 / Minor 0。初回最終レビューのMinor 1は、未知引数を専用経路で拒否するケースを追加して解消した。詳細は[実施記録](learning/controlled-iterative-search-command-implementation-plan.md)と[承認済み計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)を参照する。
+最後の理解確認は、既に保存済みの本人回答と補足を本人が完了済みと確認した。回答を新たに作らず、[学習記録](learning/controlled-iterative-search-command-implementation-plan.md)の内容を正本とする。本人は次候補1「小さいSFENで開発用コマンドを試し、出力を読む」を選択した。新セッション用の[引き継ぎ](handover-controlled-iterative-search-command-output-reading.md)を準備済みで、本人が再開プロンプトを新セッションへ入力するまで、この次テーマを始めない。
 
-実装・検証・記録は作業ブランチ上で完了し、mainには未統合。mainへの取り込みは別承認が必要。最後の理解確認は回答済みで、本人回答と補足を[学習記録](learning/controlled-iterative-search-command-implementation-plan.md)に区別して保存した。次テーマは未選択であり、候補と推薦理由は[次テーマ候補](next-topics.md)に記録した。通常対局・USIへの新方式接続、予算式変更、時間保証は対象外のまま維持した。
-
-作業場所 `/Users/oki2a24/kaname-shogi`。計画作成時の開始状態はmain、HEAD `c4751e7`、clean、origin/mainより18コミット先。計画案とレビュー記録は `c61318d`、本人の承認と実行方式の記録は `f8429f8` で保存した。実装開始時は作業ブランチ `codex/controlled-iterative-search-command` を現物確認し、Ruff 0.16.10とhooksPath `.githooks` を再確認した。これらは開始時点の状態で、現在のHEADや検証結果ではない。
+作業場所は`/Users/oki2a24/kaname-shogi`。統合時のmain HEADは`f0f4027`で、作業ブランチの7コミットをfast-forwardした。pushはしていない。統合検証時、`main`は`origin/main`より27コミット先で、未追跡の`.antigravity/tasks/`があったため保持した。その後の引き継ぎ文書コミット分を含む正確なHEADと状態は再開時にGitから確認する。
 
 ## 完了した開発用コマンド設計
 
@@ -28,10 +26,9 @@
 
 ## 次に読むもの
 
-1. 現在のGit状態、AGENTS.md、本書、[開始時の引き継ぎ](handover-controlled-iterative-search-command-plan.md)。
-2. [実装計画案](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)、[計画作成・レビュー記録](learning/controlled-iterative-search-command-implementation-plan.md)、[承認済みコマンド設計](plans/2026-10-18-controlled-iterative-search-command-design.md)、[設計学習記録](learning/controlled-iterative-search-command-design.md)。
-3. [文書索引](README.md)、[選定済み候補と理由](next-topics.md)、ルートREADMEの開発用比較と制約、[方向性](02-project-direction.md)。
-4. [探索停止](knowledge/search-stop.md)、[時計予算](knowledge/time-budget.md)、[探索比較](knowledge/search-comparison.md)、引き継ぎに列挙したコード・テスト。
-5. [承認済み探索部品設計](plans/2026-10-18-iterative-deepening-stop-time-control-design.md)、[実施記録](learning/iterative-deepening-stop-time-control-implementation.md)、[検出力の点検](knowledge/test-coverage-review.md)、[文書更新ガイド](documentation-guide.md)。
+1. 再開時のGit状態、AGENTS.md、本書、[選定済み次テーマの引き継ぎ](handover-controlled-iterative-search-command-output-reading.md)。
+2. ルートREADMEの「時間制御付き反復探索を一回試す」、[承認済みコマンド設計](plans/2026-10-18-controlled-iterative-search-command-design.md)、[探索停止](knowledge/search-stop.md)。
+3. [実装計画・結果・本人回答](learning/controlled-iterative-search-command-implementation-plan.md)と、必要なら[実装計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)、`kaname_shogi/search/run_controlled_iterative.py`、`kaname_shogi/search/result.py`。
+4. [文書索引](README.md)、[次テーマ候補](next-topics.md)、[文書更新ガイド](documentation-guide.md)。テストの変更予定はなく、過去の製品テスト成功を今回の出力観察として扱わない。
 
 全局面・全競合・実時間性能・期限内応答・新方式USI競合・実機対局・棋力・最適予算は未検証。過去の引き継ぎの現在地は保存当時の情報として読む。
