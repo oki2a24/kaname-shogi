@@ -2,13 +2,19 @@
 
 ## 現在地
 
-2026-10-18更新。「時間制御付き反復を試す開発用コマンドの学習・設計」は学習・設計・独立レビュー・設計提示を終え、本人「yes」により[設計全体](plans/2026-10-18-controlled-iterative-search-command-design.md)を明示承認済み。[学習記録](learning/controlled-iterative-search-command-design.md)に回答・補足・個別選択・全体承認・レビューを保存した。開始背景は[引き継ぎ](handover-controlled-iterative-search-command-design.md)へ保存済み。
+2026-10-18更新。本人「2」により次テーマ「承認済み開発用コマンド設計から実装計画を作る」を選定済み。[新セッション用引き継ぎ](handover-controlled-iterative-search-command-plan.md)に選定理由・完了事項・Git状態・参照資料・[再開プロンプト](handover-controlled-iterative-search-command-plan.md#再開用プロンプト)を保存した。
 
-専用コマンドで一回探索し、SFEN・上限深さ・直接指定の目標ms/上限msを必須とする。探索直前から計時し、合法予備手準備を含める。結果は終了時にまとめ、選択手と完了記録を区別する。Ctrl+Cは中断130。独立レビューは初回Minor 1（現在地記録の更新）を解消し、最終Critical・Important・Minorはすべて0。
+次は本人が再開プロンプトを新セッションへ入力するのを待つ。次テーマは実装計画の作成・独立レビュー・提示まで。具体的な計画の明示承認を待ち、TDD・コード/テスト変更・実装は始めない。選定と設計承認を、まだ存在しない計画への承認へ読み替えない。
 
-今回の範囲は学習・設計まで。実装計画・TDD・コード/テスト変更には進んでいない。最後の理解確認は本人「1」で正解し、回答・補足を学習記録へ保存した。[次テーマ候補](next-topics.md)を提示して本人の選択を待つ。後続テーマは未選定。既存三方式を維持し、通常対局・USIへの新方式接続、予算式変更、時間保証は対象外。
+作業場所 `/Users/oki2a24/kaname-shogi`、main。引き継ぎ作成開始HEAD8d29088、clean、origin/mainより17コミット先。今回も文書のみで、別worktreeの追加利用なし。他テーマの既存4件は確認したが未操作。Ruff0.16.10とhooksPath=.githooksを再確認済み。引き継ぎ保存後のHEAD・差分は再取得する。
 
-作業場所 `/Users/oki2a24/kaname-shogi`、main。開始時HEAD083f230、clean、origin/mainより15コミット先を確認した。設計承認記録は0e5ea66として保存済み。その後の再確認でclean、origin/mainより16コミット先。今回は最後の理解確認と候補の文書3件を更新して保存する段階。保存後のHEAD・差分はgitで再取得する。別worktreeは利用していない。Ruff0.16.10とhooksPath=.githooksを確認済み。製品テストは今回未実行。
+## 完了した開発用コマンド設計
+
+学習・設計・独立レビュー・本人による[設計全体](plans/2026-10-18-controlled-iterative-search-command-design.md)の明示承認と、最後の理解確認まで完了。[学習記録](learning/controlled-iterative-search-command-design.md)に個別選択・承認・レビュー・初回誤答と再確認正解を区別して保存した。設計承認0e5ea66、理解確認/候補8d29088。独立レビューの初回Minor 1は記録更新で解消、最終Critical/Important/Minorすべて0。
+
+専用コマンドで一回探索。SFEN・上限深さ・目標/上限msは必須。探索直前から計時して合法予備手準備を含み、終了時に状態・選択手/由来・最新完了記録を表示する。Ctrl+Cは中断130。コマンドは未実装。既存三方式と比較入口を維持し、通常対局・USIへの新方式接続、予算式変更、時間保証は対象外。
+
+今回の設計セッションで製品テストは実行していない。文書検査と通常フックの成功のみ。過去の探索部品546件成功などを今回の実測とは扱わない。新コマンド動作、実時間性能・期限内応答、SIGINT実プロセス、USI競合、全局面/OS、棋力などは未検証。
 
 ## 完了した前テーマ
 
@@ -20,9 +26,10 @@
 
 ## 次に読むもの
 
-1. 現在のGit状態、AGENTS.md、本書、[承認済みコマンド設計](plans/2026-10-18-controlled-iterative-search-command-design.md)、[今回の学習記録](learning/controlled-iterative-search-command-design.md)。開始時の引き継ぎは履歴として読む。
-2. [文書索引](README.md)、[選定済み候補と理由](next-topics.md)、ルートREADMEの開発用比較と制約、[方向性](02-project-direction.md)。
-3. [探索停止](knowledge/search-stop.md)、[時計予算](knowledge/time-budget.md)、[探索比較](knowledge/search-comparison.md)、引き継ぎに列挙したコード・テスト。
-4. [承認済み探索部品設計](plans/2026-10-18-iterative-deepening-stop-time-control-design.md)、[実施記録](learning/iterative-deepening-stop-time-control-implementation.md)、[検出力の点検](knowledge/test-coverage-review.md)、[文書更新ガイド](documentation-guide.md)。
+1. 現在のGit状態、AGENTS.md、本書、[新セッション用引き継ぎ](handover-controlled-iterative-search-command-plan.md)。
+2. [承認済みコマンド設計](plans/2026-10-18-controlled-iterative-search-command-design.md)、[学習記録](learning/controlled-iterative-search-command-design.md)、新しい引き継ぎに列挙した資料。
+3. [文書索引](README.md)、[選定済み候補と理由](next-topics.md)、ルートREADMEの開発用比較と制約、[方向性](02-project-direction.md)。
+4. [探索停止](knowledge/search-stop.md)、[時計予算](knowledge/time-budget.md)、[探索比較](knowledge/search-comparison.md)、引き継ぎに列挙したコード・テスト。
+5. [承認済み探索部品設計](plans/2026-10-18-iterative-deepening-stop-time-control-design.md)、[実施記録](learning/iterative-deepening-stop-time-control-implementation.md)、[検出力の点検](knowledge/test-coverage-review.md)、[文書更新ガイド](documentation-guide.md)。
 
 全局面・全競合・実時間性能・期限内応答・新方式USI競合・実機対局・棋力・最適予算は未検証。過去の引き継ぎの現在地は保存当時の情報として読む。

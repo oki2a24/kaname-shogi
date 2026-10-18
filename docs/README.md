@@ -35,7 +35,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-現在の承認段階と次の行動は[再開案内](resume.md)を正本とする。開発用コマンドの学習・設計は[学習記録](learning/controlled-iterative-search-command-design.md)を参照する。開始背景は[引き継ぎ](handover-controlled-iterative-search-command-design.md)に保存した。完了した時間制御接続の[承認済み設計](plans/2026-10-18-iterative-deepening-stop-time-control-design.md)、[実装計画と結果](plans/2026-10-18-iterative-deepening-stop-time-control-implementation-plan.md)、[学習・実施記録](learning/iterative-deepening-stop-time-control-implementation.md)が土台となる。
+現在の承認段階と次の行動は[再開案内](resume.md)を正本とする。選定済みの開発用コマンド実装計画は[新セッション用引き継ぎ](handover-controlled-iterative-search-command-plan.md)から再開する。完了した開発用コマンドの学習・設計は[学習記録](learning/controlled-iterative-search-command-design.md)を参照する。開始背景は[引き継ぎ](handover-controlled-iterative-search-command-design.md)に保存した。完了した時間制御接続の[承認済み設計](plans/2026-10-18-iterative-deepening-stop-time-control-design.md)、[実装計画と結果](plans/2026-10-18-iterative-deepening-stop-time-control-implementation-plan.md)、[学習・実施記録](learning/iterative-deepening-stop-time-control-implementation.md)が土台となる。
 
 [再開案内](resume.md)で現在の作業状態と次に読む資料を確認する。文書運用の合意範囲・調査根拠・実施タスクは[文書活用計画](plans/2026-10-14-documentation-practices-implementation-plan.md)に記録する。三方式の構成調査は[学習記録](learning/three-policy-architecture.md)、Python移行の実施・統合・理解確認は[計画と結果](plans/2026-10-14-python-315-migration-implementation-plan.md)と[学習記録](learning/python-upgrade-impact.md)を参照する。現在状態をこの索引に複写しない。
 
@@ -57,6 +57,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
 | 反復深化で留保したテスト2件の補強（main統合・取り込み先検証・最後の理解確認完了） | [学習記録](learning/iterative-deepening-test-strengthening.md) | [検出力の点検手順](knowledge/test-coverage-review.md) | — | [実装計画と結果](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md) | [開始時の引き継ぎ](handover-iterative-deepening-test-strengthening.md) |
+| 時間制御付き反復を試す開発用コマンドの実装計画（選定済み・新セッション開始待ち） | — | [探索停止](knowledge/search-stop.md)、[検出力の点検](knowledge/test-coverage-review.md) | [承認済み設計](plans/2026-10-18-controlled-iterative-search-command-design.md) | — | [引き継ぎ](handover-controlled-iterative-search-command-plan.md) |
 | 時間制御付き反復を試す開発用コマンドの学習・設計（独立レビュー・設計全体承認済み） | [学習記録](learning/controlled-iterative-search-command-design.md) | [探索停止](knowledge/search-stop.md)、[探索比較](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-18-controlled-iterative-search-command-design.md) | — | [引き継ぎ](handover-controlled-iterative-search-command-design.md) |
 | 時間制御付き反復深化（main統合・検証・最後の理解確認完了） | [学習・実施記録](learning/iterative-deepening-stop-time-control-implementation.md) | [探索停止](knowledge/search-stop.md)、[時計予算](knowledge/time-budget.md) | [承認済み設計](plans/2026-10-18-iterative-deepening-stop-time-control-design.md) | [実装計画](plans/2026-10-18-iterative-deepening-stop-time-control-implementation-plan.md) | [引き継ぎ](handover-iterative-deepening-stop-time-control-implementation.md) |
 | 反復深化の停止と既存時間制御の接続を学び設計する（設計全体承認・main統合・最後の理解確認完了） | [学習記録](learning/iterative-deepening-stop-time-control-design.md) | [探索停止](knowledge/search-stop.md)、[時計予算](knowledge/time-budget.md)、[USI応答](knowledge/usi-engine-response.md) | [承認済み設計](plans/2026-10-18-iterative-deepening-stop-time-control-design.md) | — | [新セッション用引き継ぎ](handover-iterative-deepening-stop-time-control-design.md) |
