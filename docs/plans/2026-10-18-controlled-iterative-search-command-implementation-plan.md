@@ -25,7 +25,7 @@
 
 ## 承認段階
 
-本人は2026-10-18に本書の計画全体を「yes」と明示承認した。計画承認は設計全体への過去の承認と区別して記録する。本人は順次実装方式と、現在のcheckout内に作業ブランチを作る方式を選択済み。`codex/controlled-iterative-search-command` を承認記録コミット `f8429f8` から作成し、計画固有の作業場所 `.superpowers/sdd/2026-10-18-controlled-iterative-search-command-implementation-plan/` を準備した。Task 1前の共有インターフェース走査を終え、現在は Task 1 のTDDを始める段階。
+本人は2026-10-18に本書の計画全体を「yes」と明示承認した。計画承認は設計全体への過去の承認と区別して記録する。本人は順次実装方式と、現在のcheckout内に作業ブランチを作る方式を選択済み。`codex/controlled-iterative-search-command` を承認記録コミット `f8429f8` から作成し、計画固有の作業場所 `.superpowers/sdd/2026-10-18-controlled-iterative-search-command-implementation-plan/` を準備した。Task 1のTDDと独立レビューが完了し、Task 2へ進む。
 
 ## 範囲と成功条件
 
@@ -119,15 +119,15 @@ def main(argv: list[str] | None = None) -> int:
 
 **生産:** `_make_parser() -> argparse.ArgumentParser`、`_prepare_inputs(sfen: str, max_depth: int, target_ms: int, maximum_ms: int) -> tuple[Position, SearchBudget]`。いずれもコマンド内の非公開処理とする。
 
-- [ ] **テスト:** `test_parser_requires_explicit_values` と `test_parser_keeps_argparse_duplicate_and_abbreviation_rules` を追加。四引数が全て必須、int変換、同じ引数は最後の値、一意な長い省略形をassertする。
-- [ ] **Red確認:** `_make_parser` が空の標準解析器を返すだけのimport可能な骨格でテストを実行し、必須引数や標準動作に関するassertionが失敗することを確認する。ImportErrorやテスト探索失敗だけはRedに数えない。
-- [ ] **最小実装:** 既存SFEN必須パーサーに深さ・二予算を追加する。
-- [ ] **Green確認:** `PYTHONPATH=tests .venv/bin/python -m unittest test_search_run_controlled_iterative.RunControlledIterativeTests.test_parser_requires_explicit_values test_search_run_controlled_iterative.RunControlledIterativeTests.test_parser_keeps_argparse_duplicate_and_abbreviation_rules -v` が成功する。
-- [ ] **テスト:** `test_prepare_inputs_rejects_invalid_depth_budget_and_sfen` を追加。深さ0、負予算、目標超過、SFEN不正は `assertRaises(ValueError)`、0/0と等値予算は返却値を独立値とassertする。
-- [ ] **Red確認:** `_prepare_inputs` は中立値を返す骨格のまま、呼出し結果または例外型を確かめる対象assertionが失敗することを確認する。関数を読み込めないエラーをRedに数えない。
-- [ ] **最小実装:** 深さ1以上の検査、直接SearchBudget構築、既存SFEN解析へ委譲する入力準備を実装する。
-- [ ] **Green確認:** `PYTHONPATH=tests .venv/bin/python -m unittest test_search_run_controlled_iterative.RunControlledIterativeTests.test_parser_requires_explicit_values test_search_run_controlled_iterative.RunControlledIterativeTests.test_parser_keeps_argparse_duplicate_and_abbreviation_rules test_search_run_controlled_iterative.RunControlledIterativeTests.test_prepare_inputs_rejects_invalid_depth_budget_and_sfen -v` が成功する。
-- [ ] **Refactor・独立レビュー:** 入力補助処理の重複/例外範囲を確認し、Critical/Important/Minorと対応を実装記録へ記す。
+- [x] **テスト:** `test_parser_requires_explicit_values` と `test_parser_keeps_argparse_duplicate_and_abbreviation_rules` を追加。四引数が全て必須、int変換、同じ引数は最後の値、一意な長い省略形をassertする。
+- [x] **Red確認:** `_make_parser` が空の標準解析器を返すだけのimport可能な骨格でテストを実行し、必須引数や標準動作に関するassertionが失敗することを確認する。ImportErrorやテスト探索失敗だけはRedに数えない。
+- [x] **最小実装:** 既存SFEN必須パーサーに深さ・二予算を追加する。
+- [x] **Green確認:** `PYTHONPATH=tests .venv/bin/python -m unittest test_search_run_controlled_iterative.RunControlledIterativeTests.test_parser_requires_explicit_values test_search_run_controlled_iterative.RunControlledIterativeTests.test_parser_keeps_argparse_duplicate_and_abbreviation_rules -v` が成功する。
+- [x] **テスト:** `test_prepare_inputs_rejects_invalid_depth_budget_and_sfen` を追加。深さ0、負予算、目標超過、SFEN不正は `assertRaises(ValueError)`、0/0、等値予算、目標31/上限47msは入力と独立した返却値assertで確認する。
+- [x] **Red確認:** `_prepare_inputs` は中立値を返す骨格のまま、呼出し結果または例外型を確かめる対象assertionが失敗することを確認する。関数を読み込めないエラーをRedに数えない。
+- [x] **最小実装:** 深さ1以上の検査、直接SearchBudget構築、既存SFEN解析へ委譲する入力準備を実装する。
+- [x] **Green確認:** `PYTHONPATH=tests .venv/bin/python -m unittest test_search_run_controlled_iterative.RunControlledIterativeTests.test_parser_requires_explicit_values test_search_run_controlled_iterative.RunControlledIterativeTests.test_parser_keeps_argparse_duplicate_and_abbreviation_rules test_search_run_controlled_iterative.RunControlledIterativeTests.test_prepare_inputs_rejects_invalid_depth_budget_and_sfen -v` が成功する。
+- [x] **Refactor・独立レビュー:** 入力補助処理の重複/例外範囲を確認し、Critical/Important/Minorと対応を実装記録へ記す。
 
 ### タスク2：原点と制御を一回の探索へ渡す
 
@@ -193,7 +193,7 @@ def main(argv: list[str] | None = None) -> int:
 
 ## 実行方式の選択
 
-主担当が `executing-plans` を使って順に実装する方式と、タスクごとに実装者を分ける方式を提示した。共有するコマンドモジュールとテストファイルへ変更が集中するため、順次実装を推奨し、本人は「順次実装（推奨）」を選択した。`using-git-worktrees` の確認に対し、本人は現在のcheckout内の作業ブランチを選択した。実装者・レビュアーをタスクごとに分けず、全タスク後に独立したブランチレビューを行う。
+主担当が `executing-plans` を使って順に実装する方式と、タスクごとに実装者を分ける方式を提示した。共有するコマンドモジュールとテストファイルへ変更が集中するため、順次実装を推奨し、本人は「順次実装（推奨）」を選択した。`using-git-worktrees` の確認に対し、本人は現在のcheckout内の作業ブランチを選択した。実装者は主担当が継続し、各タスクの独立レビューと全タスク後の新鮮な独立ブランチレビューを受ける。
 
 ## 計画レビュー・提示状態
 
@@ -201,4 +201,4 @@ def main(argv: list[str] | None = None) -> int:
 
 最終の独立レビューはCritical 0 / Important 0 / Minor 0。SystemExit(0)/(2)と入力ValueErrorの境界、各振る舞いのRed順、表示契約、docstring、回帰コマンド、範囲と承認境界の維持を確認済み。レビューは読み取り専用で、コード・テスト・文書を変更せず、製品テストも実行していない。
 
-計画全体の明示承認済み。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。`codex/controlled-iterative-search-command` を `f8429f8` から作成し、計画用ワークスペースと共有インターフェースのプリフライトを完了した。Task 1 のTDDに着手する。通常対局・USIへの新方式接続、予算式変更、時間保証は引き続き対象外。
+計画全体の明示承認済み。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。`codex/controlled-iterative-search-command` を `f8429f8` から作成し、計画用ワークスペースと共有インターフェースのプリフライトを完了した。Task 1のTDD・レビューを完了し、Task 2を次に始める。通常対局・USIへの新方式接続、予算式変更、時間保証は引き続き対象外。
