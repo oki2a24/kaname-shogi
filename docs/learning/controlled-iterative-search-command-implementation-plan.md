@@ -101,3 +101,13 @@ Critical 0 / Important 0 / Minor 0。全振る舞いでテストと対象asserti
 - 実装後、四つの表示テストは4/4成功し、専用テストファイル全体は9/9成功した。`.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .` が成功し、`git diff --check` にエラーはなかった。
 - Refactor確認では、表示の条件分岐と記録項目の組み立てを一関数内に保つ現在の形が契約を追いやすく、追加抽象化は不要と判断した。独立レビューは読み取り専用で、Critical 0 / Important 0 / Minor 0。状態・選択手・記録の分離、順序、既存formatter再利用を確認し、修正事項はなかった。
 - このテストは結果オブジェクトからの表示を検査し、実時間での深さ・期限・全局面の性質は検証しない。`main`、例外境界、実プロセス入口はTask 4に残る。
+
+## Task 4 実装記録（2026-10-18）
+
+- 公開 `main(argv)` とモジュール実行時の `SystemExit(main())` を追加した。argparse解析中の `SystemExit` は終了コードへ変換し、入力準備で起きた `ValueError` だけを `入力エラー:` と終了値2へ変換する。操作生成・時計・探索・整形・出力の内部例外は捕捉しない。解析から出力までの `KeyboardInterrupt` は指定診断と130にし、再探索/再表示をしない。
+- main骨格へ追加した入力/ヘルプのテストは、入力の三ケースとargparse不足引数で骨格が0を返し、ヘルプの使用法も出さない対象assertion Redを確認した。内部ValueError/KeyboardInterrupt/プロセス入口テストの初回試行ではテストfixtureのSTOPPED結果が契約に合わずValueErrorで構築失敗したため、その実行はRedに数えず、有効なNO_LEGAL_MOVE結果に直してから再実行した。修正版のRedはValueError五境界の同一例外assert、中断七境界の130 assertion、help/不正SFEN/0msのプロセス出力・終了値assertで失敗し、読み込みやプロセス起動の失敗はなかった。
+- テストは入力不正とhelpで時計/探索/操作生成がないこと、argparse `SystemExit(0)/(2)`の扱い、操作・時計・探索・整形・出力ValueErrorの同一オブジェクト伝播、解析/入力/操作/時計/探索/整形/出力の中断を確認する。中断テストは各段階の呼出しが一回であることをassertし、出力ケースではstdoutへ部分文字列を書いた後に中断し、部分文字列保持・診断一回・探索/整形/出力の再試行なしを確認する。出力ValueErrorは初回printのみ失敗するmockを用い、入力エラー診断への誤変換を検出する。
+- 実プロセスは `sys.executable -m kaname_shogi.search.run_controlled_iterative` でhelp終了0、不正SFEN終了2と診断、玉だけ局面の0/0予算でSTOPPED終了0・完了記録なしを確認した。実プロセスSIGINT配送や応答時間はこの試験から主張しない。
+- Green確認はTask 4の新規5メソッド成功、修正後の専用テスト全体14/14成功。Ruff import整理、整形、check、`git diff --check` に問題なし。Refactorは、mainの段階別例外範囲を一関数内で読む方が契約を確認しやすく、さらに分割する必要はないと判断した。
+- 独立レビュー初回はCritical 0 / Important 1 / Minor 1。中断テストで境界ごとの再試行と部分出力の保持/診断を検出できない点、および出力ValueErrorの誤入力化が偶然通り得る点を指摘された。mock呼出回数、部分書込stream、診断の完全一致、初回のみ失敗する出力mockを追加した。再レビューで部分出力時の診断assertが分岐外に必要と指摘され、全境界へ適用した。最終レビューはCritical 0 / Important 0 / Minor 0。レビュアーは読み取り専用でテストは実行しておらず、記したテスト/Ruff結果は主担当の実測。
+- 全局面、全OSのシグナル動作、SIGINTプロセス配送、実時間性能、上限ms内の応答は未検証。Task 5で専用・既存・全体テスト、代表変異、独立ブランチレビューを行う。

@@ -2,8 +2,11 @@
 
 import contextlib
 import io
+import subprocess
+import sys
 import unittest
-from unittest.mock import patch, sentinel
+from pathlib import Path
+from unittest.mock import Mock, patch, sentinel
 
 from kaname_shogi.model import Side
 from kaname_shogi.search import run_controlled_iterative
@@ -418,3 +421,487 @@ class RunControlledIterativeTests(unittest.TestCase):
                 "反復累計（完了した深さまで）: 10",
             ],
         )
+
+    def test_main_invalid_inputs_do_not_start_search(self):
+        """入力誤りと解析エラーを終了値へ変換し探索前で止める。
+
+        入力ValueErrorの誤変換、argparse終了値の伝播、入力エラー後の副作用を検出する。
+        """
+        valid_sfen = "8k/9/9/9/9/9/9/9/K8 b - 1"
+        invalid_arguments = (
+            [
+                "--sfen",
+                "invalid",
+                "--max-depth",
+                "1",
+                "--target-ms",
+                "0",
+                "--maximum-ms",
+                "0",
+            ],
+            [
+                "--sfen",
+                valid_sfen,
+                "--max-depth",
+                "0",
+                "--target-ms",
+                "0",
+                "--maximum-ms",
+                "0",
+            ],
+            [
+                "--sfen",
+                valid_sfen,
+                "--max-depth",
+                "1",
+                "--target-ms",
+                "48",
+                "--maximum-ms",
+                "47",
+            ],
+        )
+        for arguments in invalid_arguments:
+            with self.subTest(arguments=arguments):
+                with (
+                    patch.object(
+                        run_controlled_iterative.shogi,
+                        "make_controlled_operations",
+                    ) as operations_mock,
+                    patch.object(
+                        run_controlled_iterative.time, "monotonic_ns"
+                    ) as clock_mock,
+                    patch.object(
+                        run_controlled_iterative.iterative_deepening,
+                        "search_controlled",
+                    ) as search_mock,
+                    contextlib.redirect_stdout(io.StringIO()) as output,
+                    contextlib.redirect_stderr(io.StringIO()) as error_output,
+                ):
+                    exit_code = run_controlled_iterative.main(arguments)
+
+                self.assertEqual(exit_code, 2)
+                self.assertEqual(output.getvalue(), "")
+                self.assertIn("入力エラー:", error_output.getvalue())
+                operations_mock.assert_not_called()
+                clock_mock.assert_not_called()
+                search_mock.assert_not_called()
+
+        with (
+            patch.object(
+                run_controlled_iterative.shogi,
+                "make_controlled_operations",
+            ) as operations_mock,
+            patch.object(run_controlled_iterative.time, "monotonic_ns") as clock_mock,
+            patch.object(
+                run_controlled_iterative.iterative_deepening, "search_controlled"
+            ) as search_mock,
+            contextlib.redirect_stdout(io.StringIO()) as output,
+            contextlib.redirect_stderr(io.StringIO()) as error_output,
+        ):
+            exit_code = run_controlled_iterative.main(["--sfen", valid_sfen])
+
+        self.assertEqual(exit_code, 2)
+        self.assertIn("usage:", error_output.getvalue())
+        self.assertNotIn("入力エラー:", error_output.getvalue())
+        self.assertEqual(output.getvalue(), "")
+        operations_mock.assert_not_called()
+        clock_mock.assert_not_called()
+        search_mock.assert_not_called()
+
+    def test_main_help_skips_clock_and_search(self):
+        """ヘルプ要求を0で返し、時計と探索へ進まない。
+
+        argparse終了を異常扱いする誤りやヘルプ後の探索開始を検出する。
+        """
+        with (
+            patch.object(
+                run_controlled_iterative.shogi,
+                "make_controlled_operations",
+            ) as operations_mock,
+            patch.object(run_controlled_iterative.time, "monotonic_ns") as clock_mock,
+            patch.object(
+                run_controlled_iterative.iterative_deepening, "search_controlled"
+            ) as search_mock,
+            contextlib.redirect_stdout(io.StringIO()) as output,
+            contextlib.redirect_stderr(io.StringIO()) as error_output,
+        ):
+            exit_code = run_controlled_iterative.main(["--help"])
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("usage:", output.getvalue())
+        self.assertEqual(error_output.getvalue(), "")
+        operations_mock.assert_not_called()
+        clock_mock.assert_not_called()
+        search_mock.assert_not_called()
+
+    def test_internal_value_errors_propagate(self):
+        """入力準備後のValueErrorを同じ例外のまま伝播する。
+
+        操作・時計・探索・整形・出力の故障を入力誤り2へ誤変換するのを検出する。
+        """
+        arguments = [
+            "--sfen",
+            "8k/9/9/9/9/9/9/9/K8 b - 1",
+            "--max-depth",
+            "1",
+            "--target-ms",
+            "0",
+            "--maximum-ms",
+            "0",
+        ]
+        stopped = ControlledSearchResult(ControlledCompletion.NO_LEGAL_MOVE, None, None)
+
+        for boundary in ("operations", "clock", "search", "format", "output"):
+            with self.subTest(boundary=boundary):
+                failure = ValueError(f"{boundary} failed")
+                with contextlib.ExitStack() as stack:
+                    if boundary == "operations":
+                        stack.enter_context(
+                            patch.object(
+                                run_controlled_iterative.shogi,
+                                "make_controlled_operations",
+                                side_effect=failure,
+                            )
+                        )
+                    elif boundary == "clock":
+                        stack.enter_context(
+                            patch.object(
+                                run_controlled_iterative.shogi,
+                                "make_controlled_operations",
+                                return_value=sentinel.operations,
+                            )
+                        )
+                        stack.enter_context(
+                            patch.object(
+                                run_controlled_iterative.time,
+                                "monotonic_ns",
+                                side_effect=failure,
+                            )
+                        )
+                    elif boundary == "search":
+                        stack.enter_context(
+                            patch.object(
+                                run_controlled_iterative.shogi,
+                                "make_controlled_operations",
+                                return_value=sentinel.operations,
+                            )
+                        )
+                        stack.enter_context(
+                            patch.object(
+                                run_controlled_iterative.time,
+                                "monotonic_ns",
+                                return_value=123456789,
+                            )
+                        )
+                        stack.enter_context(
+                            patch.object(
+                                run_controlled_iterative,
+                                "SearchControl",
+                                return_value=sentinel.control,
+                            )
+                        )
+                        stack.enter_context(
+                            patch.object(
+                                run_controlled_iterative.iterative_deepening,
+                                "search_controlled",
+                                side_effect=failure,
+                            )
+                        )
+                    elif boundary == "format":
+                        stack.enter_context(
+                            patch.object(
+                                run_controlled_iterative,
+                                "_run_search",
+                                return_value=stopped,
+                            )
+                        )
+                        stack.enter_context(
+                            patch.object(
+                                run_controlled_iterative,
+                                "_format_result",
+                                side_effect=failure,
+                            )
+                        )
+                    else:
+                        stack.enter_context(
+                            patch.object(
+                                run_controlled_iterative,
+                                "_run_search",
+                                return_value=stopped,
+                            )
+                        )
+                        stack.enter_context(
+                            patch.object(
+                                run_controlled_iterative,
+                                "_format_result",
+                                return_value="rendered result",
+                            )
+                        )
+                        print_mock = stack.enter_context(
+                            patch("builtins.print", side_effect=[failure, None])
+                        )
+                    with (
+                        contextlib.redirect_stdout(io.StringIO()),
+                        contextlib.redirect_stderr(io.StringIO()),
+                        self.assertRaises(ValueError) as raised,
+                    ):
+                        run_controlled_iterative.main(arguments)
+
+                self.assertIs(raised.exception, failure)
+                if boundary == "output":
+                    print_mock.assert_called_once()
+
+    def test_keyboard_interrupt_returns_130_without_result_recovery(self):
+        """各段階の中断を130と診断へ変え、結果を再探索・再表示しない。
+
+        捕捉範囲の欠落、通常結果の誤回収、内部段階の再実行を検出する。
+        """
+        arguments = [
+            "--sfen",
+            "8k/9/9/9/9/9/9/9/K8 b - 1",
+            "--max-depth",
+            "1",
+            "--target-ms",
+            "0",
+            "--maximum-ms",
+            "0",
+        ]
+        stopped = ControlledSearchResult(ControlledCompletion.NO_LEGAL_MOVE, None, None)
+        diagnostic = "中断: Ctrl+C。結果表示は未完了です"
+
+        class InterruptingOutput(io.StringIO):
+            def __init__(self, interruption):
+                super().__init__()
+                self.interruption = interruption
+                self.write_attempts = 0
+
+            def write(self, value):
+                self.write_attempts += 1
+                if self.write_attempts == 1:
+                    super().write("rendered")
+                    raise self.interruption
+                return super().write(value)
+
+        for boundary in (
+            "parse",
+            "input",
+            "operations",
+            "clock",
+            "search",
+            "format",
+            "output",
+        ):
+            with self.subTest(boundary=boundary):
+                interruption = KeyboardInterrupt()
+                with contextlib.ExitStack() as stack:
+                    call_mocks = []
+                    if boundary == "parse":
+                        parser = Mock()
+                        parser.parse_args.side_effect = interruption
+                        call_mocks.append(parser.parse_args)
+                        stack.enter_context(
+                            patch.object(
+                                run_controlled_iterative,
+                                "_make_parser",
+                                return_value=parser,
+                            )
+                        )
+                    elif boundary == "input":
+                        call_mocks.append(
+                            stack.enter_context(
+                                patch.object(
+                                    run_controlled_iterative,
+                                    "_prepare_inputs",
+                                    side_effect=interruption,
+                                )
+                            )
+                        )
+                    elif boundary == "operations":
+                        call_mocks.append(
+                            stack.enter_context(
+                                patch.object(
+                                    run_controlled_iterative.shogi,
+                                    "make_controlled_operations",
+                                    side_effect=interruption,
+                                )
+                            )
+                        )
+                    elif boundary == "clock":
+                        call_mocks.append(
+                            stack.enter_context(
+                                patch.object(
+                                    run_controlled_iterative.shogi,
+                                    "make_controlled_operations",
+                                    return_value=sentinel.operations,
+                                )
+                            )
+                        )
+                        call_mocks.append(
+                            stack.enter_context(
+                                patch.object(
+                                    run_controlled_iterative.time,
+                                    "monotonic_ns",
+                                    side_effect=interruption,
+                                )
+                            )
+                        )
+                    elif boundary == "search":
+                        call_mocks.append(
+                            stack.enter_context(
+                                patch.object(
+                                    run_controlled_iterative.shogi,
+                                    "make_controlled_operations",
+                                    return_value=sentinel.operations,
+                                )
+                            )
+                        )
+                        call_mocks.append(
+                            stack.enter_context(
+                                patch.object(
+                                    run_controlled_iterative.time,
+                                    "monotonic_ns",
+                                    return_value=123456789,
+                                )
+                            )
+                        )
+                        call_mocks.append(
+                            stack.enter_context(
+                                patch.object(
+                                    run_controlled_iterative,
+                                    "SearchControl",
+                                    return_value=sentinel.control,
+                                )
+                            )
+                        )
+                        call_mocks.append(
+                            stack.enter_context(
+                                patch.object(
+                                    run_controlled_iterative.iterative_deepening,
+                                    "search_controlled",
+                                    side_effect=interruption,
+                                )
+                            )
+                        )
+                    elif boundary == "format":
+                        call_mocks.append(
+                            stack.enter_context(
+                                patch.object(
+                                    run_controlled_iterative,
+                                    "_run_search",
+                                    return_value=stopped,
+                                )
+                            )
+                        )
+                        call_mocks.append(
+                            stack.enter_context(
+                                patch.object(
+                                    run_controlled_iterative,
+                                    "_format_result",
+                                    side_effect=interruption,
+                                )
+                            )
+                        )
+                    else:
+                        call_mocks.append(
+                            stack.enter_context(
+                                patch.object(
+                                    run_controlled_iterative,
+                                    "_run_search",
+                                    return_value=stopped,
+                                )
+                            )
+                        )
+                        call_mocks.append(
+                            stack.enter_context(
+                                patch.object(
+                                    run_controlled_iterative,
+                                    "_format_result",
+                                    return_value="rendered result",
+                                )
+                            )
+                        )
+
+                    output = (
+                        InterruptingOutput(interruption)
+                        if boundary == "output"
+                        else io.StringIO()
+                    )
+                    with (
+                        contextlib.redirect_stdout(output),
+                        contextlib.redirect_stderr(io.StringIO()) as error_output,
+                    ):
+                        exit_code = run_controlled_iterative.main(arguments)
+
+                self.assertEqual(exit_code, 130)
+                for call_mock in call_mocks:
+                    call_mock.assert_called_once()
+                self.assertEqual(
+                    output.getvalue(), "rendered" if boundary == "output" else ""
+                )
+                if boundary == "output":
+                    self.assertEqual(output.write_attempts, 1)
+                self.assertEqual(error_output.getvalue(), f"{diagnostic}\n")
+
+    def test_real_process_entrypoint(self):
+        """モジュール入口のヘルプ・入力失敗・0ms停止を確認する。
+
+        SystemExitの未接続、誤ったプロセス終了値、停止記録の捏造を検出する。
+        """
+        module = "kaname_shogi.search.run_controlled_iterative"
+        repository_root = Path(__file__).resolve().parents[1]
+        base_command = [sys.executable, "-m", module]
+        cases = (
+            (["--help"], 0, "usage:", ""),
+            (
+                [
+                    "--sfen",
+                    "invalid",
+                    "--max-depth",
+                    "1",
+                    "--target-ms",
+                    "0",
+                    "--maximum-ms",
+                    "0",
+                ],
+                2,
+                "",
+                "入力エラー:",
+            ),
+            (
+                [
+                    "--sfen",
+                    "8k/9/9/9/9/9/9/9/K8 b - 1",
+                    "--max-depth",
+                    "1",
+                    "--target-ms",
+                    "0",
+                    "--maximum-ms",
+                    "0",
+                ],
+                0,
+                "STOPPED（通常停止）",
+                "",
+            ),
+        )
+
+        for arguments, expected_code, expected_stdout, expected_stderr in cases:
+            with self.subTest(arguments=arguments):
+                completed = subprocess.run(
+                    [*base_command, *arguments],
+                    capture_output=True,
+                    check=False,
+                    cwd=repository_root,
+                    text=True,
+                )
+                self.assertEqual(completed.returncode, expected_code)
+                if expected_stdout:
+                    self.assertIn(expected_stdout, completed.stdout)
+                else:
+                    self.assertEqual(completed.stdout, "")
+                if expected_stderr:
+                    self.assertIn(expected_stderr, completed.stderr)
+                else:
+                    self.assertEqual(completed.stderr, "")
+                if arguments[-1] == "0" and arguments[0] == "--sfen":
+                    if arguments[1] == "8k/9/9/9/9/9/9/9/K8 b - 1":
+                        self.assertIn("完了記録: なし（評価なし）", completed.stdout)

@@ -1,6 +1,7 @@
 """時間制御付き反復探索を一回実行する開発用コマンド。"""
 
 import argparse
+import sys
 import time
 
 from ..model import Position, Side
@@ -120,3 +121,46 @@ def _format_result(
             )
         )
     return "\n".join(lines)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """引数から制御付き反復探索を一度実行する公開入口。
+
+    引数はテスト時に渡すargv、またはNoneならプロセス引数。戻り値は正常/ヘルプ0、
+    入力誤り2、中断130。副作用として正常結果をstdoutへ一度、入力/中断診断をstderrへ出す。
+    前提・設計理由: 入力準備だけのValueErrorを入力誤りとして扱い、それ以降の内部故障は
+    原因を保つ。argparseの解析中に限ってSystemExitの終了コードを戻り値へ変換する。
+    KeyboardInterruptは解析から出力まで捕捉し、部分結果を再探索・再表示しない。
+    """
+    try:
+        parser = _make_parser()
+        try:
+            arguments = parser.parse_args(argv)
+        except SystemExit as error:
+            return int(error.code)
+
+        try:
+            position, budget = _prepare_inputs(
+                arguments.sfen,
+                arguments.max_depth,
+                arguments.target_ms,
+                arguments.maximum_ms,
+            )
+        except ValueError as error:
+            print(f"入力エラー: {error}", file=sys.stderr)
+            return 2
+
+        result = _run_search(position, arguments.max_depth, budget)
+        print(
+            _format_result(
+                arguments.sfen, position, arguments.max_depth, budget, result
+            )
+        )
+        return 0
+    except KeyboardInterrupt:
+        print("中断: Ctrl+C。結果表示は未完了です", file=sys.stderr)
+        return 130
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

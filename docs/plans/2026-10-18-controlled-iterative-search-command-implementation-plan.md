@@ -25,7 +25,7 @@
 
 ## 承認段階
 
-本人は2026-10-18に本書の計画全体を「yes」と明示承認した。計画承認は設計全体への過去の承認と区別して記録する。本人は順次実装方式と、現在のcheckout内に作業ブランチを作る方式を選択済み。`codex/controlled-iterative-search-command` を承認記録コミット `f8429f8` から作成し、計画固有の作業場所 `.superpowers/sdd/2026-10-18-controlled-iterative-search-command-implementation-plan/` を準備した。Task 1〜3のTDDと独立レビューが完了し、Task 4へ進む。
+本人は2026-10-18に本書の計画全体を「yes」と明示承認した。計画承認は設計全体への過去の承認と区別して記録する。本人は順次実装方式と、現在のcheckout内に作業ブランチを作る方式を選択済み。`codex/controlled-iterative-search-command` を承認記録コミット `f8429f8` から作成し、計画固有の作業場所 `.superpowers/sdd/2026-10-18-controlled-iterative-search-command-implementation-plan/` を準備した。Task 1〜4のTDDと独立レビューが完了し、Task 5の全体検証へ進む。
 
 ## 範囲と成功条件
 
@@ -166,16 +166,16 @@ def main(argv: list[str] | None = None) -> int:
 
 **消費:** タスク1〜3の非公開処理。**生産:** 公開 `main(argv: list[str] | None = None) -> int` と `if __name__ == "__main__": raise SystemExit(main())`。
 
-- [ ] **テスト:** `test_main_invalid_inputs_do_not_start_search` と `test_main_help_skips_clock_and_search` を追加。引数解析中のargparse起因 `SystemExit(0)` と `SystemExit(2)` はその終了コードをmainの整数戻り値にし、入力値のValueErrorだけは診断付き2とする。入力不正ではstdout空・stderr診断・操作/時計/探索なし、ヘルプは0で時計/探索なしをassertする。
-- [ ] **Red確認:** これらのテストでargparseの終了コード変換、入力ValueErrorの診断と終了値、不要な時計/探索呼出しに関する対象assertionが失敗することを確認する。
-- [ ] **テスト:** `test_internal_value_errors_propagate` を追加。操作セット、時計、探索、整形、出力それぞれのValueErrorが入力不正2へ変換されず原因のまま伝わることをassertする。
-- [ ] **テスト:** `test_keyboard_interrupt_returns_130_without_result_recovery` を追加。解析から出力までの代表境界でKeyboardInterruptを注入し、130・指定診断・再探索/再表示なしをassertする。出力途中のケースは部分文字列が残り得ることを許容し、完了結果としての再表示がないことを確認する。
-- [ ] **Red確認:** import可能なmain骨格で両テストを実行し、内部ValueErrorの同一例外伝播、中断時の130・診断・結果回収なしに関する対象assertionが失敗することを確認する。関数呼出しやテスト探索の失敗だけはRedに数えない。
-- [ ] **テスト:** `test_real_process_entrypoint` を追加。`sys.executable -m kaname_shogi.search.run_controlled_iterative` で `--help` は使用法を表示し0、SFEN不正は2、玉だけ局面の0/0予算は0・STOPPED・完了記録なしを確認する。実時間で深さを固定しない。
-- [ ] **Red確認:** モジュールがimport可能でプロセスとして起動する骨格を用い、使用法/診断/結果の内容または終了値に関する対象assertionが失敗することを確認する。プロセス起動・モジュール読込み失敗だけはRedに数えない。
-- [ ] **最小実装:** parser作成から通常出力までをKeyboardInterrupt捕捉範囲に置く。引数解析中に発生したargparse起因 `SystemExit` のコード0/2を戻り値にし、入力段階だけを2へ変換する。通常結果を一度表示し、通常の戻り値0/2/130を返す。公開 `main` の日本語docstringに引数・戻り値・標準出力/標準エラーの副作用・伝播する例外と前提条件・KeyboardInterruptの挙動・設計理由を記録する。
-- [ ] **Green確認:** 専用テストファイル全体を実行し、出力と終了コードを確認する。
-- [ ] **Refactor・独立レビュー:** mainの捕捉範囲とプロセス終了値への接続を再確認し、重大度別レビューと対応を実装記録へ記す。
+- [x] **テスト:** `test_main_invalid_inputs_do_not_start_search` と `test_main_help_skips_clock_and_search` を追加。引数解析中のargparse起因 `SystemExit(0)` と `SystemExit(2)` はその終了コードをmainの整数戻り値にし、入力値のValueErrorだけは診断付き2とする。入力不正ではstdout空・stderr診断・操作/時計/探索なし、ヘルプは0で時計/探索なしをassertする。
+- [x] **Red確認:** 中立main骨格は入力値3ケースとargparse不足引数で0を返し、ヘルプでは使用法が出ず、対象の終了値/表示assertionが失敗した。
+- [x] **テスト:** `test_internal_value_errors_propagate` を追加。操作セット、時計、探索、整形、出力それぞれのValueErrorが入力不正2へ変換されず原因のまま伝わることをassertする。
+- [x] **テスト:** `test_keyboard_interrupt_returns_130_without_result_recovery` を追加。解析から出力までの代表境界でKeyboardInterruptを注入し、130・指定診断・再探索/再表示なしをassertする。出力途中のケースは部分文字列が残り得ることを許容し、完了結果としての再表示がないことを確認する。
+- [x] **Red確認:** テスト用の不正なSTOPPEDデータをNO_LEGAL_MOVEの有効な結果へ直してから有効なRedを確認。5境界のValueError伝播assertion、7境界の中断終了値assertion、実プロセスの使用法/診断/結果assertionが失敗し、import/プロセス起動エラーではなかった。
+- [x] **テスト:** `test_real_process_entrypoint` を追加。`sys.executable -m kaname_shogi.search.run_controlled_iterative` で `--help` は使用法を表示し0、SFEN不正は2、玉だけ局面の0/0予算は0・STOPPED・完了記録なしを確認する。実時間で深さを固定しない。
+- [x] **Red確認:** モジュールがimport可能でプロセスとして起動する骨格を用い、ヘルプ/不正SFEN/0ms結果の内容と終了値のassertionが失敗することを確認した。プロセス起動・モジュール読込み失敗ではない。
+- [x] **最小実装:** parser作成から通常出力までをKeyboardInterrupt捕捉範囲に置く。引数解析中に発生したargparse起因 `SystemExit` のコード0/2を戻り値にし、入力段階だけを2へ変換する。通常結果を一度表示し、通常の戻り値0/2/130を返す。公開 `main` の日本語docstringに引数・戻り値・標準出力/標準エラーの副作用・伝播する例外と前提条件・KeyboardInterruptの挙動・設計理由を記録する。
+- [x] **Green確認:** 専用テスト全体14件が成功し、実プロセスの3ケースを含む出力と終了値を確認した。
+- [x] **Refactor・独立レビュー:** mainの捕捉範囲とプロセス終了値への接続を再確認した。初回独立レビューのImportant 1 / Minor 1（中断の呼出し回数・部分出力/診断、出力ValueErrorの誤捕捉検出）をテスト強化で解消し、最終Critical 0 / Important 0 / Minor 0。
 
 ## 全体の検証・完了条件（承認後のみ）
 
@@ -201,4 +201,4 @@ def main(argv: list[str] | None = None) -> int:
 
 最終の独立レビューはCritical 0 / Important 0 / Minor 0。SystemExit(0)/(2)と入力ValueErrorの境界、各振る舞いのRed順、表示契約、docstring、回帰コマンド、範囲と承認境界の維持を確認済み。レビューは読み取り専用で、コード・テスト・文書を変更せず、製品テストも実行していない。
 
-計画全体の明示承認済み。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。`codex/controlled-iterative-search-command` を `f8429f8` から作成し、計画用ワークスペースと共有インターフェースのプリフライトを完了した。Task 1〜3のTDD・レビューを完了し、Task 4を次に始める。通常対局・USIへの新方式接続、予算式変更、時間保証は引き続き対象外。
+計画全体の明示承認済み。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。`codex/controlled-iterative-search-command` を `f8429f8` から作成し、計画用ワークスペースと共有インターフェースのプリフライトを完了した。Task 1〜4のTDD・レビューを完了し、Task 5で全体検証・変異確認・学習記録・独立ブランチレビューを行う。通常対局・USIへの新方式接続、予算式変更、時間保証は引き続き対象外。
