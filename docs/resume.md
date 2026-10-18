@@ -2,11 +2,11 @@
 
 ## 現在地
 
-2026-10-18更新。選定済みテーマ「承認済みの時間制御付き反復の開発用コマンド設計から実装計画を作る」の[計画案](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)を作成し、独立レビューを完了した。最終レビューはCritical 0 / Important 0 / Minor 0。[作成・レビュー記録](learning/controlled-iterative-search-command-implementation-plan.md)に指摘と対応を記録した。
+2026-10-18更新。選定済みテーマ「承認済みの時間制御付き反復の開発用コマンド設計から実装計画を作る」の[計画案](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)は独立レビュー後、本人が明示承認した。最終レビューはCritical 0 / Important 0 / Minor 0。[作成・レビュー・承認記録](learning/controlled-iterative-search-command-implementation-plan.md)を参照する。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。
 
-本人の計画全体への明示承認を待つ。承認前にTDD・コード/テスト変更・製品テスト・実装を始めない。承認済み設計とテーマ選定を計画への承認へ読み替えない。通常対局・USIへの新方式接続、予算式変更、時間保証は対象外。
+作業ブランチを作成して計画実行用ワークスペースを準備する。準備完了後、Task 1からTDDを開始する。通常対局・USIへの新方式接続、予算式変更、時間保証は対象外。
 
-作業場所 `/Users/oki2a24/kaname-shogi`。本テーマ開始時はmain、HEAD `c4751e7`、clean、origin/mainより18コミット先。今回は計画・学習記録・案内の文書作成/更新のみ。製品テストは実行していない。Ruff 0.16.10とhooksPath `.githooks` は開始時に確認済み。再開時に現物のGit状態を再確認する。
+作業場所 `/Users/oki2a24/kaname-shogi`。計画作成時の開始状態はmain、HEAD `c4751e7`、clean、origin/mainより18コミット先。計画案とレビュー記録は `c61318d` で保存した。その後、本人の計画承認と順次実装/作業ブランチ選択を受けた。実装前に現物Git状態を再確認する。計画段階では製品テスト未実施。Ruff 0.16.10とhooksPath `.githooks` は開始時に確認済み。
 
 ## 完了した開発用コマンド設計
 

@@ -2,7 +2,7 @@
 
 ## 現在のテーマと状態
 
-開発用コマンド設計から作成した[実装計画案](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)の独立レビューが完了し、現在は本人の明示承認待ち。最終レビューはCritical 0 / Important 0 / Minor 0。[作成・レビュー記録](learning/controlled-iterative-search-command-implementation-plan.md)に経緯を保存した。承認前にTDD・コード/テスト変更・製品テスト・実装は始めない。現在地の正本は[再開案内](resume.md)。
+開発用コマンド設計から作成した[実装計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)は独立レビュー後に本人が明示承認した。最終レビューはCritical 0 / Important 0 / Minor 0。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。[作成・レビュー・承認記録](learning/controlled-iterative-search-command-implementation-plan.md)に経緯を保存した。現在地の正本は[再開案内](resume.md)。
 
 ## 選定時の候補（開発用コマンド設計完了後、2026-10-18）
 
