@@ -4,7 +4,7 @@
 
 2026-10-18更新。本人の計画明示承認後、時間制御付き反復深化のタスク1〜5を実装・検証・各段階の独立レビューまで完了した。最終のブランチ全体レビューと結果は[学習・実施記録](learning/iterative-deepening-stop-time-control-implementation.md)、手順・進捗は[計画と結果](plans/2026-10-18-iterative-deepening-stop-time-control-implementation-plan.md)を参照する。
 
-本人の別承認「yes」を受けてmainへ取り込み、取り込み先検証まで完了。次は最後の理解確認の回答を待つ。[出題と回答欄](learning/iterative-deepening-stop-time-control-implementation.md#最後の理解確認回答待ち)を参照する。回答・補足の記録後に次候補を見直し、本人が選ぶまで新テーマへ進まない。
+本人の別承認「yes」を受けてmainへ取り込み、取り込み先検証まで完了。最後の理解確認の初回回答を受領し、深さ2の記録保持は正しいが、応答抑制時は返す手なしと補足した。次は再確認の一問への回答を待つ。[出題と回答欄](learning/iterative-deepening-stop-time-control-implementation.md#最後の理解確認回答待ち)を参照する。回答・補足の記録後に次候補を見直し、本人が選ぶまで新テーマへ進まない。
 
 作業場所 `/Users/oki2a24/kaname-shogi`、main。6418379から80e3db0へfast-forwardで統合した。統合済み作業ブランチは通常削除済み、別worktreeなし、pushなし。統合記録保存後のHEADはGitで再確認する。実装5コミットと作業ブランチの検証履歴は学習記録へ保存済み。
 
