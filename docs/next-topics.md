@@ -2,7 +2,7 @@
 
 ## 現在のテーマと状態
 
-時間制御付き反復深化の実装・検証・独立レビュー・main統合・取り込み先検証・最後の理解確認まで完了した。[実装計画と結果](plans/2026-10-18-iterative-deepening-stop-time-control-implementation-plan.md)、[学習・実施記録](learning/iterative-deepening-stop-time-control-implementation.md)を参照する。現在地は[再開案内](resume.md)を正本とする。次テーマは未選定で、以下の候補から本人の選択を待つ。
+時間制御付き反復深化の実装・検証・独立レビュー・main統合・取り込み先検証・最後の理解確認まで完了した。[実装計画と結果](plans/2026-10-18-iterative-deepening-stop-time-control-implementation-plan.md)、[学習・実施記録](learning/iterative-deepening-stop-time-control-implementation.md)を参照する。現在地は[再開案内](resume.md)を正本とする。本人が候補2「時間制御付き反復を試す開発用コマンドの学習・設計」を選定した。[新セッション用引き継ぎ](handover-controlled-iterative-search-command-design.md)を用意し、本人が再開プロンプトを入力するまで着手しない。
 
 ## 次テーマ候補（時間制御付き反復深化の実装完了後、2026-10-18）
 
@@ -14,7 +14,7 @@ README・[方向性](02-project-direction.md)・保留候補を見直した。�
 
 2を推薦する。実装済み部品の動きを小さい局面で確認でき、通常対局の設定や通信・並行処理へ一度に範囲を広げず、理解できる段階で次へ進められるため。駒得以外の評価・置換表・定跡などの保留候補も引き続き選べる。
 
-本人の選択まで新テーマに着手しない。選択後は別希望がなければsession-handoffで新セッション用の引き継ぎを作る。
+2026-10-18、本人「2」により候補2を選定した。今回の範囲は学習・設計まで。session-handoffで新セッション用の引き継ぎを準備し、本人の新セッション入力を待つ。
 
 ## 次テーマの選定（2026-10-18）
 
