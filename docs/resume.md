@@ -2,11 +2,13 @@
 
 ## 現在地
 
-2026-10-18更新。次テーマは本人「2」により「時間制御付き反復を試す開発用コマンドの学習・設計」に選定済み。[新セッション用引き継ぎ](handover-controlled-iterative-search-command-design.md)に選定理由・完了事項・Git状態・読む資料・未決定事項と[再開プロンプト](handover-controlled-iterative-search-command-design.md#再開用プロンプト)を保存した。
+2026-10-18更新。「時間制御付き反復を試す開発用コマンドの学習・設計」は学習・設計・独立レビュー・設計提示を終え、本人「yes」により[設計全体](plans/2026-10-18-controlled-iterative-search-command-design.md)を明示承認済み。[学習記録](learning/controlled-iterative-search-command-design.md)に回答・補足・個別選択・全体承認・レビューを保存した。開始背景は[引き継ぎ](handover-controlled-iterative-search-command-design.md)へ保存済み。
 
-次は本人が再開プロンプトを新しいセッションへ入力するのを待つ。入力前に次テーマの学習・設計を始めない。次テーマは学習・設計・独立設計レビュー・設計提示までで、実装計画・TDD・コード/テスト変更は未承認。予算や表示の仕様、コマンド構成、Ctrl+Cの扱いも未決定。通常三方式を維持し、通常対局・USIへの新方式接続、予算式変更、時間保証は対象外。
+専用コマンドで一回探索し、SFEN・上限深さ・直接指定の目標ms/上限msを必須とする。探索直前から計時し、合法予備手準備を含める。結果は終了時にまとめ、選択手と完了記録を区別する。Ctrl+Cは中断130。独立レビューは初回Minor 1（現在地記録の更新）を解消し、最終Critical・Important・Minorはすべて0。
 
-作業場所 `/Users/oki2a24/kaname-shogi`、main。引き継ぎ作成開始HEAD605b0a3、clean、origin/mainより14コミット先。今回の作業ブランチは統合・検証後に削除済み、pushなし。引き継ぎ保存後のHEAD・差分は再取得する。今回の作業で別worktreeを作成/利用していないが、他テーマの既存worktree4件は現物で確認しており未操作。
+今回の範囲は学習・設計まで。実装計画・TDD・コード/テスト変更には進んでいない。後続テーマは未選定で、本人の指示を待つ。既存三方式を維持し、通常対局・USIへの新方式接続、予算式変更、時間保証は対象外。
+
+作業場所 `/Users/oki2a24/kaname-shogi`、main。開始時HEAD083f230、clean、origin/mainより15コミット先を確認した。今回の変更は文書5件のみで、承認記録を通常コミットで保存する段階。保存後のHEAD・差分はgitで再取得する。別worktreeは利用していない。Ruff0.16.10とhooksPath=.githooksを確認済み。製品テストは今回未実行。
 
 ## 完了した前テーマ
 
@@ -18,7 +20,7 @@
 
 ## 次に読むもの
 
-1. 現在のGit状態、AGENTS.md、本書、[新しい引き継ぎ](handover-controlled-iterative-search-command-design.md)。
+1. 現在のGit状態、AGENTS.md、本書、[承認済みコマンド設計](plans/2026-10-18-controlled-iterative-search-command-design.md)、[今回の学習記録](learning/controlled-iterative-search-command-design.md)。開始時の引き継ぎは履歴として読む。
 2. [文書索引](README.md)、[選定済み候補と理由](next-topics.md)、ルートREADMEの開発用比較と制約、[方向性](02-project-direction.md)。
 3. [探索停止](knowledge/search-stop.md)、[時計予算](knowledge/time-budget.md)、[探索比較](knowledge/search-comparison.md)、引き継ぎに列挙したコード・テスト。
 4. [承認済み探索部品設計](plans/2026-10-18-iterative-deepening-stop-time-control-design.md)、[実施記録](learning/iterative-deepening-stop-time-control-implementation.md)、[検出力の点検](knowledge/test-coverage-review.md)、[文書更新ガイド](documentation-guide.md)。

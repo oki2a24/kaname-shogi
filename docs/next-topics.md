@@ -2,9 +2,11 @@
 
 ## 現在のテーマと状態
 
-時間制御付き反復深化の実装・検証・独立レビュー・main統合・取り込み先検証・最後の理解確認まで完了した。[実装計画と結果](plans/2026-10-18-iterative-deepening-stop-time-control-implementation-plan.md)、[学習・実施記録](learning/iterative-deepening-stop-time-control-implementation.md)を参照する。現在地は[再開案内](resume.md)を正本とする。本人が候補2「時間制御付き反復を試す開発用コマンドの学習・設計」を選定した。[新セッション用引き継ぎ](handover-controlled-iterative-search-command-design.md)を用意し、本人が再開プロンプトを入力するまで着手しない。
+時間制御付き反復深化の実装・検証・独立レビュー・main統合・取り込み先検証・最後の理解確認まで完了した。[実装計画と結果](plans/2026-10-18-iterative-deepening-stop-time-control-implementation-plan.md)、[学習・実施記録](learning/iterative-deepening-stop-time-control-implementation.md)を参照する。現在地は[再開案内](resume.md)を正本とする。本人が候補2「時間制御付き反復を試す開発用コマンドの学習・設計」を選定した。本人の再開指示により学習・設計を開始し、独立設計レビュー後に設計全体への本人「yes」を受領して完了した。実装計画・実装は未開始、後続テーマは未選定。[学習記録](learning/controlled-iterative-search-command-design.md)を参照する。開始背景は[引き継ぎ](handover-controlled-iterative-search-command-design.md)に保存した。
 
 ## 次テーマ候補（時間制御付き反復深化の実装完了後、2026-10-18）
+
+以下の候補と選定待ちは前セッションでの履歴である。
 
 README・[方向性](02-project-direction.md)・保留候補を見直した。今回の部品はテストから利用できるが、開発用比較コマンドと通常対局への新方式接続はまだない。
 
