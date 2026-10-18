@@ -52,3 +52,7 @@ receiving-code-reviewに沿ってMinorを現行処理へ照合した。指摘は
 ## タスク1：データ契約の実績
 
 SearchInterruptedと四状態の最終結果、準備・正常遷移・制御付き操作セットを追加。中断理由の不正値3件と終了組合せの不正10件は、宣言のみの状態に対しValueErrorが発生しないFAILを確認してから検査を実装し成功した。frozenと単純ラッパーの確認は初回Greenであり、Redと扱わない。新規4テスト成功、全体は `.venv/bin/python -m unittest discover -s tests -v` で517件・28.370秒・OK。Ruff整形・checkとdiff --check成功。Refactorは不要（型配置と責務が最小）。独立レビューはCritical 0・Important 0・Minor 0。合法性・上限一致は探索側、入れ子の型注釈違反や深い凍結は範囲外。各種停止伝播は後続で検証する。
+
+## タスク2：停止可能な将棋処理の公開境界
+
+公開3操作とMoveApplicationResultを追加し、既存生成のroot互換性を保ち目標と初手保護を分離した。目標時の不要な予備手、first_only欠落による未完了、適用データの不正4組合せのFAILを確認してから修正し成功。既存本体を再利用する歩打ち・先後・局面保存・故障等は初回Greenと区別した。対象33件（最終0.293秒）、全体522件（27.467秒）OK。Ruffでテストのループ変数束縛不足B023を検出し既定引数で固定して解消、最終整形/check・差分検査成功。追加Refactor不要（規則は共有済み）。独立レビューCritical 0・Important 0・Minor 0。再帰・反復の接続と代表変異は後続で検証する。

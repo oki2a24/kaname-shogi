@@ -1218,6 +1218,7 @@ def _legal_moves_controlled(
     check_uchi_fuzume: bool,
     control: SearchControl | None,
     root: bool = False,
+    include_target: bool = False,
     protect_first_legal: bool = False,
     _first_only: bool = False,
 ) -> LegalMovesResult:
@@ -1232,8 +1233,8 @@ def _legal_moves_controlled(
     def interrupted():
         return _stopped(
             control,
-            include_target=root,
-            protect_first_legal=protect_first_legal or (root and not moves),
+            include_target=root or include_target,
+            protect_first_legal=(root or protect_first_legal) and not moves,
         )
 
     for file in range(1, 10):
@@ -1272,7 +1273,7 @@ def _legal_moves_controlled(
                         Square(file, rank),
                         check_uchi_fuzume=check_uchi_fuzume,
                         control=control,
-                        protect_first_legal=protect_first_legal or (root and not moves),
+                        protect_first_legal=(root or protect_first_legal) and not moves,
                     )
                 except ValueError:
                     continue
@@ -1616,3 +1617,79 @@ def position_after_move(position: Position, move: Move) -> Position:
     既存の停止なし適用へ委譲し、新探索と従来方式で規則を重複実装しない。
     """
     return _position_after_move(position, move)
+
+
+def legal_moves_controlled(
+    position: Position,
+    *,
+    control: SearchControl,
+    include_target: bool = False,
+    protect_first_legal: bool = False,
+) -> LegalMovesResult:
+    """停止可能な全合法手調査を返す操作。元局面を変更しない。
+
+    controlは同じ探索の制御。目標適用と最初の合法手までの保護は独立指定。
+    打ち歩詰めまで確認し、未完了一覧を手なし確定と扱わない。故障は伝播する。
+    """
+    return _legal_moves_controlled(
+        position,
+        check_uchi_fuzume=True,
+        control=control,
+        include_target=include_target,
+        protect_first_legal=protect_first_legal,
+    )
+
+
+def first_legal_move_controlled(
+    position: Position,
+    *,
+    control: SearchControl,
+    protect_first_legal: bool = False,
+) -> LegalMovesResult:
+    """最初の合法手だけを取得する操作。完了時の一覧は0または1件。
+
+    controlと保護指定を下位の打ち歩詰め確認にも渡す。目標は適用しない。
+    元局面を変更せず、空の未完了結果と手なし確定を区別する。故障は伝播する。
+    """
+    return _legal_moves_controlled(
+        position,
+        check_uchi_fuzume=True,
+        control=control,
+        protect_first_legal=protect_first_legal,
+        _first_only=True,
+    )
+
+
+@dataclass(frozen=True)
+class MoveApplicationResult:
+    """適用完了状態と次局面を持つ不変データ。
+
+    completedがTrueならPosition、FalseならNoneだけ許可し、違反はValueError。
+    構築に副作用なし。次局面の独立性は適用操作側の前提とする。
+    """
+
+    completed: bool
+    position: Position | None
+
+    def __post_init__(self) -> None:
+        if type(self.completed) is not bool or (
+            not isinstance(self.position, Position)
+            if self.completed
+            else self.position is not None
+        ):
+            raise ValueError("適用の完了状態と次局面の組合せが不正です")
+
+
+def position_after_move_controlled(
+    position: Position,
+    move: Move,
+    *,
+    control: SearchControl,
+) -> MoveApplicationResult:
+    """独立局面への適用を既存処理へ委譲し、公開データで返す操作。
+
+    controlは同じ探索の制御。元盤面・両持駒・手番を変えず、完了時だけ
+    独立局面を返す。中断はNone。未知手TypeError・違法手ValueError・故障は伝播。
+    """
+    applied, after = _position_after_move_controlled(position, move, control=control)
+    return MoveApplicationResult(applied.completed, after)

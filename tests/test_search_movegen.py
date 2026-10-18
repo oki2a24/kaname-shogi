@@ -985,3 +985,200 @@ class ReplyProtectionTests(unittest.TestCase):
         self.assertFalse(result.completed)
         self.assertIsNone(result.score)
         self.assertEqual(observed, [mg.LegalMovesResult(False, ())])
+
+
+class PublicControlledGenerationTests(unittest.TestCase):
+    def test_public_generation_separates_target_and_protection(self):
+        """目標の適用と最初の合法手までの保護を独立に指定する。
+
+        rootへの一括変換や、全生成中ずっと保護する誤りを検出する。
+        """
+        first = BoardMove(Square(2, 7), Square(2, 6), False)
+        for target in (False, True):
+            c = SearchControl(SearchBudget(10, 20), 0, now_ns=lambda: 10_000_000)
+            r = mg.legal_moves_controlled(pawns(), control=c, include_target=target)
+            self.assertEqual(r.completed, not target)
+            self.assertEqual(
+                r.moves,
+                () if target else (first, BoardMove(Square(7, 7), Square(7, 6), False)),
+            )
+        for protected in (False, True):
+            c = SearchControl(None, 0)
+            c.request_stop()
+            r = mg.legal_moves_controlled(
+                pawns(), control=c, protect_first_legal=protected
+            )
+            self.assertFalse(r.completed)
+            self.assertEqual(r.moves, (first,) if protected else ())
+
+    def test_first_legal_finishes_without_later_trials(self):
+        """最初の合法手取得は後続候補を調べず、手なしも確定できる。
+
+        全生成への誤委譲や、0予算・通常停止で未確保を投了にする誤りを検出する。
+        """
+        for zero in (False, True):
+            c = SearchControl(SearchBudget(0, 0) if zero else None, 0, now_ns=lambda: 0)
+            if not zero:
+                c.request_stop()
+            original = mg.apply_move
+            seen = []
+
+            def observe(*args, seen=seen, original=original, **kwargs):
+                seen.append(args[1])
+                return original(*args, **kwargs)
+
+            with patch.object(mg, "apply_move", side_effect=observe):
+                r = mg.first_legal_move_controlled(
+                    pawns(), control=c, protect_first_legal=True
+                )
+            self.assertTrue(r.completed)
+            self.assertEqual(r.moves, (BoardMove(Square(2, 7), Square(2, 6), False),))
+            self.assertEqual(seen, [Square(2, 7)])
+            empty = mg.first_legal_move_controlled(
+                Position(Board(), Side.SENTE), control=c, protect_first_legal=True
+            )
+            self.assertEqual(empty, mg.LegalMovesResult(True, ()))
+
+    def test_application_result_rejects_inconsistent_state(self):
+        """未完了の部分局面と完了なのに局面なしのデータを拒否する。
+
+        bool以外やPosition以外の値の混入も検出する。
+        """
+        from dataclasses import FrozenInstanceError
+
+        for completed, position in (
+            (True, None),
+            (False, pawns()),
+            (1, pawns()),
+            (True, object()),
+        ):
+            with self.subTest(completed=completed), self.assertRaises(ValueError):
+                mg.MoveApplicationResult(completed, position)
+        value = mg.MoveApplicationResult(False, None)
+        with self.assertRaises(FrozenInstanceError):
+            value.position = pawns()
+
+    def test_public_first_protection_reaches_pawn_defense(self):
+        """最初の歩打ちの防御調査へ保護を伝え、抑制は中断する。
+
+        合法側と打ち歩詰め側、先後の対照で保護喪失と不明の合法扱いを検出する。
+        """
+        for side in Side:
+            for mating in (False, True):
+                for suppress in (False, True):
+                    with self.subTest(side=side, mating=mating, suppress=suppress):
+                        p, dest = uchi(side)
+                        if not mating:
+                            p.board.set_piece(
+                                Square(4, 3) if side == Side.SENTE else Square(6, 7),
+                                None,
+                            )
+                        before = snapshot(p)
+                        c = SearchControl(None, 0)
+                        apply, drop, defense = (
+                            mg.apply_move,
+                            mg._apply_drop_controlled,
+                            mg._has_legal_move_controlled,
+                        )
+
+                        def root_move(*args, side=side, apply=apply, **kwargs):
+                            if args[0].side_to_move == side:
+                                raise ValueError("教材では根の盤上候補を除く")
+                            return apply(*args, **kwargs)
+
+                        def root_drop(*args, side=side, dest=dest, drop=drop, **kwargs):
+                            if args[0].side_to_move == side and (
+                                args[1] != BasicPieceType.PAWN or args[2] != dest
+                            ):
+                                raise ValueError("教材では対象の歩打ちだけを調べる")
+                            return drop(*args, **kwargs)
+
+                        def stop_inside(
+                            *args, c=c, suppress=suppress, defense=defense, **kwargs
+                        ):
+                            c.request_stop(suppress_response=suppress)
+                            return defense(*args, **kwargs)
+
+                        with (
+                            patch.object(mg, "apply_move", side_effect=root_move),
+                            patch.object(
+                                mg, "_apply_drop_controlled", side_effect=root_drop
+                            ),
+                            patch.object(
+                                mg,
+                                "_has_legal_move_controlled",
+                                side_effect=stop_inside,
+                            ),
+                        ):
+                            r = mg.first_legal_move_controlled(
+                                p, control=c, protect_first_legal=True
+                            )
+                        self.assertEqual(r.completed, not suppress)
+                        self.assertEqual(
+                            r.moves,
+                            ()
+                            if suppress or mating
+                            else (DropMove(BasicPieceType.PAWN, dest),),
+                        )
+                        self.assertEqual(snapshot(p), before)
+
+    def test_public_application_returns_only_complete_position(self):
+        """盤上手・成り・打ちは独立局面、途中停止は局面なしで返す。
+
+        元局面の変更と部分局面の漏出、故障の中断化を検出する。
+        """
+        from kaname_shogi.sfen import parse_sfen
+
+        for sfen, move in (
+            (None, BoardMove(Square(2, 7), Square(2, 6), False)),
+            (
+                "8k/9/9/7P1/9/9/9/9/K8 b - 1",
+                BoardMove(Square(2, 4), Square(2, 3), True),
+            ),
+            ("8k/9/9/9/9/9/9/9/K8 b P 1", DropMove(BasicPieceType.PAWN, Square(5, 5))),
+        ):
+            p = pawns() if sfen is None else parse_sfen(sfen).position
+            before = snapshot(p)
+            r = mg.position_after_move_controlled(
+                p, move, control=SearchControl(None, 0)
+            )
+            self.assertTrue(r.completed)
+            self.assertIsNot(r.position, p)
+            self.assertNotEqual(snapshot(r.position), before)
+            for suppress in (False, True):
+                c = SearchControl(None, 0)
+                name = (
+                    "_apply_drop_unchecked"
+                    if isinstance(move, DropMove)
+                    else "apply_move"
+                )
+                original = getattr(mg, name)
+
+                def stop(*args, c=c, suppress=suppress, original=original, **kwargs):
+                    result = original(*args, **kwargs)
+                    c.request_stop(suppress_response=suppress)
+                    return result
+
+                with patch.object(mg, name, side_effect=stop):
+                    r = mg.position_after_move_controlled(p, move, control=c)
+                self.assertEqual(r, mg.MoveApplicationResult(False, None))
+            self.assertEqual(snapshot(p), before)
+        for move, error in (
+            (object(), TypeError),
+            (BoardMove(Square(2, 7), Square(2, 5), False), ValueError),
+        ):
+            with self.assertRaises(error):
+                mg.position_after_move_controlled(
+                    pawns(), move, control=SearchControl(None, 0)
+                )
+        fault = RuntimeError("適用故障")
+        with (
+            patch.object(mg, "apply_move", side_effect=fault),
+            self.assertRaises(RuntimeError) as caught,
+        ):
+            mg.position_after_move_controlled(
+                pawns(),
+                BoardMove(Square(2, 7), Square(2, 6), False),
+                control=SearchControl(None, 0),
+            )
+        self.assertIs(caught.exception, fault)
