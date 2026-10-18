@@ -4,9 +4,9 @@
 
 2026-10-18更新。選定済みテーマ「承認済みの時間制御付き反復の開発用コマンド設計から実装計画を作る」の[計画案](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)は独立レビュー後、本人が明示承認した。最終レビューはCritical 0 / Important 0 / Minor 0。[作成・レビュー・承認記録](learning/controlled-iterative-search-command-implementation-plan.md)を参照する。本人は順次実装と現在のcheckout内の作業ブランチを選択済み。
 
-作業ブランチを作成して計画実行用ワークスペースを準備する。準備完了後、Task 1からTDDを開始する。通常対局・USIへの新方式接続、予算式変更、時間保証は対象外。
+作業ブランチ `codex/controlled-iterative-search-command` を `f8429f8` から作成した。計画実行用ワークスペースと共有インターフェースのプリフライトを準備済み。次にTask 1の概要を取得し、必須引数と入力検査の振る舞いからTDDを始める。通常対局・USIへの新方式接続、予算式変更、時間保証は対象外。
 
-作業場所 `/Users/oki2a24/kaname-shogi`。計画作成時の開始状態はmain、HEAD `c4751e7`、clean、origin/mainより18コミット先。計画案とレビュー記録は `c61318d` で保存した。その後、本人の計画承認と順次実装/作業ブランチ選択を受けた。実装前に現物Git状態を再確認する。計画段階では製品テスト未実施。Ruff 0.16.10とhooksPath `.githooks` は開始時に確認済み。
+作業場所 `/Users/oki2a24/kaname-shogi`。計画作成時の開始状態はmain、HEAD `c4751e7`、clean、origin/mainより18コミット先。計画案とレビュー記録は `c61318d`、本人の承認と実行方式の記録は `f8429f8` で保存した。実装開始時は作業ブランチ `codex/controlled-iterative-search-command` を現物確認し、Ruff 0.16.10とhooksPath `.githooks` を再確認した。これらは開始時点の状態で、直近の検証結果ではない。
 
 ## 完了した開発用コマンド設計
 

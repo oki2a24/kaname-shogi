@@ -49,6 +49,12 @@ Critical 0 / Important 0 / Minor 0。全振る舞いでテストと対象asserti
 
 順次実装とタスクごとの実装者分担を提示し、共有する製品/テストファイルへ変更が集まるため順次実装を推薦した。本人は「順次実装（推奨）」を選択した。隔離ワークツリーを使うか現在のcheckout内で作業するかを確認し、本人は「現在のcheckout内の作業ブランチ」を選択した。現在のcheckoutに目的が分かる作業ブランチを作成してから実装へ進む。
 
+## 実装開始時の状態
+
+承認記録コミット `f8429f8` を基点に `codex/controlled-iterative-search-command` を作成した。計画固有の作業場所 `.superpowers/sdd/2026-10-18-controlled-iterative-search-command-implementation-plan/` を用意。作業開始時に作業ツリーclean、Ruff 0.16.10は `requirements-dev.txt` と一致、`core.hooksPath=.githooks` を確認した。共有インターフェース走査では、parserとSFEN/表示整形は `comparison`、直接指定予算は `SearchBudget`、開始側視点の制御操作は `shogi.make_controlled_operations`、探索は `iterative_deepening.search_controlled` と既存の制御結果型が担当することを確認した。
+
+この記録時点では製品コード/テストの変更と製品テスト実行はない。過去の探索テスト成功は今回の実測へ流用しない。Task 1の開始後は計画と台帳に各Red/Green、Refactor判断、検出力確認、独立レビューを追記する。
+
 ## 振り返り・次回への問い
 
 実装前の計画は、テスト名を並べるだけでなく、各振る舞いで何の誤りをどの独立期待値で検出するか、Redの失敗理由が契約アサーションかを追える形にする必要がある。レビューで順序や境界の曖昧さが見つかったため、指摘ごとに現物と承認済み設計を再照合し、計画へ反映して再レビューした。
