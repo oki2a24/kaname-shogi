@@ -70,3 +70,22 @@ def depth_tree():
         "root",
         children=(("A", branch("A", (1, -4, 3))), ("B", branch("B", (0, 2, -1)))),
     )
+
+
+def controlled_operations(seen=None):
+    """数値木を制御付き契約へ包む。停止判定や探索は製品側が行う。"""
+    from kaname_shogi.search.contracts import (
+        AdvancedNode,
+        ControlledSearchOperations,
+        PreparedRoot,
+    )
+
+    base = operations(seen)
+    return ControlledSearchOperations(
+        lambda node, control: PreparedRoot(
+            node.children[0][0] if node.children else None
+        ),
+        lambda node, control: base.inspect(node),
+        lambda node, move, control: AdvancedNode(base.advance(node, move)),
+        base.evaluate,
+    )
