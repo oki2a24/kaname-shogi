@@ -2,11 +2,11 @@
 
 ## 現在地
 
-2026-10-18更新。承認済み[実装計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)に沿うTask 1〜5、TDD、検出力補強、独立レビュー、理解確認を作業ブランチで完了した後、本人の明示許可を得て`codex/controlled-iterative-search-command`をローカル`main`へfast-forward統合した。統合後のmainでこのターンに全体テスト560件（35.310秒）、`.venv/bin/ruff format --check .`（65ファイル）、`.venv/bin/ruff check .`が成功した。詳細は[作成・承認・実施・統合記録](learning/controlled-iterative-search-command-implementation-plan.md)を参照する。
+2026-10-18更新。選定済みテーマ「小さいSFENで時間制御付き反復探索の開発用コマンドを試し、出力を読む」を開始し、READMEの例を一回実行して理解確認まで完了した。[学習記録](learning/controlled-iterative-search-command-output-reading.md)に、実際の出力・終了コード・本人の初回回答と再確認回答・補足を保存する。
 
-最後の理解確認は、既に保存済みの本人回答と補足を本人が完了済みと確認した。回答を新たに作らず、[学習記録](learning/controlled-iterative-search-command-implementation-plan.md)の内容を正本とする。本人は次候補1「小さいSFENで開発用コマンドを試し、出力を読む」を選択した。新セッション用の[引き継ぎ](handover-controlled-iterative-search-command-output-reading.md)を準備済みで、本人が再開プロンプトを新セッションへ入力するまで、この次テーマを始めない。
+実行結果は終了コード0、`STOPPED（通常停止）`、指定上限深さ4に対して完了記録は深さ2、選択手`9i9h`は「完了結果」由来。完了深さの評価は`＋0`、訪問回数9、累計13。出力だけから目標50msと上限100msのどちらが原因かは特定できず、上限msは実応答時間の保証ではない。製品コードとテストは変更せず、テストを実行していない。
 
-作業場所は`/Users/oki2a24/kaname-shogi`。統合時のmain HEADは`f0f4027`で、作業ブランチの7コミットをfast-forwardした。pushはしていない。統合検証時、`main`は`origin/main`より27コミット先で、未追跡の`.antigravity/tasks/`があったため保持した。その後の引き継ぎ文書コミット分を含む正確なHEADと状態は再開時にGitから確認する。
+開始時のGit実測は`main`、HEAD `8e61832`（`origin/main`と同一）、直近3件`8e61832`・`f0f4027`・`c4751e7`。未追跡`.antigravity/tasks/`を保持した。今回の記録で次テーマ候補を更新したが、本人の選択はまだない。現在の候補と推薦理由は[次テーマ候補](next-topics.md)を参照し、選ばれるまで新しい学習・設計・実装を始めない。
 
 ## 完了した開発用コマンド設計
 
@@ -26,9 +26,8 @@
 
 ## 次に読むもの
 
-1. 再開時のGit状態、AGENTS.md、本書、[選定済み次テーマの引き継ぎ](handover-controlled-iterative-search-command-output-reading.md)。
-2. ルートREADMEの「時間制御付き反復探索を一回試す」、[承認済みコマンド設計](plans/2026-10-18-controlled-iterative-search-command-design.md)、[探索停止](knowledge/search-stop.md)。
-3. [実装計画・結果・本人回答](learning/controlled-iterative-search-command-implementation-plan.md)と、必要なら[実装計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)、`kaname_shogi/search/run_controlled_iterative.py`、`kaname_shogi/search/result.py`。
-4. [文書索引](README.md)、[次テーマ候補](next-topics.md)、[文書更新ガイド](documentation-guide.md)。テストの変更予定はなく、過去の製品テスト成功を今回の出力観察として扱わない。
+1. 本書、`AGENTS.md`、[次テーマ候補](next-topics.md)。現在のGit状態は必要に応じて `git status --short --branch` で確認する。
+2. 候補を選ぶ場合は、選んだテーマに対応する資料を[文書索引](README.md)から確認する。
+3. [今回の出力観察記録](learning/controlled-iterative-search-command-output-reading.md)と[文書更新ガイド](documentation-guide.md)を参照する。
 
-全局面・全競合・実時間性能・期限内応答・新方式USI競合・実機対局・棋力・最適予算は未検証。過去の引き継ぎの現在地は保存当時の情報として読む。
+今回の一回では、目標/上限のどちらで停止したか、実時間性能、期限内応答、他のSFEN・OS、通常対局/USIへの新方式接続、棋力、最適予算を検証していない。過去の引き継ぎのGit状態・検証結果は保存時点の情報として読む。
