@@ -2,15 +2,15 @@
 
 ## 現在地
 
-2026-10-19更新。選定テーマ「全幅4手とαβ枝刈り4手を、対局で使える方式にする接続設計」について、本人が接続先・選択方法・設定寿命・反復深化・時計範囲・停止結果・応答責務を個別に選び、設計全体を「yes」と明示承認した。[承認済み設計](plans/2026-10-19-four-ply-search-game-integration-design.md)と[学習・承認記録](learning/four-ply-search-game-integration-design.md)に保存した。
+2026-10-19更新。本人の「yes」で[接続設計](plans/2026-10-19-four-ply-search-game-integration-design.md)を承認後、「続けて」の指示で実装計画を作成し、本人は計画とネイティブ実行を明示承認した。現在は作業ブランチ `codex/four-ply-game-integration` で実装中。進捗・判断は[承認済み実装計画](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)と[計画学習記録](learning/four-ply-search-game-integration-plan.md)を参照する。設計の本人回答は[設計学習記録](learning/four-ply-search-game-integration-design.md)に記録している。
 
 今回合意したのは、通常対局CLIとUSIの両方、既存メニューとUSI `Difficulty` への二方式追加、既存三方式の維持、CLI一局固定・USI最初の`go`で局固定、各コンピュータ手の深さ1→4反復、USIのみ既存時計制御、通常停止は完了手または合法予備手、抑制時は手なし、探索データ返却とUSI側の送信前再確認・最大一回送信である。時間保証・深さ4到達保証は設計しない。
 
-探索本体では共通制御付き処理に全幅設定があるが、公開された制御付き全幅入口と反復側の方式選択がない。共通反復管理を使う薄い全幅入口で接続する設計とした。これは実装で埋める接続差分であり、全幅を比較専用に留める制約ではない。実対局の全幅四手性能、期限内応答、実機対局、棋力向上は未検証。
+承認済み計画は全幅入口、二方式反復、対局用選択アダプター、CLI、USI、全体回帰・利用案内の六タスク。ルール側と探索側の循環依存を避けるためgame_searchを設け、五方式の識別子、反復入口のpruning引数、USI送信境界への結果変換を実装する。mainへの取り込みは別承認を待つ。
 
-このテーマでコード・テスト・設定変更、実装計画、実装、CLI/USIへの接続は行っていない。テスト設計観点は設計書に記録したが、テストの作成・実行はしていない。次の作業は別途明示承認された実装計画テーマであり、まだ開始していない。
+実装開始前に計画・学習記録と文書入口の承認状態を更新し、作業ブランチ上で文書コミットする。実装テストはまだ実行していない。実対局の全幅四手性能、期限内応答、実機対局、棋力向上は計画の範囲外・未検証。
 
-新セッション開始時のGit実測は2026-10-19時点で`main`、HEAD `e75cb7d`、`origin/main`より2コミット先行、未追跡`.antigravity/tasks/`あり。この記録を含む文書コミットが後から追加されているため、現在の状態は新たに作業する前にコマンドで再確認する。未追跡ディレクトリは保持する。
+開始時は`main`、HEAD `867b64c`、`origin/main`より3コミット先行、未追跡`.antigravity/tasks/`あり。Ruff 0.16.10は固定版に一致し、ローカルhooksPathは.githooks。承認後、未追跡ディレクトリを保ったまま作業ブランチを作成した。
 
 選定の背景と再開プロンプトは[引き継ぎ](handover-four-ply-search-game-integration-design.md)、次テーマ候補の現在状態は[次テーマ候補](next-topics.md)、参照資料は[文書索引](README.md)を参照する。
 
@@ -38,8 +38,7 @@
 
 ## 次に読むもの
 
-1. 新しい作業を始める前に `git status --short --branch`、`git log -3 --oneline --decorate`、`git branch --show-current` を実行する。`AGENTS.md`、本書、[次テーマ候補](next-topics.md)、[承認済み設計](plans/2026-10-19-four-ply-search-game-integration-design.md)、[学習・承認記録](learning/four-ply-search-game-integration-design.md)と現状を照合する。
-2. 設計の詳細・根拠・未決事項は承認済み設計を正本として読む。開始時点の背景は[引き継ぎ](handover-four-ply-search-game-integration-design.md)、関連資料一覧は[文書索引](README.md)から確認する。
-3. 設計承認から実装計画の承認へ自動的に進まない。実装計画を作成する場合は別テーマとして範囲・確認方法を定め、計画を提示し明示承認を待つ。
+1. 実装計画タスク1から順にTDDで実行し、各タスクのテスト・差分・独立レビュー・記録を計画と学習記録へ反映する。現在の作業ブランチは `codex/four-ply-game-integration`。
+2. main取り込みは実装・検証・最終独立レビュー・記録の成果を提示してから本人の別承認を待つ。選定背景は[引き継ぎ](handover-four-ply-search-game-integration-design.md)、文書一覧は[索引](README.md)を参照する。
 
 前テーマの開発用コマンド出力観察で未検証だった実時間性能・期限内応答・停止理由の内訳・他のSFEN/OS・棋力は、今回の設計で実測済みとは扱わない。通常対局/USIへの実装接続も未実施である。過去の引き継ぎにあるGit状態や検証値は保存時点の情報として読む。
