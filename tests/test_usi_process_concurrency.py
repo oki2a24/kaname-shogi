@@ -111,14 +111,21 @@ def await_started(fd):
 
 class UsiProcessConcurrencyTests(unittest.TestCase):
     def test_real_entrypoint_policies_and_zero_budget(self):
-        """実入口の三方式が時計なし・0予算でも合法応答をflushする。
+        """実入口で旧三方式は時計なし・0予算、新二方式は0予算の合法応答をflushする。
 
-        方針の厳密な選択は関数テストで補完し、ここでは接続・診断分離を確認する。
+        全幅負荷を避け、新方式の実時計予算は関数統合テストで補完する。
         """
         command = "position startpos moves 7g7f"
         expected = legal_moves(parse_usi_position(command).position)
-        for policy in ("Random", "Material", "TwoPlyMaterial"):
-            for go in ("go", "go btime 0 wtime 0 byoyomi 0"):
+        policy_cases = (
+            ("Random", ("go", "go btime 0 wtime 0 byoyomi 0")),
+            ("Material", ("go", "go btime 0 wtime 0 byoyomi 0")),
+            ("TwoPlyMaterial", ("go", "go btime 0 wtime 0 byoyomi 0")),
+            ("FullWidth4", ("go btime 0 wtime 0 byoyomi 0",)),
+            ("AlphaBeta4", ("go btime 0 wtime 0 byoyomi 0",)),
+        )
+        for policy, go_commands in policy_cases:
+            for go in go_commands:
                 with self.subTest(policy=policy, go=go), engine() as (p, reader, _, __):
                     send(p, "setoption name Difficulty value " + policy)
                     send(p, command)

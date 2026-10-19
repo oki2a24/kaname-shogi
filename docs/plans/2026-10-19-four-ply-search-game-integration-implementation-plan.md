@@ -165,9 +165,9 @@ self.assertEqual(cli.choose_move_selection_policy(input_fn=lambda: '5', output_f
 **消費:** タスク3のsearch_move、既存SearchContext・SearchControl・共通送信Lock・時計予算。
 **生産:** 新二方式のDifficulty通知・受付・対局応答。送信アルゴリズムは既存のまま。
 
-- [ ] USI宣言の期待値を `option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4` に更新。大文字小文字を無視した受付、最初のgoで固定、局中変更を次局へ延期、未知値後の保持を両新値で確認する。
-- [ ] `test_new_modes_reuse_go_control_and_budget` は実アダプターを通し、時計付きgoで作った同一制御が反復へ届くことを確認する。設定はTimeManagementConfig(20, Fraction(2), Fraction(3,4), 2000)、入力は `go btime 600000 wtime 120000 byoyomi 30000`。予算の独立期待値は先手SearchBudget(30000,60000)、後手SearchBudget(6000,12000)。固定read_ns原点と同じ制御を観測し、深さごとの再構築を検出する。時計なしはNone、両時計0はSearchBudget(0,0)と区別する。
-- [ ] `test_new_mode_results_send_once_or_suppress` は制御付き反復の四状態を実アダプター経由で返し、COMPLETE/STOPPEDは選択手を一回、NO_LEGAL_MOVEは `bestmove resign` 一回、SUPPRESSEDは0回とする。完了前stopの合法予備手も含める。
+- [x] USI宣言を `option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4` に更新。大文字小文字を無視した受付、最初のgoで固定、局中変更を次局へ延期、未知値後の保持を両新値で確認した。
+- [x] `test_new_modes_reuse_go_control_and_budget` は実アダプターを通し、時計付きgoで作った同一制御が反復へ届くことを確認した。設定はTimeManagementConfig(20, Fraction(2), Fraction(3,4), 2000)、入力は `go btime 600000 wtime 120000 byoyomi 30000`。予算の独立期待値は先手SearchBudget(30000,60000)、後手SearchBudget(6000,12000)。固定read_ns原点と同じ制御を観測し、深さごとの再構築を検出した。時計なしはNone、両時計0はSearchBudget(0,0)と区別した。
+- [x] `test_new_mode_results_send_once_or_suppress` は制御付き反復の四状態を実アダプター経由で返し、COMPLETE/STOPPEDは選択手を一回、NO_LEGAL_MOVEは `bestmove resign` 一回、SUPPRESSEDは0回とした。完了前stopの合法予備手も含めた。
 
 固定応答例は先手玉だけSFEN `8k/9/9/9/9/9/9/9/K8 b - 1` の合法手 `9i9h` を使う。
 
@@ -178,11 +178,11 @@ self.assertEqual(no_legal_move_lines, ['bestmove resign'])
 self.assertEqual(suppressed_lines, [])
 ```
 
-- [ ] `test_suppression_between_search_return_and_send` は新方式アダプターを通した探索担当を明示Eventで止め、共通Lock下で抑制確定→返却解除なら送信0回、送信確定→抑制なら一回のままとする。子プロセスの `run_isolated` でハングを回収し、固定sleepや期限内応答を合格条件にしない。探索例外も既存故障回収へ届き、予備手で隠さない。
-- [ ] 実行: `.venv/bin/python -m unittest discover -s tests -p 'test_usi_four_ply.py' -v` と `test_usi_engine.py`。宣言だけでなく実アダプター経路のassertionでFAILを確認する。
-- [ ] 最小実装: USI側search_moveのimportをgame_searchへ変更し、値表と宣言へ二方式追加。設定寿命・時計作成・送信Lock・担当回収を作り直さない。
-- [ ] 上記と `test_usi_clock.py`、`test_usi_concurrency.py`、`test_usi_process_concurrency.py` を実行してOK。既存実プロセス試験の入力先行による抑制と区別し、必要な応答を待ってから次命令を送る。
-- [ ] 代表変異は送信前抑制確認の欠落、新方式だけ局中再設定、control作り直し。新テスト単独／既存全体の検出を区別し、共通規律のレビュー・記録・コミット。例: `feat: connect four-ply modes to USI clock and stop handling`。
+- [x] `test_suppression_between_search_return_and_send` は新方式アダプターを通した探索担当を明示Eventで止め、共通Lock下で抑制確定→返却解除なら送信0回、送信確定→抑制なら一回のままとした。子プロセスの `run_isolated` でハングを回収し、固定sleepや期限内応答を合格条件にしない。探索例外も既存故障回収へ届き、予備手で隠さない。
+- [x] 実行: `.venv/bin/python -m unittest discover -s tests -p 'test_usi_four_ply.py' -v` と `test_usi_engine.py`。宣言だけでなく実アダプター経路のassertionでFAILを確認した。
+- [x] 最小実装: USI側search_moveのimportをgame_searchへ変更し、値表と宣言へ二方式追加。設定寿命・時計作成・送信Lock・担当回収は作り直していない。
+- [x] 上記と `test_usi_clock.py`、`test_usi_concurrency.py`、`test_usi_process_concurrency.py` を実行してOK。既存実プロセス試験の入力先行による抑制と区別し、必要な応答を待ってから次命令を送った。ランチャー宣言試験も実行した。
+- [x] 代表変異は送信前抑制確認の欠落、新方式だけ局中再設定、control作り直し。各変異を隔離コピーで検出した。新テスト単独と既存USI群の検出範囲を区別し、独立レビュー・記録を完了した。例: `feat: connect four-ply modes to USI clock and stop handling`。
 
 ## タスク 6：全体回帰・利用案内・最終レビュー
 

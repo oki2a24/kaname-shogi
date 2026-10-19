@@ -14,8 +14,9 @@ from queue import Queue
 from threading import Lock, Thread
 from typing import TextIO
 
+from .game_search import search_move
 from .model import Position, Side
-from .movegen import MoveSelectionPolicy, SearchCompletion, search_move
+from .movegen import MoveSelectionPolicy, SearchCompletion
 from .search_control import SearchControl, SearchSignal
 from .time_management import (
     SearchBudget,
@@ -30,6 +31,8 @@ _USI_DIFFICULTY_VALUES = {
     "random": MoveSelectionPolicy.RANDOM,
     "material": MoveSelectionPolicy.MATERIAL,
     "twoplymaterial": MoveSelectionPolicy.TWO_PLY_MATERIAL,
+    "fullwidth4": MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
+    "alphabeta4": MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
 }
 
 
@@ -393,7 +396,8 @@ def _run_session(read_line, output_fn, rng, config, cancel_input) -> None:
                     "id name kaname-shogi",
                     "id author kaname-shogi project",
                     "option name Difficulty type combo default Random "
-                    "var Random var Material var TwoPlyMaterial",
+                    "var Random var Material var TwoPlyMaterial "
+                    "var FullWidth4 var AlphaBeta4",
                     "usiok",
                 ):
                     emit(response)

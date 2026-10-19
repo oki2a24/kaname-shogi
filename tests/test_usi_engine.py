@@ -194,7 +194,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             [
                 "id name kaname-shogi",
                 "id author kaname-shogi project",
-                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4",
                 "usiok",
                 "readyok",
             ],
@@ -225,7 +225,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             [
                 "id name kaname-shogi",
                 "id author kaname-shogi project",
-                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4",
                 "usiok",
             ],
         )
@@ -303,6 +303,67 @@ class UsiEngineFunctionTests(unittest.TestCase):
 
                 self.assertEqual(len(calls), 1)
                 self.assertEqual(calls[0][2], MoveSelectionPolicy.TWO_PLY_MATERIAL)
+
+    def test_accepts_four_ply_modes_case_insensitively_and_keeps_unknown_value(self):
+        """FullWidth4とAlphaBeta4を大小無視で受け未知値後も保持する。
+
+        新方式の設定表漏れ、大小文字差の受付漏れ、未知値による設定消去を検出する。
+        """
+        cases = (
+            ("fULLwIDTH4", MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH),
+            ("aLPhaBEta4", MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA),
+        )
+        for value, expected in cases:
+            with self.subTest(value=value):
+                calls, _ = self._run_with_policy_spy(
+                    [
+                        f"setoption name Difficulty value {value}",
+                        "setoption name Difficulty value Unknown",
+                        "position startpos moves 7g7f",
+                        "go",
+                        "quit",
+                    ]
+                )
+                self.assertEqual(len(calls), 1)
+                self.assertEqual(calls[0][2], expected)
+
+    def test_new_modes_are_fixed_until_next_game(self):
+        """新二方式は初回goで固定し、usinewgame後の設定を次局へ使う。
+
+        局中設定の早期反映と新方式だけの設定寿命漏れを検出する。
+        """
+        cases = (
+            (
+                "FullWidth4",
+                MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
+                "AlphaBeta4",
+                MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
+            ),
+            (
+                "AlphaBeta4",
+                MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
+                "FullWidth4",
+                MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
+            ),
+        )
+        for current_value, current, next_value, next_policy in cases:
+            with self.subTest(current_value=current_value):
+                calls, _ = self._run_with_policy_spy(
+                    [
+                        f"setoption name Difficulty value {current_value}",
+                        "position startpos moves 7g7f",
+                        "go",
+                        f"setoption name Difficulty value {next_value}",
+                        "go",
+                        "usinewgame",
+                        "position startpos moves 2g2f",
+                        "go",
+                        "quit",
+                    ]
+                )
+                self.assertEqual(
+                    [call[2] for call in calls], [current, current, next_policy]
+                )
 
     def test_invalid_value_preserves_two_ply_setting(self):
         """新値後の未知値で設定を失わず、無設定と旧値も従来方針を使う。
@@ -830,7 +891,7 @@ class UsiEngineProcessTests(unittest.TestCase):
             self.assertEqual(reader.read_line(), "id author kaname-shogi project")
             self.assertEqual(
                 reader.read_line(),
-                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4",
             )
             self.assertEqual(reader.read_line(), "usiok")
 
