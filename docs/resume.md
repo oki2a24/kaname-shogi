@@ -6,11 +6,9 @@
 
 今回の初期局面からの二回の応答はそれぞれ約5分だった。CLIに途中経過・深さ・時計は表示されず、深さ4到達、他局面の正しさ、棋力向上は確認していない。全幅の実対局待ち時間も未確認。コード・テスト・設定・実装計画は変更せず、テストは実行していない。
 
-開始時のGit確認ではHEAD `0d81528`、ブランチ `main`、既存の未追跡 `.antigravity/tasks/` があった。観察後の再確認では `main` と `origin/main` が同じHEAD `0d81528` を指し、同フォルダーだけが未追跡で残っていた。フォルダーは変更していない。
+本人は次テーマ候補1「小さい局面で全幅とαβの訪問回数を比べる」を選択した。新セッションでREADME記載の玉だけのSFEN比較コマンドを一回実行し、全幅とαβの評価・最善候補・訪問回数を読むテーマで、まだ開始していない。本人がこの候補を選んだ個別の理由は尋ねておらず、推測していない。目的・範囲・再開プロンプトは[引き継ぎ](handover-small-sfen-search-visit-counts.md)、候補と選定履歴は[次テーマ候補](next-topics.md)を参照する。本人が新セッションに再開プロンプトを入力するまでコマンドを実行せず、学習を始めない。
 
-学習記録と入口文書を更新したコミット後は、`main` が `origin/main` より1コミット先行し、追跡ファイルに未コミット変更はない。既存の `.antigravity/tasks/` は未追跡のまま保持している。
-
-次テーマは未選定。[次テーマ候補](next-topics.md)を小さい順に見直したので、本人の選択を待つ。選定後に新テーマの学習・設計・実装を先取りしない。承認済みの四手探索接続の進捗・判断・検証は[実装計画](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)、[計画学習記録](learning/four-ply-search-game-integration-plan.md)、本人の設計回答は[設計学習記録](learning/four-ply-search-game-integration-design.md)を参照する。
+引き継ぎ記録のコミット `9739ff3` 後に確認した状態は、ブランチ `main`、HEAD `9739ff3` が `origin/main` より2コミット先行し、追跡ファイルに未コミット変更はない。既存の未追跡 `.antigravity/tasks/` はそのまま保持し、変更していない。承認済みの四手探索接続の進捗・判断・検証は[実装計画](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)、[計画学習記録](learning/four-ply-search-game-integration-plan.md)、本人の設計回答は[設計学習記録](learning/four-ply-search-game-integration-design.md)を参照する。
 
 ## 以前に完了した観察テーマ（時間制御付き探索コマンド）
 
@@ -36,4 +34,4 @@
 
 ## 次にすること
 
-更新した[次テーマ候補](next-topics.md)から本人の選択を待つ。今回のCLI観察の開始背景・再開プロンプトは[引き継ぎ](handover-four-ply-cli-game-observation.md)、観察結果と回答は[学習記録](learning/four-ply-cli-game-observation.md)を参照する。過去の引き継ぎにあるGit状態や検証値は保存時点の情報として読む。
+次テーマは本人が選択済みだが、新セッション開始待ち。本人が[引き継ぎ](handover-small-sfen-search-visit-counts.md)内の再開プロンプトを入力した後、そこに記載した手順で進める。今回のCLI観察の背景・結果・回答は[引き継ぎ](handover-four-ply-cli-game-observation.md)と[学習記録](learning/four-ply-cli-game-observation.md)に保存した。過去の引き継ぎにあるGit状態や検証値は保存時点の情報として読む。
