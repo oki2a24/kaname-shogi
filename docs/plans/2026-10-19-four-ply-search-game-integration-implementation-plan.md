@@ -122,21 +122,21 @@ self.assertEqual([(r.depth, r.result.move, r.result.score,
 **消費:** タスク2の反復入口、既存三方式、将棋操作セットと結果型。
 **生産:** 上記の新enum値、game_search.choose_move/search_move。
 
-- [ ] `test_legacy_policies_delegate_unchanged` で旧三方式の各入口へ局面・moves・policy・rng・controlの同じ参照を一回だけ渡し、結果を選び直さず返すことを確認する。旧search_moveは新enum値を合法生成前に拒否する。
-- [ ] 既存 `test_search_movegen.py` のenum全列挙4か所は、対象APIが扱う旧三方式の明示列挙へ変更する。既存三方式の条件・期待値は削らず、新二方式の同じ停止・抑制・連続探索の契約はtest_game_searchで補完する。enumのdocstringは五方式の方針値として説明し、探索深さを表さないという旧説明を修正する。
-- [ ] `test_new_modes_use_depth_four_and_starting_side` で両先後・二方式を確認し、呼出しは上限4、正しいpruning、開始側視点、同じcontrolとする。新方式のrng.choiceは0回。
-- [ ] `test_controlled_outcomes_preserve_selected_move` で四状態を上記の対応表に照合する。STOPPEDで予備手のみ／完了記録ありを区別し、SUPPRESSEDの診断記録から手を復活させない。故障RuntimeErrorは伝播する。
+- [x] `test_legacy_policies_delegate_unchanged` で旧三方式の各入口へ局面・moves・policy・rng・controlの同じ参照を一回だけ渡し、結果を選び直さず返すことを確認する。旧search_moveは新enum値を合法生成前に拒否する。
+- [x] 既存 `test_search_movegen.py` のenum全列挙4か所は、対象APIが扱う旧三方式の明示列挙へ変更する。既存三方式の条件・期待値は削らず、新二方式の同じ停止・抑制・連続探索の契約はtest_game_searchで補完する。enumのdocstringは五方式の方針値として説明し、探索深さを表さないという旧説明を修正する。
+- [x] `test_new_modes_use_depth_four_and_starting_side` で両先後・二方式を確認し、呼出しは上限4、正しいpruning、開始側視点、同じcontrolとする。新方式のrng.choiceは0回。
+- [x] `test_controlled_outcomes_preserve_selected_move` で四状態を上記の対応表に照合する。STOPPEDで予備手のみ／完了記録ありを区別し、SUPPRESSEDの診断記録から手を復活させない。故障RuntimeErrorは伝播する。
 
 ```python
 self.assertEqual(adapted_stopped, movegen.SearchResult(movegen.SearchCompletion.INTERRUPTED, selected))
 self.assertEqual(adapted_suppressed, movegen.SearchResult(movegen.SearchCompletion.SUPPRESSED, None))
 ```
 
-- [ ] `test_unknown_policy_fails_before_search` は未知のobjectやNoneを両アダプターへ渡しValueError、探索開始0回を確認する。
-- [ ] 実行: `.venv/bin/python -m unittest discover -s tests -p 'test_game_search.py' -v`。入口を仮実装した場合も状態・深さ・方式のassertionによるFAILを得る。
-- [ ] 最小実装し、元局面不変と実探索接続は玉だけの先手・後手開始SFENで確認する。各方式の時計なし制御付き結果と通常反復の最終手を照合し、既存の将棋接続テストを独立期待値の補完として使う。
-- [ ] 同コマンド、`test_search_shogi*.py`、`test_search_movegen.py` を実行してOK。代表変異は先手固定、STOPPED→手なし、SUPPRESSEDの記録手復活から選ぶ。
-- [ ] 共通規律のレビュー・記録・コミット。例: `feat: route five game move selection policies`。
+- [x] `test_unknown_policy_fails_before_search` は未知のobjectやNoneを両アダプターへ渡しValueError、探索開始0回を確認する。
+- [x] 実行: `.venv/bin/python -m unittest discover -s tests -p 'test_game_search.py' -v`。入口を仮実装した場合も状態・深さ・方式のassertionによるFAILを得る。
+- [x] 最小実装し、元局面不変と実探索接続は玉だけの先手・後手開始SFENで確認する。各方式の時計なし制御付き結果と通常反復の最終手を照合し、既存の将棋接続テストを独立期待値の補完として使う。
+- [x] 同コマンド、`test_search_shogi*.py`、`test_search_movegen.py` を実行してOK。代表変異は先手固定、STOPPED→手なし、SUPPRESSEDの記録手復活から選ぶ。
+- [x] 共通規律のレビュー・記録・コミット。例: `feat: route five game move selection policies`。
 
 ## タスク 4：CLIの五方式メニューと対局接続
 

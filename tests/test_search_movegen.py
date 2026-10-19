@@ -17,6 +17,12 @@ from kaname_shogi.move import BoardMove, DropMove
 from kaname_shogi.search_control import SearchControl
 from kaname_shogi.time_management import SearchBudget
 
+LEGACY_POLICIES = (
+    mg.MoveSelectionPolicy.RANDOM,
+    mg.MoveSelectionPolicy.MATERIAL,
+    mg.MoveSelectionPolicy.TWO_PLY_MATERIAL,
+)
+
 
 def snapshot(p):
     return (
@@ -647,7 +653,7 @@ class RootSearchTests(unittest.TestCase):
 
         0を時計なし扱い、未確保を投了、部分一覧の抽選にする誤りを検出する。
         """
-        for policy in mg.MoveSelectionPolicy:
+        for policy in LEGACY_POLICIES:
             for side in Side:
                 for zero in (False, True):
                     with self.subTest(policy=policy, side=side, zero=zero):
@@ -682,7 +688,7 @@ class RootSearchTests(unittest.TestCase):
 
         SUPPRESSEDを手なし確定や予備手へ変換する誤りを検出する。
         """
-        for policy in mg.MoveSelectionPolicy:
+        for policy in LEGACY_POLICIES:
             p = pawns()
             c = SearchControl(SearchBudget(0, 0), 0, now_ns=lambda: 0)
             c.request_stop(suppress_response=True)
@@ -856,7 +862,7 @@ class RootSearchTests(unittest.TestCase):
 
         目標まで探索を引き延ばす誤りを偽時計のまま検出する。
         """
-        for policy in mg.MoveSelectionPolicy:
+        for policy in LEGACY_POLICIES:
             with self.subTest(policy=policy):
                 rng = RecordingChoice()
                 r = mg.search_move(
@@ -874,7 +880,7 @@ class RootSearchTests(unittest.TestCase):
 
         共有結果・制御フラグ・元局面の部分変更を検出する。
         """
-        for policy in mg.MoveSelectionPolicy:
+        for policy in LEGACY_POLICIES:
             with self.subTest(policy=policy):
                 p = pawns()
                 before = snapshot(p)

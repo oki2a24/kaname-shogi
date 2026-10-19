@@ -27,11 +27,13 @@ from .search_control import SearchControl, SearchSignal
 
 
 class MoveSelectionPolicy(Enum):
-    """一手を選ぶ方針を表す値。強さの保証や探索深さは表さない。"""
+    """対局で使う五つの一手選択方式を表す値。強さの保証は表さない。"""
 
     RANDOM = auto()
     MATERIAL = auto()
     TWO_PLY_MATERIAL = auto()
+    FOUR_PLY_FULL_WIDTH = auto()
+    FOUR_PLY_ALPHA_BETA = auto()
 
 
 _DROP_PIECE_TYPES = (
@@ -1554,7 +1556,7 @@ def search_move(
 
     引数:
         position: 探索開始局面。盤面・両持駒・手番を変更しない。
-        policy: RANDOM/一手駒得/二手駒得の方針データ。
+        policy: RANDOM/一手駒得/二手駒得の既存方針データ。
         rng: 全完了ランダムまたは完了最高同点の一回抽選に使う生成器。
         control: 読取り原点と予算を持つ一探索専用制御。
     戻り値:
@@ -1568,7 +1570,11 @@ def search_move(
         例外を正常停止へ変換しない。結果返却とUSI送信は原子的でないため、
         後続の送信担当が共通Lock下で再び抑制を確認する必要がある。
     """
-    if policy not in tuple(MoveSelectionPolicy):
+    if policy not in (
+        MoveSelectionPolicy.RANDOM,
+        MoveSelectionPolicy.MATERIAL,
+        MoveSelectionPolicy.TWO_PLY_MATERIAL,
+    ):
         raise ValueError("未知の一手選択方針です")
     generated = _legal_moves_controlled(
         position, check_uchi_fuzume=True, control=control, root=True
