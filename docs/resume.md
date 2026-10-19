@@ -2,13 +2,13 @@
 
 ## 現在地
 
-2026-10-19更新。選定テーマ「CLIで新方式を選び、数手の対局を観察する」は完了した。本人は `AlphaBeta4` を選び、リポジトリルートからCLIを起動して人間対コンピュータの二回の応答を観察し、`resign` で終了した。[学習記録](learning/four-ply-cli-game-observation.md)に選択、局面、表示手、概算待ち時間、本人の回答と補足を保存した。
+2026-10-19更新。選定テーマ「小さい局面で全幅とαβの訪問回数を比べる」は、コマンド実行・出力読解・最後の理解確認まで完了した。[学習記録](learning/search-visit-counts-comparison.md)に一回の実出力、終了コード、本人回答と補足を保存した。
 
-今回の初期局面からの二回の応答はそれぞれ約5分だった。CLIに途中経過・深さ・時計は表示されず、深さ4到達、他局面の正しさ、棋力向上は確認していない。全幅の実対局待ち時間も未確認。コード・テスト・設定・実装計画は変更せず、テストは実行していない。
+玉だけのSFENで深さ2・3・4を一度比較し、いずれも評価＋0、選択手9i9h、評価一致・最善候補所属Trueだった。全幅/αβの訪問数は深さ2で13/9、深さ3で67/29、深さ4で391/64。訪問回数は共通探索本体への訪問を数え、合法手生成・王手確認内部の確認局面は含まない。今回の結果を実行時間や総作業量、時間保証、全局面の正しさ、棋力向上へ一般化しない。
 
-本人は次テーマ候補1「小さい局面で全幅とαβの訪問回数を比べる」を選択した。新セッションでREADME記載の玉だけのSFEN比較コマンドを一回実行し、全幅とαβの評価・最善候補・訪問回数を読むテーマで、まだ開始していない。本人がこの候補を選んだ個別の理由は尋ねておらず、推測していない。目的・範囲・再開プロンプトは[引き継ぎ](handover-small-sfen-search-visit-counts.md)、候補と選定履歴は[次テーマ候補](next-topics.md)を参照する。本人が新セッションに再開プロンプトを入力するまでコマンドを実行せず、学習を始めない。
+今回のテーマで製品コード・テスト・設定・実装計画は変更せず、テストは実行していない。次テーマ候補と推薦を[次テーマ候補](next-topics.md)に更新し、本人の選択待ち。選択前に新しい学習・設計・実装は始めない。
 
-引き継ぎ記録のコミット `9739ff3` 後に確認した状態は、ブランチ `main`、HEAD `9739ff3` が `origin/main` より2コミット先行し、追跡ファイルに未コミット変更はない。既存の未追跡 `.antigravity/tasks/` はそのまま保持し、変更していない。承認済みの四手探索接続の進捗・判断・検証は[実装計画](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)、[計画学習記録](learning/four-ply-search-game-integration-plan.md)、本人の設計回答は[設計学習記録](learning/four-ply-search-game-integration-design.md)を参照する。
+開始時に確認したGit状態は、ブランチ`main`、HEAD `040e69d`、`origin/main`より2コミット先行、未追跡`.antigravity/tasks/`あり。今回、学習記録・再開案内・次テーマ候補・文書索引の4文書を更新し、`git diff --check`と変更文書中のローカルリンク601件の確認に成功した。未追跡ディレクトリは今回も変更していない。承認済みの四手探索接続の進捗・判断・検証は[実装計画](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)、[計画学習記録](learning/four-ply-search-game-integration-plan.md)、本人の設計回答は[設計学習記録](learning/four-ply-search-game-integration-design.md)を参照する。
 
 ## 以前に完了した観察テーマ（時間制御付き探索コマンド）
 
@@ -34,4 +34,4 @@
 
 ## 次にすること
 
-次テーマは本人が選択済みだが、新セッション開始待ち。本人が[引き継ぎ](handover-small-sfen-search-visit-counts.md)内の再開プロンプトを入力した後、そこに記載した手順で進める。今回のCLI観察の背景・結果・回答は[引き継ぎ](handover-four-ply-cli-game-observation.md)と[学習記録](learning/four-ply-cli-game-observation.md)に保存した。過去の引き継ぎにあるGit状態や検証値は保存時点の情報として読む。
+次テーマを本人が選ぶまで待つ。候補の推薦理由・選定結果・保留事項は[次テーマ候補](next-topics.md)、過去のCLI対局観察は[引き継ぎ](handover-four-ply-cli-game-observation.md)と[学習記録](learning/four-ply-cli-game-observation.md)に保存した。過去の引き継ぎにあるGit状態や検証値は保存時点の情報として読む。
