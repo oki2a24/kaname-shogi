@@ -28,7 +28,7 @@
 - 時間制御付き反復深化の探索部品：既存の予算・制御を利用し、目標では次の深さを開始せず、上限・停止時には合法予備手または最新完了結果を返す。抑制では手を返さず記録だけ保持できる。main統合・検証・最後の理解確認まで完了。この部品の実装時点では開発用コマンド・通常対局への新方式接続と時間保証は含まなかった（[記録](learning/iterative-deepening-stop-time-control-implementation.md)）。
 - 時間制御付き反復探索の開発用コマンド：2026-10-18、SFEN・最大深さ・直接指定の目標/上限msで一回探索し、終了状態・選択手・手の由来・最新完了記録を表示する専用入口を実装・検証し、最後の理解確認まで完了した。既存三方式と比較コマンドを保ち、通常対局・USI接続と時間保証は含めない（[実装計画と記録](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)、[学習・本人回答](learning/controlled-iterative-search-command-implementation-plan.md)）。
 
-- 全幅最大4手・αβ枝刈り最大4手の対局選択：2026-10-19、既存三方式を残してCLIメニューとUSI `Difficulty` へ追加した。各コンピュータ手は深さ1→4の反復探索を使う。CLIに時計制御はなく、USIは既存時計予算・停止処理を使う。実装・全体検証は現在の作業ブランチで完了し、mainへの取り込みは本人の別承認待ち。全幅四手の実戦待ち時間、期限内応答、ShogiHome実機での新方式、棋力向上は未確認である（[承認済み計画と結果](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)、[学習・検証記録](learning/four-ply-search-game-integration-plan.md)）。
+- 全幅最大4手・αβ枝刈り最大4手の対局選択：2026-10-19、既存三方式を残してCLIメニューとUSI `Difficulty` へ追加した。各コンピュータ手は深さ1→4の反復探索を使う。CLIに時計制御はなく、USIは既存時計予算・停止処理を使う。本人の別承認でmainへ統合し、取り込み先検証と最後の理解確認まで完了した。全幅四手の実戦待ち時間、期限内応答、ShogiHome実機での新方式、棋力向上は未確認である（[承認済み計画と結果](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)、[学習・検証記録](learning/four-ply-search-game-integration-plan.md)）。
 
 現在の機能・未対応は[README](../README.md)、確定仕様と各到達点の根拠は[文書索引](README.md)から確認する。実機確認は特定版・局面の実測であり、全互換性や棋力を保証しない。
 
