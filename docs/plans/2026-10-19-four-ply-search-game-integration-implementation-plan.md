@@ -75,7 +75,7 @@
 - [ ] import変更時は `.venv/bin/ruff check --select I --fix .`、続いて `.venv/bin/ruff format .`、`.venv/bin/ruff check .`、差分確認、関連テストを行う。
 - [ ] 実績は [計画学習記録](../learning/four-ply-search-game-integration-plan.md) に追記。対象ファイルだけステージし、`git diff --cached --check` と内容を確認して通常コミットする。`.antigravity/tasks/` と無関係の変更を含めない。
 
-## タスク1：全幅の優先手・制御付き入口
+## タスク 1：全幅の優先手・制御付き入口
 
 **ファイル:** 変更 `kaname_shogi/search/minimax.py`、`tests/test_search_minimax.py`。新規 `tests/test_search_minimax_controlled.py`。
 **消費:** 既存core.search/search_controlled、SearchControl、操作セット、数値木補助。
@@ -94,7 +94,7 @@ self.assertEqual(result.root_scores, (('A', (0, 3)), ('B', (0, -2))))
 - [ ] 同じコマンドと `test_search_alpha_beta*.py` を実行してOK。代表変異 `pruning=True` を全幅入口へ入れ、訪問数／候補一覧assertionのFAILを確認する。
 - [ ] 共通規律のレビュー・記録・コミット。例: `feat: add controlled full-width search entry`。
 
-## タスク2：二方式で共通の反復深化
+## タスク 2：二方式で共通の反復深化
 
 **ファイル:** 変更 `kaname_shogi/search/iterative_deepening.py`、`tests/test_search_iterative_deepening.py`、`tests/test_search_iterative_deepening_controlled.py`。
 **消費:** タスク1のminimax入口と既存αβ入口。
@@ -116,7 +116,7 @@ self.assertEqual([(r.depth, r.result.move, r.result.score,
 - [ ] 同コマンドと `test_search_compare*.py` を実行してOK。代表変異はFalse無視と最新記録の未完了上書き。既存比較コマンドがαβ既定のままであることを確認する。
 - [ ] 共通規律のレビュー・記録・コミット。例: `feat: select full-width or alpha-beta iterative search`。
 
-## タスク3：五方式の対局用選択アダプター
+## タスク 3：五方式の対局用選択アダプター
 
 **ファイル:** 新規 `kaname_shogi/game_search.py`、`tests/test_game_search.py`。変更 `kaname_shogi/movegen.py`、`tests/test_search_movegen.py`。
 **消費:** タスク2の反復入口、既存三方式、将棋操作セットと結果型。
@@ -138,7 +138,7 @@ self.assertEqual(adapted_suppressed, movegen.SearchResult(movegen.SearchCompleti
 - [ ] 同コマンド、`test_search_shogi*.py`、`test_search_movegen.py` を実行してOK。代表変異は先手固定、STOPPED→手なし、SUPPRESSEDの記録手復活から選ぶ。
 - [ ] 共通規律のレビュー・記録・コミット。例: `feat: route five game move selection policies`。
 
-## タスク4：CLIの五方式メニューと対局接続
+## タスク 4：CLIの五方式メニューと対局接続
 
 **ファイル:** 変更 `kaname_shogi/cli.py`、`tests/test_cli.py`、`tests/test_cli_entrypoint.py`。
 **消費:** タスク3のchoose_moveと五方式。
@@ -159,7 +159,7 @@ self.assertEqual(cli.choose_move_selection_policy(input_fn=lambda: '5', output_f
 - [ ] 同コマンドを実行してOK。代表変異は番号4/5逆転、各手を深さ4単発に置換。時計・設定読込をCLIへ追加していないことを差分と呼出し検査で確認する。
 - [ ] 共通規律のレビュー・記録・コミット。例: `feat: offer four-ply search modes in CLI games`。
 
-## タスク5：USIの五方式・既存時計・停止応答接続
+## タスク 5：USIの五方式・既存時計・停止応答接続
 
 **ファイル:** 変更 `kaname_shogi/usi_engine.py`、`tests/test_usi_engine.py`。新規 `tests/test_usi_four_ply.py`。必要な既存同期試験は `tests/test_usi_concurrency.py` と `tests/usi_test_support.py` を参照する。
 **消費:** タスク3のsearch_move、既存SearchContext・SearchControl・共通送信Lock・時計予算。
@@ -184,7 +184,7 @@ self.assertEqual(suppressed_lines, [])
 - [ ] 上記と `test_usi_clock.py`、`test_usi_concurrency.py`、`test_usi_process_concurrency.py` を実行してOK。既存実プロセス試験の入力先行による抑制と区別し、必要な応答を待ってから次命令を送る。
 - [ ] 代表変異は送信前抑制確認の欠落、新方式だけ局中再設定、control作り直し。新テスト単独／既存全体の検出を区別し、共通規律のレビュー・記録・コミット。例: `feat: connect four-ply modes to USI clock and stop handling`。
 
-## タスク6：全体回帰・利用案内・最終レビュー
+## タスク 6：全体回帰・利用案内・最終レビュー
 
 **ファイル:** README.md、docs/knowledge/search-comparison.md、docs/knowledge/search-stop.md、docs/knowledge/usi-engine-response.md、docs/02-project-direction.md、docs/README.md、docs/resume.md、docs/next-topics.md、本計画・学習記録。機能変更のある説明だけ更新する。
 **消費:** タスク1〜5の実装と検証証拠。
