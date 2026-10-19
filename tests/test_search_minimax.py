@@ -58,10 +58,7 @@ class MinimaxTests(unittest.TestCase):
         """
         root = two_level([3, 5], [-2, 10])
         seen = []
-        try:
-            result = minimax.search(root, 2, operations(seen), preferred_move="B")
-        except TypeError:
-            self.fail("全幅入口はpreferred_moveを受け付ける必要があります")
+        result = minimax.search(root, 2, operations(seen), preferred_move="B")
         self.assertEqual(
             (result.score, result.move, result.visited_nodes), ((0, 3), "A", 7)
         )
@@ -86,15 +83,8 @@ class MinimaxTests(unittest.TestCase):
             lambda node, move: advances.append(move),
             base.evaluate,
         )
-        try:
-            with self.assertRaises(ValueError):
-                minimax.search(
-                    two_level([3], [4]), 2, invalid, preferred_move="missing"
-                )
-        except TypeError:
-            self.fail(
-                "全幅入口はpreferred_moveの不在をValueErrorで拒否する必要があります"
-            )
+        with self.assertRaises(ValueError):
+            minimax.search(two_level([3], [4]), 2, invalid, preferred_move="missing")
         self.assertEqual(seen, ["root"])
         self.assertEqual(advances, [])
 

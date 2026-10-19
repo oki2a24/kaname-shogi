@@ -4,9 +4,9 @@
 
 2026-10-19更新。全幅最大4手・αβ枝刈り最大4手をCLIとUSIへ接続する承認済み実装計画のTask 1〜6を、作業ブランチ `codex/four-ply-game-integration` で実装・検証・記録した。各コンピュータ手で深さ1→4を反復する。既存Random・Material・TwoPlyMaterialは選択肢に残す。CLIは時計なし、USIは既存時計予算・停止処理を利用する。進捗・判断・検証は[承認済み実装計画](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)と[計画学習記録](learning/four-ply-search-game-integration-plan.md)、本人の設計回答は[設計学習記録](learning/four-ply-search-game-integration-design.md)を参照する。
 
-全体テスト591件（45.699秒）とRuff・差分検査を確認し、最終独立レビューを完了した。コードと文書は作業ブランチ上にあり、mainへの取り込みは本人の別承認待ち。承認後に取り込み先で検証し、最後の理解確認を一問だけ行う。理解確認の回答を記録するまで次テーマへ進まない。
+最終独立レビューは初回Critical 0 / Important 0 / Minor 2、再レビュー0 / 0 / 1、最終確認0 / 0 / 0。Minorをすべて修正し、修正後の対象7件と全体591件（45.738秒）が成功した。Ruff、差分、変更文書のローカルリンク検査も成功した。詳細は[計画学習記録](learning/four-ply-search-game-integration-plan.md)に記録する。コードと文書は作業ブランチ上にあり、mainへの取り込みは本人の別承認待ち。承認後に取り込み先で検証し、最後の理解確認を一問だけ行う。理解確認の回答を記録するまで次テーマへ進まない。
 
-時間内応答・深さ4完了・全幅四手の実戦待ち時間、ShogiHomeでの新方式、棋力向上は未検証・未保証。既存の未追跡 `.antigravity/tasks/` は変更・コミット対象に含めない。
+実装修正前に全体テスト591件（45.699秒）、修正後に591件（45.738秒）が成功し、Ruffと差分検査も成功した。CLIで新方式を選ぶ実プロセス対局、非ゼロ予算の新方式実プロセス探索、実時間・期限内応答・深さ4到達、全局面・全OS・全競合、ShogiHomeでの実対局、棋力向上は未検証・未保証。既存の未追跡 `.antigravity/tasks/` は変更・コミット対象に含めない。
 
 選定の背景と再開プロンプトは[引き継ぎ](handover-four-ply-search-game-integration-design.md)、次テーマ候補の現在状態は[次テーマ候補](next-topics.md)、参照資料は[文書索引](README.md)を参照する。
 

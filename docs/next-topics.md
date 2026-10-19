@@ -2,7 +2,7 @@
 
 ## 現在のテーマと状態
 
-2026-10-19、本人が選定・承認した全幅最大4手とαβ枝刈り最大4手のCLI/USI接続を、作業ブランチ `codex/four-ply-game-integration` で実装・検証・レビュー・記録した。全体検証と独立レビューは完了したが、main取り込みと取り込み先検証、最後の理解確認は残っているため、次テーマはまだ選ばない。[承認済み実装計画](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)と[計画学習記録](learning/four-ply-search-game-integration-plan.md)を参照する。現在の作業状態は[再開案内](resume.md)を正本とする。
+2026-10-19、本人が選定・承認した全幅最大4手とαβ枝刈り最大4手のCLI/USI接続を、作業ブランチ `codex/four-ply-game-integration` で実装した。最終独立レビューは初回Critical 0 / Important 0 / Minor 2、再レビュー0 / 0 / 1、最終確認0 / 0 / 0。Minorを修正し、対象7件・全体591件（45.738秒）、Ruff、差分、ローカルリンク検査が成功した。main取り込みと取り込み先検証、最後の理解確認は別手順として残るため、次テーマはまだ選ばない。[承認済み実装計画](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)と[計画学習記録](learning/four-ply-search-game-integration-plan.md)を参照する。現在の作業状態は[再開案内](resume.md)を正本とする。
 
 開発用コマンド設計から作成した[実装計画](plans/2026-10-18-controlled-iterative-search-command-implementation-plan.md)は独立レビュー後に本人が明示承認し、順次実装・検証・最終独立レビュー・最後の理解確認まで完了した。本人の明示許可により作業ブランチをローカル`main`へfast-forward統合し、統合後の全体テスト560件（35.310秒）、Ruff整形確認65ファイル、Ruff検査が成功した。本人回答と補足、統合結果は[学習記録](learning/controlled-iterative-search-command-implementation-plan.md)に保存する。
 
@@ -14,7 +14,7 @@
 
 合意した範囲は通常対局CLIとUSIの両方への接続、既存メニュー・`Difficulty` への二方式追加、既存三方式の維持、設定寿命の現行踏襲、各コンピュータ手の深さ1→4反復深化、USIのみ既存時計制御、停止/抑制結果と送信責務の現行契約踏襲。時間保証や深さ4到達保証は含まない。
 
-接続設計、実装計画、ネイティブ実行は本人がそれぞれ承認済み。実装・検証・独立レビューは作業ブランチで完了した。main取り込みと取り込み先検証、最後の理解確認は別手順として残り、本人の別承認を待つ。全幅四手の実時間、期限内応答、ShogiHome実機、棋力は未検証。
+接続設計、実装計画、ネイティブ実行は本人がそれぞれ承認済み。実装・検証・最終独立レビューは作業ブランチで完了した。main取り込みと取り込み先検証、最後の理解確認は別手順として残り、本人の別承認を待つ。全幅四手の実時間、期限内応答、ShogiHome実機、棋力は未検証。
 
 ## 選定前の候補と推薦（2026-10-18、小さい順）
 
