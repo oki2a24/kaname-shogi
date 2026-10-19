@@ -2,17 +2,17 @@
 
 ## 現在地
 
-2026-10-19更新。全幅最大4手・αβ枝刈り最大4手をCLIとUSIへ接続する承認済み実装計画のTask 1〜6を作業ブランチで実装・検証・記録し、本人の承認でローカル `main` へfast-forward統合した（`867b64c` から `5646986`）。各コンピュータ手で深さ1→4を反復する。既存Random・Material・TwoPlyMaterialは選択肢に残す。CLIは時計なし、USIは既存時計予算・停止処理を利用する。進捗・判断・検証は[承認済み実装計画](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)と[計画学習記録](learning/four-ply-search-game-integration-plan.md)、本人の設計回答は[設計学習記録](learning/four-ply-search-game-integration-design.md)を参照する。
+2026-10-19更新。選定テーマ「CLIで新方式を選び、数手の対局を観察する」は完了した。本人は `AlphaBeta4` を選び、リポジトリルートからCLIを起動して人間対コンピュータの二回の応答を観察し、`resign` で終了した。[学習記録](learning/four-ply-cli-game-observation.md)に選択、局面、表示手、概算待ち時間、本人の回答と補足を保存した。
 
-最終独立レビューは初回Critical 0 / Important 0 / Minor 2、再レビュー0 / 0 / 1、最終確認0 / 0 / 0。Minorをすべて修正し、修正後の対象7件とブランチ全体591件（45.738秒）が成功した。取り込み先 `main` でも全体591件（45.550秒）、Ruff整形確認（69ファイル）、Ruff検査、差分検査が成功した。最後の理解確認では「応答専用の役割をもったものにやらせる」という本人の記憶と、探索結果返却・USI応答担当による抑制再確認と最大一回送信の分担を記録し、完了した。詳細は[計画学習記録](learning/four-ply-search-game-integration-plan.md)を参照する。
+今回の初期局面からの二回の応答はそれぞれ約5分だった。CLIに途中経過・深さ・時計は表示されず、深さ4到達、他局面の正しさ、棋力向上は確認していない。全幅の実対局待ち時間も未確認。コード・テスト・設定・実装計画は変更せず、テストは実行していない。
 
-本人が次テーマ「CLIで新方式を選び、数手の対局を観察する」を選択し、[引き継ぎ・再開プロンプト](handover-four-ply-cli-game-observation.md)を準備した。新しいセッションで本人がプロンプトを入力するまで、方式選択・CLI起動・観察は始めない。次テーマは学習・手動観察であり、コード・テスト・設定・実装計画の変更は含めない。
+開始時のGit確認ではHEAD `0d81528`、ブランチ `main`、既存の未追跡 `.antigravity/tasks/` があった。観察後の再確認では `main` と `origin/main` が同じHEAD `0d81528` を指し、同フォルダーだけが未追跡で残っていた。フォルダーは変更していない。
 
-実装修正前に全体テスト591件（45.699秒）、修正後に591件（45.738秒）が成功し、取り込み先mainでも591件（45.550秒）が成功した。CLIで新方式を選ぶ実プロセス対局、非ゼロ予算の新方式実プロセス探索、実時間・期限内応答・深さ4到達、全局面・全OS・全競合、ShogiHomeでの実対局、棋力向上は未検証・未保証。既存の未追跡 `.antigravity/tasks/` は変更・コミット対象に含めない。
+学習記録と入口文書を更新したコミット後は、`main` が `origin/main` より1コミット先行し、追跡ファイルに未コミット変更はない。既存の `.antigravity/tasks/` は未追跡のまま保持している。
 
-選定の背景と再開プロンプトは[引き継ぎ](handover-four-ply-search-game-integration-design.md)、次テーマ候補の現在状態は[次テーマ候補](next-topics.md)、参照資料は[文書索引](README.md)を参照する。
+次テーマは未選定。[次テーマ候補](next-topics.md)を小さい順に見直したので、本人の選択を待つ。選定後に新テーマの学習・設計・実装を先取りしない。承認済みの四手探索接続の進捗・判断・検証は[実装計画](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)、[計画学習記録](learning/four-ply-search-game-integration-plan.md)、本人の設計回答は[設計学習記録](learning/four-ply-search-game-integration-design.md)を参照する。
 
-## 直近で完了した観察テーマ
+## 以前に完了した観察テーマ（時間制御付き探索コマンド）
 
 前テーマではREADME記載の小さいSFENで開発用コマンドを一回実行し、理解確認まで完了した。[学習記録](learning/controlled-iterative-search-command-output-reading.md)に実出力・終了コード・本人の回答と補足を保存した。
 
@@ -36,6 +36,4 @@
 
 ## 次にすること
 
-[再開用プロンプト](handover-four-ply-cli-game-observation.md)を確認し、本人が新しいセッションへ入力する。開始時にそのセッションでGit状態を再確認し、既存の未追跡 `.antigravity/tasks/` を変更対象へ混ぜない。現在はローカル `main` に統合済みで、リモートへのpushはしていない。
-
-CLIで新方式を選ぶ実プロセス対局、非ゼロ予算での新方式実プロセス探索、実時間・期限内応答・深さ4到達、全局面・全OS・全競合、ShogiHomeでの実対局、棋力向上は未検証・未保証。過去の引き継ぎにあるGit状態や検証値は保存時点の情報として読む。
+更新した[次テーマ候補](next-topics.md)から本人の選択を待つ。今回のCLI観察の開始背景・再開プロンプトは[引き継ぎ](handover-four-ply-cli-game-observation.md)、観察結果と回答は[学習記録](learning/four-ply-cli-game-observation.md)を参照する。過去の引き継ぎにあるGit状態や検証値は保存時点の情報として読む。
