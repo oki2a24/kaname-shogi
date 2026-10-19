@@ -2,15 +2,11 @@
 
 ## 現在地
 
-2026-10-19更新。本人の「yes」で[接続設計](plans/2026-10-19-four-ply-search-game-integration-design.md)を承認後、「続けて」の指示で実装計画を作成し、本人は計画とネイティブ実行を明示承認した。現在は作業ブランチ `codex/four-ply-game-integration` で実装中。進捗・判断は[承認済み実装計画](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)と[計画学習記録](learning/four-ply-search-game-integration-plan.md)を参照する。設計の本人回答は[設計学習記録](learning/four-ply-search-game-integration-design.md)に記録している。
+2026-10-19更新。全幅最大4手・αβ枝刈り最大4手をCLIとUSIへ接続する承認済み実装計画のTask 1〜6を、作業ブランチ `codex/four-ply-game-integration` で実装・検証・記録した。各コンピュータ手で深さ1→4を反復する。既存Random・Material・TwoPlyMaterialは選択肢に残す。CLIは時計なし、USIは既存時計予算・停止処理を利用する。進捗・判断・検証は[承認済み実装計画](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)と[計画学習記録](learning/four-ply-search-game-integration-plan.md)、本人の設計回答は[設計学習記録](learning/four-ply-search-game-integration-design.md)を参照する。
 
-今回合意したのは、通常対局CLIとUSIの両方、既存メニューとUSI `Difficulty` への二方式追加、既存三方式の維持、CLI一局固定・USI最初の`go`で局固定、各コンピュータ手の深さ1→4反復、USIのみ既存時計制御、通常停止は完了手または合法予備手、抑制時は手なし、探索データ返却とUSI側の送信前再確認・最大一回送信である。時間保証・深さ4到達保証は設計しない。
+全体テスト591件（45.699秒）とRuff・差分検査を確認し、最終独立レビューを完了した。コードと文書は作業ブランチ上にあり、mainへの取り込みは本人の別承認待ち。承認後に取り込み先で検証し、最後の理解確認を一問だけ行う。理解確認の回答を記録するまで次テーマへ進まない。
 
-承認済み計画は全幅入口、二方式反復、対局用選択アダプター、CLI、USI、全体回帰・利用案内の六タスク。ルール側と探索側の循環依存を避けるためgame_searchを設け、五方式の識別子、反復入口のpruning引数、USI送信境界への結果変換を実装する。mainへの取り込みは別承認を待つ。
-
-実装開始前に計画・学習記録と文書入口の承認状態を更新し、作業ブランチ上で文書コミットする。実装テストはまだ実行していない。実対局の全幅四手性能、期限内応答、実機対局、棋力向上は計画の範囲外・未検証。
-
-開始時は`main`、HEAD `867b64c`、`origin/main`より3コミット先行、未追跡`.antigravity/tasks/`あり。Ruff 0.16.10は固定版に一致し、ローカルhooksPathは.githooks。承認後、未追跡ディレクトリを保ったまま作業ブランチを作成した。
+時間内応答・深さ4完了・全幅四手の実戦待ち時間、ShogiHomeでの新方式、棋力向上は未検証・未保証。既存の未追跡 `.antigravity/tasks/` は変更・コミット対象に含めない。
 
 選定の背景と再開プロンプトは[引き継ぎ](handover-four-ply-search-game-integration-design.md)、次テーマ候補の現在状態は[次テーマ候補](next-topics.md)、参照資料は[文書索引](README.md)を参照する。
 
@@ -38,7 +34,7 @@
 
 ## 次に読むもの
 
-1. 実装計画タスク1から順にTDDで実行し、各タスクのテスト・差分・独立レビュー・記録を計画と学習記録へ反映する。現在の作業ブランチは `codex/four-ply-game-integration`。
-2. main取り込みは実装・検証・最終独立レビュー・記録の成果を提示してから本人の別承認を待つ。選定背景は[引き継ぎ](handover-four-ply-search-game-integration-design.md)、文書一覧は[索引](README.md)を参照する。
+1. 作業ブランチの成果を確認し、main取り込みを希望する場合は別途明示する。取り込みの許可前にmainを変更しない。
+2. 許可後は取り込み先で変更に見合う検証を行い、最後の理解確認に答える。回答の記録・確認後に[次テーマ候補](next-topics.md)を見直す。
 
-前テーマの開発用コマンド出力観察で未検証だった実時間性能・期限内応答・停止理由の内訳・他のSFEN/OS・棋力は、今回の設計で実測済みとは扱わない。通常対局/USIへの実装接続も未実施である。過去の引き継ぎにあるGit状態や検証値は保存時点の情報として読む。
+前テーマの開発用コマンド出力観察で未検証だった実時間性能・期限内応答・停止理由の内訳・他のSFEN/OS・棋力は、今回の実装で実測済みとは扱わない。通常対局CLIとUSIへの接続は作業ブランチ上で実装したが、mainには未統合である。過去の引き継ぎにあるGit状態や検証値は保存時点の情報として読む。

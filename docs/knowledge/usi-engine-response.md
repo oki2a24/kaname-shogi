@@ -1,6 +1,6 @@
 # USIエンジンの一手応答
 
-更新日：2026-10-12
+更新日：2026-10-19
 
 ## 境界
 
@@ -18,14 +18,14 @@
 `usi` には次のcombo行を `usiok` より前に出す。
 
 ```text
-option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial
+option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4
 ```
 
-`setoption name Difficulty value Random` は一様ランダム、`value Material` は一手後の駒得比較を選ぶ。`value TwoPlyMaterial` は二手先読み（駒得）の方針を選択境界へ渡す。設定がない場合は `Random`。USI仕様に従い、受信時のoption名と値は大文字小文字を区別せずに比較する。[USI仕様 §5.3 `setoption`](https://hgm.nubati.net/usi.html)はnameとvalueをcase-insensitiveとしている。未知の設定名は読み飛ばし、既知の `Difficulty` に不正値が届いた場合は最後の有効値を保つ。
+`setoption name Difficulty value Random` は一様ランダム、`value Material` は一手後の駒得比較、`value TwoPlyMaterial` は二手先読み（駒得）の方針を選択境界へ渡す。`value FullWidth4` は枝を省略しない最大4手の反復深化、`value AlphaBeta4` はαβ枝刈り付き最大4手の反復深化を選ぶ。新二方式は各 `go` で深さ1から4へ進む。設定がない場合は `Random`。USI仕様に従い、受信時のoption名と値は大文字小文字を区別せずに比較する。[USI仕様 §5.3 `setoption`](https://hgm.nubati.net/usi.html)はnameとvalueをcase-insensitiveとしている。未知の設定名は読み飛ばし、既知の `Difficulty` に不正値が届いた場合は最後の有効値を保つ。
 
 設定値は `run_usi_engine` 内で `_UsiEngineState` と別に保持する。局の最初の `go` で有効値を局内方針として固定するため、後から届いた `setoption` は現在局の後続 `go` には影響しない。`usinewgame` は局面を消し、局内固定だけを解除して、設定値を次局へ残す。乱数器も設定・局面状態と別にし、一回のエンジン実行中で共有する。
 
-今回の三択通知・受付はmainへ取り込み、検証済み。新値固有の局中固定・次局継承は[今回の実施記録](../learning/usi-policy-lifetime.md)の1系列で検証済み（main取り込み・検証済み）。新値後の未知値保持は[実施記録](../learning/usi-invalid-value.md)の1系列と無設定・旧値対照で検証済み（main取り込み・検証済み、理解確認完了）。新方式の関数境界の実選択・二回の合法応答・局面保存・手なしresignは[実施記録](../learning/usi-function-response.md)の教材と空盤で検証済み（main取り込み・取り込み先検証・理解確認済み）。新方式設定後の実プロセスbestmove・stdout診断分離は[実施記録](../learning/usi-process-response.md)の既存pipeケースで検証した（main取り込み・取り込み先検証済み）。新方式はShogiHome 1.28.2の平手対局一例でTwoPlyMaterial送信と20回のbestmoveを確認した（[実施記録](../learning/two-ply-final-check.md#承認後のshogihome確認実績2026-10-11事後記録)）。他局面・秒読み後の互換性や応答時間上限は未保証。[実施記録](../learning/usi-three-policies.md)を参照する。
+以前の三択通知・受付とそのShogiHome確認は、各リンク先に記録した当時の実績として保持する。2026-10-19に `FullWidth4`・`AlphaBeta4` を追加し、`game_search.search_move` をUSI入口へ接続した。先行する新二方式の局中固定・次局継承、未知値保持、時計予算・同一制御、応答状態・送信競合・実入口確認は[今回の実装・学習記録](../learning/four-ply-search-game-integration-plan.md)を参照する。この作業ではShogiHome実機を確認していないため、二新方式のGUI表示・対局互換性・応答時間は未検証である。
 
 ## コマンドとエラー
 
@@ -56,7 +56,7 @@ TimeManagementConfigは不変な設定データで、mainが一回読んで非�
 
 現在threadが命令を管理し、一入力threadとgoごとの一探索threadをQueueで接続する。読取りと入力確定は別。入力確定と最終送信を同じLockで順序付け、先に終了・禁止命令を確定すれば送信しない。先に送信を完了すればその一回は残る。通常stopは抑制にせず、idle stopは持ち越さない。isready/usiは探索中も行単位で送信できる。
 
-SearchResultは結果データ。COMPLETE/Noneだけresign、INTERRUPTEDは合法手、SUPPRESSEDは無応答。送信直前にも抑制を再確認し、writeとflushが戻ってからsentを確定する。送信完了と担当終了は別なので、次探索前に共通Lock外でjoinする。乱数器は実行内共有だが並行探索へ渡さない。
+既存三方式の `SearchResult` は結果データ。COMPLETE/Noneだけresign、INTERRUPTEDは合法手、SUPPRESSEDは無応答。新二方式の制御付き反復結果は対局アダプターで既存の状態・手へ変換され、USI送信側は同じ契約を使う。NO_LEGAL_MOVEは手なしとして `bestmove resign`、STOPPEDは最新完了手または合法予備手、SUPPRESSEDは手なしとなる。送信直前にも共通Lock下で抑制を再確認し、writeとflushが戻ってからsentを確定するため、一つの探索応答は最大一回である。送信完了と担当終了は別なので、次探索前に共通Lock外でjoinする。乱数器は実行内共有だが並行探索へ渡さない。
 
 mainの入力源はmacOSのfdと内部終了pipeをselectorで待ち、非blocking readと逐次復号を使う。LF/CRLF/CR、分割文字、EOF末尾行に対応する。CRのみは次バイトまたはEOFで完成する。完成時刻から受渡し・前担当回収・解析・複製・起動を予算へ含める。借用stdinは閉じず属性を復元し、自前pipe/selectorだけ解放する。標準入力は先読みされていないことが前提。
 

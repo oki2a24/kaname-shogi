@@ -2,7 +2,7 @@
 
 ## 利用方法
 
-通常対局のRandom（最弱・既定）・一手駒得・二手先読みとは別の開発用コマンド。
+この文書は通常対局の一手選択とは別に、同一局面の全幅読みとαβ枝刈りを比較する開発用コマンドの仕様を説明する。対局ではRandom・Material・TwoPlyMaterialに加え、全幅最大4手とαβ枝刈り最大4手を選択できる。比較コマンドの結果をそのまま対局中の選択や棋力の保証とは扱わない。
 
 ```sh
 .venv/bin/python -m kaname_shogi.search.compare --sfen "8k/9/9/9/9/9/9/9/K8 b - 1"
@@ -54,7 +54,7 @@
 
 `search/minimax.py` と `search/alpha_beta.py` が方式入口、`core.py` が共通探索、`contracts.py` と `result.py` がデータ、`shogi.py` が将棋接続、`compare.py` が指定深さ比較の入出力。反復管理は `iterative_deepening.py`、その比較入口は `compare_iterative.py`、入力・整形・一致判定の共通処理は `comparison.py`。評価の正本は `evaluation.py`、既存 `movegen.material_balance` の入口も維持。複製適用の公開操作 `movegen.position_after_move` は既存適用へ委譲する。
 
-これらの比較コマンドは時間制御、置換表、定跡、新評価項目、通常対局への新方式追加を含まない。合法手が多い局面の四手探索は長時間かかり得る。局面例・数値木・回帰の成功は棋力向上や全入力の証明ではない。OSからのSIGINT配送の実プロセス試験は未実施で、中断の捕捉と表示は操作境界で確認。
+これらの比較コマンドは時間制御、置換表、定跡、新評価項目、対局方式の選択を含まない。対局接続の実装では `game_search` が新二方式を共通反復探索へ渡す。CLIは深さ1から4まで時計制御なし、USIは既存の時計予算・停止を使用する。合法手が多い局面の全幅四手探索は長時間かかり得て、実応答時間・期限内の完了は保証しない。局面例・数値木・回帰の成功は棋力向上や全入力の証明ではない。OSからのSIGINT配送の実プロセス試験は未実施で、中断の捕捉と表示は操作境界で確認。
 
 根拠と履歴：[承認済み設計](../plans/2026-10-17-engine-search-comparison-design.md)、[実装計画](../plans/2026-10-17-engine-search-comparison-implementation-plan.md)、[実装・学習記録](../learning/engine-improvement-stage-design.md)。
 
@@ -65,4 +65,4 @@
 
 2026-10-18に探索部品として `iterative_deepening.search_controlled` と `alpha_beta.search_controlled` を追加した。比較コマンドは従来の停止なし入口を使い続ける。停止なし反復は遅延取得で完了記録を一件ずつ渡し、手なしでも深さ1の記録を一件渡す。制御付き反復は準備を含めて同期実行し、最終終了結果を一件返す。準備の手なしは完了記録なしで終了する。
 
-反復・再帰・優先手順序・完了累計の本体を共有する。準備と中断反復は累計に含めず、中断時は最新完了記録または予備手を使う。詳細は[探索停止](search-stop.md)、[承認済み設計](../plans/2026-10-18-iterative-deepening-stop-time-control-design.md)、[実装・検証記録](../learning/iterative-deepening-stop-time-control-implementation.md)を参照。比較コマンドへの時計オプションや通常対局への新方式接続は追加していない。
+反復・再帰・優先手順序・完了累計の本体を共有する。準備と中断反復は累計に含めず、中断時は最新完了記録または予備手を使う。詳細は[探索停止](search-stop.md)、[承認済み設計](../plans/2026-10-18-iterative-deepening-stop-time-control-design.md)、[実装・検証記録](../learning/iterative-deepening-stop-time-control-implementation.md)を参照。比較コマンドに時計オプションはない。通常対局への接続仕様と検証範囲は[四手探索の接続設計](../plans/2026-10-19-four-ply-search-game-integration-design.md)と[実装・学習記録](../learning/four-ply-search-game-integration-plan.md)を参照する。

@@ -22,13 +22,13 @@
 
 ## 後続接続
 
-USIは各goの独立局面・新制御からsearch_moveを呼ぶ。go完成行の読取り原点、stopと抑制、一回送信、故障通知、入力待機解除・担当回収を[接続仕様](usi-engine-response.md#入力送信故障回収2026-10-12接続)へまとめた。CLIは従来の同期選択を維持する。[引渡し契約](../plans/2026-10-12-search-stop-implementation-plan.md#後続の入力並行処理usi接続への引き渡し)は当時の記録として保持する。
+USIは各goの独立局面・新制御からsearch_moveを呼ぶ。go完成行の読取り原点、stopと抑制、一回送信、故障通知、入力待機解除・担当回収を[接続仕様](usi-engine-response.md#入力送信故障回収2026-10-12接続)へまとめた。2026-10-19にCLIとUSIへ全幅四手・αβ四手を選択肢として接続した。新方式は共通反復探索を深さ1→4で使い、CLIには時計制御を加えず、USIは既存時計予算と制御を再利用する。接続境界・設定寿命・検証範囲は[承認済み設計](../plans/2026-10-19-four-ply-search-game-integration-design.md)と[実施記録](../learning/four-ply-search-game-integration-plan.md)を参照する。[引渡し契約](../plans/2026-10-12-search-stop-implementation-plan.md#後続の入力並行処理usi接続への引き渡し)は当時の記録として保持する。
 
 専用制御Lockは送信同期を代替しない。接続側の共通Lockで結果返却直後の抑制を再確認する。実時間安全性、全OS・全競合、計測・対局は未検証。
 
 ## 制御付き反復深化の探索部品（2026-10-18）
 
-`search.iterative_deepening.search_controlled(node, max_depth, operations, control)` は最終終了結果を一件返す同期操作。`shogi.make_controlled_operations(perspective)` は開始側視点の将棋用操作セットを作る操作。呼出し元のSearchControlを準備・各深さ・子へ共通で渡し、予算計算や原点設定をやり直さない。通常三方式を使うUSI・CLIと比較コマンドには新方式を接続していない。
+`search.iterative_deepening.search_controlled(node, max_depth, operations, control)` は最終終了結果を一件返す同期操作。`shogi.make_controlled_operations(perspective)` は開始側視点の将棋用操作セットを作る操作。呼出し元のSearchControlを準備・各深さ・子へ共通で渡し、予算計算や原点設定をやり直さない。2026-10-19から、対局用 `game_search` が全幅四手・αβ四手をこの共通入口へ接続する。比較コマンドは独立した比較手順のままで、対局選択・時計引数を受け付けない。
 
 準備は生成順の最初の合法手だけを確保する。通常停止の保護は、この手の合法性確認（打ち歩詰めの防御調査を含む）または全調査の手なし確定までで、抑制は保護しない。準備の手なしは反復完了記録を作らない。目標は新しい深さを始める前だけ、上限・通常停止・抑制は深さ内部でも確認する。
 
