@@ -10,7 +10,7 @@ from test_search_shogi import KINGS, MATE, RECAPTURE
 
 from kaname_shogi import movegen as mg
 from kaname_shogi.model import Side
-from kaname_shogi.search import alpha_beta, shogi
+from kaname_shogi.search import alpha_beta, minimax, shogi
 from kaname_shogi.search import iterative_deepening as iterative
 from kaname_shogi.search.contracts import PreparedRoot
 from kaname_shogi.search.result import ControlledCompletion as C
@@ -73,6 +73,17 @@ class FinalCheckControl(SearchControl):
 
 
 class ControlledIterativeTests(unittest.TestCase):
+    def search_controlled_with_pruning(self, node, max_depth, ops, control, pruning):
+        """未実装引数だけを意図したRedとして報告する。"""
+        try:
+            return iterative.search_controlled(
+                node, max_depth, ops, control, pruning=pruning
+            )
+        except TypeError as error:
+            if "unexpected keyword argument 'pruning'" in str(error):
+                self.fail("制御付き反復入口はpruning方式を選べる必要があります")
+            raise
+
     def assert_record(self, r, state, move, depth, score, total):
         """結果と完了記録を独立リテラルの一組として比較する。"""
         self.assertEqual((r.completion, r.move), (state, move))
@@ -82,6 +93,210 @@ class ControlledIterativeTests(unittest.TestCase):
             (last.depth, last.result.score, last.total_visited_nodes),
             (depth, score, total),
         )
+
+    def test_controlled_modes_preserve_stop_fallback_and_latest_record(self):
+        """両方式が予備手・手なし・直近完了記録の停止契約を保つ。
+
+        初回停止時の手なし化、手なしの誤投了、未完了深さの採用を検出する。
+        """
+        for pruning in (False, True):
+            with self.subTest(pruning=pruning):
+                stopped = SearchControl(None, 0, now_ns=lambda: 0)
+                stopped.request_stop()
+                result = self.search_controlled_with_pruning(
+                    changing_tree(), 3, controlled_operations(), stopped, pruning
+                )
+                self.assertEqual(result, ControlledSearchResult(C.STOPPED, "A", None))
+
+                no_move = self.search_controlled_with_pruning(
+                    TreeNode("end"),
+                    4,
+                    controlled_operations(),
+                    SearchControl(None, 0, now_ns=lambda: 0),
+                    pruning,
+                )
+                self.assertEqual(
+                    no_move, ControlledSearchResult(C.NO_LEGAL_MOVE, None, None)
+                )
+
+                control = FinalCheckControl(3)
+                base = controlled_operations()
+
+                def inspect_node(node, active_control, base=base, control=control):
+                    if node.label == "root":
+                        control.current_depth += 1
+                    return base.inspect(node, active_control)
+
+                partial = self.search_controlled_with_pruning(
+                    changing_tree(),
+                    3,
+                    replace(base, inspect=inspect_node),
+                    control,
+                    pruning,
+                )
+                self.assert_record(partial, C.STOPPED, "B", 2, (0, 1), 10)
+
+    def test_controlled_mode_reuses_control_and_propagates_faults(self):
+        """方式選択後も同じ停止制御を渡し、操作故障をそのまま伝える。
+
+        深さ別の制御再生成と例外を通常停止へ隠す誤りを検出する。
+        """
+        for pruning in (False, True):
+            with self.subTest(pruning=pruning):
+                control = SearchControl(None, 0, now_ns=lambda: 0)
+                base = controlled_operations()
+
+                def prepare(node, active_control, control=control, base=base):
+                    self.assertIs(active_control, control)
+                    return base.prepare(node, active_control)
+
+                def inspect_node(node, active_control, control=control, base=base):
+                    self.assertIs(active_control, control)
+                    return base.inspect(node, active_control)
+
+                def advance(node, move, active_control, control=control, base=base):
+                    self.assertIs(active_control, control)
+                    return base.advance(node, move, active_control)
+
+                result = self.search_controlled_with_pruning(
+                    changing_tree(),
+                    2,
+                    replace(
+                        base, prepare=prepare, inspect=inspect_node, advance=advance
+                    ),
+                    control,
+                    pruning,
+                )
+                self.assert_record(result, C.COMPLETE, "B", 2, (0, 1), 10)
+
+                failure = RuntimeError("advance failed")
+
+                def broken_advance(node, move, active_control, failure=failure):
+                    raise failure
+
+                with self.assertRaises(RuntimeError) as caught:
+                    self.search_controlled_with_pruning(
+                        changing_tree(),
+                        2,
+                        replace(base, advance=broken_advance),
+                        SearchControl(None, 0, now_ns=lambda: 0),
+                        pruning,
+                    )
+                self.assertIs(caught.exception, failure)
+
+    def test_suppression_after_completed_depth_hides_move_for_both_methods(self):
+        """一深さ完了直後の抑制は手を隠し、完了記録を保つ。
+
+        返却前の抑制漏れと直前に完了した結果の消失を検出する。
+        """
+        for pruning in (False, True):
+            with self.subTest(pruning=pruning):
+                control = SearchControl(None, 0, now_ns=lambda: 0)
+                module = alpha_beta if pruning else minimax
+                real = module.search_controlled
+
+                def complete_then_suppress(*args, real=real, control=control, **kwargs):
+                    completed = real(*args, **kwargs)
+                    control.request_stop(suppress_response=True)
+                    return completed
+
+                with patch.object(
+                    module, "search_controlled", side_effect=complete_then_suppress
+                ):
+                    result = self.search_controlled_with_pruning(
+                        changing_tree(),
+                        1,
+                        controlled_operations(),
+                        control,
+                        pruning,
+                    )
+                self.assert_record(result, C.SUPPRESSED, None, 1, (0, 5), 3)
+
+    def test_invalid_pruning_fails_before_prepare(self):
+        """制御付き方式選択はboolのみ受け入れ、準備前に検査する。
+
+        truthyな整数やNoneの許容、誤値による局面準備を検出する。
+        """
+        for bad in (0, 1, None):
+            with self.subTest(pruning=bad):
+                prepared = []
+                base = controlled_operations()
+                ops = replace(
+                    base,
+                    prepare=lambda node, control, prepared=prepared: prepared.append(
+                        node
+                    ),
+                )
+                with self.assertRaises(ValueError):
+                    self.search_controlled_with_pruning(
+                        changing_tree(),
+                        2,
+                        ops,
+                        SearchControl(None, 0, now_ns=lambda: 0),
+                        bad,
+                    )
+                self.assertEqual(prepared, [])
+
+        for pruning in (False, True):
+            with self.subTest(pruning=pruning, max_depth=0):
+                prepared = []
+                base = controlled_operations()
+                ops = replace(
+                    base,
+                    prepare=lambda node, control, prepared=prepared: prepared.append(
+                        node
+                    ),
+                )
+                with self.assertRaises(ValueError):
+                    self.search_controlled_with_pruning(
+                        changing_tree(),
+                        0,
+                        ops,
+                        SearchControl(None, 0, now_ns=lambda: 0),
+                        pruning,
+                    )
+                self.assertEqual(prepared, [])
+
+    def test_previous_best_is_passed_to_next_depth_for_both_methods(self):
+        """制御付き両方式が前回完了の最善手を次の深さへ渡す。
+
+        優先なし、最初の手への固定、二回前の最善手の再利用を検出する。
+        """
+        for pruning, module in ((False, minimax), (True, alpha_beta)):
+            with self.subTest(pruning=pruning):
+                calls = []
+                control = SearchControl(None, 0, now_ns=lambda: 0)
+                real = module.search_controlled
+
+                def observed(
+                    node,
+                    depth,
+                    ops,
+                    active_control,
+                    *,
+                    preferred_move=None,
+                    real=real,
+                    calls=calls,
+                ):
+                    calls.append((depth, preferred_move))
+                    return real(
+                        node,
+                        depth,
+                        ops,
+                        active_control,
+                        preferred_move=preferred_move,
+                    )
+
+                with patch.object(module, "search_controlled", side_effect=observed):
+                    result = self.search_controlled_with_pruning(
+                        changing_tree(),
+                        3,
+                        controlled_operations(),
+                        control,
+                        pruning,
+                    )
+                self.assertEqual(calls, [(1, None), (2, "A"), (3, "B")])
+                self.assertEqual(result.move, "A")
 
     def test_zero_budget_and_initial_stop_return_fallback(self):
         """初回完了前の通常停止は予備手を返し、深さ1を始めない。

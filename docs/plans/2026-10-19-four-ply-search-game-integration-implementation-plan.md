@@ -100,7 +100,7 @@ self.assertEqual(result.root_scores, (('A', (0, 3)), ('B', (0, -2))))
 **消費:** タスク1のminimax入口と既存αβ入口。
 **生産:** pruningを選べる二つの反復入口。既存呼出しはTrueで互換。
 
-- [ ] `test_both_methods_complete_depths_one_to_four` を追加し、既存 `depth_tree()` の手計算値を各方式へ個別に照合する。
+- [x] `test_both_methods_complete_depths_one_to_four` を追加し、既存 `depth_tree()` の手計算値を各方式へ個別に照合する。
 
 ```python
 self.assertEqual([(r.depth, r.result.move, r.result.score,
@@ -109,12 +109,12 @@ self.assertEqual([(r.depth, r.result.move, r.result.score,
                   (3, 'B', (0, 2), 7, 15), (4, 'A', (0, 3), 9, 24)])
 ```
 
-- [ ] `test_full_width_is_not_pruned` で省略可能な木の全訪問を確認。優先手・例外・不正上限・不正pruningの即時検査も両経路へ適用する。
-- [ ] 制御付きの既存STOPPED/SUPPRESSED/NO_LEGAL_MOVE、深い未完了結果を採用しない例、同じcontrol、返却直前抑制、操作故障の代表をFalse/Trueで確認する。stop先行は合法予備手、深さ2完了後の深さ3停止は深さ2の手、抑制はmove=Noneとする。
-- [ ] 実行: `.venv/bin/python -m unittest discover -s tests -p 'test_search_iterative_deepening*.py' -v`。新しい選択と全幅経路の振る舞いFAILを確認する。
-- [ ] 最小実装: 選択した一深さ入口を既存 `_iterations` へ渡す。準備・最終状態選択・制御保持を一か所に保ち、既定入口の実行時patchも有効にする。
-- [ ] 同コマンドと `test_search_compare*.py` を実行してOK。代表変異はFalse無視と最新記録の未完了上書き。既存比較コマンドがαβ既定のままであることを確認する。
-- [ ] 共通規律のレビュー・記録・コミット。例: `feat: select full-width or alpha-beta iterative search`。
+- [x] `test_full_width_is_not_pruned` で省略可能な木の全訪問を確認。優先手・例外・不正上限・不正pruningの即時検査も両経路へ適用する。
+- [x] 制御付きの既存STOPPED/SUPPRESSED/NO_LEGAL_MOVE、深い未完了結果を採用しない例、同じcontrol、返却直前抑制、操作故障の代表をFalse/Trueで確認する。stop先行は合法予備手、深さ2完了後の深さ3停止は深さ2の手、抑制はmove=Noneとする。
+- [x] 実行: `.venv/bin/python -m unittest discover -s tests -p 'test_search_iterative_deepening*.py' -v`。新しい選択と全幅経路の振る舞いFAILを確認する。
+- [x] 最小実装: 選択した一深さ入口を既存 `_iterations` へ渡す。準備・最終状態選択・制御保持を一か所に保ち、既定入口の実行時patchも有効にする。
+- [x] 同コマンドと `test_search_compare*.py` を実行してOK。代表変異はFalse無視と最新記録の未完了上書き。既存比較コマンドがαβ既定のままであることを確認する。
+- [x] 共通規律のレビュー・記録・コミット。例: `feat: select full-width or alpha-beta iterative search`。
 
 ## タスク 3：五方式の対局用選択アダプター
 

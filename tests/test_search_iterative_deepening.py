@@ -25,6 +25,111 @@ def changing_tree():
 
 
 class IterativeDeepeningTests(unittest.TestCase):
+    def search_with_pruning(self, node, max_depth, ops, pruning):
+        """未実装引数だけを意図したRedとして報告する。"""
+        try:
+            return iterative_deepening.search(node, max_depth, ops, pruning=pruning)
+        except TypeError as error:
+            if "unexpected keyword argument 'pruning'" in str(error):
+                self.fail("反復入口はpruning方式を選べる必要があります")
+            raise
+
+    def test_both_methods_complete_depths_one_to_four(self):
+        """全幅とαβが深さ1から4の独立期待値を返す。
+
+        深さ飛ばし、誤評価、今回分だけの累計や方式取り違えを検出する。
+        """
+        expected = [
+            (1, "A", (0, 0), 3, 3),
+            (2, "A", (0, 1), 5, 8),
+            (3, "B", (0, 2), 7, 15),
+            (4, "A", (0, 3), 9, 24),
+        ]
+        for pruning in (False, True):
+            with self.subTest(pruning=pruning):
+                records = list(
+                    self.search_with_pruning(depth_tree(), 4, operations(), pruning)
+                )
+                self.assertEqual(
+                    [
+                        (
+                            record.depth,
+                            record.result.move,
+                            record.result.score,
+                            record.result.visited_nodes,
+                            record.total_visited_nodes,
+                        )
+                        for record in records
+                    ],
+                    expected,
+                )
+
+    def test_full_width_is_not_pruned(self):
+        """全幅反復は候補を省略せず根の確定値を保持する。
+
+        pruning=Falseの無視やαβ入口への誤接続を検出する。
+        """
+        records = list(
+            self.search_with_pruning(
+                two_level([3, 5], [-2, 10]), 2, operations(), False
+            )
+        )
+        self.assertEqual(
+            [
+                (
+                    r.depth,
+                    r.result.move,
+                    r.result.score,
+                    r.result.visited_nodes,
+                    r.total_visited_nodes,
+                )
+                for r in records
+            ],
+            [(1, "A", (0, 0), 3, 3), (2, "A", (0, 3), 7, 10)],
+        )
+        self.assertEqual(
+            records[-1].result.root_scores, (("A", (0, 3)), ("B", (0, -2)))
+        )
+
+    def test_invalid_pruning_fails_before_search(self):
+        """方式選択はboolだけを許し、探索操作より前に検証する。
+
+        intやNoneの受入れと検査後の局面調査開始を検出する。
+        """
+        for bad in (0, 1, None):
+            with self.subTest(pruning=bad):
+                seen = []
+                with self.assertRaises(ValueError):
+                    self.search_with_pruning(changing_tree(), 2, operations(seen), bad)
+                self.assertEqual(seen, [])
+        for pruning in (False, True):
+            with self.subTest(pruning=pruning, max_depth=0):
+                seen = []
+                with self.assertRaises(ValueError):
+                    self.search_with_pruning(
+                        changing_tree(), 0, operations(seen), pruning
+                    )
+                self.assertEqual(seen, [])
+
+    def test_both_methods_propagate_operation_faults(self):
+        """両方式とも探索操作の故障を同じ例外として伝える。
+
+        広い例外処理で通常の完了や中断に変換する誤りを検出する。
+        """
+        for pruning in (False, True):
+            with self.subTest(pruning=pruning):
+                failure = RuntimeError("inspect failed")
+
+                def inspect(node, failure=failure):
+                    raise failure
+
+                ops = SearchOperations(
+                    inspect, lambda node, move: node, lambda n: (0, 0)
+                )
+                with self.assertRaises(RuntimeError) as caught:
+                    list(self.search_with_pruning(changing_tree(), 2, ops, pruning))
+                self.assertIs(caught.exception, failure)
+
     def test_completed_depth_changes_best_and_accumulates(self):
         """浅い高評価を保持せず深い完了結果と累計へ更新する。
 
@@ -70,17 +175,25 @@ class IterativeDeepeningTests(unittest.TestCase):
 
         優先なし・浅い手への固定・二回前の流用を検出する。
         """
-        real = alpha_beta.search
-        calls = []
+        for pruning, module in ((False, minimax), (True, alpha_beta)):
+            calls = []
+            real = module.search
 
-        def observed(node, depth, ops, *, preferred_move=None):
-            calls.append((depth, preferred_move))
-            return real(node, depth, ops, preferred_move=preferred_move)
+            def observed(
+                node, depth, ops, *, preferred_move=None, real=real, calls=calls
+            ):
+                calls.append((depth, preferred_move))
+                return real(node, depth, ops, preferred_move=preferred_move)
 
-        with patch.object(alpha_beta, "search", side_effect=observed):
-            records = list(iterative_deepening.search(changing_tree(), 3, operations()))
-        self.assertEqual(calls, [(1, None), (2, "A"), (3, "B")])
-        self.assertEqual(records[-1].result.move, "B")
+            with (
+                self.subTest(pruning=pruning),
+                patch.object(module, "search", side_effect=observed),
+            ):
+                records = list(
+                    self.search_with_pruning(changing_tree(), 3, operations(), pruning)
+                )
+            self.assertEqual(calls, [(1, None), (2, "A"), (3, "B")])
+            self.assertEqual(records[-1].result.move, "B")
 
     def test_terminal_yields_once(self):
         """手なしは深さ1の評価を渡して終了する。
