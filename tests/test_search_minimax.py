@@ -38,6 +38,66 @@ class MinimaxTests(unittest.TestCase):
         self.assertEqual(r.root_scores, (("A", (0, 3)), ("B", (0, 4))))
         self.assertEqual(seen, ["root", "A", "A0", "A1", "B", "B0", "B1"])
 
+    def test_full_width_keeps_all_candidates(self):
+        """全幅入口が両候補を最後まで調べて確定値を返す。
+
+        αβへ誤接続して訪問数や後続根候補を欠く回帰を検出する。
+        """
+        seen = []
+        result = minimax.search(two_level([3, 5], [-2, 10]), 2, operations(seen))
+        self.assertEqual(
+            (result.score, result.move, result.visited_nodes), ((0, 3), "A", 7)
+        )
+        self.assertEqual(result.root_scores, (("A", (0, 3)), ("B", (0, -2))))
+        self.assertEqual(seen, ["root", "A", "A0", "A1", "B", "B0", "B1"])
+
+    def test_preferred_move_only_reorders_root(self):
+        """優先手は根だけを先頭へ移し、全候補の探索を保つ。
+
+        優先手の無視、子への伝播、候補除外、真の最善手の取り違えを検出する。
+        """
+        root = two_level([3, 5], [-2, 10])
+        seen = []
+        try:
+            result = minimax.search(root, 2, operations(seen), preferred_move="B")
+        except TypeError:
+            self.fail("全幅入口はpreferred_moveを受け付ける必要があります")
+        self.assertEqual(
+            (result.score, result.move, result.visited_nodes), ((0, 3), "A", 7)
+        )
+        self.assertEqual(result.root_scores, (("B", (0, -2)), ("A", (0, 3))))
+        self.assertEqual(seen, ["root", "B", "B0", "B1", "A", "A0", "A1"])
+
+        tied = two_level([3, 5], [3, 4])
+        self.assertEqual(
+            minimax.search(tied, 2, operations(), preferred_move="B").move, "B"
+        )
+
+    def test_missing_preferred_move_fails_before_advancing(self):
+        """開始局面にない優先手を子局面の作成前に拒否する。
+
+        不正手の探索やadvance後の遅延検査を検出する。
+        """
+        seen = []
+        advances = []
+        base = operations(seen)
+        invalid = SearchOperations(
+            base.inspect,
+            lambda node, move: advances.append(move),
+            base.evaluate,
+        )
+        try:
+            with self.assertRaises(ValueError):
+                minimax.search(
+                    two_level([3], [4]), 2, invalid, preferred_move="missing"
+                )
+        except TypeError:
+            self.fail(
+                "全幅入口はpreferred_moveの不在をValueErrorで拒否する必要があります"
+            )
+        self.assertEqual(seen, ["root"])
+        self.assertEqual(advances, [])
+
     def test_zero_depth_and_terminal_precedence(self):
         """終端は静的駒得より優先し、終端と深さ0では先へ進まない。
 

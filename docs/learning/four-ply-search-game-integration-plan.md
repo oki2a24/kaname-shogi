@@ -33,3 +33,15 @@ writing-plansを使い、承認済み設計、既存の選択入口、CLI/USI、
 ## 計画承認と実装開始
 
 本人は計画提示後に「yes」と回答し、ネイティブ実行方法を含む計画を承認した。承認後に `codex/four-ply-game-integration` を作成し、同ブランチ上で計画・学習記録・現在地文書の承認状態を更新してから実装へ進む。Task 1からTDDを開始し、各タスクの検出力と独立レビュー結果を追記する。mainへの取り込みは、最終成果を提示した後に別途承認を待つ。
+
+## Task 1：全幅入口
+
+2026-10-19、`minimax.search` に根優先手を受け取る入口を追加し、制御付き `search_controlled` も共有coreへ `pruning=False` で委譲した。根候補値・再帰・停止・評価の実装を重複させず、制御付き探索では `prepare` を呼ばない。
+
+TDDのRedでは `.venv/bin/python -m unittest discover -s tests -p 'test_search_minimax*.py' -v` を追加テストと実行し、preferred_move未対応と制御付き入口不在をテスト内の明示的なassertion failureで確認した。その後、全幅の両根候補値と訪問数、優先手が根だけを並べ替えること、同点時の優先手、存在しない優先手のadvance前拒否を検証した。制御付き側は完了値、prepare非呼出し、根優先手の転送、操作途中STOP/SUPPRESS、深さ検査前の副作用なしを確認した。
+
+Green後の同minimaxパターンは11件成功、関連αβパターンは17件成功。`.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .` が成功した。枝刈り有効の代表変異を隔離コピーへ入れると `test_full_width_keeps_all_candidates` が期待訪問7に対し実際6で失敗し、全幅誤接続を検出した。Task 1単体とαβ関連の検出範囲を確認したが、プロジェクト全体テストはTask 1完了ゲートで実行する。
+
+独立レビューはCritical 0、Important 0、Minor 1。Minorは `tests/test_search_minimax.py` の2か所がTypeErrorを広く捕捉し、未対応引数以外の原因も同じテスト診断に置き換え得る点。製品挙動ではなくテスト診断上の懸念であるためこのタスクでは延期し、後の記録で参照できるよう保持する。レビュー担当はテストを再実行しておらず、上記の検証は実装担当が実行した結果である。
+
+Refactor確認では、共通coreに探索・停止・採点が残り薄い委譲を保てているため追加変更なしとした。Task 1実績は承認済み計画と作業台帳にも記録する。

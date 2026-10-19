@@ -81,18 +81,18 @@
 **消費:** 既存core.search/search_controlled、SearchControl、操作セット、数値木補助。
 **生産:** 上記のminimax二入口。再帰・停止・採点はcoreを共有。
 
-- [ ] `test_preferred_move_only_reorders_root` と `test_full_width_keeps_all_candidates` を追加する。数値木A=[3,5]、B=[−2,10]、深さ2では評価3・A・訪問7、root_scores=((A,3),(B,−2))。優先Bでも両枝を最後まで訪問し、根の候補順だけB→A。同点木A=[3,5]、B=[3,4]で優先BならBを選ぶ。不在優先手はadvance前にValueError。
+- [x] `test_preferred_move_only_reorders_root` と `test_full_width_keeps_all_candidates` を追加する。数値木A=[3,5]、B=[−2,10]、深さ2では評価3・A・訪問7、root_scores=((A,3),(B,−2))。優先Bでも両枝を最後まで訪問し、根の候補順だけB→A。同点木A=[3,5]、B=[3,4]で優先BならBを選ぶ。不在優先手はadvance前にValueError。
 
 ```python
 self.assertEqual((result.score, result.move, result.visited_nodes), ((0, 3), 'A', 7))
 self.assertEqual(result.root_scores, (('A', (0, 3)), ('B', (0, -2))))
 ```
 
-- [ ] 制御付き `test_completed_result_is_full_width` で同じ独立値を確認し、prepareを呼ばないことも確認する。`test_stop_and_suppression_do_not_publish_partial_scores` は操作途中で要求し、SearchInterrupted(STOP/SUPPRESS)を返し未完了SearchResultを作らないことを確認する。
-- [ ] 実行: `.venv/bin/python -m unittest discover -s tests -p 'test_search_minimax*.py' -v`。未実装の振る舞いでFAILする理由を確認する。
-- [ ] 最小実装: preferred_moveをcoreへ渡す。新制御付き入口もcoreへ委譲し、bool以外の深さなど既存検査・例外をそのまま使う。
-- [ ] 同じコマンドと `test_search_alpha_beta*.py` を実行してOK。代表変異 `pruning=True` を全幅入口へ入れ、訪問数／候補一覧assertionのFAILを確認する。
-- [ ] 共通規律のレビュー・記録・コミット。例: `feat: add controlled full-width search entry`。
+- [x] 制御付き `test_completed_result_is_full_width` で同じ独立値を確認し、prepareを呼ばないことも確認する。`test_stop_and_suppression_do_not_publish_partial_scores` は操作途中で要求し、SearchInterrupted(STOP/SUPPRESS)を返し未完了SearchResultを作らないことを確認する。
+- [x] 実行: `.venv/bin/python -m unittest discover -s tests -p 'test_search_minimax*.py' -v`。未実装の振る舞いでFAILする理由を確認する。
+- [x] 最小実装: preferred_moveをcoreへ渡す。新制御付き入口もcoreへ委譲し、bool以外の深さなど既存検査・例外をそのまま使う。
+- [x] 同じコマンドと `test_search_alpha_beta*.py` を実行してOK。代表変異 `pruning=True` を全幅入口へ入れ、訪問数／候補一覧assertionのFAILを確認する。
+- [x] 共通規律のレビュー・記録・コミット。例: `feat: add controlled full-width search entry`。
 
 ## タスク 2：二方式で共通の反復深化
 
