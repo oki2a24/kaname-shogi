@@ -144,7 +144,7 @@ self.assertEqual(adapted_suppressed, movegen.SearchResult(movegen.SearchCompleti
 **消費:** タスク3のchoose_moveと五方式。
 **生産:** 番号4=全幅、5=αβを選べるCLI。対局呼出しの引数形は従来どおり。
 
-- [ ] メニューの対応テストを五方式へ拡張する。表示には `4: 全幅読み（最大4手）、5: αβ枝刈り（最大4手）`、エラーは `エラー：一手選択方針を1〜5で選んでください。`。無効例を従来の4から6へ変更し、空入力Random・再入力を維持する。
+- [x] メニューの対応テストを五方式へ拡張する。表示には `4: 全幅読み（最大4手）、5: αβ枝刈り（最大4手）`、エラーは `エラー：一手選択方針を1〜5で選んでください。`。無効例を従来の4から6へ変更し、空入力Random・再入力を維持する。
 
 ```python
 self.assertEqual(cli.choose_move_selection_policy(input_fn=lambda: '4', output_fn=lambda _: None),
@@ -153,11 +153,11 @@ self.assertEqual(cli.choose_move_selection_policy(input_fn=lambda: '5', output_f
                  MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA)
 ```
 
-- [ ] `test_new_modes_remain_fixed_for_game` は一局の複数コンピュータ手で同じpolicyが届くことを確認。`test_each_computer_turn_restarts_at_depth_one` は小局面から二回の新方式呼出しで一深さ入口の深さ列がそれぞれ[1,2,3,4]となることを確認する。実際の対局入口がアダプターを通ることも確認する。
-- [ ] 実行: `.venv/bin/python -m unittest discover -s tests -p 'test_cli*.py' -v`。メニューと呼出し先の振る舞いFAILを確認する。
-- [ ] 最小実装: cliのchoose_moveのimportをgame_searchへ接続し、メニューに二項目追加。従来の合法手生成、対局形式、Ctrl+C終了、手の表示・適用を維持する。
-- [ ] 同コマンドを実行してOK。代表変異は番号4/5逆転、各手を深さ4単発に置換。時計・設定読込をCLIへ追加していないことを差分と呼出し検査で確認する。
-- [ ] 共通規律のレビュー・記録・コミット。例: `feat: offer four-ply search modes in CLI games`。
+- [x] `test_new_modes_remain_fixed_for_game` は一局の複数コンピュータ手で同じpolicyが届くことを確認。`test_each_computer_turn_restarts_at_depth_one` は小局面から二回の新方式呼出しで一深さ入口の深さ列がそれぞれ[1,2,3,4]となることを確認する。実際の対局入口がアダプターを通ることも確認する。
+- [x] 実行: `.venv/bin/python -m unittest discover -s tests -p 'test_cli*.py' -v`。メニューと呼出し先の振る舞いFAILを確認する。
+- [x] 最小実装: cliのchoose_moveのimportをgame_searchへ接続し、メニューに二項目追加。従来の合法手生成、対局形式、Ctrl+C終了、手の表示・適用を維持する。
+- [x] 同コマンドを実行してOK。代表変異は番号4/5逆転、各手を深さ4単発に置換。時計・設定読込をCLIへ追加していないことを差分と呼出し検査で確認する。
+- [x] 共通規律のレビュー・記録・コミット。例: `feat: offer four-ply search modes in CLI games`。
 
 ## タスク 5：USIの五方式・既存時計・停止応答接続
 

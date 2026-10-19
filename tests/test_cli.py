@@ -6,7 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from kaname_shogi import cli
+from kaname_shogi import cli, game_search
 from kaname_shogi.display import render_position
 from kaname_shogi.game_record import GameRecord, RecordedDrop, RecordedMove
 from kaname_shogi.model import (
@@ -21,6 +21,8 @@ from kaname_shogi.model import (
 )
 from kaname_shogi.move import BoardMove, DropMove
 from kaname_shogi.movegen import MoveSelectionPolicy
+from kaname_shogi.search import alpha_beta, minimax
+from kaname_shogi.sfen import parse_sfen
 
 
 class CommandParsingTests(unittest.TestCase):
@@ -179,7 +181,7 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         return choose(**kwargs)
 
     def test_choose_move_selection_policy_maps_choices(self):
-        """1・2・3をランダム・一手駒得・二手先読みへ対応付ける。
+        """番号1〜5を既存三方式・全幅・αβの各選択肢へ対応付ける。
 
         表示値と内部方針を取り違える誤りや、利用者向けの合意済み名称を欠かす
         誤りを検出する。
@@ -188,6 +190,8 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
             ("1", MoveSelectionPolicy.RANDOM),
             ("2", MoveSelectionPolicy.MATERIAL),
             ("3", MoveSelectionPolicy.TWO_PLY_MATERIAL),
+            ("4", MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH),
+            ("5", MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA),
         )
         for value, expected in cases:
             outputs = []
@@ -202,7 +206,8 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
                     outputs,
                     [
                         "一手選択方針を選んでください（1: ランダム、2: 一手駒得、"
-                        "3: 二手先読み（駒得）、空入力: ランダム）:"
+                        "3: 二手先読み（駒得）、4: 全幅読み（最大4手）、"
+                        "5: αβ枝刈り（最大4手）、空入力: ランダム）:"
                     ],
                 )
 
@@ -224,14 +229,14 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         """
         outputs = []
         policy = self._choose_policy(
-            input_fn=ScriptedInput(["4", "2"]), output_fn=outputs.append
+            input_fn=ScriptedInput(["6", "2"]), output_fn=outputs.append
         )
 
         self.assertEqual(policy, MoveSelectionPolicy.MATERIAL)
         self.assertEqual(
             sum("一手選択方針を選んでください" in line for line in outputs), 2
         )
-        self.assertIn("エラー：一手選択方針を1〜3で選んでください。", outputs)
+        self.assertIn("エラー：一手選択方針を1〜5で選んでください。", outputs)
 
 
 class ScriptedInput:
@@ -250,6 +255,13 @@ class ScriptedInput:
 
 
 class GameplayTests(unittest.TestCase):
+    def test_cli_uses_game_search_adapter(self):
+        """CLIの対局手選択入口は五方式用アダプターを参照する。
+
+        低水準三方式用入口へ新方式を渡して失敗する接続漏れを検出する。
+        """
+        self.assertIs(cli.choose_move, game_search.choose_move)
+
     def test_run_game_defaults_to_random_policy(self):
         """方針省略時の自動手に最弱のRANDOMを渡す。
 
@@ -301,6 +313,80 @@ class GameplayTests(unittest.TestCase):
 
                 choose_move.assert_called_once()
                 self.assertEqual(choose_move.call_args.args[2], policy)
+
+    def test_new_modes_remain_fixed_for_game(self):
+        """新二方式を一局中の複数コンピュータ手へ同じ値で渡す。
+
+        対局の途中で設定を読み直したり、既定のRANDOMへ戻したりする誤りを検出する。
+        """
+        for policy in (
+            MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
+            MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
+        ):
+            with self.subTest(policy=policy):
+                position = parse_sfen("8k/9/9/9/9/9/9/9/K8 b - 1").position
+                with (
+                    patch.object(cli, "create_initial_position", return_value=position),
+                    patch.object(cli, "is_game_over", side_effect=(False, False, True)),
+                    patch.object(
+                        cli,
+                        "choose_move",
+                        wraps=cli.choose_move,
+                    ) as choose_move,
+                ):
+                    record = cli.run_game(
+                        mode=cli.GameMode.COMPUTER_VS_COMPUTER,
+                        move_selection_policy=policy,
+                        output_fn=lambda _: None,
+                    )
+
+                self.assertEqual(len(record.moves), 2)
+                self.assertEqual(choose_move.call_count, 2)
+                self.assertEqual(
+                    [call.args[2] for call in choose_move.call_args_list],
+                    [policy, policy],
+                )
+
+    def test_each_new_mode_restarts_at_depth_one_on_each_computer_turn(self):
+        """二回の実対局探索がそれぞれ深さ1から4まで進む。
+
+        4手探索を一度だけ実行したり、次手で前回深さや反復状態を再利用する誤りを検出する。
+        """
+        modes = (
+            (MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH, minimax),
+            (MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA, alpha_beta),
+        )
+        for policy, search_mode in modes:
+            with self.subTest(policy=policy):
+                position = parse_sfen("8k/9/9/9/9/9/9/9/K8 b - 1").position
+                with (
+                    patch.object(cli, "create_initial_position", return_value=position),
+                    patch.object(cli, "is_game_over", side_effect=(False, False, True)),
+                    patch.object(
+                        search_mode,
+                        "search",
+                        wraps=search_mode.search,
+                    ) as depth_search,
+                    patch.object(
+                        cli, "choose_move", wraps=cli.choose_move
+                    ) as choose_move,
+                ):
+                    record = cli.run_game(
+                        mode=cli.GameMode.COMPUTER_VS_COMPUTER,
+                        move_selection_policy=policy,
+                        output_fn=lambda _: None,
+                    )
+
+                self.assertEqual(len(record.moves), 2)
+                self.assertEqual(choose_move.call_count, 2)
+                self.assertEqual(
+                    [call.args[2] for call in choose_move.call_args_list],
+                    [policy, policy],
+                )
+                self.assertEqual(
+                    [call.args[1] for call in depth_search.call_args_list],
+                    [1, 2, 3, 4, 1, 2, 3, 4],
+                )
 
     def test_help_displays_commands_and_reprompts_same_turn(self):
         """help表示後は案内を再表示して同じ手番から入力を続ける。

@@ -25,6 +25,8 @@ class CliEntrypointTests(unittest.TestCase):
             MoveSelectionPolicy.RANDOM,
             MoveSelectionPolicy.MATERIAL,
             MoveSelectionPolicy.TWO_PLY_MATERIAL,
+            MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
+            MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
         ):
             for mode in GameMode:
                 with self.subTest(mode=mode, policy=policy):

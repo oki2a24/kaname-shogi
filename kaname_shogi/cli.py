@@ -7,9 +7,10 @@ from enum import Enum
 
 from .display import render_position
 from .game_record import GameRecord
+from .game_search import choose_move
 from .model import BasicPieceType, Side, Square, create_initial_position
 from .move import BoardMove, DropMove, Move
-from .movegen import MoveSelectionPolicy, choose_move, is_game_over, legal_moves
+from .movegen import MoveSelectionPolicy, is_game_over, legal_moves
 
 __all__ = (
     "GameMode",
@@ -119,24 +120,29 @@ def choose_move_selection_policy(
 
     戻り値:
         1なら既存一様ランダムのRANDOM、2なら一手後の駒得比較のMATERIAL、
-        3なら自分一手＋相手一手を比較するTWO_PLY_MATERIAL。
+        3なら二手駒得のTWO_PLY_MATERIAL、4なら全幅四手のFOUR_PLY_FULL_WIDTH、
+        5ならαβ四手のFOUR_PLY_ALPHA_BETA。
         空入力はRANDOMを返す。不正入力では返さず再入力する。
 
     副作用:
         局面、棋譜、乱数を変更せず、メニューとエラーだけを表示する。
 
     難易度を強さの保証ではなく一手選択方針として示す。現行の一様ランダムを
-    最弱の既定値として保ち、入力を対局進行から分離する。
+    既定値として保ち、五方式の選択を対局進行から分離する。新二方式も一局中に固定し、
+    各コンピュータ手で深さ1から4まで再探索する。CLIには時間制御を追加しない。
     """
     policies = {
         "1": MoveSelectionPolicy.RANDOM,
         "2": MoveSelectionPolicy.MATERIAL,
         "3": MoveSelectionPolicy.TWO_PLY_MATERIAL,
+        "4": MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
+        "5": MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
     }
     while True:
         output_fn(
             "一手選択方針を選んでください（1: ランダム、2: 一手駒得、"
-            "3: 二手先読み（駒得）、空入力: ランダム）:"
+            "3: 二手先読み（駒得）、4: 全幅読み（最大4手）、"
+            "5: αβ枝刈り（最大4手）、空入力: ランダム）:"
         )
         choice = input_fn().strip()
         if choice == "":
@@ -144,7 +150,7 @@ def choose_move_selection_policy(
         try:
             return policies[choice]
         except KeyError:
-            output_fn("エラー：一手選択方針を1〜3で選んでください。")
+            output_fn("エラー：一手選択方針を1〜5で選んでください。")
 
 
 @dataclass(frozen=True)
