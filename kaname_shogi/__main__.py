@@ -1,6 +1,15 @@
 """python3 -m kaname_shogiで実行するCLIの入口。"""
 
-from .cli import GameMode, choose_game_mode, choose_move_selection_policy, run_game
+import sys
+
+from .cli import (
+    GameMode,
+    choose_clock_settings,
+    choose_game_mode,
+    choose_move_selection_policy,
+    run_game,
+)
+from .time_management import load_time_management_config
 
 
 def main() -> int:
@@ -13,11 +22,13 @@ def main() -> int:
         正常に対局を終了した場合のプロセス終了コード0。
 
     副作用:
-        対局形式を選び、コンピュータが参加する場合は一手選択方針を尋ねてから
-        run_gameを呼び出す。EOFまたはCtrl-Cでは終了メッセージを表示する。
+        対局形式を選び、コンピュータが参加する場合は方針・時計を選び、時間予算設定を
+        一度読み込んでrun_gameへ渡す。設定読込のValueError/OSErrorはstderrへ診断して
+        終了コード1を返す。EOFまたはCtrl-Cでは終了メッセージを表示する。
 
     対局形式と一手選択方針の責務を分け、選んだ方針を対局開始後に切り替えない。
-    人間対人間にはコンピュータの選択方針が不要なため尋ねない。
+    人間対人間にはコンピュータ設定とJSON読込が不要なため行わない。設定読込の失敗を
+    実行時の探索・時計故障と混同しないよう、読込操作だけを狭い例外境界で扱う。
     """
     try:
         mode = choose_game_mode()
@@ -25,7 +36,18 @@ def main() -> int:
             run_game(mode=mode)
         else:
             move_selection_policy = choose_move_selection_policy()
-            run_game(mode=mode, move_selection_policy=move_selection_policy)
+            clock_settings = choose_clock_settings()
+            try:
+                time_config = load_time_management_config()
+            except (ValueError, OSError) as error:
+                print("時間設定を読み込めませんでした: " + str(error), file=sys.stderr)
+                return 1
+            run_game(
+                mode=mode,
+                move_selection_policy=move_selection_policy,
+                clock_settings=clock_settings,
+                time_config=time_config,
+            )
     except EOFError, KeyboardInterrupt:
         print("入力を終了しました。")
     return 0

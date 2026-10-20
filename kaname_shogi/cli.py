@@ -24,6 +24,7 @@ __all__ = (
     "GameMode",
     "choose_game_mode",
     "choose_move_selection_policy",
+    "choose_clock_settings",
     "MoveCommand",
     "DropCommand",
     "ResignCommand",
@@ -160,6 +161,59 @@ def choose_move_selection_policy(
             return policies[choice]
         except KeyError:
             output_fn("エラー：一手選択方針を1〜5で選んでください。")
+
+
+def choose_clock_settings(
+    *,
+    input_fn: Callable[[], str] = input,
+    output_fn: Callable[[str], None] = print,
+) -> CliClockSettings:
+    """コンピュータ対局の持ち時間と秒読みを入力して時計設定を返す。
+
+    引数:
+        input_fn: 分・秒の入力を一つずつ返す操作。EOFとCtrl-Cは呼出し側へ伝える。
+        output_fn: 二欄の案内と入力エラーを表示する操作。
+
+    戻り値:
+        分を初期持ち時間ms、秒を秒読みmsへ変換したCliClockSettings。
+
+    副作用:
+        二欄を表示し、入力が不正または0と0の組合せなら両欄を再入力する。
+        局面、時計、時間予算設定やファイルは変更しない。
+
+    例外:
+        EOFError、KeyboardInterrupt: 入力操作から呼出し側へそのまま伝える。
+
+    空入力の10分・30秒は性能から決めた値ではなく、承認済み設計の利用者向け
+    初期値である。半角の十進整数だけを受理し、USI入力の符号付き整数表記と分ける。
+    """
+    while True:
+        output_fn("コンピュータの持ち時間（分、空入力10）:")
+        initial_minutes_text = input_fn().strip()
+        output_fn("秒読み（秒、空入力30）:")
+        byoyomi_seconds_text = input_fn().strip()
+
+        try:
+            if initial_minutes_text == "":
+                initial_minutes = 10
+            elif all(character in "0123456789" for character in initial_minutes_text):
+                initial_minutes = int(initial_minutes_text)
+            else:
+                raise ValueError("持ち時間は半角の非負整数で入力してください")
+
+            if byoyomi_seconds_text == "":
+                byoyomi_seconds = 30
+            elif all(character in "0123456789" for character in byoyomi_seconds_text):
+                byoyomi_seconds = int(byoyomi_seconds_text)
+            else:
+                raise ValueError("秒読みは半角の非負整数で入力してください")
+
+            return CliClockSettings(
+                initial_minutes * 60_000,
+                byoyomi_seconds * 1_000,
+            )
+        except ValueError as error:
+            output_fn("エラー：" + str(error))
 
 
 @dataclass(frozen=True)
@@ -463,6 +517,7 @@ def _run_computer_turn(
         output_fn("探索結果が抑制されたため対局を終了しました。")
         return updated_clock, False
     if clock.is_expired(side, elapsed_ns):
+        _output_clock_summary(output_fn, side, elapsed_ns, updated_clock)
         winner_name = "後手" if side is Side.SENTE else "先手"
         output_fn(f"{side_name}が時間切れです。{winner_name}の勝ちです。")
         return updated_clock, False
@@ -471,6 +526,11 @@ def _run_computer_turn(
         SearchCompletion.INTERRUPTED,
     ):
         raise ValueError("探索結果の終了状態が不正です")
+    completion_name = (
+        "完了" if result.completion is SearchCompletion.COMPLETE else "通常停止"
+    )
+    output_fn("探索状態: " + completion_name)
+    _output_clock_summary(output_fn, side, elapsed_ns, updated_clock)
     if result.move is None:
         if result.completion is SearchCompletion.INTERRUPTED:
             raise ValueError("通常停止の探索結果に合法手がありません")
@@ -488,6 +548,45 @@ def _resignation_message(side_to_move: Side) -> str:
     loser_name = "先手" if side_to_move == Side.SENTE else "後手"
     winner_name = "後手" if side_to_move == Side.SENTE else "先手"
     return f"{loser_name}が投了しました。{winner_name}の勝ちです。"
+
+
+def _format_milliseconds_as_seconds(milliseconds: int) -> str:
+    """整数msを秒と小数第3位へ切り分ける。"""
+    seconds, fractional_ms = divmod(milliseconds, 1_000)
+    if fractional_ms == 0:
+        return f"{seconds}秒"
+    return f"{seconds}.{fractional_ms:03d}秒"
+
+
+def _format_elapsed_milliseconds(milliseconds: int) -> str:
+    """消費時間の整数msを小数第3位まで表示する。"""
+    seconds, fractional_ms = divmod(milliseconds, 1_000)
+    return f"{seconds}.{fractional_ms:03d}秒"
+
+
+def _format_clock_time(remaining_ns: int) -> str:
+    """残りnsを切り捨てmsとしてMM:SS.mmm形式へ変換する。"""
+    total_milliseconds = remaining_ns // 1_000_000
+    total_seconds, milliseconds = divmod(total_milliseconds, 1_000)
+    minutes, seconds = divmod(total_seconds, 60)
+    return f"{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
+
+
+def _output_clock_summary(
+    output_fn: Callable[[str], None],
+    side: Side,
+    elapsed_ns: int,
+    updated_clock: CliClock,
+) -> None:
+    """一手の消費時間と返却後の残り時間を表示する。"""
+    side_name = "先手" if side is Side.SENTE else "後手"
+    elapsed_milliseconds = elapsed_ns // 1_000_000
+    output_fn("消費時間: " + _format_elapsed_milliseconds(elapsed_milliseconds))
+    output_fn(
+        f"{side_name}の残り持ち時間: "
+        f"{_format_clock_time(updated_clock.remaining_ns(side))}"
+        f"（秒読み{_format_milliseconds_as_seconds(updated_clock.settings.byoyomi_ms)}）"
+    )
 
 
 def _checkmate_message(side_to_move: Side) -> str:
