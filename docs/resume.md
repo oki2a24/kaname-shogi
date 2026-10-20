@@ -2,9 +2,9 @@
 
 ## 現在地
 
-2026-10-20更新。選定済みテーマの[承認済み計画](plans/2026-10-20-cli-search-time-control-implementation-plan.md)に基づくTask 1〜5の実装・検証・独立レビューを作業ブランチ`codex/cli-search-time-control-plan`で完了した。[実施記録](learning/cli-search-time-control-plan.md)にTDD・検出力・レビュー結果を記録する。mainへの取込みと取込み先検証、最後の理解確認は未実施で、別途承認を待つ。
+2026-10-20更新。選定済みテーマの[承認済み計画](plans/2026-10-20-cli-search-time-control-implementation-plan.md)に基づくTask 1〜5の実装・検証・独立レビューを完了し、本人の承認を得てコミット`eb78e9e`までmainへfast-forward統合した。統合後の全体検証も成功。[実施記録](learning/cli-search-time-control-plan.md)にTDD・検出力・レビュー・統合結果を記録する。最後の理解確認が未実施で、回答を待つ。
 
-作業ディレクトリは`/Users/oki2a24/kaname-shogi`。ブランチにはTask 1〜5の実装・記録がある。Task 1〜4は通常フックを通した個別コミット。未追跡`.antigravity/tasks/`は開始時からあり保持する。Ruff 0.16.10は固定版と一致、ローカル`core.hooksPath`は`.githooks`。別worktree・push・main取込みは行っていない。
+作業ディレクトリは`/Users/oki2a24/kaname-shogi`、現在ブランチは`main`。Task 1〜4は通常フックを通した個別コミット、Task 5は`eb78e9e`。統合後に`.venv/bin/python -m unittest discover -s tests -v`を実行し623件成功。未追跡`.antigravity/tasks/`は開始時からあり保持する。Ruff 0.16.10は固定版と一致、ローカル`core.hooksPath`は`.githooks`。pushは行っていない。
 
 仕様の正本は[承認済み設計](plans/2026-10-20-cli-search-time-control-design.md)、本人回答・個別合意は[設計学習記録](learning/cli-search-time-control-design.md)。共通`game_search.search_move`・予算計算・`SearchControl`を再利用し、コンピュータ手の事前詰み/全合法手生成、完了深さ/手の由来表示を追加していない。CLIが時計・返却後時間切れ判定・時計つき保存を担う。USI製品経路、共通探索、予算式、設定値は変更していない。
 
@@ -34,4 +34,4 @@
 
 ## 次にすること
 
-実装ブランチの具体的な差分を提示し、mainへの取込みについて本人の別承認を待つ。承認後は取り込み先で回帰検証・文書確認を行い、最後の理解確認を一問だけ出して回答を待つ。理解確認と次テーマ選定が終わるまで、新しい学習・実装を始めない。
+CLI時計制御の契約について最後の理解確認を一問だけ出し、本人の回答を待つ。回答と補足を学習記録へ追記し、次テーマの候補と推薦理由を示す。回答を受け取るまで新しい学習・実装は始めない。
