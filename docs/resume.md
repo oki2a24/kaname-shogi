@@ -4,11 +4,11 @@
 
 2026-10-20更新。前テーマ「承認済みCLI設計から実装計画を作る」は、その後の明示的な実装指示・main取り込み承認を経て、Task 1〜5の実装・検証・独立レビュー・main統合・取り込み先検証まで完了した。最後の理解確認の回答と補足は[学習記録](learning/cli-search-time-control-plan.md)へ記録済み。テーマ「時計つき棋譜を短いCLI操作で保存・再読込する」は2026-10-20にランダム方式で一回観察し、保存前後のJSON全体の一致と、保存・読込・人間入力時間を消費しないことを[学習記録](learning/cli-clocked-record-roundtrip.md)へ記録した。
 
-テーマ「読込失敗時に棋譜と時計を保つ理由を固定例で確認する」は、固定例の紙上照合と2026-10-20の最後の理解確認まで完了した。本人の回答「不正なまま受け入れるとゲームが成立しない可能性があるため」と補足を[学習記録](learning/cli-record-load-failure.md)へ分けて記録した。製品コード・テスト・設定・承認済み設計は変更しておらず、テストも実行していない。次テーマは未選定で、候補と推薦理由は[次テーマ一覧](next-topics.md)にある。開始時の背景は[新セッション用引き継ぎ](handover-cli-record-load-failure.md)に残す。
+テーマ「読込失敗時に棋譜と時計を保つ理由を固定例で確認する」は、固定例の紙上照合と2026-10-20の最後の理解確認まで完了した。本人の回答「不正なまま受け入れるとゲームが成立しない可能性があるため」と補足を[学習記録](learning/cli-record-load-failure.md)へ分けて記録した。製品コード・テスト・設定・承認済み設計は変更しておらず、テストも実行していない。次テーマとして「CLIで読込失敗時の表示と状態保持を一回観察する」が選定済み・未開始。本人から「実際にどんな出力となるかを見せること」と条件があり、端末から採取した実出力を最終応答でも示す。[新セッション用引き継ぎ](handover-cli-record-load-failure-observation.md)のプロンプトが入力されるまで観察を始めない。紙上学習の背景は[前回の引き継ぎ](handover-cli-record-load-failure.md)に残す。
 
-作業ディレクトリは`/Users/oki2a24/kaname-shogi`、現在ブランチは`main`。この記録更新後は`origin/main`より3コミット先となり、未追跡`.antigravity/tasks/`だけが残る状態。テーマ開始時のHEADは`a39ef7b`で`origin/main`より2コミット先だった。未追跡`.antigravity/tasks/`は開始時からあり、今回も変更していない。Ruff 0.16.10は固定版と一致し、ローカル`core.hooksPath`は`.githooks`。
+作業ディレクトリは`/Users/oki2a24/kaname-shogi`、現在ブランチは`main`。引き継ぎ文書の更新後は`origin/main`より4コミット先となり、未追跡`.antigravity/tasks/`だけが残る状態。今回の引き継ぎ準備開始時HEADは`27b660e`で`origin/main`より3コミット先だった。未追跡`.antigravity/tasks/`は前テーマ開始時からあり、今回も変更していない。Ruff 0.16.10は固定版と一致し、ローカル`core.hooksPath`は`.githooks`。
 
-前テーマの観察開始時点のGit状態は[学習記録](learning/cli-clocked-record-roundtrip.md)に記録した。今回の開始時状態と固定例、本人回答・補足は今回の[学習記録](learning/cli-record-load-failure.md)、テーマ選定の背景は[引き継ぎ](handover-cli-record-load-failure.md)に記録した。
+前テーマの観察開始時点のGit状態は[学習記録](learning/cli-clocked-record-roundtrip.md)に記録した。前テーマの開始時状態、固定例、本人回答・補足は[学習記録](learning/cli-record-load-failure.md)、開始背景は[引き継ぎ](handover-cli-record-load-failure.md)に記録した。選定済み観察テーマの条件・実施手順・再開用プロンプトは[今回の引き継ぎ](handover-cli-record-load-failure-observation.md)に記録した。
 
 仕様の正本は[承認済み設計](plans/2026-10-20-cli-search-time-control-design.md)、本人回答・個別合意は[設計学習記録](learning/cli-search-time-control-design.md)。共通`game_search.search_move`・予算計算・`SearchControl`を再利用し、コンピュータ手の事前詰み/全合法手生成、完了深さ/手の由来表示を追加していない。CLIが時計・返却後時間切れ判定・時計つき保存を担う。USI製品経路、共通探索、予算式、設定値は変更していない。
 
@@ -37,4 +37,4 @@
 直近の製品検証は取り込み先80e3db0で全体546件30.083秒OK、Ruff63ファイル整形確認・check、差分検査成功。代表変異11件と独立全体レビューは取り込み前の実績（最終Critical/Important/Minor 0/0/0）。これらを新セッションの実測として流用しない。以降は文書変更だけで、製品テストは再実行していない。過去の設計と反復深化補強の履歴は学習記録と各開始時引き継ぎからたどる。
 
 ## 次にすること
-[次テーマ候補](next-topics.md)から本人が一つ選ぶのを待つ。選定後は選ばれたテーマの開始手順を整えるが、候補選定を設計承認・実装許可とは扱わない。
+新しいセッションで本人が[引き継ぎの再開用プロンプト](handover-cli-record-load-failure-observation.md)を入力したら、最初に現物のGit状態と設定を再確認し、実際のCLI出力を採取する。選定は観察の開始であり、コード変更・テスト実行・設定変更・承認済み設計変更の許可ではない。最後の理解確認は一問だけ出し、回答を待つ。
