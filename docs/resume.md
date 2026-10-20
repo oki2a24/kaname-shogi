@@ -10,7 +10,7 @@ USIに寄せるため、コンピュータ手は事前の詰み確認・全合�
 
 GameRecordの既存v1辞書変換・検証再生を公開操作として再利用する追加範囲も、全体提示時に明示した上で承認済み。設計承認を実装計画・実装の承認と扱わない。
 
-開始時main、HEAD ee4b5c1、未追跡`.antigravity/tasks/`あり。開始時のorigin/main先行表示と途中の変化は学習記録へ保存した。未追跡ディレクトリは保持する。現在の作業場所は同じ/Users/oki2a24/kaname-shogi、作業ブランチcodex/cli-search-time-control-design。文書5件だけをコミットする段階で、mainには未取り込み。探索実行・製品テスト・時間測定は行っていない。前テーマの[訪問回数比較](learning/search-visit-counts-comparison.md)は完了済み。過去の観察から時間・原因・予算を推定しない。[開始時の引き継ぎ](handover-cli-search-time-control-design.md)は背景として保持する。
+開始時main、HEAD ee4b5c1、未追跡`.antigravity/tasks/`あり。開始時のorigin/main先行表示と途中の変化は学習記録へ保存した。未追跡ディレクトリは保持する。現在の作業場所は同じ/Users/oki2a24/kaname-shogi、作業ブランチcodex/cli-search-time-control-design。文書5件を82a7368へコミット済みで、mainには未取り込み。通常フック、文書の相対リンク先634件・空白・コミット差分検査は成功。探索実行・製品テスト・時間測定は行っていない。前テーマの[訪問回数比較](learning/search-visit-counts-comparison.md)は完了済み。過去の観察から時間・原因・予算を推定しない。[開始時の引き継ぎ](handover-cli-search-time-control-design.md)は背景として保持する。
 
 ## 以前に完了した観察テーマ（時間制御付き探索コマンド）
 
@@ -36,4 +36,4 @@ GameRecordの既存v1辞書変換・検証再生を公開操作として再利�
 
 ## 次にすること
 
-承認済み設計・記録の文書コミット後、AGENTS.mdに従いmain取り込みの別承認を得る。承認後に取り込み先で文書検証し、最後の理解確認を一問だけ出して回答を待つ。回答と補足を記録してから次の候補を提示する。実装計画・実装へは自動移行しない。
+承認済み設計・記録は作業ブランチへコミット済み。AGENTS.mdに従いmain取り込みの別承認を得る。承認後に取り込み先で文書検証し、最後の理解確認を一問だけ出して回答を待つ。回答と補足を記録してから次の候補を提示する。実装計画・実装へは自動移行しない。
