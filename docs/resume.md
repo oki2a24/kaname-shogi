@@ -2,15 +2,15 @@
 
 ## 現在地
 
-2026-10-20更新。前テーマ「承認済みCLI設計から実装計画を作る」は、その後の明示的な実装指示・main取り込み承認を経て、Task 1〜5の実装・検証・独立レビュー・main統合・取り込み先検証まで完了した。取り込み先の全体テストは623件成功。最後の理解確認の回答と補足は[実施記録](learning/cli-search-time-control-plan.md)へ記録済み。次テーマ「時計つき棋譜を短いCLI操作で保存・再読込する」は2026-10-20にランダム方式で一回観察し、指定の棋譜二手と時計を保存・読込・再保存した。保存前後のJSON全体が一致し、本人の最後の理解確認回答と補足を[学習記録](learning/cli-clocked-record-roundtrip.md)へ記録した。テーマは完了し、次テーマは未選定である。候補と推薦理由は[次テーマ一覧](next-topics.md)を参照する。
+2026-10-20更新。前テーマ「承認済みCLI設計から実装計画を作る」は、その後の明示的な実装指示・main取り込み承認を経て、Task 1〜5の実装・検証・独立レビュー・main統合・取り込み先検証まで完了した。取り込み先の全体テストは623件成功。最後の理解確認の回答と補足は[実施記録](learning/cli-search-time-control-plan.md)へ記録済み。テーマ「時計つき棋譜を短いCLI操作で保存・再読込する」は2026-10-20にランダム方式で一回観察し、指定の棋譜二手と時計を保存・読込・再保存した。保存前後のJSON全体が一致し、本人の回答「保存・読込には時間を消費しない、人間の入力にかかった時間も消費しない」と補足を[学習記録](learning/cli-clocked-record-roundtrip.md)へ記録した。本人は次テーマ候補1「読込失敗時に棋譜と時計を保つ理由を固定例で確認する」を選定済み。これは学習のみで未開始、選定理由は本人に尋ねていない。開始時の背景・再開プロンプトは[新セッション用引き継ぎ](handover-cli-record-load-failure.md)に記録した。新セッションでこの引き継ぎを入力するまで、次テーマの学習・設計・実装は始めない。
 
 作業ディレクトリは`/Users/oki2a24/kaname-shogi`、現在ブランチは`main`。未追跡`.antigravity/tasks/`は開始時からあり保持する。Ruff 0.16.10は固定版と一致し、ローカル`core.hooksPath`は`.githooks`。pushはしていない。
 
-今回の開始時はHEAD `5358441`、`origin/main`より16コミット先行。開始時の未追跡`.antigravity/tasks/`を保持している。観察実績、本人回答と補足、次候補は上記の学習記録と次テーマ一覧を参照する。
+前テーマの観察開始時点のGit状態は[学習記録](learning/cli-clocked-record-roundtrip.md)に記録した。今回の引き継ぎ準備開始時の物理状態は[新テーマ用引き継ぎ](handover-cli-record-load-failure.md)に記録した。前テーマの観察実績、本人回答と補足は学習記録を、次テーマの選定状況は[次テーマ一覧](next-topics.md)を参照する。
 
 仕様の正本は[承認済み設計](plans/2026-10-20-cli-search-time-control-design.md)、本人回答・個別合意は[設計学習記録](learning/cli-search-time-control-design.md)。共通`game_search.search_move`・予算計算・`SearchControl`を再利用し、コンピュータ手の事前詰み/全合法手生成、完了深さ/手の由来表示を追加していない。CLIが時計・返却後時間切れ判定・時計つき保存を担う。USI製品経路、共通探索、予算式、設定値は変更していない。
 
-開始背景は[新セッション用引き継ぎ](handover-cli-clocked-record-roundtrip.md)、観察実績・本人回答・補足は[学習記録](learning/cli-clocked-record-roundtrip.md)に記録した。本人が選ぶまで次テーマの学習・設計・実装には進まない。
+前テーマの開始背景は[引き継ぎ](handover-cli-clocked-record-roundtrip.md)、観察実績・本人回答・補足は[学習記録](learning/cli-clocked-record-roundtrip.md)に記録した。今回選定したテーマの開始背景は[次テーマ用引き継ぎ](handover-cli-record-load-failure.md)を参照する。
 
 ## 以前に完了した観察テーマ（時間制御付き探索コマンド）
 
@@ -36,4 +36,4 @@
 
 ## 次にすること
 
-本人が[次テーマ一覧](next-topics.md)の候補から次テーマを選ぶのを待つ。選定後は本人の希望がなければ、新しいセッションへ引き継ぐ。
+新しいセッションで[選定済みテーマの引き継ぎ](handover-cli-record-load-failure.md)を本人が入力するのを待つ。入力後、引き継ぎに書かれた物理状態と現在のGit状態を照合してから、学習のみの固定例を始める。
