@@ -2,11 +2,13 @@
 
 import random
 import unittest
+from fractions import Fraction
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from kaname_shogi import cli, game_search
+from kaname_shogi.cli_clock import CliClockSettings
 from kaname_shogi.display import render_position
 from kaname_shogi.game_record import GameRecord, RecordedDrop, RecordedMove
 from kaname_shogi.model import (
@@ -20,9 +22,17 @@ from kaname_shogi.model import (
     create_initial_position,
 )
 from kaname_shogi.move import BoardMove, DropMove
-from kaname_shogi.movegen import MoveSelectionPolicy
+from kaname_shogi.movegen import (
+    MoveSelectionPolicy,
+    SearchCompletion,
+    SearchResult,
+)
 from kaname_shogi.search import alpha_beta, minimax
 from kaname_shogi.sfen import parse_sfen
+from kaname_shogi.time_management import TimeManagementConfig
+
+_TEST_TIME_CONFIG = TimeManagementConfig(20, Fraction(2), Fraction(3, 4), 0)
+_TEST_CLOCK_SETTINGS = CliClockSettings(600_000, 30_000)
 
 
 class CommandParsingTests(unittest.TestCase):
@@ -258,30 +268,35 @@ class GameplayTests(unittest.TestCase):
     def test_cli_uses_game_search_adapter(self):
         """CLIの対局手選択入口は五方式用アダプターを参照する。
 
-        低水準三方式用入口へ新方式を渡して失敗する接続漏れを検出する。
+        旧無制御入口へ戻す接続漏れを検出する。
         """
-        self.assertIs(cli.choose_move, game_search.choose_move)
+        self.assertIs(cli.game_search, game_search)
+        self.assertFalse(hasattr(cli, "choose_move"))
 
     def test_run_game_defaults_to_random_policy(self):
-        """方針省略時の自動手に最弱のRANDOMを渡す。
+        """方針省略時の制御付き自動手にRANDOMを渡す。
 
         CLI経由で方針を指定しない呼び出しが、駒得評価へ暗黙に変わる誤りを検出する。
         """
         selected_move = BoardMove(Square(3, 3), Square(3, 4), False)
-        with (
-            patch.object(cli, "legal_moves", return_value=(selected_move,)),
-            patch.object(
-                cli, "choose_move", create=True, return_value=selected_move
-            ) as choose_move,
-        ):
+        rng = random.Random(20261005)
+        with patch.object(
+            game_search,
+            "search_move",
+            return_value=SearchResult(SearchCompletion.COMPLETE, selected_move),
+        ) as search_move:
             cli.run_game(
                 input_fn=ScriptedInput(["move 7 7 7 6", "resign"]),
                 output_fn=lambda _: None,
-                rng=random.Random(20261005),
+                rng=rng,
+                clock_settings=_TEST_CLOCK_SETTINGS,
+                time_config=_TEST_TIME_CONFIG,
+                now_ns=lambda: 0,
             )
 
-        choose_move.assert_called_once()
-        self.assertEqual(choose_move.call_args.args[2], MoveSelectionPolicy.RANDOM)
+        search_move.assert_called_once()
+        self.assertIs(search_move.call_args.args[1], MoveSelectionPolicy.RANDOM)
+        self.assertIs(search_move.call_args.args[2], rng)
 
     def test_run_game_passes_selected_policy_to_computer_turn(self):
         """明示された三方式それぞれを局中の自動手へ一度渡す。
@@ -295,24 +310,23 @@ class GameplayTests(unittest.TestCase):
         ):
             with self.subTest(policy=policy):
                 selected_move = BoardMove(Square(3, 3), Square(3, 4), False)
-                with (
-                    patch.object(cli, "legal_moves", return_value=(selected_move,)),
-                    patch.object(
-                        cli, "choose_move", create=True, return_value=selected_move
-                    ) as choose_move,
-                ):
-                    try:
-                        cli.run_game(
-                            input_fn=ScriptedInput(["move 7 7 7 6", "resign"]),
-                            output_fn=lambda _: None,
-                            rng=random.Random(20261005),
-                            move_selection_policy=policy,
-                        )
-                    except TypeError as error:
-                        self.fail(f"run_gameが選択方針を受け付けません: {error}")
+                with patch.object(
+                    game_search,
+                    "search_move",
+                    return_value=SearchResult(SearchCompletion.COMPLETE, selected_move),
+                ) as search_move:
+                    cli.run_game(
+                        input_fn=ScriptedInput(["move 7 7 7 6", "resign"]),
+                        output_fn=lambda _: None,
+                        rng=random.Random(20261005),
+                        move_selection_policy=policy,
+                        clock_settings=_TEST_CLOCK_SETTINGS,
+                        time_config=_TEST_TIME_CONFIG,
+                        now_ns=lambda: 0,
+                    )
 
-                choose_move.assert_called_once()
-                self.assertEqual(choose_move.call_args.args[2], policy)
+                search_move.assert_called_once()
+                self.assertIs(search_move.call_args.args[1], policy)
 
     def test_new_modes_remain_fixed_for_game(self):
         """新二方式を一局中の複数コンピュータ手へ同じ値で渡す。
@@ -325,27 +339,47 @@ class GameplayTests(unittest.TestCase):
         ):
             with self.subTest(policy=policy):
                 position = parse_sfen("8k/9/9/9/9/9/9/9/K8 b - 1").position
+                search_calls = []
+                real_search_move = game_search.search_move
+
+                def controlled_search(
+                    search_position,
+                    selected_policy,
+                    rng,
+                    control,
+                    search_calls=search_calls,
+                    real_search_move=real_search_move,
+                ):
+                    search_calls.append(
+                        (search_position, selected_policy, rng, control)
+                    )
+                    if len(search_calls) == 3:
+                        raise KeyboardInterrupt
+                    return real_search_move(
+                        search_position, selected_policy, rng, control
+                    )
+
                 with (
                     patch.object(cli, "create_initial_position", return_value=position),
-                    patch.object(cli, "is_game_over", side_effect=(False, False, True)),
                     patch.object(
-                        cli,
-                        "choose_move",
-                        wraps=cli.choose_move,
-                    ) as choose_move,
+                        game_search, "search_move", side_effect=controlled_search
+                    ) as search_move,
                 ):
                     record = cli.run_game(
                         mode=cli.GameMode.COMPUTER_VS_COMPUTER,
                         move_selection_policy=policy,
                         output_fn=lambda _: None,
+                        clock_settings=_TEST_CLOCK_SETTINGS,
+                        time_config=_TEST_TIME_CONFIG,
+                        now_ns=lambda: 0,
                     )
 
                 self.assertEqual(len(record.moves), 2)
-                self.assertEqual(choose_move.call_count, 2)
+                self.assertEqual(search_move.call_count, 3)
                 self.assertEqual(
-                    [call.args[2] for call in choose_move.call_args_list],
-                    [policy, policy],
+                    [call[1] for call in search_calls], [policy, policy, policy]
                 )
+                self.assertIsNot(search_calls[0][3], search_calls[1][3])
 
     def test_each_new_mode_restarts_at_depth_one_on_each_computer_turn(self):
         """二回の実対局探索がそれぞれ深さ1から4まで進む。
@@ -359,30 +393,52 @@ class GameplayTests(unittest.TestCase):
         for policy, search_mode in modes:
             with self.subTest(policy=policy):
                 position = parse_sfen("8k/9/9/9/9/9/9/9/K8 b - 1").position
+                search_calls = []
+                real_search_move = game_search.search_move
+
+                def controlled_search(
+                    search_position,
+                    selected_policy,
+                    rng,
+                    control,
+                    search_calls=search_calls,
+                    real_search_move=real_search_move,
+                ):
+                    search_calls.append(
+                        (search_position, selected_policy, rng, control)
+                    )
+                    if len(search_calls) == 3:
+                        raise KeyboardInterrupt
+                    return real_search_move(
+                        search_position, selected_policy, rng, control
+                    )
+
                 with (
                     patch.object(cli, "create_initial_position", return_value=position),
-                    patch.object(cli, "is_game_over", side_effect=(False, False, True)),
                     patch.object(
                         search_mode,
-                        "search",
-                        wraps=search_mode.search,
+                        "search_controlled",
+                        wraps=search_mode.search_controlled,
                     ) as depth_search,
                     patch.object(
-                        cli, "choose_move", wraps=cli.choose_move
-                    ) as choose_move,
+                        game_search, "search_move", side_effect=controlled_search
+                    ) as search_move,
                 ):
                     record = cli.run_game(
                         mode=cli.GameMode.COMPUTER_VS_COMPUTER,
                         move_selection_policy=policy,
                         output_fn=lambda _: None,
+                        clock_settings=_TEST_CLOCK_SETTINGS,
+                        time_config=_TEST_TIME_CONFIG,
+                        now_ns=lambda: 0,
                     )
 
                 self.assertEqual(len(record.moves), 2)
-                self.assertEqual(choose_move.call_count, 2)
+                self.assertEqual(search_move.call_count, 3)
                 self.assertEqual(
-                    [call.args[2] for call in choose_move.call_args_list],
-                    [policy, policy],
+                    [call[1] for call in search_calls], [policy, policy, policy]
                 )
+                self.assertIsNot(search_calls[0][3], search_calls[1][3])
                 self.assertEqual(
                     [call.args[1] for call in depth_search.call_args_list],
                     [1, 2, 3, 4, 1, 2, 3, 4],
@@ -545,19 +601,26 @@ class GameplayTests(unittest.TestCase):
         )
 
     def test_computer_vs_computer_stops_without_winner_when_no_legal_move(self):
-        """自動対局の合法手空一覧は入力せず勝者なしで停止する。"""
+        """自動手番の完了手なしは入力せず手番側の投了として終わる。"""
         inputs = ScriptedInput([])
         outputs = []
-        with patch.object(cli, "legal_moves", return_value=()):
+        with patch.object(
+            game_search,
+            "search_move",
+            return_value=SearchResult(SearchCompletion.COMPLETE, None),
+        ):
             record = cli.run_game(
                 mode=cli.GameMode.COMPUTER_VS_COMPUTER,
                 input_fn=inputs,
                 output_fn=outputs.append,
+                clock_settings=_TEST_CLOCK_SETTINGS,
+                time_config=_TEST_TIME_CONFIG,
+                now_ns=lambda: 0,
             )
 
         self.assertEqual(inputs.calls, 0)
         self.assertEqual(record.moves, ())
-        self.assertFalse(any("勝ちです。" in line for line in outputs))
+        self.assertIn("先手が投了しました。後手の勝ちです。", outputs)
 
     def test_human_sente_move_is_followed_by_one_computer_gote_move(self):
         """先手の成功手の後に、後手のコンピュータが一手だけ指す。
@@ -675,23 +738,30 @@ class GameplayTests(unittest.TestCase):
         self.assertGreater(prompts[-1], sente_boards[-1])
 
     def test_stops_without_winner_when_computer_has_no_legal_move(self):
-        """詰みでない合法手空一覧は、勝敗なしの異常終了として扱う。
+        """完了手なしは時間内の投了として記録し、成功済み人間手を保つ。
 
-        選択器のNoneを投了や勝敗へ変換する誤りを検出する。
+        旧CLIの勝者なし終了やコンピュータ手を仮の履歴へ足す誤りを検出する。
         """
         inputs = ScriptedInput(["move 7 7 7 6"])
         outputs = []
 
-        with patch.object(cli, "legal_moves", return_value=()):
+        with patch.object(
+            game_search,
+            "search_move",
+            return_value=SearchResult(SearchCompletion.COMPLETE, None),
+        ):
             record = cli.run_game(
-                input_fn=inputs, output_fn=outputs.append, rng=random.Random(20260926)
+                input_fn=inputs,
+                output_fn=outputs.append,
+                rng=random.Random(20260926),
+                clock_settings=_TEST_CLOCK_SETTINGS,
+                time_config=_TEST_TIME_CONFIG,
+                now_ns=lambda: 0,
             )
 
         self.assertEqual(inputs.calls, 1)
         self.assertEqual(len(record.moves), 1)
-        self.assertIn("コンピュータの合法手がありません。", outputs)
-        self.assertFalse(any("勝ちです。" in output for output in outputs))
-        self.assertFalse(any("投了しました。" in output for output in outputs))
+        self.assertIn("後手が投了しました。先手の勝ちです。", outputs)
 
     def test_records_computer_drop_move(self):
         """コンピュータの駒打ちを表示し、GameRecordへ記録する。
@@ -712,13 +782,21 @@ class GameplayTests(unittest.TestCase):
                 cli, "create_initial_position", return_value=position, create=True
             ),
             patch.object(
-                cli,
-                "legal_moves",
-                return_value=(DropMove(BasicPieceType.PAWN, Square(5, 5)),),
+                game_search,
+                "search_move",
+                return_value=SearchResult(
+                    SearchCompletion.COMPLETE,
+                    DropMove(BasicPieceType.PAWN, Square(5, 5)),
+                ),
             ),
         ):
             record = cli.run_game(
-                input_fn=inputs, output_fn=outputs.append, rng=random.Random(20260926)
+                input_fn=inputs,
+                output_fn=outputs.append,
+                rng=random.Random(20260926),
+                clock_settings=_TEST_CLOCK_SETTINGS,
+                time_config=_TEST_TIME_CONFIG,
+                now_ns=lambda: 0,
             )
 
         self.assertEqual(
@@ -1120,18 +1198,35 @@ class GameplayTests(unittest.TestCase):
         self.assertIn("詰みです。後手の勝ちです。", outputs)
 
     def test_stops_after_a_move_gives_checkmate(self):
-        """合法手で詰みになった後は次の入力を読まず、勝者を表示する。"""
+        """人間の手でコンピュータ側が詰んだ場合は探索の手なしを投了とする。
+
+        コンピュータ手番へ旧事前詰み判定を残し、勝敗を探索結果より先に決める誤りを
+        検出する。人間手番の詰み判定は別テストで維持を確認する。
+        """
         position = self._mate_after_sente_rook_move()
         inputs = ScriptedInput(["move 5 3 5 2"])
         outputs = []
 
-        with patch.object(
-            cli, "create_initial_position", return_value=position, create=True
+        with (
+            patch.object(
+                cli, "create_initial_position", return_value=position, create=True
+            ),
+            patch.object(
+                game_search,
+                "search_move",
+                return_value=SearchResult(SearchCompletion.COMPLETE, None),
+            ),
         ):
-            cli.run_game(input_fn=inputs, output_fn=outputs.append)
+            cli.run_game(
+                input_fn=inputs,
+                output_fn=outputs.append,
+                clock_settings=_TEST_CLOCK_SETTINGS,
+                time_config=_TEST_TIME_CONFIG,
+                now_ns=lambda: 0,
+            )
 
         self.assertEqual(inputs.calls, 1)
-        self.assertIn("詰みです。先手の勝ちです。", outputs)
+        self.assertIn("後手が投了しました。先手の勝ちです。", outputs)
 
     def test_finishes_normally_on_eof(self):
         """EOFは勝敗にせず、終了メッセージを表示して正常終了する。"""

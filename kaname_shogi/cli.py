@@ -1,16 +1,24 @@
 """指し手入力の解析と、標準入出力による対局進行を扱う。"""
 
 import random
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 
+from . import game_search
+from .cli_clock import CliClock, CliClockSettings
 from .display import render_position
 from .game_record import GameRecord
-from .game_search import choose_move
 from .model import BasicPieceType, Side, Square, create_initial_position
 from .move import BoardMove, DropMove, Move
-from .movegen import MoveSelectionPolicy, is_game_over, legal_moves
+from .movegen import MoveSelectionPolicy, SearchCompletion, is_game_over
+from .search_control import SearchControl
+from .time_management import (
+    TimeManagementConfig,
+    calculate_search_budget,
+    load_time_management_config,
+)
 
 __all__ = (
     "GameMode",
@@ -129,7 +137,8 @@ def choose_move_selection_policy(
 
     難易度を強さの保証ではなく一手選択方針として示す。現行の一様ランダムを
     既定値として保ち、五方式の選択を対局進行から分離する。新二方式も一局中に固定し、
-    各コンピュータ手で深さ1から4まで再探索する。CLIには時間制御を追加しない。
+    各コンピュータ手で深さ1から4まで再探索する。時計は対局管理層が持ち、各手を
+    共通探索の制御へ渡す。
     """
     policies = {
         "1": MoveSelectionPolicy.RANDOM,
@@ -403,22 +412,75 @@ def _run_computer_turn(
     rng: random.Random,
     output_fn: Callable[[str], None],
     move_selection_policy: MoveSelectionPolicy,
-) -> bool:
-    """コンピュータ担当側の合法手を一つ選んで適用し、成功したかを返す。
+    clock: CliClock,
+    time_config: TimeManagementConfig,
+    now_ns: Callable[[], int],
+) -> tuple[CliClock, bool]:
+    """共通の制御付き探索から一手を得て、対局時計と成功手を更新する。
 
-    合法手が空の場合は選択不能を勝敗や投了へ変換せず、専用メッセージを表示して
-    Falseを返す。選択された手は適用前に表示し、成功後の局面を表示する。
+    引数:
+        record: 現在局面と成功手の履歴を保持する対局記録。
+        rng: 五方式で共有する対局単位の乱数生成器。
+        output_fn: 思考開始・結果・盤面を受け取る表示操作。
+        move_selection_policy: 一局で固定する五方式の一手選択方針。
+        clock: 開始時の残り時間を含む現在のCLI時計。
+        time_config: 予算計算に使う対局中固定の時間設定。
+        now_ns: 探索開始・返却時点を同じ単調時計で読む操作。
+
+    戻り値:
+        更新した時計と続行可否。局面・履歴は時間内に合法手を返した場合だけ進む。
+
+    例外:
+        ValueError: 時計の経過が不正、または探索結果が契約に合わない場合。
+        探索・時計・表示・棋譜操作からの他の例外はそのまま呼出し側へ伝える。
+
+    副作用:
+        対局時計の返却後時間を更新し、時間内に手があれば一度だけ棋譜へ適用して
+        表示する。時計の時間切れは探索予算の上限とは独立に、開始時時計と秒読みで
+        判定する。抑制結果は手や勝敗へ変換しない。
+
+    コンピュータ手に限って計時し、探索前の詰み確認や全合法手生成をせず、USIと
+    同じ `game_search.search_move`、公開予算計算、SearchControlの停止契約を使う。
     """
-    moves = legal_moves(record.current_position)
-    selected = choose_move(record.current_position, moves, move_selection_policy, rng)
-    if selected is None:
-        output_fn("コンピュータの合法手がありません。")
-        return False
-    side_name = "先手" if record.current_position.side_to_move == Side.SENTE else "後手"
-    output_fn(side_name + "の指し手: " + _format_selected_move(selected))
-    _apply_selected_move(record, selected)
+    side = record.current_position.side_to_move
+    side_name = "先手" if side is Side.SENTE else "後手"
+    output_fn(side_name + "のコンピュータが思考中です。")
+    started_ns = now_ns()
+    budget = calculate_search_budget(
+        clock.remaining_ns(side) // 1_000_000,
+        clock.settings.byoyomi_ms,
+        time_config,
+    )
+    control = SearchControl(budget, started_ns, now_ns=now_ns)
+    search_position = record.current_position
+    result = game_search.search_move(
+        search_position, move_selection_policy, rng, control
+    )
+    elapsed_ns = now_ns() - started_ns
+    updated_clock = clock.after_turn(side, elapsed_ns)
+
+    if result.completion is SearchCompletion.SUPPRESSED:
+        output_fn("探索結果が抑制されたため対局を終了しました。")
+        return updated_clock, False
+    if clock.is_expired(side, elapsed_ns):
+        winner_name = "後手" if side is Side.SENTE else "先手"
+        output_fn(f"{side_name}が時間切れです。{winner_name}の勝ちです。")
+        return updated_clock, False
+    if result.completion not in (
+        SearchCompletion.COMPLETE,
+        SearchCompletion.INTERRUPTED,
+    ):
+        raise ValueError("探索結果の終了状態が不正です")
+    if result.move is None:
+        if result.completion is SearchCompletion.INTERRUPTED:
+            raise ValueError("通常停止の探索結果に合法手がありません")
+        output_fn(_resignation_message(side))
+        return updated_clock, False
+
+    output_fn(side_name + "の指し手: " + _format_selected_move(result.move))
+    _apply_selected_move(record, result.move)
     output_fn(render_position(record.current_position))
-    return True
+    return updated_clock, True
 
 
 def _resignation_message(side_to_move: Side) -> str:
@@ -442,6 +504,9 @@ def run_game(
     rng: random.Random | None = None,
     mode: GameMode = GameMode.HUMAN_VS_COMPUTER,
     move_selection_policy: MoveSelectionPolicy = MoveSelectionPolicy.RANDOM,
+    clock_settings: CliClockSettings | None = None,
+    time_config: TimeManagementConfig | None = None,
+    now_ns: Callable[[], int] = time.monotonic_ns,
 ) -> GameRecord:
     """初期局面から、modeが決める担当で対局を進める。
 
@@ -454,14 +519,20 @@ def run_game(
             人間先手・コンピュータ後手とする。
         move_selection_policy: コンピュータが一手を選ぶ方針。一局中固定する。省略時は
             現行と同じ一様ランダムのRANDOMとする。
+        clock_settings: コンピュータ参加対局の初期持ち時間・秒読み。省略時は10分・30秒。
+            人間対人間では時計を作らない。
+        time_config: コンピュータ探索の予算設定。省略時は対局開始時に一度だけ読む。
+            人間対人間では読み込まない。
+        now_ns: コンピュータ手の開始・返却時刻を読む同じ単調時計。テストで注入できる。
 
     戻り値:
-        詰み、投了、EOF、Ctrl-C、またはコンピュータの合法手空一覧で終了した時点の
-        `GameRecord`。人間・コンピュータ双方の成功したmove / dropだけを履歴に含め、
-        終了イベントは履歴に含めない。
+        詰み、投了、時間切れ、応答抑制、EOFまたはCtrl-Cで終了した時点の`GameRecord`。
+        人間・コンピュータ双方の成功したmove / dropだけを履歴に含め、終了イベントは
+        履歴に含めない。
 
     副作用:
         初期局面から記録を作り、局面表示、入力案内、自動手の表示をoutput_fnへ渡す。
+        コンピュータ参加対局は時計を作り、未注入なら時間設定を一度だけ読み込む。
         合法な入力と自動手だけが記録の現在局面と履歴を変更し、形式・合法性・保存・
         読込エラーでは人間の同じ手番で再入力する。`save` は記録を変更せず保存し、
         `load` は成功したときだけ記録を新しいものへ置き換えて局面を表示する。
@@ -470,26 +541,44 @@ def run_game(
         では両側が自動手を指す。
 
     前提条件:
-        各手番の行動前に詰みを優先して確認する。EOF/Ctrl-Cと合法手空一覧は投了や勝敗に
-        変換しない。先後交代は局面規則、入力・自動手の担当はmodeという境界を分ける。
+        人間手番の行動前に詰みを確認する。コンピュータ手は共通の制御付き探索へ渡し、
+        完了手なしは投了、返却後の対局時計超過は時間切れ負けとして扱う。抑制結果と
+        EOF/Ctrl-Cを勝敗へ変換しない。人間の入力時間は差し引かない。先後交代は局面規則、
+        入力・自動手の担当はmodeという境界を分ける。
         `load` 成功後は読込局面の `side_to_move` と `mode` に従って、次の人間入力または
         コンピュータ手へ進む。標準のinputとprintは差し替え可能である。
     """
     if rng is None:
         rng = random.Random()
+    clock = None
+    if mode is not GameMode.HUMAN_VS_HUMAN:
+        if clock_settings is None:
+            clock_settings = CliClockSettings(600_000, 30_000)
+        if time_config is None:
+            time_config = load_time_management_config()
+        clock = CliClock.start(clock_settings)
     record = GameRecord(create_initial_position())
     output_fn(render_position(record.current_position))
     try:
         while True:
             position = record.current_position
-            if is_game_over(position):
-                output_fn(_checkmate_message(position.side_to_move))
-                return record
-
-            if not mode.is_human_turn(position.side_to_move):
-                if not _run_computer_turn(
-                    record, rng, output_fn, move_selection_policy
-                ):
+            if mode.is_human_turn(position.side_to_move):
+                if is_game_over(position):
+                    output_fn(_checkmate_message(position.side_to_move))
+                    return record
+            else:
+                if clock is None or time_config is None:
+                    raise ValueError("コンピュータ対局の時計設定がありません")
+                clock, should_continue = _run_computer_turn(
+                    record,
+                    rng,
+                    output_fn,
+                    move_selection_policy,
+                    clock,
+                    time_config,
+                    now_ns,
+                )
+                if not should_continue:
                     return record
                 continue
 
