@@ -4,6 +4,7 @@ import json
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from kaname_shogi.model import (
     BasicPieceType,
@@ -267,6 +268,172 @@ class GameRecordTests(unittest.TestCase):
                 },
             ],
         )
+
+    def test_public_payload_matches_literal_v1_and_replays_independently(self):
+        """公開辞書操作が固定v1形式を出力し、合法履歴を独立再生する。
+
+        保存した辞書を期待値の根拠にせず、成りと駒打ちを含む手書き形式へ
+        比較する。辞書や返却payloadの変更が記録内部へ漏れる誤りを検出する。
+        """
+        self._require_implementation()
+        board = Board()
+        board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(2, 2), Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+        position.sente_hand.add(BasicPieceType.PAWN)
+        position.gote_hand.add(BasicPieceType.PAWN)
+        record = GameRecord(position)
+        record.apply_move(Square(2, 2), Square(2, 1), promote=True)
+        record.apply_drop(BasicPieceType.PAWN, Square(4, 4))
+
+        literal_v1 = {
+            "format": "kaname-shogi-game-record-v1",
+            "initial_position": {
+                "side_to_move": "SENTE",
+                "pieces": [
+                    {"file": 2, "rank": 2, "piece_type": "PAWN", "side": "SENTE"},
+                    {"file": 5, "rank": 1, "piece_type": "KING", "side": "GOTE"},
+                    {"file": 5, "rank": 9, "piece_type": "KING", "side": "SENTE"},
+                ],
+                "hands": {
+                    "SENTE": {"PAWN": 1},
+                    "GOTE": {"PAWN": 1},
+                },
+            },
+            "moves": [
+                {
+                    "kind": "move",
+                    "source": {"file": 2, "rank": 2},
+                    "destination": {"file": 2, "rank": 1},
+                    "promote": True,
+                },
+                {
+                    "kind": "drop",
+                    "piece_type": "PAWN",
+                    "destination": {"file": 4, "rank": 4},
+                },
+            ],
+        }
+        to_payload = getattr(record, "to_payload", None)
+        from_payload = getattr(GameRecord, "from_payload", None)
+        self.assertIsNotNone(to_payload, "GameRecord.to_payloadが未実装です")
+        self.assertIsNotNone(from_payload, "GameRecord.from_payloadが未実装です")
+        if to_payload is None or from_payload is None:
+            return
+
+        self.assertEqual(to_payload(), literal_v1)
+        loaded = from_payload(literal_v1)
+        self.assertEqual(loaded.moves, record.moves)
+        self.assertEqual(loaded.current_position.side_to_move, Side.SENTE)
+        self.assertEqual(
+            loaded.current_position.board.piece_at(Square(2, 1)),
+            Piece(PieceType.PRO_PAWN, Side.SENTE),
+        )
+        self.assertEqual(
+            loaded.current_position.board.piece_at(Square(4, 4)),
+            Piece(PieceType.PAWN, Side.GOTE),
+        )
+        self.assertEqual(
+            loaded.current_position.gote_hand.count(BasicPieceType.PAWN), 0
+        )
+
+        literal_v1["moves"][0]["promote"] = False
+        self.assertTrue(loaded.moves[0].promote)
+        returned_payload = to_payload()
+        returned_payload["initial_position"]["pieces"].clear()
+        self.assertEqual(
+            to_payload(),
+            {
+                **literal_v1,
+                "moves": [
+                    {
+                        "kind": "move",
+                        "source": {"file": 2, "rank": 2},
+                        "destination": {"file": 2, "rank": 1},
+                        "promote": True,
+                    },
+                    {
+                        "kind": "drop",
+                        "piece_type": "PAWN",
+                        "destination": {"file": 4, "rank": 4},
+                    },
+                ],
+            },
+        )
+
+    def test_public_payload_rejects_illegal_history_and_save_load_delegate(self):
+        """公開読込も合法手再生を検証し、既存保存窓口が公開操作を使う。
+
+        形が正しいだけの不可能な履歴と不正な入れ子を拒否し、ファイルAPIだけが
+        非公開変換を別実装してv1契約からずれる誤りを検出する。
+        """
+        self._require_implementation()
+        from_payload = getattr(GameRecord, "from_payload", None)
+        self.assertIsNotNone(from_payload, "GameRecord.from_payloadが未実装です")
+        if from_payload is None:
+            return
+        illegal_history = {
+            "format": "kaname-shogi-game-record-v1",
+            "initial_position": {
+                "side_to_move": "SENTE",
+                "pieces": [
+                    {"file": 5, "rank": 9, "piece_type": "KING", "side": "SENTE"},
+                    {"file": 5, "rank": 1, "piece_type": "KING", "side": "GOTE"},
+                ],
+                "hands": {"SENTE": {}, "GOTE": {}},
+            },
+            "moves": [
+                {
+                    "kind": "move",
+                    "source": {"file": 7, "rank": 7},
+                    "destination": {"file": 7, "rank": 6},
+                    "promote": False,
+                }
+            ],
+        }
+        malformed_nested = {
+            "format": "kaname-shogi-game-record-v1",
+            "initial_position": {
+                "side_to_move": "SENTE",
+                "pieces": [],
+                "hands": {"SENTE": {}},
+            },
+            "moves": [],
+        }
+        with self.assertRaises(ValueError):
+            from_payload(illegal_history)
+        with self.assertRaises(ValueError):
+            from_payload(malformed_nested)
+
+        record = GameRecord(create_initial_position())
+        original_to_payload = GameRecord.to_payload
+        serialized_records = []
+
+        def spy_to_payload(instance):
+            serialized_records.append(instance)
+            return original_to_payload(instance)
+
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "record.json"
+            with patch.object(GameRecord, "to_payload", spy_to_payload):
+                record.save(path)
+            self.assertEqual(serialized_records, [record])
+
+            original_from_payload = GameRecord.from_payload
+            parsed_payloads = []
+
+            def spy_from_payload(cls, payload):
+                parsed_payloads.append(payload)
+                return original_from_payload(payload)
+
+            with patch.object(
+                GameRecord, "from_payload", classmethod(spy_from_payload)
+            ):
+                loaded = GameRecord.load(path)
+
+        self.assertEqual(parsed_payloads, [record.to_payload()])
+        self.assertEqual(loaded.moves, record.moves)
 
     def test_loads_saved_record_and_replays_current_position(self):
         """保存済みの開始局面と履歴から独立した記録を再現する。

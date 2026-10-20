@@ -110,6 +110,55 @@ class GameRecord:
                 apply_drop(position, move.piece_type, move.destination)
         return position
 
+    def to_payload(self) -> dict:
+        """開始局面と履歴を既存v1 JSON形式の辞書へ変換する。
+
+        引数:
+            なし。
+
+        戻り値:
+            JSONへ保存できる新しい辞書。現在局面は開始局面と履歴から再現できるため
+            含めない。
+
+        副作用:
+            なし。返す辞書・配列は記録内部と共有しない。
+
+        例外:
+            ValueError: 履歴に既知でない操作が含まれる場合。
+
+        ファイル保存とCLIセッションの両方から同じv1変換を使えるよう、形式変換を
+        ファイルI/Oから分けて公開する。
+        """
+        return _record_to_payload(self)
+
+    @classmethod
+    def from_payload(cls, payload: object) -> GameRecord:
+        """既存v1 JSON辞書を検証し、合法履歴を再適用した棋譜を作る。
+
+        引数:
+            payload: v1形式のJSONオブジェクト。
+
+        戻り値:
+            開始局面へ全履歴を再適用した、新しいGameRecord。
+
+        副作用:
+            入力辞書を変更せず、新しい記録だけを作る。既存棋譜やファイルは変更しない。
+
+        例外:
+            ValueError: 形式・値・入れ子・合法手履歴が既存v1規則に合わない場合。
+
+        ファイル読込と時計つきCLI保存で同じ検証・合法再生を再利用し、保存形式ごとに
+        将棋規則の検証を複製しない。
+        """
+        initial_position, moves = _payload_to_position_and_moves(payload)
+        record = cls(initial_position)
+        for move in moves:
+            if isinstance(move, RecordedMove):
+                record.apply_move(move.source, move.destination, promote=move.promote)
+            else:
+                record.apply_drop(move.piece_type, move.destination)
+        return record
+
     def save(self, path: str | Path) -> None:
         """開始局面と成功手を専用JSONファイルへ保存する。
 
@@ -127,7 +176,7 @@ class GameRecord:
             ある場合は、ファイルを開く前に失敗する。現在局面は保存せず、開始局面
             と履歴から再現できる形にすることで二重管理を避ける。
         """
-        payload = _record_to_payload(self)
+        payload = self.to_payload()
         with Path(path).open("w", encoding="utf-8") as output:
             json.dump(payload, output, ensure_ascii=False, indent=2)
             output.write("\n")
@@ -152,14 +201,7 @@ class GameRecord:
         """
         with Path(path).open(encoding="utf-8") as source:
             payload = json.load(source)
-        initial_position, moves = _payload_to_position_and_moves(payload)
-        record = cls(initial_position)
-        for move in moves:
-            if isinstance(move, RecordedMove):
-                record.apply_move(move.source, move.destination, promote=move.promote)
-            else:
-                record.apply_drop(move.piece_type, move.destination)
-        return record
+        return cls.from_payload(payload)
 
     def apply_move(
         self, source: Square, destination: Square, *, promote: bool = False
