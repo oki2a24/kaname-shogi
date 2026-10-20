@@ -8,6 +8,7 @@ from enum import Enum
 
 from . import game_search
 from .cli_clock import CliClock, CliClockSettings
+from .cli_session import CliSession
 from .display import render_position
 from .game_record import GameRecord
 from .model import BasicPieceType, Side, Square, create_initial_position
@@ -633,8 +634,10 @@ def run_game(
         初期局面から記録を作り、局面表示、入力案内、自動手の表示をoutput_fnへ渡す。
         コンピュータ参加対局は時計を作り、未注入なら時間設定を一度だけ読み込む。
         合法な入力と自動手だけが記録の現在局面と履歴を変更し、形式・合法性・保存・
-        読込エラーでは人間の同じ手番で再入力する。`save` は記録を変更せず保存し、
-        `load` は成功したときだけ記録を新しいものへ置き換えて局面を表示する。
+        読込エラーでは人間の同じ手番で再入力する。`save` は記録と現在時計を一つの
+        ファイルへ保存し、`load` は棋譜と任意の時計の両方を完全検証した後に置き換えて
+        局面を表示する。時計なし旧v1をコンピュータ対局で読む場合は起動初期値から時計を
+        作り、そのことを案内する。
         `resign` は人間担当側の投了として表示し、局面を変更せず終了する。人間対人間
         では両側、人間対コンピュータでは先手だけが入力し、コンピュータ対コンピュータ
         では両側が自動手を指す。
@@ -688,11 +691,26 @@ def run_game(
                     output_fn(_HELP_TEXT)
                     continue
                 if isinstance(command, SaveCommand):
-                    record.save(command.path)
+                    CliSession(record, clock).save(command.path)
                     output_fn("棋譜を保存しました。")
                     continue
                 if isinstance(command, LoadCommand):
-                    record = GameRecord.load(command.path)
+                    session = CliSession.load(command.path)
+                    record = session.record
+                    if session.clock is None:
+                        if mode is GameMode.HUMAN_VS_HUMAN:
+                            clock = None
+                        else:
+                            if clock_settings is None:
+                                raise ValueError(
+                                    "コンピュータ対局の初期時計設定がありません"
+                                )
+                            clock = CliClock.start(clock_settings)
+                            output_fn(
+                                "時計情報がないため、対局開始時に選んだ初期値を使用しました。"
+                            )
+                    else:
+                        clock = session.clock
                     output_fn("棋譜を読み込みました。")
                     output_fn(render_position(record.current_position))
                     continue

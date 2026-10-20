@@ -22,7 +22,9 @@
 
 ## 後続接続
 
-USIは各goの独立局面・新制御からsearch_moveを呼ぶ。go完成行の読取り原点、stopと抑制、一回送信、故障通知、入力待機解除・担当回収を[接続仕様](usi-engine-response.md#入力送信故障回収2026-10-12接続)へまとめた。2026-10-19にCLIとUSIへ全幅四手・αβ四手を選択肢として接続した。新方式は共通反復探索を深さ1→4で使い、CLIには時計制御を加えず、USIは既存時計予算と制御を再利用する。接続境界・設定寿命・検証範囲は[承認済み設計](../plans/2026-10-19-four-ply-search-game-integration-design.md)と[実施記録](../learning/four-ply-search-game-integration-plan.md)を参照する。[引渡し契約](../plans/2026-10-12-search-stop-implementation-plan.md#後続の入力並行処理usi接続への引き渡し)は当時の記録として保持する。
+USIは各goの独立局面・新制御から`search_move`を呼ぶ。go完成行の読取り原点、stopと抑制、一回送信、故障通知、入力待機解除・担当回収を[接続仕様](usi-engine-response.md#入力送信故障回収2026-10-12接続)へまとめた。2026-10-19にCLIとUSIへ全幅四手・αβ四手を選択肢として接続した。新方式は共通反復探索を深さ1→4で使う。USIの接続境界・設定寿命・検証範囲は[承認済み設計](../plans/2026-10-19-four-ply-search-game-integration-design.md)と[実施記録](../learning/four-ply-search-game-integration-plan.md)を参照する。[引渡し契約](../plans/2026-10-12-search-stop-implementation-plan.md#後続の入力並行処理usi接続への引き渡し)は当時の記録として保持する。
+
+2026-10-20に通常対局CLIも同じ`game_search.search_move`・公開予算計算・`SearchControl`を使うよう接続した。CLIは時計・返却後の時間切れ判定・表示・保存を担い、USIエンジン経路や共通探索・予算式を変更しない。CLIの計時原点はコンピュータ手番の思考開始表示後で、返却直後に終点を読む。コンピュータ手前の独自詰み確認・全合法手生成、完了深さや手の由来表示を行わない。時間切れ後の返却手は適用せず、通常停止結果は時計内なら扱い、抑制は勝敗へ変換しない。人間手番の詰み確認は維持する。詳細は[通常対局CLI時計メモ](32-human-vs-computer-cli.md)、[承認済み設計](../plans/2026-10-20-cli-search-time-control-design.md)、[実装・検証記録](../learning/cli-search-time-control-plan.md)を参照する。
 
 専用制御Lockは送信同期を代替しない。接続側の共通Lockで結果返却直後の抑制を再確認する。実時間安全性、全OS・全競合、計測・対局は未検証。
 

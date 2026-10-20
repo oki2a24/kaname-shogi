@@ -8,6 +8,8 @@
 - `load_time_management_config` は設定を読む操作。引数省略時はモジュール位置からリポジトリ直下の `config/time-management.json` を読む。明示相対Pathはcwd基準。キャッシュなし。
 - `calculate_search_budget` は自分側の残り持ち時間・秒読み（非負整数ms）と設定から予算を計算する操作。先後の選択・時刻取得・期限判定はしない。
 
+通常対局CLIもこの同じloaderと公開予算計算を利用する。実入口はコンピュータ参加時に一度読み、直接`run_game`を呼ぶ場合は未注入時だけ一度読む。人間同士では時計設定とJSONを読まない。CLIが先後別にnsで持つ残り時間を現在手番側だけmsへ切り捨てて渡す。返却後の時計更新・時間切れ判定はCLI対局管理の責務であり、USI経路・予算式・設定値を変更するものではない。実時間による期限内応答は保証しない。[通常対局CLIの時計](32-human-vs-computer-cli.md)を参照。
+
 四設定はallocation_turns=20（整数1以上）、maximum_multiplier=2（有限数1超）、byoyomi_target_ratio=0.75（有限数0超1未満）、response_margin_ms=2000（整数0以上）。値は採用済みの未検証暫定値。JSONの整数欄は整数表記、係数欄は整数/十進数を許す。必須・重複・未知・bool等を検査し、代替既定値は使わない。十進表記をDecimalで保持しFractionへ変換、整数演算で切り捨てる。
 
 R>0では基本目標=R//N、境界=max(0,R+B−S)、上限=min(floor(基本目標×M),境界)、目標=min(基本目標,上限)。R=0では上限=max(0,B−S)、目標=floor(上限×q)。分母Nは固定。時間はms。

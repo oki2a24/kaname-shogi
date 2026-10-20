@@ -2,11 +2,11 @@
 
 ## 現在地
 
-2026-10-20更新。選定済みテーマ「承認済みCLI設計から実装計画を作る」を新セッションで開始し、[計画案全体](plans/2026-10-20-cli-search-time-control-implementation-plan.md)を作成した。独立レビュー初回0/1/0の指摘を対応し、再確認0/0/0、文書検証まで完了。計画全体を提示し、本人の「yes」によりAPIの具体化・手順・検証方法を含め承認済み。TDD・実装は未着手で、実装開始は別の指示待ち。今回の範囲は計画作成・独立レビュー・提示までであり、計画承認後も実装へ自動移行しない。[今回の作成・レビュー記録](learning/cli-search-time-control-plan.md)を参照する。
+2026-10-20更新。選定済みテーマの[承認済み計画](plans/2026-10-20-cli-search-time-control-implementation-plan.md)に基づくTask 1〜5の実装・検証・独立レビューを作業ブランチ`codex/cli-search-time-control-plan`で完了した。[実施記録](learning/cli-search-time-control-plan.md)にTDD・検出力・レビュー結果を記録する。mainへの取込みと取込み先検証、最後の理解確認は未実施で、別途承認を待つ。
 
-開始時は`/Users/oki2a24/kaname-shogi`、main、HEAD f3a05b8、origin/mainより5コミット先行、追跡ファイル変更なし、未追跡`.antigravity/tasks/`あり。作業用`codex/cli-search-time-control-plan`へ切り替え、同じディレクトリで文書4件だけを変更した。承認記録を含む文書検証・独立点検を終え、通常フックによる作業ブランチへのコミット対象とした。別worktree・main取り込み・pushなし。Ruff 0.16.10は固定版と一致、ローカルhooksPathは.githooks。未追跡ディレクトリは保持する。
+作業ディレクトリは`/Users/oki2a24/kaname-shogi`。ブランチにはTask 1〜5の実装・記録がある。Task 1〜4は通常フックを通した個別コミット。未追跡`.antigravity/tasks/`は開始時からあり保持する。Ruff 0.16.10は固定版と一致、ローカル`core.hooksPath`は`.githooks`。別worktree・push・main取込みは行っていない。
 
-仕様の正本は[承認済み設計](plans/2026-10-20-cli-search-time-control-design.md)、本人回答・変更合意・設計承認と理解確認は[設計学習記録](learning/cli-search-time-control-design.md)。[今回の開始時引き継ぎ](handover-cli-search-time-control-plan.md)は開始前の履歴として保持する。共通search_move・予算・停止契約を再利用し、コンピュータ手の事前詰み/全生成、完了深さ/手の由来表示は復活させない。時計保持・返却後判定・時計つき保存はCLI管理側。棋譜v1公開変換は設計承認範囲内、USI製品経路・共通探索・予算式・設定値は対象外。
+仕様の正本は[承認済み設計](plans/2026-10-20-cli-search-time-control-design.md)、本人回答・個別合意は[設計学習記録](learning/cli-search-time-control-design.md)。共通`game_search.search_move`・予算計算・`SearchControl`を再利用し、コンピュータ手の事前詰み/全合法手生成、完了深さ/手の由来表示を追加していない。CLIが時計・返却後時間切れ判定・時計つき保存を担う。USI製品経路、共通探索、予算式、設定値は変更していない。
 
 前テーマは設計全体承認、独立レビュー再確認0/0/0、本人の別承認でmain統合・文書検証、最後の回答「CLI」まで完了。設計・記録は82a7368・843efdc・ae828e5・2e9a11d、開始準備はf3a05b8。製品機能は未変更で、今回製品テスト・TDD・変異注入・対局・時間測定は実行していない。
 
@@ -34,4 +34,4 @@
 
 ## 次にすること
 
-[承認済み計画全体](plans/2026-10-20-cli-search-time-control-implementation-plan.md)と[承認記録](learning/cli-search-time-control-plan.md)を基準に、本人から実装開始の別の指示を待つ。計画承認を実装開始・main取り込みの承認と扱わない。
+実装ブランチの具体的な差分を提示し、mainへの取込みについて本人の別承認を待つ。承認後は取り込み先で回帰検証・文書確認を行い、最後の理解確認を一問だけ出して回答を待つ。理解確認と次テーマ選定が終わるまで、新しい学習・実装を始めない。

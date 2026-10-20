@@ -1,12 +1,16 @@
 """通常CLIの探索制御・時計接続の契約を検証する。"""
 
+import json
 import random
 import unittest
 from fractions import Fraction
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import Mock, patch
 
 from kaname_shogi import cli, game_search, movegen
 from kaname_shogi.cli_clock import CliClock, CliClockSettings
+from kaname_shogi.cli_session import CliSession
 from kaname_shogi.game_record import GameRecord, RecordedMove
 from kaname_shogi.model import (
     Board,
@@ -788,6 +792,320 @@ class CliTimeControlTests(unittest.TestCase):
         start_clock.assert_called_once_with(CliClockSettings(600_000, 30_000))
         search.assert_called_once()
 
+    def test_load_commits_record_and_clock_together_or_preserves_both(self):
+        """読込失敗では棋譜と時計の双方を保ち、同じ手番から保存できる。
+
+        不正clock、不合法履歴、壊れたJSON、I/O失敗の後に独立した元の棋譜payloadと
+        時計値を再保存で比較し、片方だけの置換や出力だけで成功と誤認する漏れを検出する。
+        """
+        settings = CliClockSettings(600_000, 30_000)
+        config = TimeManagementConfig(20, Fraction(2), Fraction(3, 4), 0)
+        expected_record = GameRecord(create_initial_position())
+        expected_clock = CliClock.start(settings)
+
+        with TemporaryDirectory() as directory:
+            directory_path = Path(directory)
+            valid_path = directory_path / "valid.json"
+            CliSession(expected_record, expected_clock).save(valid_path)
+            valid_payload = json.loads(valid_path.read_text(encoding="utf-8"))
+
+            invalid_clock = json.loads(json.dumps(valid_payload))
+            invalid_clock["clock"]["byoyomi_ms"] = True
+            invalid_clock_path = directory_path / "invalid-clock.json"
+            invalid_clock_path.write_text(json.dumps(invalid_clock), encoding="utf-8")
+
+            illegal_history = json.loads(json.dumps(valid_payload))
+            illegal_history["game_record"]["moves"] = [
+                {
+                    "kind": "move",
+                    "source": {"file": 7, "rank": 7},
+                    "destination": {"file": 7, "rank": 8},
+                    "promote": False,
+                }
+            ]
+            illegal_history_path = directory_path / "illegal-history.json"
+            illegal_history_path.write_text(
+                json.dumps(illegal_history), encoding="utf-8"
+            )
+
+            broken_json_path = directory_path / "broken.json"
+            broken_json_path.write_text("{", encoding="utf-8")
+            missing_path = directory_path / "missing" / "session.json"
+            load_failures = (
+                invalid_clock_path,
+                illegal_history_path,
+                broken_json_path,
+                missing_path,
+            )
+            saved_paths = tuple(
+                directory_path / f"after-{index}.json"
+                for index in range(len(load_failures))
+            )
+            commands = []
+            for load_path, save_path in zip(load_failures, saved_paths, strict=True):
+                commands.extend((f"load {load_path}", f"save {save_path}"))
+            commands.append("resign")
+            outputs = []
+
+            record = cli.run_game(
+                input_fn=iter(commands).__next__,
+                output_fn=outputs.append,
+                mode=cli.GameMode.HUMAN_VS_COMPUTER,
+                clock_settings=settings,
+                time_config=config,
+                now_ns=lambda: 0,
+            )
+
+            saved_sessions = tuple(CliSession.load(path) for path in saved_paths)
+
+        self.assertEqual(record.to_payload(), expected_record.to_payload())
+        for saved_session in saved_sessions:
+            self.assertEqual(
+                saved_session.record.to_payload(), expected_record.to_payload()
+            )
+            self.assertEqual(saved_session.clock, expected_clock)
+        self.assertEqual(sum(line.startswith("エラー：") for line in outputs), 4)
+
+    def test_clocked_then_legacy_load_uses_original_startup_settings(self):
+        """旧v1読込は直前の保存時計でなくCLI起動時の初期条件へ戻す。
+
+        10分/30秒で起動後に5分/10秒セッションを読み、続けて旧v1を読む順序と
+        保存済み先後値を照合し、前の読込設定を流用する誤りを検出する。
+        """
+        startup_settings = CliClockSettings(600_000, 30_000)
+        loaded_clock = CliClock(
+            CliClockSettings(300_000, 10_000), 280_123_456_789, 245_987_654_321
+        )
+        config = TimeManagementConfig(20, Fraction(2), Fraction(3, 4), 0)
+
+        with TemporaryDirectory() as directory:
+            clocked_path = Path(directory) / "clocked.json"
+            legacy_path = Path(directory) / "legacy.json"
+            result_path = Path(directory) / "after-legacy.json"
+            initial_record = GameRecord(create_initial_position())
+            CliSession(initial_record, loaded_clock).save(clocked_path)
+            initial_record.save(legacy_path)
+            outputs = []
+
+            record = cli.run_game(
+                input_fn=iter(
+                    (
+                        f"load {clocked_path}",
+                        f"load {legacy_path}",
+                        f"save {result_path}",
+                        "resign",
+                    )
+                ).__next__,
+                output_fn=outputs.append,
+                mode=cli.GameMode.HUMAN_VS_COMPUTER,
+                clock_settings=startup_settings,
+                time_config=config,
+                now_ns=lambda: 0,
+            )
+            saved_session = CliSession.load(result_path)
+
+        expected_clock = CliClock.start(startup_settings)
+        self.assertEqual(record.to_payload(), initial_record.to_payload())
+        self.assertEqual(saved_session.record.to_payload(), initial_record.to_payload())
+        self.assertEqual(saved_session.clock, expected_clock)
+        self.assertIn(
+            "時計情報がないため、対局開始時に選んだ初期値を使用しました。", outputs
+        )
+
+    def test_preserves_clock_in_human_game_and_legacy_without_clock(self):
+        """人間同士は読込時計を保持し、時計なしなら従来v1で保存する。
+
+        時計つき棋譜を読んで着手・保存した後に同じ対局で旧v1を読んだとき、時計が
+        残留せず従来形式で保存されることと、新規棋譜の形式を手書き状態と比較する。
+        """
+        loaded_clock = CliClock(
+            CliClockSettings(600_000, 30_000), 500_123_456_789, 400_987_654_321
+        )
+
+        with TemporaryDirectory() as directory:
+            directory_path = Path(directory)
+            initial_record = GameRecord(create_initial_position())
+            clocked_path = directory_path / "clocked.json"
+            after_move_path = directory_path / "after-human-move.json"
+            legacy_path = directory_path / "legacy.json"
+            after_legacy_path = directory_path / "after-legacy.json"
+            new_path = directory_path / "new.json"
+            CliSession(initial_record, loaded_clock).save(clocked_path)
+            initial_record.save(legacy_path)
+
+            legacy_record = cli.run_game(
+                input_fn=iter(
+                    (
+                        f"load {clocked_path}",
+                        "move 7 7 7 6",
+                        f"save {after_move_path}",
+                        f"load {legacy_path}",
+                        f"save {after_legacy_path}",
+                        "resign",
+                    )
+                ).__next__,
+                output_fn=lambda _: None,
+                mode=cli.GameMode.HUMAN_VS_HUMAN,
+                now_ns=lambda: self.fail("人間同士で実時間時計を読まない"),
+            )
+            clocked_saved = CliSession.load(after_move_path)
+
+            new_record = cli.run_game(
+                input_fn=iter((f"save {new_path}", "resign")).__next__,
+                output_fn=lambda _: None,
+                mode=cli.GameMode.HUMAN_VS_HUMAN,
+                now_ns=lambda: self.fail("人間同士で実時間時計を読まない"),
+            )
+            legacy_payload = json.loads(after_legacy_path.read_text(encoding="utf-8"))
+            new_payload = json.loads(new_path.read_text(encoding="utf-8"))
+
+        expected_clocked_record = GameRecord(create_initial_position())
+        expected_clocked_record.apply_move(Square(7, 7), Square(7, 6))
+        expected_legacy_record = GameRecord(create_initial_position())
+        self.assertEqual(
+            clocked_saved.record.to_payload(), expected_clocked_record.to_payload()
+        )
+        self.assertEqual(clocked_saved.clock, loaded_clock)
+        self.assertEqual(
+            legacy_record.to_payload(), expected_legacy_record.to_payload()
+        )
+        self.assertEqual(new_record.to_payload(), expected_legacy_record.to_payload())
+        self.assertEqual(legacy_payload, expected_legacy_record.to_payload())
+        self.assertEqual(new_payload, expected_legacy_record.to_payload())
+
+    def test_loaded_computer_side_uses_its_saved_remainder(self):
+        """読込局面の後手探索は保存残りから予算を作り、返却後だけ減算する。
+
+        手書き時計の後手123456789nsから独立に123ms予算・15ms消費後108456689nsを
+        期待し、先手値・起動既定時計への置換・残り時計のms丸めを検出する。
+        """
+        config = TimeManagementConfig(20, Fraction(2), Fraction(3, 4), 0)
+        settings = CliClockSettings(600_000, 10_000)
+        saved_clock = CliClock(settings, 550_123_456_789, 123_456_789)
+        saved_record = GameRecord(create_initial_position())
+        saved_record.apply_move(Square(7, 7), Square(7, 6))
+        gote_move = BoardMove(Square(3, 3), Square(3, 4), False)
+        budget_inputs = []
+        original_budget = cli.calculate_search_budget
+
+        def calculate_budget(remaining_ms, byoyomi_ms, time_config):
+            budget_inputs.append((remaining_ms, byoyomi_ms, time_config))
+            return original_budget(remaining_ms, byoyomi_ms, time_config)
+
+        with TemporaryDirectory() as directory:
+            session_path = Path(directory) / "gote-to-move.json"
+            saved_path = Path(directory) / "after-gote-move.json"
+            CliSession(saved_record, saved_clock).save(session_path)
+            times = iter((100_000, 15_100_100))
+            with (
+                patch.object(
+                    cli, "calculate_search_budget", side_effect=calculate_budget
+                ),
+                patch.object(
+                    game_search,
+                    "search_move",
+                    return_value=SearchResult(SearchCompletion.COMPLETE, gote_move),
+                ) as search,
+            ):
+                record = cli.run_game(
+                    input_fn=iter(
+                        (f"load {session_path}", f"save {saved_path}", "resign")
+                    ).__next__,
+                    output_fn=lambda _: None,
+                    mode=cli.GameMode.HUMAN_VS_COMPUTER,
+                    clock_settings=CliClockSettings(10_000, 50_000),
+                    time_config=config,
+                    now_ns=times.__next__,
+                )
+            saved_session = CliSession.load(saved_path)
+
+        expected_record = GameRecord.from_payload(saved_record.to_payload())
+        expected_record.apply_move(gote_move.source, gote_move.destination)
+        self.assertEqual(record.to_payload(), expected_record.to_payload())
+        self.assertEqual(
+            saved_session.record.to_payload(), expected_record.to_payload()
+        )
+        self.assertEqual(budget_inputs, [(123, 10_000, config)])
+        self.assertEqual(search.call_count, 1)
+        self.assertEqual(
+            saved_session.clock,
+            CliClock(settings, 550_123_456_789, 108_456_689),
+        )
+
+    def test_save_excludes_idle_time_and_preserves_error_state(self):
+        """人間の待ち時間と保存失敗は時計を減らさず、成功保存は手と時計を揃える。
+
+        load・人間入力・表示・save失敗の間に偽時計を大きく進め、探索中の15msだけを
+        時計から差し引いた固定値と保存履歴を照合する。失敗後の同手番継続も確認する。
+        """
+        settings = CliClockSettings(600_000, 30_000)
+        config = TimeManagementConfig(20, Fraction(2), Fraction(3, 4), 0)
+        gote_move = BoardMove(Square(3, 3), Square(3, 4), False)
+        fake_now = [1_000]
+        budget_inputs = []
+        original_budget = cli.calculate_search_budget
+
+        def input_with_idle_time():
+            fake_now[0] += 3_600_000_000_000
+            return next(commands)
+
+        def output_with_idle_time(_text):
+            fake_now[0] += 600_000_000_000
+
+        def search_with_fixed_elapsed(_position, _policy, _rng, _control):
+            fake_now[0] += 15_000_000
+            return SearchResult(SearchCompletion.COMPLETE, gote_move)
+
+        def calculate_budget(remaining_ms, byoyomi_ms, time_config):
+            budget_inputs.append((remaining_ms, byoyomi_ms, time_config))
+            return original_budget(remaining_ms, byoyomi_ms, time_config)
+
+        with TemporaryDirectory() as directory:
+            directory_path = Path(directory)
+            legacy_path = directory_path / "legacy.json"
+            failed_save_path = directory_path / "missing-parent" / "failed.json"
+            saved_path = directory_path / "after-search.json"
+            GameRecord(create_initial_position()).save(legacy_path)
+            commands = iter(
+                (
+                    f"load {legacy_path}",
+                    "move 7 7 7 6",
+                    f"save {failed_save_path}",
+                    f"save {saved_path}",
+                    "resign",
+                )
+            )
+            with (
+                patch.object(
+                    cli, "calculate_search_budget", side_effect=calculate_budget
+                ),
+                patch.object(
+                    game_search, "search_move", side_effect=search_with_fixed_elapsed
+                ),
+            ):
+                record = cli.run_game(
+                    input_fn=input_with_idle_time,
+                    output_fn=output_with_idle_time,
+                    mode=cli.GameMode.HUMAN_VS_COMPUTER,
+                    clock_settings=settings,
+                    time_config=config,
+                    now_ns=lambda: fake_now[0],
+                )
+            saved_session = CliSession.load(saved_path)
+
+        expected_record = GameRecord(create_initial_position())
+        expected_record.apply_move(Square(7, 7), Square(7, 6))
+        expected_record.apply_move(gote_move.source, gote_move.destination)
+        self.assertEqual(record.to_payload(), expected_record.to_payload())
+        self.assertEqual(
+            saved_session.record.to_payload(), expected_record.to_payload()
+        )
+        self.assertEqual(budget_inputs, [(600_000, 30_000, config)])
+        self.assertEqual(
+            saved_session.clock,
+            CliClock(settings, 600_000_000_000, 599_985_000_000),
+        )
+
     def test_keyboard_interrupt_from_computer_output_keeps_record_unmodified(self):
         """探索後の指し手表示中に中断したら履歴を変更せず対局を終える。
 
@@ -1203,7 +1521,9 @@ class CliTimeControlTests(unittest.TestCase):
             patch.object(
                 cli, "load_time_management_config", return_value=config
             ) as load_config,
-            patch.object(GameRecord, "load", return_value=loaded_record) as load_record,
+            patch.object(
+                CliSession, "load", return_value=CliSession(loaded_record, None)
+            ) as load_session,
             patch.object(cli, "calculate_search_budget", side_effect=calculate_loaded),
             patch.object(
                 game_search,
@@ -1220,7 +1540,7 @@ class CliTimeControlTests(unittest.TestCase):
             )
 
         load_config.assert_called_once_with()
-        load_record.assert_called_once_with("saved.json")
+        load_session.assert_called_once_with("saved.json")
         self.assertEqual(loaded_budget_configs, [config])
         self.assertEqual(len(record.moves), 1)
 

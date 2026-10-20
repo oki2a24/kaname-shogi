@@ -54,7 +54,7 @@
 
 `search/minimax.py` と `search/alpha_beta.py` が方式入口、`core.py` が共通探索、`contracts.py` と `result.py` がデータ、`shogi.py` が将棋接続、`compare.py` が指定深さ比較の入出力。反復管理は `iterative_deepening.py`、その比較入口は `compare_iterative.py`、入力・整形・一致判定の共通処理は `comparison.py`。評価の正本は `evaluation.py`、既存 `movegen.material_balance` の入口も維持。複製適用の公開操作 `movegen.position_after_move` は既存適用へ委譲する。
 
-これらの比較コマンドは時間制御、置換表、定跡、新評価項目、対局方式の選択を含まない。対局接続の実装では `game_search` が新二方式を共通反復探索へ渡す。CLIは深さ1から4まで時計制御なし、USIは既存の時計予算・停止を使用する。合法手が多い局面の全幅四手探索は長時間かかり得て、実応答時間・期限内の完了は保証しない。局面例・数値木・回帰の成功は棋力向上や全入力の証明ではない。OSからのSIGINT配送の実プロセス試験は未実施で、中断の捕捉と表示は操作境界で確認。
+これらの比較コマンドは時間制御、置換表、定跡、新評価項目、対局方式の選択を含まない。対局接続の実装では `game_search` が新二方式を共通反復探索へ渡す。通常CLIとUSIは既存の時計予算・停止制御を使うが、CLIは自身の時計を管理し返却後に時間切れを判定し、USIはGUIから各goの時計を受ける。合法手が多い局面の全幅四手探索は長時間かかり得て、実応答時間・期限内の完了は保証しない。局面例・数値木・回帰の成功は棋力向上や全入力の証明ではない。OSからのSIGINT配送の実プロセス試験は未実施で、中断の捕捉と表示は操作境界で確認。
 
 根拠と履歴：[承認済み設計](../plans/2026-10-17-engine-search-comparison-design.md)、[実装計画](../plans/2026-10-17-engine-search-comparison-implementation-plan.md)、[実装・学習記録](../learning/engine-improvement-stage-design.md)。
 
