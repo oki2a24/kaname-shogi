@@ -30,6 +30,8 @@
 
 - 全幅最大4手・αβ枝刈り最大4手の対局選択：2026-10-19、既存三方式を残してCLIメニューとUSI `Difficulty` へ追加した。各コンピュータ手は深さ1→4の反復探索を使う。CLIに時計制御はなく、USIは既存時計予算・停止処理を使う。本人の別承認でmainへ統合し、取り込み先検証と最後の理解確認まで完了した。全幅四手の実戦待ち時間、期限内応答、ShogiHome実機での新方式、棋力向上は未確認である（[承認済み計画と結果](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md)、[学習・検証記録](learning/four-ply-search-game-integration-plan.md)）。
 
+- 通常対局CLIの探索時間制御：2026-10-20、共通探索・予算計算・停止契約を再利用し、CLI側の時計、返却後の時間切れ判定、時計つき棋譜保存を実装・検証した。main統合・取り込み先検証・最後の理解確認まで完了。USI経路・共通探索・予算式と設定値は変更していない。実時間応答や期限内応答は保証していない（[承認済み設計・実装計画・実施記録](plans/2026-10-20-cli-search-time-control-implementation-plan.md)、[本人回答とレビュー記録](learning/cli-search-time-control-plan.md)）。
+
 現在の機能・未対応は[README](../README.md)、確定仕様と各到達点の根拠は[文書索引](README.md)から確認する。実機確認は特定版・局面の実測であり、全互換性や棋力を保証しない。
 
 ## 評価・探索へ進む位置付け

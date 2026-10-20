@@ -2,13 +2,13 @@
 
 ## 現在地
 
-2026-10-20更新。選定済みテーマの[承認済み計画](plans/2026-10-20-cli-search-time-control-implementation-plan.md)に基づくTask 1〜5の実装・検証・独立レビューを完了し、本人の承認を得てコミット`eb78e9e`までmainへfast-forward統合した。統合後の全体検証も成功。[実施記録](learning/cli-search-time-control-plan.md)にTDD・検出力・レビュー・統合結果を記録する。最後の理解確認が未実施で、回答を待つ。
+2026-10-20更新。本テーマ「承認済みCLI設計から実装計画を作る」は、その後の明示的な実装指示・main取り込み承認を経て、Task 1〜5の実装・検証・独立レビュー・main統合・取り込み先検証まで完了した。取り込み先の全体テストは623件成功。本人の最後の理解確認の回答と補足も[実施記録](learning/cli-search-time-control-plan.md)へ記録済み。
 
-作業ディレクトリは`/Users/oki2a24/kaname-shogi`、現在ブランチは`main`。Task 1〜4は通常フックを通した個別コミット、Task 5は`eb78e9e`。統合後に`.venv/bin/python -m unittest discover -s tests -v`を実行し623件成功。未追跡`.antigravity/tasks/`は開始時からあり保持する。Ruff 0.16.10は固定版と一致、ローカル`core.hooksPath`は`.githooks`。pushは行っていない。
+作業ディレクトリは`/Users/oki2a24/kaname-shogi`、現在ブランチは`main`。未追跡`.antigravity/tasks/`は開始時からあり保持する。Ruff 0.16.10は固定版と一致し、ローカル`core.hooksPath`は`.githooks`。pushはしていない。
 
 仕様の正本は[承認済み設計](plans/2026-10-20-cli-search-time-control-design.md)、本人回答・個別合意は[設計学習記録](learning/cli-search-time-control-design.md)。共通`game_search.search_move`・予算計算・`SearchControl`を再利用し、コンピュータ手の事前詰み/全合法手生成、完了深さ/手の由来表示を追加していない。CLIが時計・返却後時間切れ判定・時計つき保存を担う。USI製品経路、共通探索、予算式、設定値は変更していない。
 
-前テーマは設計全体承認、独立レビュー再確認0/0/0、本人の別承認でmain統合・文書検証、最後の回答「CLI」まで完了。設計・記録は82a7368・843efdc・ae828e5・2e9a11d、開始準備はf3a05b8。製品機能は未変更で、今回製品テスト・TDD・変異注入・対局・時間測定は実行していない。
+次テーマは未選定。候補と推薦理由は[次テーマ候補](next-topics.md)を参照する。本人が選ぶまで、新しい学習・設計・実装は始めない。
 
 ## 以前に完了した観察テーマ（時間制御付き探索コマンド）
 
@@ -34,4 +34,4 @@
 
 ## 次にすること
 
-CLI時計制御の契約について最後の理解確認を一問だけ出し、本人の回答を待つ。回答と補足を学習記録へ追記し、次テーマの候補と推薦理由を示す。回答を受け取るまで新しい学習・実装は始めない。
+本人が[次テーマ候補](next-topics.md)から一つ選ぶのを待つ。選定後は、本人が別の希望を示さない限り、session-handoffスキルを使って新しいセッション用の引き継ぎと再開案内を準備する。本人が新しいセッションへ入力するまで次テーマの学習・実装は始めない。
