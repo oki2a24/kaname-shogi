@@ -58,6 +58,7 @@ CLI探索時間制御の[承認済み実装計画全体](plans/2026-10-20-cli-se
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
+| CLIの乱数・モード比較テストを固定時計で決定的にする（実装・全体検証・独立レビュー済み、worktreeのみ） | [後日実装修正記録](learning/cli-search-time-control-design.md) | [検出力点検](knowledge/test-coverage-review.md) | — | [実装計画・実施結果](plans/2026-10-21-cli-test-clock-determinism-implementation-plan.md) | — |
 | 反復深化で留保したテスト2件の補強（main統合・取り込み先検証・最後の理解確認完了） | [学習記録](learning/iterative-deepening-test-strengthening.md) | [検出力の点検手順](knowledge/test-coverage-review.md) | — | [実装計画と結果](plans/2026-10-17-iterative-deepening-test-strengthening-plan.md) | [開始時の引き継ぎ](handover-iterative-deepening-test-strengthening.md) |
 | 全幅4手とαβ枝刈り4手の対局接続（main統合・取り込み先検証・理解確認まで完了） | [設計の回答・承認](learning/four-ply-search-game-integration-design.md)、[計画・実施・最後の回答](learning/four-ply-search-game-integration-plan.md) | [探索比較](knowledge/search-comparison.md)、[探索停止](knowledge/search-stop.md)、[USI応答](knowledge/usi-engine-response.md) | [承認済み設計](plans/2026-10-19-four-ply-search-game-integration-design.md) | [計画・実施結果](plans/2026-10-19-four-ply-search-game-integration-implementation-plan.md) | [選定時の引き継ぎ](handover-four-ply-search-game-integration-design.md) |
 | CLIの探索時間制御を学び設計する（設計承認・main取り込み・理解確認完了） | [学習・回答・個別合意](learning/cli-search-time-control-design.md) | [探索停止](knowledge/search-stop.md)、[時間予算](knowledge/time-budget.md)、[USI応答](knowledge/usi-engine-response.md) | [承認済み設計](plans/2026-10-20-cli-search-time-control-design.md) | — | [新セッション用引き継ぎ](handover-cli-search-time-control-design.md) |

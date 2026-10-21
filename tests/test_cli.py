@@ -653,11 +653,13 @@ class GameplayTests(unittest.TestCase):
             input_fn=ScriptedInput(["move 7 7 7 6"]),
             output_fn=outputs_a.append,
             rng=random.Random(20260926),
+            now_ns=lambda: 0,
         )
         record_b = cli.run_game(
             input_fn=ScriptedInput(["move 7 7 7 6"]),
             output_fn=outputs_b.append,
             rng=random.Random(20260926),
+            now_ns=lambda: 0,
         )
 
         self.assertEqual(record_a.moves, record_b.moves)
@@ -671,12 +673,14 @@ class GameplayTests(unittest.TestCase):
             input_fn=ScriptedInput(["move 7 7 7 6"]),
             output_fn=default_outputs.append,
             rng=random.Random(20260927),
+            now_ns=lambda: 0,
         )
         explicit_record = cli.run_game(
             mode=cli.GameMode.HUMAN_VS_COMPUTER,
             input_fn=ScriptedInput(["move 7 7 7 6"]),
             output_fn=explicit_outputs.append,
             rng=random.Random(20260927),
+            now_ns=lambda: 0,
         )
 
         self.assertEqual(explicit_record.moves, default_record.moves)
