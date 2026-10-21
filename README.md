@@ -164,11 +164,26 @@ load records/game.json
 
 ## テスト
 
-リポジトリ直下で次を実行します。
+日常の全体確認は、標準ライブラリだけを使う並列ランナーで実行できます。
+標準discoveryと同じ有効な `test*.py` モジュールとpackage initializerを一度ずつ標準 `unittest -v` の別プロセスとして起動し、既定で最大4 workerを使います。失敗したモジュールが一つでもあれば非0で終了します。
+
+```sh
+python3 scripts/run_tests_parallel.py
+```
+
+worker数を指定する場合は `--workers` を使います。1未満は受け付けません。
+
+```sh
+python3 scripts/run_tests_parallel.py --workers 2
+```
+
+従来の逐次実行も残しています。モジュール間の共有状態や実行順に依存する問題を切り分けるときは、こちらでも確認します。
 
 ```sh
 python3 -m unittest discover -s tests -v
 ```
+
+2026-10-21の実測では、41モジュール・637件の逐次実行が53.318秒、並列実行3回が20.089〜20.308秒（平均20.167秒）でした。マシンやテスト構成で変わるため、実測条件と限界は[並列実行の学習・実施記録](docs/learning/python-unittest-parallel-runner.md)を参照してください。
 
 テストメソッド名は検索や個別実行に使える英語とし、日本語docstringで確認する振る舞いと検出したい誤りを説明しています。`-v` を付けると、その日本語説明も表示されます。
 

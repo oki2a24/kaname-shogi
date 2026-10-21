@@ -13,6 +13,15 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 _TEST_SUMMARY = re.compile(r"^Ran (\d+) tests? in [0-9.]+s$", re.MULTILINE)
+_SKIP_SUMMARY = re.compile(r"^OK \(.*\bskipped=(\d+)\b.*\)$", re.MULTILINE)
+_VALID_MODULE_NAME = re.compile(r"[_a-z]\w*\.py$", re.IGNORECASE)
+_WORKER_BOOTSTRAP = (
+    "import sys, unittest; "
+    "tests_dir, module = sys.argv[1:3]; "
+    "sys.path.insert(0, tests_dir); "
+    "program = unittest.main(module=module, argv=['unittest', '-v'], exit=False); "
+    "sys.exit(0 if program.result.wasSuccessful() else 1)"
+)
 
 
 @dataclass(frozen=True)
@@ -24,6 +33,7 @@ class ModuleResult:
     stdout: str
     stderr: str
     test_count: int
+    skipped_count: int
     elapsed_seconds: float
 
 
@@ -34,7 +44,8 @@ def discover_test_modules(tests_dir):
         tests_dir: `unittest discover -s` に渡す探索開始ディレクトリ。
 
     Returns:
-        `test*.py` に一致するimport可能なモジュール名を辞書順で返す。
+        標準discoveryと同じ有効な `test*.py` とpackageを辞書順で返す。
+        package自身も含み、initializerのテストとimport失敗を実行対象にする。
 
     Raises:
         FileNotFoundError: 探索開始ディレクトリが存在しない場合。
@@ -50,11 +61,17 @@ def discover_test_modules(tests_dir):
 
     def visit(directory, package_parts):
         for path in sorted(directory.iterdir()):
-            if path.is_file() and fnmatchcase(path.name, "test*.py"):
+            if (
+                path.is_file()
+                and _VALID_MODULE_NAME.fullmatch(path.name)
+                and fnmatchcase(path.name, "test*.py")
+            ):
                 module_parts = package_parts + [path.stem]
                 modules.append(".".join(module_parts))
             elif path.is_dir() and (path / "__init__.py").is_file():
-                visit(path, package_parts + [path.name])
+                nested_parts = package_parts + [path.name]
+                modules.append(".".join(nested_parts))
+                visit(path, nested_parts)
 
     visit(tests_dir, [])
     return sorted(modules)
@@ -63,11 +80,18 @@ def discover_test_modules(tests_dir):
 def _run_test_module(module, tests_dir, repo_root):
     """標準unittestを一つのモジュールに対して実行する。"""
     env = os.environ.copy()
+    env["PYTHON_COLORS"] = "0"
     python_paths = [str(Path(tests_dir).resolve())]
     if env.get("PYTHONPATH"):
         python_paths.append(env["PYTHONPATH"])
     env["PYTHONPATH"] = os.pathsep.join(python_paths)
-    command = [sys.executable, "-m", "unittest", "-v", module]
+    command = [
+        sys.executable,
+        "-c",
+        _WORKER_BOOTSTRAP,
+        str(Path(tests_dir).resolve()),
+        module,
+    ]
     started = time.monotonic()
 
     try:
@@ -87,17 +111,20 @@ def _run_test_module(module, tests_dir, repo_root):
             stdout="",
             stderr=f"Could not start {command!r}: {error}\n",
             test_count=0,
+            skipped_count=0,
             elapsed_seconds=time.monotonic() - started,
         )
 
     output = completed.stdout + completed.stderr
     summaries = _TEST_SUMMARY.findall(output)
+    skipped_summaries = _SKIP_SUMMARY.findall(output)
     return ModuleResult(
         module=module,
         returncode=completed.returncode,
         stdout=completed.stdout,
         stderr=completed.stderr,
         test_count=int(summaries[-1]) if summaries else 0,
+        skipped_count=int(skipped_summaries[-1]) if skipped_summaries else 0,
         elapsed_seconds=time.monotonic() - started,
     )
 
@@ -140,6 +167,7 @@ def run_test_modules(modules, *, tests_dir, repo_root, workers):
                     stdout="",
                     stderr=f"Worker raised {type(error).__name__}: {error}\n",
                     test_count=0,
+                    skipped_count=0,
                     elapsed_seconds=0.0,
                 )
     return [results[module] for module in modules]
@@ -170,7 +198,7 @@ def main(argv=None):
         argv: 引数列。Noneの場合は標準入力引数を使う。
 
     Returns:
-        すべて成功した場合は0、テスト失敗や起動失敗があれば1。
+        成功または正当なskipの場合は0、失敗・起動失敗・実行0件の場合は1。
 
     Raises:
         SystemExit: 引数不正、テストモジュール0件、探索失敗の場合。
@@ -206,12 +234,16 @@ def main(argv=None):
 
     elapsed = time.monotonic() - started
     total_tests = sum(result.test_count for result in results)
+    total_skipped = sum(result.skipped_count for result in results)
     failures = [result.module for result in results if result.returncode != 0]
     sys.stdout.write(
         f"\nRan {total_tests} tests across {len(results)} modules in {elapsed:.3f}s\n"
     )
     if failures:
         sys.stdout.write(f"FAILED modules: {', '.join(failures)}\n")
+        return 1
+    if total_tests == 0 and total_skipped == 0:
+        sys.stdout.write("NO TESTS RAN\n")
         return 1
     sys.stdout.write("OK\n")
     return 0
