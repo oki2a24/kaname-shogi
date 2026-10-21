@@ -6,9 +6,9 @@
 
 テーマ「読込失敗時に棋譜と時計を保つ理由を固定例で確認する」は、固定例の紙上照合と2026-10-20の最後の理解確認まで完了した。本人の回答「不正なまま受け入れるとゲームが成立しない可能性があるため」と補足を[学習記録](learning/cli-record-load-failure.md)へ分けて記録した。今回のテーマ「CLIで読込失敗時の表示と状態保持を一回観察する」は、2026-10-20のCLI観察と前後JSON比較、2026-10-21の最後の理解確認回答・補足の記録まで完了した。[学習記録](learning/cli-record-load-failure-observation.md)に実出力、JSON比較、本人回答とアシスタント補足を分けて記録した。製品コード・テスト・設定・承認済み設計は変更しておらず、自動テストも実行していない。
 
-2026-10-21、本人はCLI時計の残る予定観察「時計のない旧v1棋譜を通常CLIで読み、起動時計の補完を一回観察する」を次テーマに選定し、その後にShogiHomeで全幅最大4手・αβ最大4手を実践検証する順序も指定した。旧v1観察は未開始であり、実装済みのCLI時計機能に関する今回計画済みの観察を締める。ShogiHomeでの実践検証は、その観察テーマの記録・最後の理解確認が終わってから始める。開始背景・具体手順・再開プロンプトは[今回の引き継ぎ](handover-cli-legacy-v1-clock-completion-observation.md)、全体の位置づけは[学習ロードマップ](next-topics.md)を参照する。
+2026-10-21、本人はCLI時計の残る予定観察「時計のない旧v1棋譜を通常CLIで読み、起動時計の補完を一回観察する」を選定し、その後にShogiHomeで全幅最大4手・αβ最大4手を実践検証する順序も指定した。旧v1観察は同日に通常CLIで一回実施し、実出力・直後に保存したJSON・確認できた範囲と限界に加え、最後の理解確認の本人回答とアシスタント補足を[学習記録](learning/cli-legacy-v1-clock-completion-observation.md)へ記録して完了した。補助テーマとして行ったCLI時計観察から、元の主線で未確認だったShogiHome実践検証へ戻る。本人指定の次テーマの背景・開始条件・再開プロンプトは[今回の引き継ぎ](handover-shogihome-four-ply-practice-verification.md)、全体の位置づけは[学習ロードマップ](next-topics.md)を参照する。ShogiHomeの画面・接続・対局はまだ操作していない。
 
-作業ディレクトリは`/Users/oki2a24/kaname-shogi`、ブランチは`main`。今回の観察開始時と回答記録開始時のGit状態は[学習記録](learning/cli-record-load-failure-observation.md)に時点を分けて記録した。未追跡`.antigravity/tasks/`は各段階で変更していない。Ruff 0.16.10は固定版と一致し、ローカル`core.hooksPath`は`.githooks`。
+作業ディレクトリは`/Users/oki2a24/kaname-shogi`、ブランチは`main`。旧v1観察開始時はHEAD`f850f01`で`origin/main`より2コミット先行、未追跡`.antigravity/tasks/`があった。開始時Git状態・Ruff・hooksPathと実測は[旧v1観察の学習記録](learning/cli-legacy-v1-clock-completion-observation.md)に記録した。次セッションでは必ずGit状態を読み直す。ShogiHome実践検証の引き継ぎを作成し、画面確認と実機検証はまだ始めていない。未追跡`.antigravity/tasks/`は変更していない。製品コード・テスト・設定は変更しておらず、自動テストも実行していない。
 
 前テーマの観察開始時点のGit状態は[学習記録](learning/cli-clocked-record-roundtrip.md)に記録した。前テーマの開始時状態、固定例、本人回答・補足は[学習記録](learning/cli-record-load-failure.md)、開始背景は[引き継ぎ](handover-cli-record-load-failure.md)に記録した。選定済み観察テーマの条件・実施手順・再開用プロンプトは[今回の引き継ぎ](handover-cli-record-load-failure-observation.md)に記録した。
 
