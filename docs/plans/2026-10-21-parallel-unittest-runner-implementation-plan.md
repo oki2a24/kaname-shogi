@@ -72,8 +72,10 @@
 - 変更: 本計画へ実装・検証・未検証・独立レビューの実績を追記
 - 変更: 新しい学習・実施記録と `docs/README.md` の索引
 - 変更: `docs/resume.md` の現在地を更新
+- 変更: `AGENTS.md` にAI作業者向けの通常テストコマンドを記録
 
 - [x] READMEに並列コマンドを日常の高速な全体確認として説明し、逐次 `unittest discover` も互換確認・診断用に残した。
+- [x] `AGENTS.md` にPython全体テストの通常コマンドとして並列ランナーを記録し、逐次コマンドを共有状態・順序依存・並列差の診断に使う条件を記載した。
 - [x] 並列実行を3回行い、637件で20.104秒・20.308秒・20.089秒。標準逐次版も637件で53.318秒で成功した。並列平均は20.167秒で、逐次比約2.64倍・経過時間約62.2%短縮。
 - [x] 逐次全体テスト、Ruff import/format check/lint、`git diff --check` を実行した。
 - [x] Refactorの要否を記録し、独立レビューをCritical / Important / Minorで記録する。初回のCritical 0・Important 3・Minor 2、再レビューのCritical 0・Important 1・Minor 0（空initializer）、続くCritical 0・Important 1・Minor 1（全体0件suite・計測値）、カラーskipとRed記録に対するCritical 0・Important 0・Minor 2を順に解消した。最終再レビューはCritical 0 / Important 0 / Minor 0で、Refactor追加は不要と判断した。
