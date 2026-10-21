@@ -4,7 +4,7 @@
 
 2026-10-21、既存のPythonユニットテスト全体が約50秒かかる状況を受け、テストを削らずに実行時間を短縮できるか調べ、標準ライブラリだけの並列ランナーを実装した。実装計画は本人が承認した。
 
-対象はテストモジュールの発見・実行方法と開発者向け案内。製品コード、テストの意味、既存テストの除外・skip・filterは変更していない。既存の逐次 `unittest discover` も維持した。作業は専用worktreeのブランチ `codex/parallel-unittest-runner` で行い、main統合は別途承認を待つ。
+対象はテストモジュールの発見・実行方法と開発者向け案内。製品コード、テストの意味、既存テストの除外・skip・filterは変更していない。既存の逐次 `unittest discover` も維持した。作業は専用worktreeのブランチ `codex/parallel-unittest-runner` で行い、実装・レビュー後に別途承認を得てmainへ統合した。取り込み先の検証結果を以下に記録する。
 
 ## 実装前の調査と予備計測
 
@@ -46,13 +46,13 @@ worktreeは当初 `.venv` を持たず、実行ファイル経由の既存テス
 
 ## 検証・レビュー・統合状態
 
-専用契約テスト14件、並列全体実行3回（各637件成功）、標準逐次全体実行1回（637件成功）、Ruff import整理・format・check、`git diff --check` を実行した。初回独立レビューはCritical 0 / Important 3 / Minor 2で、いずれも対応した。再レビューでCritical 0 / Important 1 / Minor 0（空initializer）、その後の再レビューでCritical 0 / Important 1 / Minor 1（全体0件suiteを成功扱いする問題、および計測値の古さ）、次のレビューでCritical 0 / Important 0 / Minor 2（カラー出力でのskip数解析、Red確認の記録範囲）を指摘された。カラー出力の回帰は修正前に失敗、workerで色を無効化した後に成功した。記録文もRed確認の事実に合わせて修正した。変更した文書の相対リンク647件は参照先欠落0件。最終独立レビューはCritical 0 / Important 0 / Minor 0で、レビュー指摘の未対応はない。AI向けの継続利用方針を `AGENTS.md` に追記し、`f534e6b` にコミットした。READMEの人間向け案内とAGENTSのAI向け指示は作業ブランチ上で両方揃った。main統合は別途本人承認待ち。
+専用契約テスト14件、並列全体実行3回（各637件成功）、標準逐次全体実行1回（637件成功）、Ruff import整理・format・check、`git diff --check` を実行した。初回独立レビューはCritical 0 / Important 3 / Minor 2で、いずれも対応した。再レビューでCritical 0 / Important 1 / Minor 0（空initializer）、その後の再レビューでCritical 0 / Important 1 / Minor 1（全体0件suiteを成功扱いする問題、および計測値の古さ）、次のレビューでCritical 0 / Important 0 / Minor 2（カラー出力でのskip数解析、Red確認の記録範囲）を指摘された。カラー出力の回帰は修正前に失敗、workerで色を無効化した後に成功した。記録文もRed確認の事実に合わせて修正した。変更した文書の相対リンク647件は参照先欠落0件。最終独立レビューはCritical 0 / Important 0 / Minor 0で、レビュー指摘の未対応はない。AI向けの継続利用方針を `AGENTS.md` に追記し、`f534e6b` にコミットした。READMEの人間向け案内とAGENTSのAI向け指示をmainに統合した後、2026-10-21に承認を受けて `c89128a` までfast-forwardした。取り込み先で `PYTHONDONTWRITEBYTECODE=1 python3 scripts/run_tests_parallel.py` を再実行し、637件・41モジュールが19.843秒で成功。main側の未追跡ファイルは保持した。最後の理解確認への本人回答はまだない。
 
 Refactorでは、発見・worker実行・CLI集約を分けた構成を維持した。テスト、実装、README間に追加の抽象化は必要と判断しなかった。
 
 ## 最後の理解確認
 
-main統合後、取り込み先の検証が完了してから一問ずつ行う。本人回答はまだなく、理解済みとしては記録しない。
+main統合後の取り込み先全体テストは成功済み。確認問題: 並列実行が速くなっても、逐次実行コマンドをREADMEに残して併用する理由は何か。本人回答はまだなく、理解済みとしては記録しない。
 
 ## 振り返り・次回への問い
 

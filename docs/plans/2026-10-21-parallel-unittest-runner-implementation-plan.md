@@ -80,9 +80,10 @@
 - [x] 逐次全体テスト、Ruff import/format check/lint、`git diff --check` を実行した。
 - [x] Refactorの要否を記録し、独立レビューをCritical / Important / Minorで記録する。初回のCritical 0・Important 3・Minor 2、再レビューのCritical 0・Important 1・Minor 0（空initializer）、続くCritical 0・Important 1・Minor 1（全体0件suite・計測値）、カラーskipとRed記録に対するCritical 0・Important 0・Minor 2を順に解消した。最終再レビューはCritical 0 / Important 0 / Minor 0で、Refactor追加は不要と判断した。
 - [x] 計画・学習記録・索引・READMEのリンクと現在状態を確認した。変更した文書の相対リンク647件を確認し、欠落は0件。
-- [x] 差分内容を確認し、対象7ファイルを通常フック経由でコミットした（`0016700`）。フックのRuff format check・lintは成功。main統合は別途本人の承認を待つ。
+- [x] 差分内容を確認し、対象7ファイルを通常フック経由でコミットした（`0016700`）。フックのRuff format check・lintは成功。続くAI指示更新とmain統合の記録は次の項目に記載した。
 - [x] 追加要望を受けてAI向けの通常テスト方針を `AGENTS.md` に追記し、実施記録・再開案内と併せて通常フック経由でコミットした（`f534e6b`）。
+- [x] 本人承認後に `codex/parallel-unittest-runner` をmainへfast-forward統合（統合先 `c89128a`）。取り込み先で並列全体実行を行い、637件・41モジュールが19.843秒で成功した。mainに存在した `.antigravity/tasks/TODO-codex-controlled-iterative-search-command.md` は保持した。
 
 ## 完了条件
 
-全テストを保持したまま、READMEに記載された並列コマンドが再現可能である。並列全体テスト3回以上と従来の逐次全体テストが成功し、両方のテスト数が一致する。失敗したworkerの診断と終了値が呼出し元に届く。Ruff・差分検査・独立レビュー・文書確認が完了している。main統合は別途本人承認を待つ。
+全テストを保持したまま、READMEに記載された並列コマンドが再現可能である。並列全体テスト3回以上と従来の逐次全体テストが成功し、両方のテスト数が一致する。失敗したworkerの診断と終了値が呼出し元に届く。Ruff・差分検査・独立レビュー・文書確認が完了し、本人承認後にmainへ統合して取り込み先の並列全体テストも成功した。最後の理解確認は学習記録へ回答を追記する前に一問ずつ行う。
