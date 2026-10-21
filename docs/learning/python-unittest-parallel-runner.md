@@ -45,7 +45,7 @@ worktreeは当初 `.venv` を持たず、実行ファイル経由の既存テス
 
 ## 検証・レビュー・統合状態
 
-専用契約テスト14件、並列全体実行3回（各637件成功）、標準逐次全体実行1回（637件成功）、Ruff import整理・format・check、`git diff --check` を実行した。初回独立レビューはCritical 0 / Important 3 / Minor 2で、いずれも対応した。再レビューでCritical 0 / Important 1 / Minor 0（空initializer）、その後の再レビューでCritical 0 / Important 1 / Minor 1（全体0件suiteを成功扱いする問題、および計測値の古さ）、次のレビューでCritical 0 / Important 0 / Minor 2（カラー出力でのskip数解析、Red確認の記録範囲）を指摘された。カラー出力の回帰は修正前に失敗、workerで色を無効化した後に成功した。記録文もRed確認の事実に合わせて修正した。変更した文書の相対リンク647件は参照先欠落0件。最終独立レビューはCritical 0 / Important 0 / Minor 0で、レビュー指摘の未対応はない。作業ブランチへのコミットとmain統合承認は未実施。
+専用契約テスト14件、並列全体実行3回（各637件成功）、標準逐次全体実行1回（637件成功）、Ruff import整理・format・check、`git diff --check` を実行した。初回独立レビューはCritical 0 / Important 3 / Minor 2で、いずれも対応した。再レビューでCritical 0 / Important 1 / Minor 0（空initializer）、その後の再レビューでCritical 0 / Important 1 / Minor 1（全体0件suiteを成功扱いする問題、および計測値の古さ）、次のレビューでCritical 0 / Important 0 / Minor 2（カラー出力でのskip数解析、Red確認の記録範囲）を指摘された。カラー出力の回帰は修正前に失敗、workerで色を無効化した後に成功した。記録文もRed確認の事実に合わせて修正した。変更した文書の相対リンク647件は参照先欠落0件。最終独立レビューはCritical 0 / Important 0 / Minor 0で、レビュー指摘の未対応はない。実装・検証・レビュー記録はコミット `0016700` に含まれ、再開案内と実施完了チェックの追記は後続の文書コミットに反映する。main統合は別途本人承認待ち。
 
 Refactorでは、発見・worker実行・CLI集約を分けた構成を維持した。テスト、実装、README間に追加の抽象化は必要と判断しなかった。
 

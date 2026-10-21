@@ -78,7 +78,7 @@
 - [x] 逐次全体テスト、Ruff import/format check/lint、`git diff --check` を実行した。
 - [x] Refactorの要否を記録し、独立レビューをCritical / Important / Minorで記録する。初回のCritical 0・Important 3・Minor 2、再レビューのCritical 0・Important 1・Minor 0（空initializer）、続くCritical 0・Important 1・Minor 1（全体0件suite・計測値）、カラーskipとRed記録に対するCritical 0・Important 0・Minor 2を順に解消した。最終再レビューはCritical 0 / Important 0 / Minor 0で、Refactor追加は不要と判断した。
 - [x] 計画・学習記録・索引・READMEのリンクと現在状態を確認した。変更した文書の相対リンク647件を確認し、欠落は0件。
-- [ ] 差分内容を確認し、明示したファイルだけを通常フックを通してコミットする。main統合は別途本人の承認を待つ。
+- [x] 差分内容を確認し、対象7ファイルを通常フック経由でコミットした（`0016700`）。フックのRuff format check・lintは成功。main統合は別途本人の承認を待つ。
 
 ## 完了条件
 
