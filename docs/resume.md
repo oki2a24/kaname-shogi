@@ -2,19 +2,11 @@
 
 ## 現在地
 
-2026-10-21更新。前テーマ「承認済みCLI設計から実装計画を作る」は、その後の明示的な実装指示・main取り込み承認を経て、Task 1〜5の実装・検証・独立レビュー・main統合・取り込み先検証まで完了した。最後の理解確認の回答と補足は[学習記録](learning/cli-search-time-control-plan.md)へ記録済み。テーマ「時計つき棋譜を短いCLI操作で保存・再読込する」は2026-10-20にランダム方式で一回観察し、保存前後のJSON全体の一致と、保存・読込・人間入力時間を消費しないことを[学習記録](learning/cli-clocked-record-roundtrip.md)へ記録した。
+2026-10-21更新。テーマ「ShogiHomeで全幅最大4手とαβ最大4手を実践検証する」は、合意した二局の観察と最後の理解確認まで完了した。実測・証拠・限界と本人の振り返りは[学習記録](learning/shogihome-four-ply-practice-verification.md)にある。元の主線に未完了の帰還目標はない。CLI時計の設計・実装と予定していた観察も派生した補助テーマとして完了した。
 
-テーマ「読込失敗時に棋譜と時計を保つ理由を固定例で確認する」は、固定例の紙上照合と2026-10-20の最後の理解確認まで完了した。本人の回答「不正なまま受け入れるとゲームが成立しない可能性があるため」と補足を[学習記録](learning/cli-record-load-failure.md)へ分けて記録した。今回のテーマ「CLIで読込失敗時の表示と状態保持を一回観察する」は、2026-10-20のCLI観察と前後JSON比較、2026-10-21の最後の理解確認回答・補足の記録まで完了した。[学習記録](learning/cli-record-load-failure-observation.md)に実出力、JSON比較、本人回答とアシスタント補足を分けて記録した。製品コード・テスト・設定・承認済み設計は変更しておらず、自動テストも実行していない。
+本人は次の大テーマ「駒得以外の局面評価を一項目から学び設計する」を選定した。テーマ内で非駒得評価の一項目を選び、学習・設計するところから始める。評価要素、具体設計、実装範囲は未決であり、テーマ選定を設計承認・実装承認と扱わない。次セッション用の背景・再開プロンプトは[引き継ぎ](handover-non-material-position-evaluation.md)、主線と任意候補は[学習ロードマップ](next-topics.md)を参照する。本人の序盤テンポに関する改善仮説は別の任意候補であり、今回の範囲に含めない。
 
-2026-10-21、本人はCLI時計の残る予定観察「時計のない旧v1棋譜を通常CLIで読み、起動時計の補完を一回観察する」を選定し、その後にShogiHomeで全幅最大4手・αβ最大4手を実践検証する順序も指定した。旧v1観察は同日に通常CLIで一回実施し、実出力・直後に保存したJSON・確認できた範囲と限界に加え、最後の理解確認の本人回答とアシスタント補足を[学習記録](learning/cli-legacy-v1-clock-completion-observation.md)へ記録して完了した。補助テーマとして行ったCLI時計観察から、元の主線で未確認だったShogiHome実践検証へ戻る。本人指定の次テーマの背景・開始条件・再開プロンプトは[今回の引き継ぎ](handover-shogihome-four-ply-practice-verification.md)、全体の位置づけは[学習ロードマップ](next-topics.md)を参照する。ShogiHomeの画面・接続・対局はまだ操作していない。
-
-作業ディレクトリは`/Users/oki2a24/kaname-shogi`、ブランチは`main`。旧v1観察開始時はHEAD`f850f01`で`origin/main`より2コミット先行、未追跡`.antigravity/tasks/`があった。開始時Git状態・Ruff・hooksPathと実測は[旧v1観察の学習記録](learning/cli-legacy-v1-clock-completion-observation.md)に記録した。次セッションでは必ずGit状態を読み直す。ShogiHome実践検証の引き継ぎを作成し、画面確認と実機検証はまだ始めていない。未追跡`.antigravity/tasks/`は変更していない。製品コード・テスト・設定は変更しておらず、自動テストも実行していない。
-
-前テーマの観察開始時点のGit状態は[学習記録](learning/cli-clocked-record-roundtrip.md)に記録した。前テーマの開始時状態、固定例、本人回答・補足は[学習記録](learning/cli-record-load-failure.md)、開始背景は[引き継ぎ](handover-cli-record-load-failure.md)に記録した。選定済み観察テーマの条件・実施手順・再開用プロンプトは[今回の引き継ぎ](handover-cli-record-load-failure-observation.md)に記録した。
-
-仕様の正本は[承認済み設計](plans/2026-10-20-cli-search-time-control-design.md)、本人回答・個別合意は[設計学習記録](learning/cli-search-time-control-design.md)。共通`game_search.search_move`・予算計算・`SearchControl`を再利用し、コンピュータ手の事前詰み/全合法手生成、完了深さ/手の由来表示を追加していない。CLIが時計・返却後時間切れ判定・時計つき保存を担う。USI製品経路、共通探索、予算式、設定値は変更していない。
-
-前テーマの開始背景は[引き継ぎ](handover-cli-clocked-record-roundtrip.md)、観察実績・本人回答・補足は[学習記録](learning/cli-clocked-record-roundtrip.md)に記録した。紙上固定例と本人回答・補足は[前回の学習記録](learning/cli-record-load-failure.md)と[開始時の引き継ぎ](handover-cli-record-load-failure.md)を参照する。今回の実測出力とJSON比較は[今回の学習記録](learning/cli-record-load-failure-observation.md)、開始条件・手順は[今回の引き継ぎ](handover-cli-record-load-failure-observation.md)に記録した。
+引き継ぎ準備開始時の状態は作業ディレクトリ /Users/oki2a24/kaname-shogi、ブランチ main、HEAD 1b837d8（origin/mainより3コミット先行）。関連文書の未コミット変更と未追跡 .antigravity/tasks/ があった。今回、関連する学習記録・ロードマップ・索引・再開案内・引き継ぎを確認してコミットする。.antigravity/tasks/ は変更しない。コード・設定変更はなく、自動テストは実行していない。次セッションでは必ず実際のGit状態を確認し、この記録の時点と照合する。
 
 ## 以前に完了した観察テーマ（時間制御付き探索コマンド）
 
@@ -39,4 +31,5 @@
 直近の製品検証は取り込み先80e3db0で全体546件30.083秒OK、Ruff63ファイル整形確認・check、差分検査成功。代表変異11件と独立全体レビューは取り込み前の実績（最終Critical/Important/Minor 0/0/0）。これらを新セッションの実測として流用しない。以降は文書変更だけで、製品テストは再実行していない。過去の設計と反復深化補強の履歴は学習記録と各開始時引き継ぎからたどる。
 
 ## 次にすること
-最後の理解確認への本人回答と補足を記録し、今回のテーマは完了した。次にすることは[次テーマ候補](next-topics.md)から本人が選ぶこと。選定までは新しい学習・設計・実装を始めない。今回のテーマはコード変更・テスト実行・設定変更・承認済み設計変更を含まない。
+
+新しいセッションでGit状態と[引き継ぎ](handover-non-material-position-evaluation.md)を照合し、大テーマ「駒得以外の局面評価を一項目から学び設計する」を学習から始める。候補要素や設計を先回りで固定せず、一項目を選び、改善仮説と独立した期待値を持つ小さな局面を設計する。具体的な範囲・表現・確認方法を提示し、実装計画が必要なら明示承認を得る。承認前にコード・テストを変更しない。本人の理解確認は一問ずつ行い、回答を待つ。

@@ -102,7 +102,7 @@ python3 -m kaname_shogi.search.compare --sfen "8k/9/9/9/9/9/9/9/K8 b - 1"
 - **未対応:** 千日手、持将棋、入玉、自動保存、反則による勝敗判定。CLIの時計はコンピュータ側だけで、人間側の時間は計りません。
 - **エンジンの強さ:** 評価方式は同点候補からランダムに選ぶことがあります。通常対局で選べる探索は最大4手ですが、棋力向上や一定の強さは保証しません。全幅四手は合法手の多い局面で長時間かかる場合があります。
 - **コンピュータ同士の対局:** 手数上限はありません。詰み、合法手なし、または `Ctrl-C` で停止します。
-- **ShogiHome:** Mac版1.28.1・1.28.2の限られた局面と設定で確認しました。TwoPlyMaterialの平手対局一例では20回応答し、最大約28.4秒でした。全幅4手・αβ4手はShogiHomeで未確認です。時計動作や応答時間の上限、他の局面・版での互換性は保証しません。詳しくは[使用感確認の記録](docs/learning/two-ply-final-check.md)と[時計付き停止の確認記録](docs/learning/clock-stop-real-check-conditions.md)、[USI応答の仕様](docs/knowledge/usi-engine-response.md)を参照してください。
+- **ShogiHome:** Mac版1.28.1・1.28.2の限られた局面と設定で確認しました。TwoPlyMaterialの平手対局一例では20回応答し、最大約28.4秒でした。Version 1.28.2では平手初期局面・人間先手・双方10分＋30秒で全幅4手とαβ4手を各一局実施し、同じ初手三手への異なる応答をUSIログと棋譜で照合しました。最初の三応答は各方式とも約60秒・54秒・49秒で、両局とも生成AIが操作した人間側の切れ負けでした。この二局から方式の強さや速度の優劣、全局面の正しさ、応答時間の上限は判断できません。他の局面・版との互換性も保証しません。詳しくは[四手方式の実践確認記録](docs/learning/shogihome-four-ply-practice-verification.md)、[使用感確認の記録](docs/learning/two-ply-final-check.md)、[時計付き停止の確認記録](docs/learning/clock-stop-real-check-conditions.md)、[USI応答の仕様](docs/knowledge/usi-engine-response.md)を参照してください。
 
 ## CLI操作
 
