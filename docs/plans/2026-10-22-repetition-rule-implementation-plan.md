@@ -248,4 +248,5 @@
 - 独立した隔離変異7件（手番キー除外、敗者先手固定、古い判定窓、共有スナップショット、読込履歴リセット、不正手の履歴加算、盤上配置位置の無視）は、各対応テストの期待アサーションで失敗した。位置キーから盤上配置を無視する変異は `test_repetition_key_includes_board_hands_and_turn` 単独で確認し、読み込みエラーは検出成功に数えていない。
 - Refactor確認では、責任ごとの実装がまとまっており、追加抽象化の利益を示す重複がないため構造変更をしなかった。検出範囲、代表ケース、単独/全体の補完、未検証事項は[学習記録](../learning/repetition-rule-design.md)に記録した。
 - 初回独立レビューの文書Important指摘をREADME・索引・承認記録で修正し、配置位置テストを補強した。最終独立レビューはCritical 0 / Important 0 / Minor 2。Minorは昇格状態・複数枚の持ち駒差を個別検査するテストと、load失敗後の追跡器保持を振る舞いで検査するテストで、学習記録へDeferredとして記録した。
-- レビュー済み実装・テスト・文書は `4080c4a`（`feat: support repetition rule in normal CLI`）として `codex/repetition-rule` にコミットした。mainへの取り込みと取り込み先検証は別承認後に行う。
+- レビュー済み実装・テスト・文書は `4080c4a`（`feat: support repetition rule in normal CLI`）と `7985cb9`（実装記録）として `codex/repetition-rule` にコミットした。本人承認後、mainを `1b69147` から `7985cb9` へfast-forward統合した。統合先の全テスト661件・42モジュール、Ruff整形確認78ファイル・check、差分検査に成功した。originへのpushは行っていない。
+- main統合と取り込み先の検証を完了した。最後の理解確認はこれから一問だけ行い、回答を学習記録へ追記する。
