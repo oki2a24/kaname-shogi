@@ -8,7 +8,8 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from kaname_shogi import cli, game_search
-from kaname_shogi.cli_clock import CliClockSettings
+from kaname_shogi.cli_clock import CliClock, CliClockSettings
+from kaname_shogi.cli_session import CliSession
 from kaname_shogi.display import render_position
 from kaname_shogi.game_record import GameRecord, RecordedDrop, RecordedMove
 from kaname_shogi.model import (
@@ -26,6 +27,11 @@ from kaname_shogi.movegen import (
     MoveSelectionPolicy,
     SearchCompletion,
     SearchResult,
+)
+from kaname_shogi.repetition import (
+    RepetitionOutcome,
+    RepetitionOutcomeKind,
+    RepetitionTracker,
 )
 from kaname_shogi.search import alpha_beta, minimax
 from kaname_shogi.sfen import parse_sfen
@@ -953,6 +959,160 @@ class GameplayTests(unittest.TestCase):
             ),
         )
 
+    def test_loading_record_rebuilds_repetition_history(self):
+        """4回目通常千日手の読込後も、履歴を引き継いで指し継ぐ。
+
+        読込時に追跡器を開始局面へ戻すと、次の再出現を5回目として終局できない。
+        """
+        loaded_record = self._ordinary_cycle_record(3)
+
+        with TemporaryDirectory() as directory:
+            path = f"{directory}/fourfold.json"
+            loaded_record.save(path)
+            inputs = ScriptedInput(
+                [f"load {path}", *self._ordinary_human_cycle(), "resign"]
+            )
+            outputs = []
+
+            with patch.object(
+                cli, "create_initial_position", return_value=self._repetition_position()
+            ):
+                record = cli.run_game(
+                    mode=cli.GameMode.HUMAN_VS_HUMAN,
+                    input_fn=inputs,
+                    output_fn=outputs.append,
+                )
+
+        self.assertEqual(len(record.moves), 16)
+        self.assertEqual(inputs.calls, 5)
+        self.assertIn(
+            "同一局面が打開後に再出現したため、千日手が成立しました。対局を終了します。",
+            outputs,
+        )
+
+    def test_loading_record_at_repetition_end_does_not_accept_move(self):
+        """千日手成立位置の棋譜を読んだら次の指し手を受け付けない。
+
+        保存時点ですでに終局した棋譜の後から、余分な成功手を記録する誤りを検出する。
+        """
+        loaded_record = self._ordinary_cycle_record(4)
+
+        with TemporaryDirectory() as directory:
+            path = f"{directory}/terminal.json"
+            loaded_record.save(path)
+            inputs = ScriptedInput([f"load {path}", "resign"])
+            outputs = []
+
+            with patch.object(
+                cli, "create_initial_position", return_value=self._repetition_position()
+            ):
+                record = cli.run_game(
+                    mode=cli.GameMode.HUMAN_VS_HUMAN,
+                    input_fn=inputs,
+                    output_fn=outputs.append,
+                )
+
+        self.assertEqual(len(record.moves), 16)
+        self.assertEqual(inputs.calls, 1)
+        self.assertIn(
+            "同一局面が打開後に再出現したため、千日手が成立しました。対局を終了します。",
+            outputs,
+        )
+
+    def test_loading_post_terminal_record_preserves_current_session(self):
+        """終局後の続きがある棋譜は拒否し、読込前の棋譜と時計を保つ。
+
+        過去のv1保存を黙って受理したり、候補読込の失敗で現在状態を失ったりする誤りを
+        検出する。
+        """
+        post_terminal_record = self._ordinary_cycle_record(4)
+        post_terminal_record.apply_move(Square(4, 9), Square(4, 8))
+        initial_remaining_ns = _TEST_CLOCK_SETTINGS.initial_time_ms * 1_000_000
+        expected_clock = CliClock(
+            _TEST_CLOCK_SETTINGS,
+            initial_remaining_ns,
+            initial_remaining_ns - 125_000_000,
+        )
+
+        with TemporaryDirectory() as directory:
+            invalid_path = f"{directory}/post-terminal.json"
+            preserved_path = f"{directory}/preserved.json"
+            post_terminal_record.save(invalid_path)
+            inputs = ScriptedInput(
+                [
+                    "move 4 9 4 8",
+                    f"load {invalid_path}",
+                    f"save {preserved_path}",
+                    "resign",
+                ]
+            )
+            outputs = []
+            clock_call = 0
+
+            def now_ns():
+                nonlocal clock_call
+                turn_index, within_turn = divmod(clock_call, 2)
+                clock_call += 1
+                started_ns = (turn_index + 1) * 1_000_000_000
+                return started_ns + (
+                    (turn_index + 1) * 125_000_000 if within_turn else 0
+                )
+
+            with (
+                patch.object(
+                    cli,
+                    "create_initial_position",
+                    return_value=self._repetition_position(),
+                ),
+                patch.object(
+                    game_search,
+                    "search_move",
+                    return_value=SearchResult(
+                        SearchCompletion.COMPLETE,
+                        BoardMove(Square(5, 1), Square(6, 1), False),
+                    ),
+                ),
+            ):
+                record = cli.run_game(
+                    mode=cli.GameMode.HUMAN_VS_COMPUTER,
+                    input_fn=inputs,
+                    output_fn=outputs.append,
+                    clock_settings=_TEST_CLOCK_SETTINGS,
+                    time_config=_TEST_TIME_CONFIG,
+                    now_ns=now_ns,
+                )
+
+            preserved_session = CliSession.load(preserved_path)
+
+        self.assertEqual(
+            record.moves,
+            (
+                RecordedMove(Square(4, 9), Square(4, 8), False),
+                RecordedMove(Square(5, 1), Square(6, 1), False),
+            ),
+        )
+        self.assertEqual(preserved_session.record.moves, record.moves)
+        self.assertEqual(preserved_session.clock, expected_clock)
+        self.assertTrue(any(line.startswith("エラー：") for line in outputs))
+
+    def test_saved_payload_has_no_repetition_result_field(self):
+        """棋譜v1保存は開始局面と指し手だけを保ち、千日手結果を追加しない。
+
+        判定結果を履歴と二重保存して読込時の状態が食い違う形式変更を検出する。
+        """
+        payload = self._ordinary_cycle_record(3).to_payload()
+
+        self.assertEqual(set(payload), {"format", "initial_position", "moves"})
+        self.assertEqual(payload["format"], "kaname-shogi-game-record-v1")
+
+    def _ordinary_cycle_record(self, cycle_count):
+        """通常循環を指定回数再生した独立したGameRecordを作る。"""
+        record = GameRecord(self._repetition_position())
+        for _ in range(cycle_count):
+            for move in self._ordinary_moves():
+                record.apply_move(move.source, move.destination, promote=move.promote)
+        return record
+
     def test_reprompts_without_replacing_record_after_load_error(self):
         """load失敗は元の記録を保ち、同じ人間手番で再入力する。"""
         with TemporaryDirectory() as directory:
@@ -1282,3 +1442,240 @@ class GameplayTests(unittest.TestCase):
         self.assertEqual(record.moves, ())
         self.assertEqual(record.current_position.side_to_move, Side.SENTE)
         self.assertIn("詰みです。後手の勝ちです。", outputs)
+
+    @staticmethod
+    def _repetition_position():
+        """通常循環と連続王手循環を試せる最小局面を作る。"""
+        board = Board()
+        board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(4, 9), Piece(PieceType.ROOK, Side.SENTE))
+        return Position(board, Side.SENTE)
+
+    @staticmethod
+    def _ordinary_human_cycle():
+        """人間対人間で使う通常循環の入力を返す。"""
+        return (
+            "move 4 9 4 8",
+            "move 5 1 6 1",
+            "move 4 8 4 9",
+            "move 6 1 5 1",
+        )
+
+    @staticmethod
+    def _ordinary_moves():
+        """自動対局で使う通常循環の合法手を返す。"""
+        return (
+            BoardMove(Square(4, 9), Square(4, 8), False),
+            BoardMove(Square(5, 1), Square(6, 1), False),
+            BoardMove(Square(4, 8), Square(4, 9), False),
+            BoardMove(Square(6, 1), Square(5, 1), False),
+        )
+
+    def test_fourfold_ordinary_position_displays_continuation_and_accepts_move(self):
+        """通常出現4回目は案内後も指し継ぎ、5回目で入力を止める。
+
+        4回目で終了して次の入力を捨てる誤り、または5回目で終局せず投了入力まで
+        読んでしまう誤りを検出する。
+        """
+        inputs = ScriptedInput(self._ordinary_human_cycle() * 4 + ("resign",))
+        outputs = []
+
+        with patch.object(
+            cli,
+            "create_initial_position",
+            return_value=self._repetition_position(),
+            create=True,
+        ):
+            record = cli.run_game(
+                mode=cli.GameMode.HUMAN_VS_HUMAN,
+                input_fn=inputs,
+                output_fn=outputs.append,
+            )
+
+        self.assertEqual(len(record.moves), 16)
+        self.assertEqual(inputs.calls, 16)
+        self.assertIn("同一局面が4回現れました。対局を続けます。", outputs)
+        self.assertIn(
+            "同一局面が打開後に再出現したため、千日手が成立しました。対局を終了します。",
+            outputs,
+        )
+
+    def test_perpetual_check_repetition_displays_checker_loss(self):
+        """連続王手で4回目に至ると王手側を敗者として一局を終える。
+
+        王手を受けた側を敗者にしたり、通常千日手として続行したりする誤りを検出する。
+        """
+        cycle = (
+            "move 4 9 5 9",
+            "move 5 1 4 1",
+            "move 5 9 4 9",
+            "move 4 1 5 1",
+        )
+        inputs = ScriptedInput(cycle * 3 + ("resign",))
+        outputs = []
+
+        with patch.object(
+            cli,
+            "create_initial_position",
+            return_value=self._repetition_position(),
+            create=True,
+        ):
+            record = cli.run_game(
+                mode=cli.GameMode.HUMAN_VS_HUMAN,
+                input_fn=inputs,
+                output_fn=outputs.append,
+            )
+
+        self.assertEqual(len(record.moves), 12)
+        self.assertEqual(inputs.calls, 12)
+        self.assertIn("連続王手の千日手です。先手の負けです。後手の勝ちです。", outputs)
+        self.assertNotIn("同一局面が4回現れました。対局を続けます。", outputs)
+
+    def test_unresolved_double_perpetual_check_stops_without_winner(self):
+        """双方連続王手の未裁定結果は勝者を作らず一局を停止する。
+
+        CLIが未裁定結果を投了や通常千日手へ変換し、勝敗を表示する誤りを検出する。
+        """
+        inputs = ScriptedInput(["move 7 7 7 6", "move 3 3 3 4"])
+        outputs = []
+        outcome = RepetitionOutcome(
+            RepetitionOutcomeKind.UNRESOLVED_DOUBLE_PERPETUAL_CHECK
+        )
+
+        with patch.object(
+            RepetitionTracker, "add_position", return_value=outcome
+        ) as add_position:
+            record = cli.run_game(
+                mode=cli.GameMode.HUMAN_VS_HUMAN,
+                input_fn=inputs,
+                output_fn=outputs.append,
+            )
+
+        self.assertEqual(len(record.moves), 1)
+        self.assertEqual(inputs.calls, 1)
+        self.assertEqual(add_position.call_count, 1)
+        self.assertIn(
+            "双方が連続王手に該当する局面です。勝者を判定せず対局を停止します。",
+            outputs,
+        )
+        self.assertFalse(any("勝ちです。" in output for output in outputs))
+
+    def test_invalid_move_does_not_advance_repetition_history(self):
+        """不正入力は履歴へ加えず、成功手だけを一度追跡する。
+
+        合法手適用前に履歴を増やしてしまい、再入力時に反復判定をずらす誤りを検出する。
+        """
+        inputs = ScriptedInput(["move 7 7 7 8", "move 7 7 7 6", "resign"])
+        outputs = []
+        positions = []
+        add_position = RepetitionTracker.add_position
+
+        def record_addition(tracker, position):
+            positions.append(position.copy())
+            return add_position(tracker, position)
+
+        with patch.object(RepetitionTracker, "add_position", new=record_addition):
+            record = cli.run_game(
+                mode=cli.GameMode.HUMAN_VS_HUMAN,
+                input_fn=inputs,
+                output_fn=outputs.append,
+            )
+
+        self.assertEqual(len(record.moves), 1)
+        self.assertEqual(inputs.calls, 3)
+        self.assertEqual(len(positions), 1)
+        self.assertIn("エラー：到着マスは出発駒の移動先候補に含まれません", outputs)
+
+    def test_human_vs_computer_repetition_tracks_each_successful_side_once(self):
+        """人間対コンピュータでも実着手のみを先後一回ずつ追跡する。
+
+        人間手だけを記録したり、自動手を二重計上したり、4回目で終了する誤りを検出する。
+        """
+        inputs = ScriptedInput(("move 4 9 4 8", "move 4 8 4 9") * 4)
+        outputs = []
+        computer_moves = (
+            BoardMove(Square(5, 1), Square(6, 1), False),
+            BoardMove(Square(6, 1), Square(5, 1), False),
+        ) * 4
+        search_results = [
+            SearchResult(SearchCompletion.COMPLETE, move) for move in computer_moves
+        ]
+        tracked_positions = []
+        add_position = RepetitionTracker.add_position
+
+        def record_addition(tracker, position):
+            tracked_positions.append(position.copy())
+            return add_position(tracker, position)
+
+        with (
+            patch.object(
+                cli,
+                "create_initial_position",
+                return_value=self._repetition_position(),
+                create=True,
+            ),
+            patch.object(
+                game_search, "search_move", side_effect=search_results
+            ) as search_move,
+            patch.object(RepetitionTracker, "add_position", new=record_addition),
+        ):
+            record = cli.run_game(
+                mode=cli.GameMode.HUMAN_VS_COMPUTER,
+                input_fn=inputs,
+                output_fn=outputs.append,
+                clock_settings=_TEST_CLOCK_SETTINGS,
+                time_config=_TEST_TIME_CONFIG,
+                now_ns=lambda: 0,
+            )
+
+        self.assertEqual(len(record.moves), 16)
+        self.assertEqual(search_move.call_count, 8)
+        self.assertEqual(inputs.calls, 8)
+        self.assertEqual(len(tracked_positions), 16)
+        self.assertIn("同一局面が4回現れました。対局を続けます。", outputs)
+        self.assertIn(
+            "同一局面が打開後に再出現したため、千日手が成立しました。対局を終了します。",
+            outputs,
+        )
+
+    def test_computer_vs_computer_repetition_stops_after_fifth_occurrence(self):
+        """コンピュータ同士でも5回目の通常出現で探索を止める。
+
+        自動手経路が判定部品を通さず対局を続け、追加の探索を実行する誤りを検出する。
+        """
+        inputs = ScriptedInput([])
+        outputs = []
+        moves = self._ordinary_moves() * 4
+        search_results = [
+            SearchResult(SearchCompletion.COMPLETE, move) for move in moves
+        ] + [KeyboardInterrupt()]
+
+        with (
+            patch.object(
+                cli,
+                "create_initial_position",
+                return_value=self._repetition_position(),
+                create=True,
+            ),
+            patch.object(
+                game_search, "search_move", side_effect=search_results
+            ) as search_move,
+        ):
+            record = cli.run_game(
+                mode=cli.GameMode.COMPUTER_VS_COMPUTER,
+                input_fn=inputs,
+                output_fn=outputs.append,
+                clock_settings=_TEST_CLOCK_SETTINGS,
+                time_config=_TEST_TIME_CONFIG,
+                now_ns=lambda: 0,
+            )
+
+        self.assertEqual(len(record.moves), 16)
+        self.assertEqual(search_move.call_count, 16)
+        self.assertEqual(inputs.calls, 0)
+        self.assertIn("同一局面が4回現れました。対局を続けます。", outputs)
+        self.assertIn(
+            "同一局面が打開後に再出現したため、千日手が成立しました。対局を終了します。",
+            outputs,
+        )

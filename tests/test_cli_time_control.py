@@ -23,6 +23,7 @@ from kaname_shogi.model import (
 )
 from kaname_shogi.move import BoardMove
 from kaname_shogi.movegen import MoveSelectionPolicy, SearchCompletion, SearchResult
+from kaname_shogi.repetition import RepetitionTracker
 from kaname_shogi.search_control import SearchControl
 from kaname_shogi.time_management import SearchBudget, TimeManagementConfig
 
@@ -238,6 +239,7 @@ class CliTimeControlTests(unittest.TestCase):
         ):
             updated_clock, should_continue = cli._run_computer_turn(
                 record,
+                RepetitionTracker.from_positions(record.iter_positions()),
                 rng,
                 output,
                 MoveSelectionPolicy.RANDOM,
@@ -343,6 +345,7 @@ class CliTimeControlTests(unittest.TestCase):
                 ):
                     updated_clock, should_continue = cli._run_computer_turn(
                         record,
+                        RepetitionTracker.from_positions(record.iter_positions()),
                         random.Random(20261020),
                         lambda _: None,
                         MoveSelectionPolicy.RANDOM,
@@ -483,6 +486,7 @@ class CliTimeControlTests(unittest.TestCase):
                 ) as search_move:
                     updated_clock, should_continue = cli._run_computer_turn(
                         record,
+                        RepetitionTracker.from_positions(record.iter_positions()),
                         random.Random(20261020),
                         outputs.append,
                         MoveSelectionPolicy.RANDOM,
@@ -550,6 +554,9 @@ class CliTimeControlTests(unittest.TestCase):
                     ):
                         updated_clock, should_continue = cli._run_computer_turn(
                             GameRecord(position),
+                            RepetitionTracker.from_positions(
+                                GameRecord(position).iter_positions()
+                            ),
                             random.Random(20261020),
                             outputs.append,
                             MoveSelectionPolicy.RANDOM,
@@ -594,6 +601,9 @@ class CliTimeControlTests(unittest.TestCase):
         ):
             cli._run_computer_turn(
                 GameRecord(create_initial_position()),
+                RepetitionTracker.from_positions(
+                    GameRecord(create_initial_position()).iter_positions()
+                ),
                 random.Random(20261020),
                 long_outputs.append,
                 MoveSelectionPolicy.RANDOM,
@@ -617,6 +627,9 @@ class CliTimeControlTests(unittest.TestCase):
         ):
             cli._run_computer_turn(
                 GameRecord(create_initial_position()),
+                RepetitionTracker.from_positions(
+                    GameRecord(create_initial_position()).iter_positions()
+                ),
                 random.Random(20261020),
                 submillisecond_outputs.append,
                 MoveSelectionPolicy.RANDOM,
@@ -688,6 +701,7 @@ class CliTimeControlTests(unittest.TestCase):
                 ):
                     updated_clock, should_continue = cli._run_computer_turn(
                         record,
+                        RepetitionTracker.from_positions(record.iter_positions()),
                         random.Random(20261020),
                         outputs.append,
                         MoveSelectionPolicy.RANDOM,
@@ -1160,6 +1174,7 @@ class CliTimeControlTests(unittest.TestCase):
                     with self.assertRaises(type(error)) as raised:
                         cli._run_computer_turn(
                             record,
+                            RepetitionTracker.from_positions(record.iter_positions()),
                             random.Random(20261020),
                             lambda _: None,
                             MoveSelectionPolicy.RANDOM,
@@ -1175,6 +1190,9 @@ class CliTimeControlTests(unittest.TestCase):
             with self.assertRaises(RuntimeError) as raised:
                 cli._run_computer_turn(
                     GameRecord(create_initial_position()),
+                    RepetitionTracker.from_positions(
+                        GameRecord(create_initial_position()).iter_positions()
+                    ),
                     random.Random(20261020),
                     lambda _: None,
                     MoveSelectionPolicy.RANDOM,
@@ -1196,6 +1214,9 @@ class CliTimeControlTests(unittest.TestCase):
             with self.assertRaises(RuntimeError) as raised:
                 cli._run_computer_turn(
                     GameRecord(create_initial_position()),
+                    RepetitionTracker.from_positions(
+                        GameRecord(create_initial_position()).iter_positions()
+                    ),
                     random.Random(20261020),
                     lambda _: None,
                     MoveSelectionPolicy.RANDOM,
@@ -1217,6 +1238,9 @@ class CliTimeControlTests(unittest.TestCase):
             with self.assertRaises(OSError) as raised:
                 cli._run_computer_turn(
                     GameRecord(create_initial_position()),
+                    RepetitionTracker.from_positions(
+                        GameRecord(create_initial_position()).iter_positions()
+                    ),
                     random.Random(20261020),
                     lambda _: None,
                     MoveSelectionPolicy.RANDOM,
@@ -1238,6 +1262,9 @@ class CliTimeControlTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "elapsed_ns"):
                 cli._run_computer_turn(
                     GameRecord(create_initial_position()),
+                    RepetitionTracker.from_positions(
+                        GameRecord(create_initial_position()).iter_positions()
+                    ),
                     random.Random(20261020),
                     lambda _: None,
                     MoveSelectionPolicy.RANDOM,

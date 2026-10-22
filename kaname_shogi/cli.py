@@ -14,6 +14,7 @@ from .game_record import GameRecord
 from .model import BasicPieceType, Side, Square, create_initial_position
 from .move import BoardMove, DropMove, Move
 from .movegen import MoveSelectionPolicy, SearchCompletion, is_game_over
+from .repetition import RepetitionOutcome, RepetitionOutcomeKind, RepetitionTracker
 from .search_control import SearchControl
 from .time_management import (
     TimeManagementConfig,
@@ -464,6 +465,7 @@ def _format_selected_move(move: Move) -> str:
 
 def _run_computer_turn(
     record: GameRecord,
+    repetition_tracker: RepetitionTracker,
     rng: random.Random,
     output_fn: Callable[[str], None],
     move_selection_policy: MoveSelectionPolicy,
@@ -475,6 +477,7 @@ def _run_computer_turn(
 
     引数:
         record: 現在局面と成功手の履歴を保持する対局記録。
+        repetition_tracker: 成功した実着手だけを判定する一局の履歴追跡器。
         rng: 五方式で共有する対局単位の乱数生成器。
         output_fn: 思考開始・結果・盤面を受け取る表示操作。
         move_selection_policy: 一局で固定する五方式の一手選択方針。
@@ -540,8 +543,41 @@ def _run_computer_turn(
 
     output_fn(side_name + "の指し手: " + _format_selected_move(result.move))
     _apply_selected_move(record, result.move)
-    output_fn(render_position(record.current_position))
-    return updated_clock, True
+    position = record.current_position
+    output_fn(render_position(position))
+    outcome = repetition_tracker.add_position(position)
+    should_continue = not _display_repetition_outcome(outcome, output_fn)
+    return updated_clock, should_continue
+
+
+def _display_repetition_outcome(
+    outcome: RepetitionOutcome, output_fn: Callable[[str], None]
+) -> bool:
+    """千日手判定を表示し、現在の一局を終了する結果ならTrueを返す。"""
+    if outcome.kind is RepetitionOutcomeKind.CONTINUE:
+        return False
+    if outcome.kind is RepetitionOutcomeKind.FOURFOLD_CONTINUE:
+        output_fn("同一局面が4回現れました。対局を続けます。")
+        return False
+    if outcome.kind is RepetitionOutcomeKind.REPETITION:
+        output_fn(
+            "同一局面が打開後に再出現したため、千日手が成立しました。対局を終了します。"
+        )
+        return True
+    if outcome.kind is RepetitionOutcomeKind.PERPETUAL_CHECK_LOSS:
+        loser = outcome.losing_side
+        if loser is None:
+            raise ValueError("連続王手負けの結果に敗者がありません")
+        loser_name = "先手" if loser is Side.SENTE else "後手"
+        winner_name = "後手" if loser is Side.SENTE else "先手"
+        output_fn(
+            f"連続王手の千日手です。{loser_name}の負けです。{winner_name}の勝ちです。"
+        )
+        return True
+    if outcome.kind is RepetitionOutcomeKind.UNRESOLVED_DOUBLE_PERPETUAL_CHECK:
+        output_fn("双方が連続王手に該当する局面です。勝者を判定せず対局を停止します。")
+        return True
+    raise ValueError("千日手判定の結果が不正です")
 
 
 def _resignation_message(side_to_move: Side) -> str:
@@ -626,7 +662,7 @@ def run_game(
         now_ns: コンピュータ手の開始・返却時刻を読む同じ単調時計。テストで注入できる。
 
     戻り値:
-        詰み、投了、時間切れ、応答抑制、EOFまたはCtrl-Cで終了した時点の`GameRecord`。
+        詰み、投了、時間切れ、応答抑制、千日手、EOFまたはCtrl-Cで終了した時点の`GameRecord`。
         人間・コンピュータ双方の成功したmove / dropだけを履歴に含め、終了イベントは
         履歴に含めない。
 
@@ -635,10 +671,13 @@ def run_game(
         コンピュータ参加対局は時計を作り、未注入なら時間設定を一度だけ読み込む。
         合法な入力と自動手だけが記録の現在局面と履歴を変更し、形式・合法性・保存・
         読込エラーでは人間の同じ手番で再入力する。`save` は記録と現在時計を一つの
-        ファイルへ保存し、`load` は棋譜と任意の時計の両方を完全検証した後に置き換えて
-        局面を表示する。時計なし旧v1をコンピュータ対局で読む場合は起動初期値から時計を
-        作り、そのことを案内する。
-        `resign` は人間担当側の投了として表示し、局面を変更せず終了する。人間対人間
+        ファイルへ保存し、`load` は棋譜・任意の時計・全指し手から再構成した千日手履歴を
+        検証してからまとめて置き換え、局面を表示する。終局後の手を含む保存棋譜は拒否して
+        現在状態を保ち、終局位置で終わる棋譜は結果表示後に終了する。時計なし旧v1を
+        コンピュータ対局で読む場合は起動初期値から時計を作り、そのことを案内する。
+        `resign` は人間担当側の投了として表示し、局面を変更せず終了する。通常の同一
+        局面4回目は指し継ぎ案内を表示して続行し、打開後の再出現・連続王手負け・
+        双方連続王手の未裁定結果は表示して現在の一局を終了する。人間対人間
         では両側、人間対コンピュータでは先手だけが入力し、コンピュータ対コンピュータ
         では両側が自動手を指す。
 
@@ -660,6 +699,7 @@ def run_game(
             time_config = load_time_management_config()
         clock = CliClock.start(clock_settings)
     record = GameRecord(create_initial_position())
+    repetition_tracker = RepetitionTracker(record.current_position)
     output_fn(render_position(record.current_position))
     try:
         while True:
@@ -673,6 +713,7 @@ def run_game(
                     raise ValueError("コンピュータ対局の時計設定がありません")
                 clock, should_continue = _run_computer_turn(
                     record,
+                    repetition_tracker,
                     rng,
                     output_fn,
                     move_selection_policy,
@@ -696,23 +737,36 @@ def run_game(
                     continue
                 if isinstance(command, LoadCommand):
                     session = CliSession.load(command.path)
-                    record = session.record
+                    candidate_record = session.record
+                    candidate_repetition_tracker = RepetitionTracker.from_positions(
+                        candidate_record.iter_positions()
+                    )
                     if session.clock is None:
                         if mode is GameMode.HUMAN_VS_HUMAN:
-                            clock = None
+                            candidate_clock = None
                         else:
                             if clock_settings is None:
                                 raise ValueError(
                                     "コンピュータ対局の初期時計設定がありません"
                                 )
-                            clock = CliClock.start(clock_settings)
-                            output_fn(
-                                "時計情報がないため、対局開始時に選んだ初期値を使用しました。"
-                            )
+                            candidate_clock = CliClock.start(clock_settings)
                     else:
-                        clock = session.clock
+                        candidate_clock = session.clock
+                    record, repetition_tracker, clock = (
+                        candidate_record,
+                        candidate_repetition_tracker,
+                        candidate_clock,
+                    )
+                    if session.clock is None and clock is not None:
+                        output_fn(
+                            "時計情報がないため、対局開始時に選んだ初期値を使用しました。"
+                        )
                     output_fn("棋譜を読み込みました。")
                     output_fn(render_position(record.current_position))
+                    if _display_repetition_outcome(
+                        repetition_tracker.current_outcome, output_fn
+                    ):
+                        return record
                     continue
                 if isinstance(command, ResignCommand):
                     output_fn(_resignation_message(position.side_to_move))
@@ -721,7 +775,11 @@ def run_game(
             except (ValueError, OSError) as error:
                 output_fn("エラー：" + str(error))
                 continue
-            output_fn(render_position(record.current_position))
+            position = record.current_position
+            output_fn(render_position(position))
+            outcome = repetition_tracker.add_position(position)
+            if _display_repetition_outcome(outcome, output_fn):
+                return record
     except EOFError, KeyboardInterrupt:
         output_fn("入力を終了しました。")
         return record

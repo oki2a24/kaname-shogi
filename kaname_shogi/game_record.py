@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -109,6 +110,36 @@ class GameRecord:
             else:
                 apply_drop(position, move.piece_type, move.destination)
         return position
+
+    def iter_positions(self) -> Iterator[Position]:
+        """開始局面と各成功手直後の独立した局面を順に返す。
+
+        引数:
+            なし。
+
+        戻り値:
+            開始局面を先頭とし、保存した各手を適用した直後の局面を続ける反復子。
+            返す各局面は互いに独立した複製である。
+
+        副作用:
+            対局記録の開始局面・現在局面・指し手列を変更しない。返却した局面への
+            呼び出し側の変更も、他の返却値や記録内部へ伝播しない。
+
+        前提条件:
+            保存済みの手は既存の `apply_move` / `apply_drop` が受理した成功手である。
+            開始局面から一度だけ順に再生し、局面履歴を全件保存せずに読込時などの
+            履歴再構成を線形時間で行うための読み取り操作である。
+        """
+        position = self._initial_position.copy()
+        yield position.copy()
+        for move in self._moves:
+            if isinstance(move, RecordedMove):
+                apply_move(
+                    position, move.source, move.destination, promote=move.promote
+                )
+            else:
+                apply_drop(position, move.piece_type, move.destination)
+            yield position.copy()
 
     def to_payload(self) -> dict:
         """開始局面と履歴を既存v1 JSON形式の辞書へ変換する。

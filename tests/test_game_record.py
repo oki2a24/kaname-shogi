@@ -600,6 +600,146 @@ class GameRecordTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 record.save(path)
 
+    @staticmethod
+    def _position_signature(position):
+        """局面の全盤面・持ち駒・手番を比較可能な値へ写す。"""
+        hand_piece_types = (
+            BasicPieceType.PAWN,
+            BasicPieceType.LANCE,
+            BasicPieceType.KNIGHT,
+            BasicPieceType.SILVER,
+            BasicPieceType.GOLD,
+            BasicPieceType.BISHOP,
+            BasicPieceType.ROOK,
+        )
+        pieces = tuple(
+            (file, rank, piece.piece_type, piece.side)
+            for file in range(1, 10)
+            for rank in range(1, 10)
+            if (piece := position.board.piece_at(Square(file, rank))) is not None
+        )
+        return (
+            position.side_to_move,
+            pieces,
+            tuple(position.sente_hand.count(piece) for piece in hand_piece_types),
+            tuple(position.gote_hand.count(piece) for piece in hand_piece_types),
+        )
+
+    def test_iter_positions_includes_initial_and_each_successful_move(self):
+        """開始局面と成功した盤上移動・駒打ち後を順番に返す。
+
+        読み取り値を現在局面だけにしたり、成り・後手の応手・駒打ちを再生から
+        落としたりする誤りを、手書きの局面列との比較で検出する。
+        """
+        self._require_implementation()
+        board = Board()
+        board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(2, 2), Piece(PieceType.PAWN, Side.SENTE))
+        board.set_piece(Square(8, 6), Piece(PieceType.PAWN, Side.GOTE))
+        initial_position = Position(board, Side.SENTE)
+        initial_position.sente_hand.add(BasicPieceType.PAWN)
+        record = GameRecord(initial_position)
+        record.apply_move(Square(2, 2), Square(2, 1), promote=True)
+        record.apply_move(Square(8, 6), Square(8, 7))
+        record.apply_drop(BasicPieceType.PAWN, Square(4, 4))
+
+        snapshots = list(record.iter_positions())
+        empty_hand = (0, 0, 0, 0, 0, 0, 0)
+        one_sente_pawn = (1, 0, 0, 0, 0, 0, 0)
+        expected = [
+            (
+                Side.SENTE,
+                (
+                    (2, 2, PieceType.PAWN, Side.SENTE),
+                    (5, 1, PieceType.KING, Side.GOTE),
+                    (5, 9, PieceType.KING, Side.SENTE),
+                    (8, 6, PieceType.PAWN, Side.GOTE),
+                ),
+                one_sente_pawn,
+                empty_hand,
+            ),
+            (
+                Side.GOTE,
+                (
+                    (2, 1, PieceType.PRO_PAWN, Side.SENTE),
+                    (5, 1, PieceType.KING, Side.GOTE),
+                    (5, 9, PieceType.KING, Side.SENTE),
+                    (8, 6, PieceType.PAWN, Side.GOTE),
+                ),
+                one_sente_pawn,
+                empty_hand,
+            ),
+            (
+                Side.SENTE,
+                (
+                    (2, 1, PieceType.PRO_PAWN, Side.SENTE),
+                    (5, 1, PieceType.KING, Side.GOTE),
+                    (5, 9, PieceType.KING, Side.SENTE),
+                    (8, 7, PieceType.PAWN, Side.GOTE),
+                ),
+                one_sente_pawn,
+                empty_hand,
+            ),
+            (
+                Side.GOTE,
+                (
+                    (2, 1, PieceType.PRO_PAWN, Side.SENTE),
+                    (4, 4, PieceType.PAWN, Side.SENTE),
+                    (5, 1, PieceType.KING, Side.GOTE),
+                    (5, 9, PieceType.KING, Side.SENTE),
+                    (8, 7, PieceType.PAWN, Side.GOTE),
+                ),
+                empty_hand,
+                empty_hand,
+            ),
+        ]
+
+        self.assertEqual([self._position_signature(p) for p in snapshots], expected)
+
+    def test_iter_positions_returns_independent_snapshots(self):
+        """各返却局面を独立させ、呼び出し側の変更を伝播させない。
+
+        同じ可変Positionを再利用してyieldする誤りや、返却値を棋譜内部と共有する
+        誤りを、先頭スナップショットの変更で検出する。
+        """
+        self._require_implementation()
+        record = GameRecord(create_initial_position())
+        record.apply_move(Square(7, 7), Square(7, 6))
+
+        snapshots = list(record.iter_positions())
+        snapshots[0].board.set_piece(Square(1, 5), Piece(PieceType.ROOK, Side.SENTE))
+        snapshots[0].sente_hand.add(BasicPieceType.PAWN)
+
+        self.assertIsNone(snapshots[1].board.piece_at(Square(1, 5)))
+        self.assertEqual(snapshots[1].sente_hand.count(BasicPieceType.PAWN), 0)
+        self.assertIsNone(record.initial_position.board.piece_at(Square(1, 5)))
+        self.assertIsNone(record.current_position.board.piece_at(Square(1, 5)))
+        self.assertEqual(
+            record.current_position.sente_hand.count(BasicPieceType.PAWN), 0
+        )
+
+    def test_iter_positions_does_not_mutate_record(self):
+        """全局面を再生しても現在局面と成功手列を維持する。
+
+        反復を現在局面へ直接適用する誤りを、履歴読み出しの前後で比較して検出する。
+        """
+        self._require_implementation()
+        record = GameRecord(create_initial_position())
+        record.apply_move(Square(7, 7), Square(7, 6))
+        record.apply_move(Square(3, 3), Square(3, 4))
+        before_position = self._position_signature(record.current_position)
+        before_moves = record.moves
+
+        snapshots = list(record.iter_positions())
+
+        self.assertEqual(len(snapshots), 3)
+        self.assertEqual(
+            self._position_signature(record.current_position), before_position
+        )
+        self.assertEqual(record.moves, before_moves)
+        self.assertEqual(self._position_signature(snapshots[-1]), before_position)
+
 
 if __name__ == "__main__":
     unittest.main()
