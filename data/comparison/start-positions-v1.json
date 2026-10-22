@@ -1,0 +1,39 @@
+{
+  "format": "kaname-shogi-comparison-positions-v1",
+  "id": "starter-v1",
+  "positions": [
+    {
+      "id": "initial",
+      "setup_moves": [],
+      "rationale": "平手初期局面"
+    },
+    {
+      "id": "open-bishops",
+      "setup_moves": ["7g7f", "3c3d", "2g2f", "8c8d"],
+      "rationale": "双方の角道と飛車先の歩を動かした序盤"
+    },
+    {
+      "id": "closed-bishop",
+      "setup_moves": ["7g7f", "8c8d", "6g6f"],
+      "rationale": "先手が角道を閉じた、後手番の序盤"
+    },
+    {
+      "id": "pawn-exchanges",
+      "setup_moves": [
+        "7g7f",
+        "3c3d",
+        "2g2f",
+        "8c8d",
+        "2f2e",
+        "8d8e",
+        "2e2d",
+        "2c2d",
+        "2h2d",
+        "8e8f",
+        "8g8f",
+        "8b8f"
+      ],
+      "rationale": "双方の飛車先で歩を交換し、双方に持ち歩がある局面"
+    }
+  ]
+}
