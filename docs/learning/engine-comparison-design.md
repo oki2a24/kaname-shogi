@@ -135,7 +135,17 @@
 
 ### main統合・統合先検証（2026-10-23事後記録）
 
-本人の別途承認を受け、P2実装コミット `3adbd23` を開始時のローカルmain `e595f8e` へfast-forward統合した。統合先main上で `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py` を再実行し、705件・45モジュールが14.548秒で成功した。`.venv/bin/ruff format --check .` は84ファイル既整形、`.venv/bin/ruff check .` と `git diff --check` も成功。pushは行っていない。統合後記録の独立レビューはCritical 0 / Important 0 / Minor 1で、P1の当時未承認という記述が現在形に見える指摘を受け、上記のとおりP1記録時点と明記した。その他の指摘はなかった。最後の理解確認は未実施であり、本人回答を待ってから学習記録へ追記する。既存未追跡の `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は統合後も保持した。
+本人の別途承認を受け、P2実装コミット `3adbd23` を開始時のローカルmain `e595f8e` へfast-forward統合した。統合先main上で `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py` を再実行し、705件・45モジュールが14.548秒で成功した。`.venv/bin/ruff format --check .` は84ファイル既整形、`.venv/bin/ruff check .` と `git diff --check` も成功。pushは行っていない。統合後記録の独立レビュー初回はCritical 0 / Important 0 / Minor 1で、P1の当時未承認という記述が現在形に見える指摘を受け、P1記録時点と明記して修正した。独立再レビューはCritical 0 / Important 0 / Minor 0。既存未追跡の `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は統合後も保持した。
+
+### 最後の理解確認と振り返り（2026-10-23）
+
+**問い:** 通常の同一局面が4回目に出たときは対局を続け、5回目に直近4出現区間を判定する設計にしたのはなぜですか？
+
+**本人回答:** 「4回目で千日手ではあるが、続行も可能なため、5回目で終了とするため」
+
+**アシスタントの補足:** 理解の核心は合っている。現行部品は同一局面の出現区間で双方の連続王手、片側の連続王手、通常反復の順に判定する。4回目の判定区間で双方が連続王手なら `UNRESOLVED_DOUBLE_PERPETUAL_CHECK`（勝者なしの未裁定終局）、片側だけなら `PERPETUAL_CHECK_LOSS`（その側の負け）で直ちに終局する。どちらもなければ `FOURFOLD_CONTINUE` を返し、打開のため対局を続ける。同一局面が再び現れた5回目は、2回目から5回目までの直近4出現区間を判定し、連続王手があれば上記の結果を返し、なければ `REPETITION`（勝者なしの通常千日手）で終了する。通常千日手と双方連続王手の未裁定は別集計し、後者を勝敗へ変換しない。
+
+別個の振り返り質問はしていない。この回答と補足をP2の最後の理解確認として記録した。
 
 ## 出典
 
