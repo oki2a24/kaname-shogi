@@ -2,7 +2,7 @@
 
 ## 現在地
 
-2026-10-22、P1「比較方法と比較用CLIを学び設計する」は設計承認・最後の理解確認・回答記録まで完了済み。[P1学習記録](learning/engine-comparison-design.md)と[承認済み比較設計](plans/2026-10-21-engine-comparison-design.md)を参照する。補助テーマ「千日手ルールを学び設計する」は一次資料・現行コード・将棋ソフト実装を確認し、本人回答と判断理由を[学習記録](learning/repetition-rule-design.md)へ保存した。設計案と実装計画は本人の明示承認済みで、Task 1〜4の実装を作業ブランチ `codex/repetition-rule` のworktree `/Users/oki2a24/.codex/worktrees/repetition-rule/kaname-shogi` で完了した。Task 5の全体661件・42モジュール、Ruff、相対リンク検査と最終独立レビュー（Critical 0 / Important 0 / Minor 2、Deferred）を記録した。作業ブランチへのコミットを行う。
+2026-10-22、P1「比較方法と比較用CLIを学び設計する」は設計承認・最後の理解確認・回答記録まで完了済み。[P1学習記録](learning/engine-comparison-design.md)と[承認済み比較設計](plans/2026-10-21-engine-comparison-design.md)を参照する。補助テーマ「千日手ルールを学び設計する」は一次資料・現行コード・将棋ソフト実装を確認し、本人回答と判断理由を[学習記録](learning/repetition-rule-design.md)へ保存した。設計案・実装計画の明示承認を受け、Task 1〜5を作業ブランチ `codex/repetition-rule` のworktree `/Users/oki2a24/.codex/worktrees/repetition-rule/kaname-shogi` で実装・検証・レビュー・記録し、`4080c4a` としてコミット済み。全体661件・42モジュール、Ruff、相対リンク検査は成功。最終独立レビューはCritical 0 / Important 0 / Minor 2（Deferred）。
 
 mainへの取り込みは別承認が必要で、まだ実施していない。取り込み・取り込み先検証の後に最後の理解確認を一問行う。承認済みの道筋はP1 → 千日手テーマ → 比較CLI実装計画・承認 → P2実装・確認 → 主線A1。通常CLIのSFEN入出力・序盤テンポ改善は別候補として保留し、今回へ自動追加しない。開始時点の背景と指定資料は[千日手テーマ開始時の引き継ぎ](handover-repetition-rule-design.md)を参照する。
 
@@ -38,4 +38,4 @@ mainへの取り込みは別承認が必要で、まだ実施していない。�
 
 ## 次にすること
 
-Task 5の検証・レビュー・文書更新を終え、作業ブランチへのコミットを行う。mainへの取り込みは本人の別承認を待つ。承認後は元の作業ディレクトリの現状態と差分を照合し、既存の `.antigravity/tasks/` を保持して取り込み、取り込み先で検証する。その後に最後の理解確認を一問だけ行い、回答を学習記録へ追記する。理解確認後、本人が次テーマを選ぶまでは新しい学習・実装を開始しない。
+実装コミット `4080c4a` は作業worktreeにあり、元の `/Users/oki2a24/kaname-shogi` へは未取り込み。元の作業ディレクトリには未コミットの `docs/README.md`、`docs/resume.md`、千日手学習記録・設計・計画の変更と、未追跡 `.antigravity/tasks/`、`.venv.backup-2026-10-22/` が残る。これらを保全した状態で、本人の別承認後に差分を照合して取り込み、取り込み先で検証する。その後に最後の理解確認を一問だけ行い、回答を学習記録へ追記する。理解確認後、本人が次テーマを選ぶまでは新しい学習・実装を開始しない。
