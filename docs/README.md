@@ -35,7 +35,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-A1/B1の飛車可動性の実装・main統合・検証・理解確認は完了した。C1は実装・パイプライン接続・最終検証・独立レビュー・予備比較まで完了し、確認比較の条件選択待ちである。現在の承認段階と次の行動は[再開案内](resume.md)、仕様は[承認済みC1設計](plans/2026-10-24-c1-rook-mobility-evaluation-design.md)、本人回答と実績は[C1学習記録](learning/c1-rook-mobility-evaluation.md)、手順と検証結果は[実装計画](plans/2026-10-24-c1-rook-mobility-evaluation-implementation-plan.md)を参照する。開始時の背景は[C1引き継ぎ](handover-c1-rook-mobility-evaluation.md)、前段階の結果は[A1/B1学習記録](learning/rook-mobility-design.md)、長期主線は[ロードマップ](roadmap-non-material-position-evaluation.md)を参照する。
+A1/B1の飛車可動性の実装・main統合・検証・理解確認は完了した。C1は実装・パイプライン接続・最終検証・独立レビューに加え、256手と512手のpilotを完了した。512手pilotでは未決着0/12局だったが、同じ6組・同じ乱数種での上限感度確認であり強さの結論は出していない。確認比較の条件選択待ちである。現在の承認段階と次の行動は[再開案内](resume.md)、仕様は[承認済みC1設計](plans/2026-10-24-c1-rook-mobility-evaluation-design.md)、本人回答と実績は[C1学習記録](learning/c1-rook-mobility-evaluation.md)、手順と検証結果は[実装計画](plans/2026-10-24-c1-rook-mobility-evaluation-implementation-plan.md)を参照する。開始時の背景は[C1引き継ぎ](handover-c1-rook-mobility-evaluation.md)、前段階の結果は[A1/B1学習記録](learning/rook-mobility-design.md)、長期主線は[ロードマップ](roadmap-non-material-position-evaluation.md)を参照する。
 
 以前の到達点として、CLI探索時間制御の[実装計画と結果](plans/2026-10-20-cli-search-time-control-implementation-plan.md)、[実施・独立レビュー記録](learning/cli-search-time-control-plan.md)がある。予定したCLI時計の観察と、元の探索強化主線であるShogiHomeの四手方式二局の実践確認は、最後の理解確認まで完了した。[実践確認の学習記録](learning/shogihome-four-ply-practice-verification.md)を参照する。大テーマ「駒得以外の局面評価」の今回開始時の背景は[開始時の引き継ぎ](handover-non-material-position-evaluation.md)に保存している。過去の実測・本人回答・制約は各記録で確認する。
 
@@ -60,7 +60,7 @@ A1/B1の飛車可動性の実装・main統合・検証・理解確認は完了�
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
-| C1：飛車可動性の接続・比較評価（pilot完了、確認比較の条件選択待ち） | [学習・個別合意・実績](learning/c1-rook-mobility-evaluation.md) | [比較CLI・分析](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-24-c1-rook-mobility-evaluation-design.md) | [承認済み実装計画・実施記録](plans/2026-10-24-c1-rook-mobility-evaluation-implementation-plan.md) | [開始時の背景](handover-c1-rook-mobility-evaluation.md) |
+| C1：飛車可動性の接続・比較評価（256/512手pilot完了、確認比較条件の選択待ち） | [学習・個別合意・実績](learning/c1-rook-mobility-evaluation.md) | [比較CLI・分析](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-24-c1-rook-mobility-evaluation-design.md) | [承認済み実装計画・実施記録](plans/2026-10-24-c1-rook-mobility-evaluation-implementation-plan.md) | [開始時の背景](handover-c1-rook-mobility-evaluation.md) |
 | A1：飛車だけの可動性（学習・設計・B1統合・検証・理解確認まで完了） | [学習・本人回答・個別合意](learning/rook-mobility-design.md) | — | [承認済み設計](plans/2026-10-24-rook-mobility-design.md) | [実装計画・結果](plans/2026-10-24-rook-mobility-implementation-plan.md) | [開始時の背景](handover-a1-non-material-position-evaluation.md) |
 | Pythonユニットテストの並列実行（main統合・取り込み先637件検証・最後の理解確認回答済み） | [実装・計測・レビュー・本人回答記録](learning/python-unittest-parallel-runner.md) | [検出力点検](knowledge/test-coverage-review.md) | — | [実装計画・実施記録](plans/2026-10-21-parallel-unittest-runner-implementation-plan.md) | — |
 | CLIの乱数・モード比較テストを固定時計で決定的にする（実装・全体検証・独立レビュー・main統合済み） | [後日実装修正記録](learning/cli-search-time-control-design.md) | [検出力点検](knowledge/test-coverage-review.md) | — | [実装計画・実施結果](plans/2026-10-21-cli-test-clock-determinism-implementation-plan.md) | — |

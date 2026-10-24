@@ -6,7 +6,7 @@
 
 タスク1〜5と準備→比較→分析の実プロセス接続は完了した。pipeline test 1件が成功し、同一種一覧で計時情報を除く予定・棋譜・終局理由・勝敗の再現を確認した。条件SHA、勝者方式の対応、未決着区間、組単位の標本数の4変異を一時コピーで検出した。最終レビューのMinorをTDDで修正し、関連40件、全体795件・55モジュール、Ruff三工程、文書リンク807件/見出し8件、差分検査が成功した。最終独立レビューはCritical 0 / Important 0 / Minor 0。検出範囲・未検証事項は[学習記録](learning/c1-rook-mobility-evaluation.md)にある。
 
-C1のコード・テスト・初期記録はコミット `42fc9e9`（`feat: 比較CLIで飛車可動性を評価する`）へ保存済み。ブランチ `codex/c1-rook-mobility-evaluation`、mainへの統合は未実施。承認済みpilotは6局面×1組、12局、各256手で実行し、比較時間は251.999秒、5局が手数上限に達した。条件・summary・全棋譜は `data/comparison/runs/c1-rook-mobility-pilot-2026-10-24/` にあり、乱数種一覧と分析JSONは同じ `runs/` の隣接ファイルである。未決着のため強さ・目標検出力は未判定で、次はpilotの所要時間と未決着率を踏まえた確認比較条件の本人選択待ち。`.venv/bin/ruff --version` は固定版 `0.16.10`、hooksPathは `.githooks`。通常CLIのSFEN入出力と飛車可動性バージョン2は追加しない。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持する。
+C1のコード・テスト・初期記録は `42fc9e9` などローカルブランチ `codex/c1-rook-mobility-evaluation` に保存済みで、mainへの統合は未実施。pilotは同じ6局面×1組・同じ乱数種で256手と512手を比較した。256手では12局中5局が上限、所要251.999秒。512手では12局すべて終局し、上限到達0、所要319.985秒。後者は前者と同じ棋譜を延長した上限感度確認なので独立標本として合算しない。両方とも6組で分析区間は `[0,1]`、強さ・目標検出力は未判定。512手条件を2,040組へ単純比例した目安は約30.2時間であり、確認比較の組数・手数上限・実行予算は本人の選択待ち。条件・summary・棋譜・分析JSONは `data/comparison/runs/c1-rook-mobility-pilot-2026-10-24/` と `data/comparison/runs/c1-rook-mobility-pilot-512-2026-10-24/` および各隣接ファイルにある。`.venv/bin/ruff --version` は固定版 `0.16.10`、hooksPathは `.githooks`。通常CLIのSFEN入出力と飛車可動性バージョン2は追加しない。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持する。
 
 ## C1開始前の状態（履歴）
 

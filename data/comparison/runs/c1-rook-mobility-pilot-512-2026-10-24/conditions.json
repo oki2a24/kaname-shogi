@@ -1,0 +1,289 @@
+{
+  "format": "kaname-shogi-comparison-conditions-v2",
+  "baseline": "material",
+  "candidate": "material-rook-mobility",
+  "positions_file": "data/comparison/c1-rook-mobility-positions-v1.json",
+  "positions_sha256": "4a1be9c3f9f4c04e97121d926475f83f49bda648f65400ab0f7572a7e6b6e53e",
+  "positions": [
+    {
+      "id": "initial",
+      "setup_moves": [],
+      "rationale": "平手初期局面",
+      "start_sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+      "initial_move_number": 1
+    },
+    {
+      "id": "open-bishops",
+      "setup_moves": [
+        "7g7f",
+        "3c3d",
+        "2g2f",
+        "8c8d"
+      ],
+      "rationale": "双方の角道と飛車先の歩を動かした序盤",
+      "start_sfen": "lnsgkgsnl/1r5b1/p1pppp1pp/1p4p2/9/2P4P1/PP1PPPP1P/1B5R1/LNSGKGSNL b - 5",
+      "initial_move_number": 5
+    },
+    {
+      "id": "closed-bishop",
+      "setup_moves": [
+        "7g7f",
+        "8c8d",
+        "6g6f"
+      ],
+      "rationale": "先手が角道を閉じた、後手番の序盤",
+      "start_sfen": "lnsgkgsnl/1r5b1/p1ppppppp/1p7/9/2PP5/PP2PPPPP/1B5R1/LNSGKGSNL w - 4",
+      "initial_move_number": 4
+    },
+    {
+      "id": "pawn-exchanges",
+      "setup_moves": [
+        "7g7f",
+        "3c3d",
+        "2g2f",
+        "8c8d",
+        "2f2e",
+        "8d8e",
+        "2e2d",
+        "2c2d",
+        "2h2d",
+        "8e8f",
+        "8g8f",
+        "8b8f"
+      ],
+      "rationale": "双方の飛車先で歩を交換し、双方に持ち歩がある局面",
+      "start_sfen": "lnsgkgsnl/7b1/p1pppp2p/6pR1/9/1rP6/P2PPPP1P/1B7/LNSGKGSNL b 2P2p 13",
+      "initial_move_number": 13
+    },
+    {
+      "id": "developed-before-exchanges",
+      "setup_moves": [
+        "7g7f",
+        "3c3d",
+        "2g2f",
+        "8c8d",
+        "2f2e",
+        "8d8e",
+        "6i7h",
+        "4a3b",
+        "3i3h",
+        "7a7b",
+        "3g3f",
+        "7c7d",
+        "3h3g",
+        "7b7c",
+        "3g4f",
+        "7c6d",
+        "5g5f",
+        "5c5d",
+        "5i6h",
+        "5a4b"
+      ],
+      "rationale": "双方の飛車先交換前で、飛車可動性は手計算で6対6、駒得差0の局面",
+      "start_sfen": "ln1g2snl/1r3kgb1/p2p1p1pp/2psp1p2/1p5P1/2P1PSP2/PP1P1P2P/1BGK3R1/LNS2G1NL b - 21",
+      "initial_move_number": 21
+    },
+    {
+      "id": "developed-after-exchanges",
+      "setup_moves": [
+        "7g7f",
+        "3c3d",
+        "2g2f",
+        "8c8d",
+        "2f2e",
+        "8d8e",
+        "6i7h",
+        "4a3b",
+        "3i3h",
+        "7a7b",
+        "3g3f",
+        "7c7d",
+        "3h3g",
+        "7b7c",
+        "3g4f",
+        "7c6d",
+        "5g5f",
+        "5c5d",
+        "5i6h",
+        "5a4b",
+        "2e2d",
+        "2c2d",
+        "2h2d",
+        "8e8f",
+        "8g8f",
+        "8b8f"
+      ],
+      "rationale": "双方の飛車先交換後で、飛車可動性は手計算で8対8、持ち歩も各2枚の局面",
+      "start_sfen": "ln1g2snl/5kgb1/p2p1p2p/2psp1pR1/9/1rP1PSP2/P2P1P2P/1BGK5/LNS2G1NL b 2P2p 27",
+      "initial_move_number": 27
+    }
+  ],
+  "pairs_per_position": 1,
+  "seed": null,
+  "max_plies": 512,
+  "schedule": [
+    {
+      "game_id": "game-000001",
+      "position_id": "initial",
+      "pair_number": 0,
+      "game_number_in_pair": 1,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 269905461791325978394116568680945706512,
+      "candidate_seed": 158580673566570504876046224558081849083
+    },
+    {
+      "game_id": "game-000002",
+      "position_id": "initial",
+      "pair_number": 0,
+      "game_number_in_pair": 2,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 269905461791325978394116568680945706512,
+      "candidate_seed": 158580673566570504876046224558081849083
+    },
+    {
+      "game_id": "game-000003",
+      "position_id": "open-bishops",
+      "pair_number": 1,
+      "game_number_in_pair": 1,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 298033152574335717372176033642985950556,
+      "candidate_seed": 2952434686972022082446938224118762444
+    },
+    {
+      "game_id": "game-000004",
+      "position_id": "open-bishops",
+      "pair_number": 1,
+      "game_number_in_pair": 2,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 298033152574335717372176033642985950556,
+      "candidate_seed": 2952434686972022082446938224118762444
+    },
+    {
+      "game_id": "game-000005",
+      "position_id": "closed-bishop",
+      "pair_number": 2,
+      "game_number_in_pair": 1,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 336851485787231178126629542282431713778,
+      "candidate_seed": 311069280698055545146880388093243702542
+    },
+    {
+      "game_id": "game-000006",
+      "position_id": "closed-bishop",
+      "pair_number": 2,
+      "game_number_in_pair": 2,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 336851485787231178126629542282431713778,
+      "candidate_seed": 311069280698055545146880388093243702542
+    },
+    {
+      "game_id": "game-000007",
+      "position_id": "pawn-exchanges",
+      "pair_number": 3,
+      "game_number_in_pair": 1,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 230636228331984239476273850227317386058,
+      "candidate_seed": 180476076020119974185388942358572166663
+    },
+    {
+      "game_id": "game-000008",
+      "position_id": "pawn-exchanges",
+      "pair_number": 3,
+      "game_number_in_pair": 2,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 230636228331984239476273850227317386058,
+      "candidate_seed": 180476076020119974185388942358572166663
+    },
+    {
+      "game_id": "game-000009",
+      "position_id": "developed-before-exchanges",
+      "pair_number": 4,
+      "game_number_in_pair": 1,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 162204496174954990959166164980772720191,
+      "candidate_seed": 312433373076344295523910169518146630698
+    },
+    {
+      "game_id": "game-000010",
+      "position_id": "developed-before-exchanges",
+      "pair_number": 4,
+      "game_number_in_pair": 2,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 162204496174954990959166164980772720191,
+      "candidate_seed": 312433373076344295523910169518146630698
+    },
+    {
+      "game_id": "game-000011",
+      "position_id": "developed-after-exchanges",
+      "pair_number": 5,
+      "game_number_in_pair": 1,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 299518094178762691913981968464078275652,
+      "candidate_seed": 264290831960570153383416386790404717863
+    },
+    {
+      "game_id": "game-000012",
+      "position_id": "developed-after-exchanges",
+      "pair_number": 5,
+      "game_number_in_pair": 2,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 299518094178762691913981968464078275652,
+      "candidate_seed": 264290831960570153383416386790404717863
+    }
+  ],
+  "timing": {
+    "source": "time.monotonic_ns",
+    "start": "immediately_before_legal_moves",
+    "end": "immediately_after_choose_move_returns",
+    "unit": "nanoseconds"
+  },
+  "clock": null,
+  "repetition": {
+    "ordinary_fourth_occurrence": "continue",
+    "ordinary_fifth_occurrence": "terminal",
+    "ordinary_rematch": false,
+    "perpetual_check_loss": "opposite_side_wins",
+    "double_perpetual_check": "unresolved_no_winner"
+  },
+  "git": {
+    "head": "d588e479ba50a1262e921da7d5b6f28d21f693a9",
+    "dirty": true,
+    "diagnostic": null
+  },
+  "runtime": {
+    "python_version": "3.15.0",
+    "python_implementation": "CPython",
+    "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "processor": "arm"
+  },
+  "source_sha256": "a36c53fa57c5e5749793a9ad94fd8affaa72262809d39b5793ae8f8b0afae643",
+  "positions_json": "{\n  \"format\": \"kaname-shogi-comparison-positions-v1\",\n  \"id\": \"c1-rook-mobility-v1\",\n  \"positions\": [\n    {\n      \"id\": \"initial\",\n      \"setup_moves\": [],\n      \"rationale\": \"平手初期局面\"\n    },\n    {\n      \"id\": \"open-bishops\",\n      \"setup_moves\": [\"7g7f\", \"3c3d\", \"2g2f\", \"8c8d\"],\n      \"rationale\": \"双方の角道と飛車先の歩を動かした序盤\"\n    },\n    {\n      \"id\": \"closed-bishop\",\n      \"setup_moves\": [\"7g7f\", \"8c8d\", \"6g6f\"],\n      \"rationale\": \"先手が角道を閉じた、後手番の序盤\"\n    },\n    {\n      \"id\": \"pawn-exchanges\",\n      \"setup_moves\": [\n        \"7g7f\",\n        \"3c3d\",\n        \"2g2f\",\n        \"8c8d\",\n        \"2f2e\",\n        \"8d8e\",\n        \"2e2d\",\n        \"2c2d\",\n        \"2h2d\",\n        \"8e8f\",\n        \"8g8f\",\n        \"8b8f\"\n      ],\n      \"rationale\": \"双方の飛車先で歩を交換し、双方に持ち歩がある局面\"\n    },\n    {\n      \"id\": \"developed-before-exchanges\",\n      \"setup_moves\": [\n        \"7g7f\",\n        \"3c3d\",\n        \"2g2f\",\n        \"8c8d\",\n        \"2f2e\",\n        \"8d8e\",\n        \"6i7h\",\n        \"4a3b\",\n        \"3i3h\",\n        \"7a7b\",\n        \"3g3f\",\n        \"7c7d\",\n        \"3h3g\",\n        \"7b7c\",\n        \"3g4f\",\n        \"7c6d\",\n        \"5g5f\",\n        \"5c5d\",\n        \"5i6h\",\n        \"5a4b\"\n      ],\n      \"rationale\": \"双方の飛車先交換前で、飛車可動性は手計算で6対6、駒得差0の局面\"\n    },\n    {\n      \"id\": \"developed-after-exchanges\",\n      \"setup_moves\": [\n        \"7g7f\",\n        \"3c3d\",\n        \"2g2f\",\n        \"8c8d\",\n        \"2f2e\",\n        \"8d8e\",\n        \"6i7h\",\n        \"4a3b\",\n        \"3i3h\",\n        \"7a7b\",\n        \"3g3f\",\n        \"7c7d\",\n        \"3h3g\",\n        \"7b7c\",\n        \"3g4f\",\n        \"7c6d\",\n        \"5g5f\",\n        \"5c5d\",\n        \"5i6h\",\n        \"5a4b\",\n        \"2e2d\",\n        \"2c2d\",\n        \"2h2d\",\n        \"8e8f\",\n        \"8g8f\",\n        \"8b8f\"\n      ],\n      \"rationale\": \"双方の飛車先交換後で、飛車可動性は手計算で8対8、持ち歩も各2枚の局面\"\n    }\n  ]\n}\n",
+  "randomization": {
+    "purpose": "pilot",
+    "source": "os",
+    "bits": 128,
+    "seed_list_sha256": "f0637a4be44ee387447d211d3cf08e8d74ee17db017a0984446dab168b0eff9f",
+    "seed_list_json": "{\n  \"format\": \"kaname-shogi-comparison-seeds-v1\",\n  \"purpose\": \"pilot\",\n  \"positions_sha256\": \"4a1be9c3f9f4c04e97121d926475f83f49bda648f65400ab0f7572a7e6b6e53e\",\n  \"position_ids\": [\n    \"initial\",\n    \"open-bishops\",\n    \"closed-bishop\",\n    \"pawn-exchanges\",\n    \"developed-before-exchanges\",\n    \"developed-after-exchanges\"\n  ],\n  \"pairs_per_position\": 1,\n  \"source\": \"os\",\n  \"bits\": 128,\n  \"pairs\": [\n    {\n      \"position_id\": \"initial\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 269905461791325978394116568680945706512,\n      \"candidate_seed\": 158580673566570504876046224558081849083\n    },\n    {\n      \"position_id\": \"open-bishops\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 298033152574335717372176033642985950556,\n      \"candidate_seed\": 2952434686972022082446938224118762444\n    },\n    {\n      \"position_id\": \"closed-bishop\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 336851485787231178126629542282431713778,\n      \"candidate_seed\": 311069280698055545146880388093243702542\n    },\n    {\n      \"position_id\": \"pawn-exchanges\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 230636228331984239476273850227317386058,\n      \"candidate_seed\": 180476076020119974185388942358572166663\n    },\n    {\n      \"position_id\": \"developed-before-exchanges\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 162204496174954990959166164980772720191,\n      \"candidate_seed\": 312433373076344295523910169518146630698\n    },\n    {\n      \"position_id\": \"developed-after-exchanges\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 299518094178762691913981968464078275652,\n      \"candidate_seed\": 264290831960570153383416386790404717863\n    }\n  ]\n}\n"
+  },
+  "policy_parameters": {
+    "baseline": {},
+    "candidate": {
+      "material": 10,
+      "mobility": 1,
+      "mate_priority": true
+    }
+  }
+}
