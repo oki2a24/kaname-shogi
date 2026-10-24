@@ -183,18 +183,18 @@ choice.assert_called_once_with((blocked, opened))
 - [x] **2. Redを確認。** `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_one_ply_selection.py -v`。返値・choice引数・区分・視点のassert失敗を記録する。
 - [x] **3. 最小実装。** 上記シグネチャの選択操作のみ。movegenの既存choose_moveやenumは編集しない。合成評価のimportなし。
 - [x] **4. Green・Refactor・独立レビュー。** 同コマンド成功。差替で新評価への隠れた依存がないこと、詰み確認の防御探索以外の応手読みを追加していないことをレビューする。
-- [ ] **5. 品質検査・コミット。** 共通Ruff手順・記録更新後に当該2ファイルと記録を通常コミット。
+- [x] **5. 品質検査・コミット。** 共通Ruff手順・記録更新後に当該2ファイルと記録を通常コミット。
 
 **GREEN条件:** 実局面での選択・評価差替・詰み順序・境界・不変性・故障伝播が成功、Critical/Importantが0。
 
 ### Task 4：検出力点検・全体回帰・実施記録
 
-**ファイル:** 上記6製品/テストファイル、学習記録、知識メモ新規 `docs/knowledge/rook-mobility-evaluation.md`、設計/本計画、再開案内・索引・ロードマップ・次テーマ候補。製品のCLI/USI機能説明は変わらないためルートREADMEは原則変更しない。
+**ファイル:** 上記6製品/テストファイル、学習記録、知識メモ新規 `docs/knowledge/rook-mobility-evaluation.md`、設計/本計画、`docs/02-project-direction.md`、再開案内・索引・ロードマップ・次テーマ候補。製品のCLI/USI機能説明は変わらないためルートREADMEは原則変更しない。
 
 **消費:** Task 1〜3の公開操作と検証結果。**生産:** B1部品の検証証拠とレビュー・未検証範囲。C1公開済みとは記録しない。
 
-- [ ] **1. 契約ごとの点検。** 対象/独立期待値/検出対象/専用と関連の補完/未検証を学習記録へ整理する。
-- [ ] **2. 代表変異の検出力確認。** /private/tmp内の隔離コピー等で実施し、元ブランチの製品を汚さない。下表の意図したassert FAILと復元後成功を確認する。構文/import失敗は検出成功ではない。
+- [x] **1. 契約ごとの点検。** 対象/独立期待値/検出対象/専用と関連の補完/未検証を学習記録へ整理する。
+- [x] **2. 代表変異の検出力確認。** /private/tmp内の隔離コピー等で実施し、元ブランチの製品を汚さない。下表の意図したassert FAILと復元後成功を確認する。構文/import失敗は検出成功ではない。
 
 | 変異 | 直接検出するテスト |
 | --- | --- |
@@ -204,11 +204,11 @@ choice.assert_called_once_with((blocked, opened))
 | 係数10を1にする | Task 2の173/176 |
 | 開始側でなく適用後手番で採点 | Task 3の先後二候補選択 |
 | 勝ち区分を通常評価へ落とす | Task 3の実詰み対10**30 |
-| 別評価を無視し可動性へ固定 | Task 3のmaterial_balance差替時のchoice引数 |
+| 注入された別評価を無視して既定の合成評価へ固定 | Task 3のmaterial_balance差替時のchoice引数 |
 
-- [ ] **3. 品質検査と全体テスト。** `.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、`git diff --check`、`PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py`。全モジュール成功・失敗/skipなしを確認。件数・時間は今回の実測のみ記録し、過去705件を予告値にしない。
-- [ ] **4. 独立ブランチレビュー。** Refactor要否・専用/関連/全体・変異・文書を渡し、Critical/Important/Minorを記録。Critical/Importantは解消後、影響範囲を再検証・再レビューする。
-- [ ] **5. 文書検証・記録コミット。** 相対リンク・アンカーを確認し、未実施は未実施と明記。変更ファイルのみステージし通常コミット。
+- [x] **3. 品質検査と全体テスト。** `.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、`git diff --check`、`PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py`。全モジュール成功・失敗/skipなしを確認。件数・時間は今回の実測のみ記録し、過去705件を予告値にしない。
+- [x] **4. 独立ブランチレビュー。** Refactor要否・専用/関連/全体・変異・文書を渡し、Critical/Important/Minorを記録。Critical/Importantは解消後、影響範囲を再検証・再レビューする。最終レビューはCritical 0 / Important 0で追加指摘なし。Task 3のMinor 1は混在する兄弟候補の直接検査がない範囲上の残件として学習記録へ残した。
+- [x] **5. 文書検証・記録コミット。** 相対リンク・アンカーを確認し、未実施は未実施と明記。変更ファイルのみステージし通常コミット。
 - [ ] **6. 統合承認の別ゲート。** 本人承認後にmainへ取り込み、取り込み先で全体テスト・Ruff・差分・リンク検証。未承認なら取り込まない。統合確認後は最後の理解確認を一問だけ出し、本人回答と補足を記録する。
 
 **GREEN条件:** 今回の全体回帰・品質検査・代表変異・最終独立レビューがそろい、未検証とC1への帰還目標が記録される。実装完了とmain統合・C1公開・棋力確認を区別する。
@@ -223,4 +223,4 @@ choice.assert_called_once_with((blocked, opened))
 - セルフレビューでピン局面の双方候補数を15/15へ訂正した。また、詰み比較の通常候補に当初考えた９九玉→９八は相手詰みが継続するため不適切だった。既存操作による一時照合で、５三飛→６三と後手鏡像は合法・非詰み、５二飛成/不成と後手鏡像は合法・詰みと確認して固定した。新テスト実行や新実装の検証ではない。
 - 専用コマンドは標準discoverで新規モジュールを指定する形式。実行時のパス・Python・テスト名を再確認し、期待されるassert失敗/成功を記録する。製品テストは承認前のため未実行。
 
-本人は本計画を承認し、ネイティブ実行を選択した。Task 1はRed/Green、Refactor要否、独立レビュー、品質検査、記録を完了し、9テスト成功後に `8f39c9b` として通常コミットした。Task 2はbehavioral Redを確認後、設定と合成操作を実装した。専用5、Task 1の9、既存評価2テスト、全Ruff検査が成功し、独立レビューはCritical 0 / Important 0 / Minor 0。記録を含めて `e9a3d45` として通常コミットした。Task 3はRed/GreenとRuff検査、専用10・Task 1の9・Task 2の5・既存評価2の成功を確認。独立レビューはCritical 0 / Important 0 / Minor 1で、捕獲・成り・打ちを含む異種兄弟枝同士の相互干渉が未検証との指摘を、範囲内の軽微な残件として記録した。Task 3の記録後に通常コミットする。
+本人は本計画を承認し、ネイティブ実行を選択した。Task 1はRed/Green、Refactor要否、独立レビュー、品質検査、記録を完了し、9テスト成功後に `8f39c9b` として通常コミットした。Task 2はbehavioral Redを確認後、設定と合成操作を実装した。専用5、Task 1の9、既存評価2テスト、全Ruff検査が成功し、独立レビューはCritical 0 / Important 0 / Minor 0。記録を含めて `e9a3d45` として通常コミットした。Task 3はRed/GreenとRuff検査、専用10・Task 1の9・Task 2の5・既存評価2の成功を確認。独立レビューはCritical 0 / Important 0 / Minor 1で、異種兄弟枝同士の相互干渉が直接未検証との指摘を、範囲内の軽微な残件として記録した。実装・テスト・記録を `bc6651b` として通常コミットした。Task 4では7代表変異を隔離コピー上で意図したassertion failureとして確認し、全体テスト729件/48モジュールが14.591秒で成功した。Ruffと差分検査も成功。差分 `41910f4..bc6651b` の独立コードレビューはCritical 0 / Important 0 / Minor 1で、同じ枝組合せの未検証を記録した。最終文書レビューもCritical 0 / Important 0で追加指摘なし。独立したリンク検査は790件・アンカー5件で欠落0、独立全体テストは729件・48モジュールが14.602秒で成功した。変異実行の再確認は行わず、7対象テスト名と検出契約を照合した。Task 4の検証・レビュー・記録を完了した。main統合は別途本人承認の対象であり、未実施。
