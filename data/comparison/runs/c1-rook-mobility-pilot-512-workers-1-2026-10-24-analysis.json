@@ -1,0 +1,338 @@
+{
+  "format": "kaname-shogi-comparison-analysis-v1",
+  "inputs": {
+    "conditions": {
+      "file": "conditions.json",
+      "sha256": "7794092c93d8aac16864091f8b6e02496ebff964e52b3ba59056aaaa1fdd891b"
+    },
+    "games": [
+      {
+        "file": "game-000001.json",
+        "sha256": "528d541ff06f5c04c42b0905aa888cdbe550e945e6834d2a9004cda6b3dc8ecd"
+      },
+      {
+        "file": "game-000002.json",
+        "sha256": "ade1c7bec32aebd9a8a59767bc3be5496cea496d838cbfb7627b451550a5ee55"
+      },
+      {
+        "file": "game-000003.json",
+        "sha256": "82c48ceebf01890e27ff3bc27acde9dac88e3be1dfa9ae010c67156e5596d8d5"
+      },
+      {
+        "file": "game-000004.json",
+        "sha256": "357c2878a82b2774e39f20017c45a6b3162b0bd5579a697416df5576386ab3b0"
+      },
+      {
+        "file": "game-000005.json",
+        "sha256": "a246d36d3ed8b4f132e2fa9815fa0c0de3c1c13f55a7a5d08647c7a3ee33efc6"
+      },
+      {
+        "file": "game-000006.json",
+        "sha256": "6b9c00596638313d678e74a1c20de1caec7cc00999a8687376f6e029b98e38f0"
+      },
+      {
+        "file": "game-000007.json",
+        "sha256": "00e814d7d5834461ffe282c7f79faf44ab9000d7a28abf21d18f9a93eaf9841b"
+      },
+      {
+        "file": "game-000008.json",
+        "sha256": "5b3f0892e242a7560d56cfbe0efb66eb4fbe91e7f839f636fb868587ad4437d5"
+      },
+      {
+        "file": "game-000009.json",
+        "sha256": "221361dad3060f7a6b23dd05dadb5a99dd0dbcbe3dd10abb3d2161a593323355"
+      },
+      {
+        "file": "game-000010.json",
+        "sha256": "49d844a9d91a24ceed37ac923af7cc66f9bcbda002117fc3aa873b09c1ae9690"
+      },
+      {
+        "file": "game-000011.json",
+        "sha256": "c287cdb8e898bc76606590deb94658a47c4e255ee252e57fae700f5d9872a6eb"
+      },
+      {
+        "file": "game-000012.json",
+        "sha256": "22a3db41be86d2bf53358f05d64189246763999a27067c08de9182ae45b95890"
+      }
+    ],
+    "summary": {
+      "file": "summary.json",
+      "sha256": "fdfe82336554914ba3ef5b59031cf25a05b03197557d6b18c9e8d9b125d6fa5a"
+    }
+  },
+  "analyzer": {
+    "source_sha256": "97d4dfb7763222efc3878b4fad500bc13b19c8681cf53098b0ff16e54026789b",
+    "git": {
+      "head": "7b2286be5f5b18a77bb4fcb4c96a8ee6412ae672",
+      "dirty": true,
+      "diagnostic": null
+    },
+    "runtime": {
+      "python_version": "3.15.0",
+      "python_implementation": "CPython",
+      "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O"
+    }
+  },
+  "purpose": "pilot",
+  "baseline": "material",
+  "candidate": "material-rook-mobility",
+  "assumptions": {
+    "independent_unit": "pair",
+    "games_within_pair_independent": false,
+    "identically_distributed_pairs_required": false,
+    "primary_comparisons": 1,
+    "configured_positions_equal_weight": true,
+    "unresolved_game_score_bounds": [
+      0.0,
+      1.0
+    ]
+  },
+  "confidence_level": 0.95,
+  "method": "hoeffding-paired-bounds-v1",
+  "planned_games": 12,
+  "completed_pairs": 6,
+  "counts": {
+    "games": 12,
+    "candidate_wins": 6,
+    "candidate_losses": 6,
+    "ordinary_repetitions": 0,
+    "ply_limits": 0,
+    "unresolved_double_perpetual_checks": 0,
+    "results": {
+      "checkmate": 7,
+      "no_legal_move": 5,
+      "perpetual_check_loss": 0,
+      "repetition": 0,
+      "ply_limit": 0,
+      "interrupted": 0,
+      "error": 0,
+      "unresolved_double_perpetual_check": 0
+    },
+    "completed_pairs": 6
+  },
+  "score": {
+    "lower_mean": 0.5,
+    "upper_mean": 0.5,
+    "radius": 0.5544426220774891,
+    "lower": 0.0,
+    "upper": 1.0,
+    "decision": "exploratory"
+  },
+  "by_position": {
+    "initial": {
+      "games": 2,
+      "candidate_wins": 0,
+      "candidate_losses": 2,
+      "ordinary_repetitions": 0,
+      "ply_limits": 0,
+      "unresolved_double_perpetual_checks": 0,
+      "results": {
+        "checkmate": 0,
+        "no_legal_move": 2,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      },
+      "pairs": 1,
+      "mean_score_bounds": {
+        "lower_mean": 0.0,
+        "upper_mean": 0.0
+      }
+    },
+    "open-bishops": {
+      "games": 2,
+      "candidate_wins": 1,
+      "candidate_losses": 1,
+      "ordinary_repetitions": 0,
+      "ply_limits": 0,
+      "unresolved_double_perpetual_checks": 0,
+      "results": {
+        "checkmate": 1,
+        "no_legal_move": 1,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      },
+      "pairs": 1,
+      "mean_score_bounds": {
+        "lower_mean": 0.5,
+        "upper_mean": 0.5
+      }
+    },
+    "closed-bishop": {
+      "games": 2,
+      "candidate_wins": 1,
+      "candidate_losses": 1,
+      "ordinary_repetitions": 0,
+      "ply_limits": 0,
+      "unresolved_double_perpetual_checks": 0,
+      "results": {
+        "checkmate": 1,
+        "no_legal_move": 1,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      },
+      "pairs": 1,
+      "mean_score_bounds": {
+        "lower_mean": 0.5,
+        "upper_mean": 0.5
+      }
+    },
+    "pawn-exchanges": {
+      "games": 2,
+      "candidate_wins": 2,
+      "candidate_losses": 0,
+      "ordinary_repetitions": 0,
+      "ply_limits": 0,
+      "unresolved_double_perpetual_checks": 0,
+      "results": {
+        "checkmate": 2,
+        "no_legal_move": 0,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      },
+      "pairs": 1,
+      "mean_score_bounds": {
+        "lower_mean": 1.0,
+        "upper_mean": 1.0
+      }
+    },
+    "developed-before-exchanges": {
+      "games": 2,
+      "candidate_wins": 0,
+      "candidate_losses": 2,
+      "ordinary_repetitions": 0,
+      "ply_limits": 0,
+      "unresolved_double_perpetual_checks": 0,
+      "results": {
+        "checkmate": 1,
+        "no_legal_move": 1,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      },
+      "pairs": 1,
+      "mean_score_bounds": {
+        "lower_mean": 0.0,
+        "upper_mean": 0.0
+      }
+    },
+    "developed-after-exchanges": {
+      "games": 2,
+      "candidate_wins": 2,
+      "candidate_losses": 0,
+      "ordinary_repetitions": 0,
+      "ply_limits": 0,
+      "unresolved_double_perpetual_checks": 0,
+      "results": {
+        "checkmate": 2,
+        "no_legal_move": 0,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      },
+      "pairs": 1,
+      "mean_score_bounds": {
+        "lower_mean": 1.0,
+        "upper_mean": 1.0
+      }
+    }
+  },
+  "by_side": {
+    "candidate_sente": {
+      "games": 6,
+      "candidate_wins": 3,
+      "candidate_losses": 3,
+      "ordinary_repetitions": 0,
+      "ply_limits": 0,
+      "unresolved_double_perpetual_checks": 0,
+      "results": {
+        "checkmate": 4,
+        "no_legal_move": 2,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    },
+    "candidate_gote": {
+      "games": 6,
+      "candidate_wins": 3,
+      "candidate_losses": 3,
+      "ordinary_repetitions": 0,
+      "ply_limits": 0,
+      "unresolved_double_perpetual_checks": 0,
+      "results": {
+        "checkmate": 3,
+        "no_legal_move": 3,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    }
+  },
+  "move_time_by_policy": {
+    "random": {
+      "successful_moves": 0,
+      "total_ns": 0,
+      "average_ns": null,
+      "max_ns": null
+    },
+    "material": {
+      "successful_moves": 1358,
+      "total_ns": 79434829939,
+      "average_ns": 58493983.754786454,
+      "max_ns": 142723916
+    },
+    "two-ply-material": {
+      "successful_moves": 0,
+      "total_ns": 0,
+      "average_ns": null,
+      "max_ns": null
+    },
+    "full-width-4": {
+      "successful_moves": 0,
+      "total_ns": 0,
+      "average_ns": null,
+      "max_ns": null
+    },
+    "alpha-beta-4": {
+      "successful_moves": 0,
+      "total_ns": 0,
+      "average_ns": null,
+      "max_ns": null
+    },
+    "material-rook-mobility": {
+      "successful_moves": 1358,
+      "total_ns": 199960435447,
+      "average_ns": 147246270.57952872,
+      "max_ns": 1216261667
+    }
+  },
+  "elapsed_ns": 320166501083
+}

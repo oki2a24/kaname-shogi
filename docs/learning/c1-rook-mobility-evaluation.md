@@ -135,3 +135,60 @@ python3 -m kaname_shogi.analyze_comparison --input-dir data/comparison/runs/c1-r
 同じ512手上限で2,040組へ単純比例すると約108,795秒、約30.2時間となる。前回256手の約23.8時間より増えた。この換算は6組の平均を直線的に広げた粗い見積もりで、局面ごとのばらつき、seed準備・分析・人の監視時間は含まない。今回の6組で上限到達がなかったことも、将来の比較で未決着が出ない保証にはならず、予定組数での目標検出力も保証しない。
 
 結果は `data/comparison/runs/c1-rook-mobility-pilot-512-2026-10-24/`、分析は隣接する `data/comparison/runs/c1-rook-mobility-pilot-512-2026-10-24-analysis.json`。確認比較の組数・手数上限・総時間予算は引き続き未決定で、本人の条件選択を待つ。
+
+### 比較CLIの並列実行を検討する（2026-10-24）
+
+本人は、ユニットテストのように比較CLIの局を並列で実行できるか質問した。現行の `compare_games.main()` は予定を逐次処理し、`--workers` はない。各局は局ごとの乱数生成器・棋譜・反復状態を持ち、結果の保存とsummary更新は一つのCLIプロセスが行う。CPUを使う探索処理なので、最大4つのプロセスで局単位に並列化し、結果保存を親へ集約する案を提示した。
+
+本人は最大4ワーカー対応の追加計画作成を選んだ。既定値について本人は「1（推奨・現行の逐次動作を維持し、必要時に4を指定）」を選択した。作業場所は既存の `/Users/oki2a24/kaname-shogi` と `codex/c1-rook-mobility-evaluation` ブランチを継続する。実装計画案は[最大4ワーカー並列化計画](../plans/2026-10-24-c1-comparison-parallel-workers-implementation-plan.md)。2026-10-24時点では計画の明示承認待ちで、TDD・コード・テスト変更・比較pilotは始めていない。
+
+計画案では新コードの逐次対照約5分20秒と4ワーカー再実行約2〜4分を合わせ、pilotは概ね8〜10分の見込み。完全な4倍速なら一回分約80秒だが、局ごとの時間差・プロセス起動・保存処理があるため保証ではない。2,040組は逐次目安30.2時間、理想的な4倍速は7.6時間だが、こちらも予測。再実行は同じ種による再現性・時間確認で、独立な棋力標本へ加えない。確認比較の組数・上限・総時間予算も未決定。
+
+#### TDD手順の明記に関する確認
+
+初回提示した計画に「TDD適用」の参照と一件のRed→Green記述はあったが、全タスクの各振る舞いでRed→Green→Refactorを行う明示的手順が不足していた。本人がこの点を質問した。確認を受け、計画へタスク1〜4に共通する一振る舞いずつのRed（import errorではなく契約アサーション失敗）→最小Green→Refactor要否確認と検出範囲記録を追加し、タスクごとの適用を明記した。その時点では計画の明示承認前で、コード・テスト変更は始めていなかった。その後、本人はTDD手順を追記した計画全体を承認した。
+
+### 比較CLI並列化の実装・再現性pilot（2026-10-24）
+
+本人は最大4worker、既定値1の実装計画を明示承認した。実装は `codex/c1-rook-mobility-evaluation` 上で実施し、通常CLI・USIの方式選択、SFEN入出力、飛車可動性バージョン2、確認比較の組数・時間条件は変更していない。`--workers 1..4` を追加し、2〜4はspawn process poolで局ごとに実行する。局結果とsummaryのJSONは親だけが保存する。条件形式は逐次v1/v2、並列v3、summaryは逐次v1、並列v2とし、分析readerは対応する版の組合せ・worker数・全予定・局SHA・summary件数を照合する。中断・故障後は新規投入を止め、取消しできない実行中局を回収する。保存失敗時は成功扱いせず1で終了する。
+
+各振る舞いをRed→Green→Refactorで実装した。専用試験は予定game_idと方式別seedの対応、逆順完了、同時Future上限、親書込、worker/Future故障、worker内中断、親Ctrl-C、保存失敗とexecutor回収、conditions v2/v3とsummary版の組合せを分けた。conditions v3の未知/欠落execution、未知executor、bool/範囲外worker数、条件hashと局JSON、seed予定、summary再集計を検証した。通常の対局CLI・USIの入力方式は未変更である。
+
+実spawn pipelineはworkers=1/2/4で12局（6局面×1組、各局2手上限）を動かし、保存されたschedule・棋譜・終局・勝者・分析得点が一致することを確認した。分析readerは完了したconditions v3/summary v2を受理し、in-flightのあるバッチを拒否した。既存の512手pilot（conditions v2/summary v1）はそのまま分析でき、分析中に既存artifactのbyte列が変わらないことも確認した。
+
+強さ比較の結論には使わない再現性・時間pilotとして、保存済みの同じ6組、同じ128ビット乱数種、同じ512手上限を、新コードで逐次と4workerの別出力先へ実行した。双方のconditions `source_sha256` は `97d4dfb7763222efc3878b4fad500bc13b19c8681cf53098b0ff16e54026789b` で一致し、局面・seed-list hash・schedule・全局の安定フィールド・summary終了理由・分析得点が逐次基準と一致した。旧512手pilotとも局面・乱数種、全12棋譜、終局、勝敗、summary結果、得点が一致した。計時値、経過時間、conditions hash、worker metadataは一致比較から除いた。
+
+| 実行 | worker | 完了 | 総成功手数 | 終局 | summary時間 |
+| --- | ---: | ---: | ---: | --- | ---: |
+| 旧512手pilot | 1 | 12/12 | 2,716 | 詰み7・合法手なし5 | 319.985秒 |
+| 新コード逐次対照 | 1 | 12/12 | 2,716 | 詰み7・合法手なし5 | 320.167秒 |
+| 新コード並列pilot | 4 | 12/12 | 2,716 | 詰み7・合法手なし5 | 125.555秒 |
+
+新コードではこの一回の実測で4workerが逐次の約2.55倍速だった。CPU負荷、局ごとの処理量、OS、Python版に依存し、4倍速や他環境の時間を保証しない。Python 3.15.0・macOS 27.0.1 arm64で実行した。両分析の得点平均は `[0.5, 0.5]`、95%区間は `[0,1]`、判定はpilotで、強さを判定しない。同一乱数種の反復を独立標本として数えない。2,040組の実測時間・確認比較の目標検出力・強さの改善/悪化は未確認のままである。
+
+成果物は逐次 `data/comparison/runs/c1-rook-mobility-pilot-512-workers-1-2026-10-24/` と隣接する `-analysis.json`、4worker `data/comparison/runs/c1-rook-mobility-pilot-512-workers-4-2026-10-24/` と隣接する分析JSON。確認比較の組数・手数上限・総時間予算はまだ選んでいない。実装は現在の作業ブランチに記録し、mainへの統合は別途本人承認を得てから行う。
+
+
+### 最終検証（2026-10-24、独立レビュー前）
+
+Ruff `0.16.10` でimport順確認、103ファイルのformat確認、全checkを行い成功した。比較関連6モジュールは102 testsが74.772秒で成功し、全体は821 tests・55 modulesが73.937秒で成功した。対象文書の相対Markdownリンク781件とローカル見出し参照は欠落0件、`git diff --check`も成功した。
+
+代表変異5件を隔離コピーで確認した。別予定game_idへの局JSON付替えはreaderの拒否、worker上限無視は上限assertion、in-flight二重計上は独立件数assertion、ERROR後の追加投入は保存局集合assertionで検出した。conditions v2拒否変異は、手書きv2読込testが `既存conditions v2を読み込めません` と明示するAssertionErrorで検出することを、修正後testで再確認した。全て読み込み失敗をテストのRedと取り違えていない。
+
+初回独立コードレビューはCritical 0・Important 1・Minor 1だった。Importantは親Ctrl-Cが`wait()`だけで捕捉され、submitと成果物writerから漏れる点。原因は並列経路の捕捉境界が狭く、完了Futureを局JSONへ保存中/summary更新中の状態も継続できなかったこと。逐次経路の条件保存後中断、局保存中断、summary保存中断処理と比較した。
+
+三つの振る舞いでテストを先に追加し、初回投入中・局JSON保存中・summary保存中の親割込みがCLI外へ漏れることをそれぞれFAILで確認した。最小修正では初回/追加submit後に投入停止・取消しを行い、局JSON保存が中断した場合は出力が未作成なら完了Futureの結果を再保存、summary保存中断後は残りworkerを回収して最終summaryを再保存する。状態変更とFuture取消しを `stop_after_parent_interrupt` へまとめた。関連の割込みテストは27件すべて成功し、全体824件・55 modulesが73.476秒で成功、Ruffと`git diff --check`も成功した。
+
+この段階では、Minorだった `--seed` のconditions v1/v3実行が分析CLIで読めない制限の案内不足をREADMEと知識メモへ明記し、修正後の独立レビューを待っていた。全OSの実SIGINT配送、複数回連続Ctrl-C、強制終了時の復旧も未検証だった。後続のレビュー・修正・最終記録は次節に記す。
+
+### 追加レビュー指摘の修正と最終検証（2026-10-24）
+
+二回目の独立レビューではCritical 0・Important 1・Minor 0。submitが仕事を投入した後、Futureを`pending`へ登録する前に親SIGINTが来ると結果が未追跡になる可能性、および`submit()`の`BrokenProcessPool`等が例外のままCLI外へ漏れる問題が指摘された。二件目のsubmit中にSIGINTを送り、先行局も実行中にしたテストは、修正前に二件目の局JSONが欠けるFAILを確認した。submit例外のテストも修正前に`BrokenProcessPool`が漏れるFAILを確認した。修正ではsubmitとFuture登録の短い区間だけSIGINTを保留し、局との対応付け後に中断処理へ移る。submit直接例外は予定局のERROR Futureとして回収し、後続投入を止める。
+
+三回目の独立レビューでは、端末Ctrl-Cがspawn workerにも届き、workerの`run_game()`が実行中局を途中終了する可能性が追加指摘された。承認済みの「親が中断後に開始済み局を回収する」挙動を保つため、ProcessPool initializerからworkerのSIGINTを無視する設定を行う。initializer接続テストは修正前に`initializer`未設定のassertionでFAILし、修正後はexecutor接続とspawn子プロセス内のsignal dispositionを検査するテストが成功した。
+
+修正後は `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest tests.test_compare_games -v` が31 tests / 1.071秒、`PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py` が828 tests / 55 modules / 73.109秒で成功した。`.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、`.venv/bin/ruff format --check .`、`git diff --check` も成功した。テストはFuture対応付けの境界、submit失敗の局別ERROR化、initializer接続、spawn worker内でSIGINTが無視されることを検査する。
+
+最終独立レビューはCritical 0・Important 0・Minor 2。コード上の統合阻害はないと判断された。Minorの一つはレビュー中の件数・結果未記録であり、この節と計画・README・知識メモ・再開案内の更新で対応する。残る一つはinitializer実行前の短いworker起動窓で実端末SIGINTが届く可能性。起動直後の実プロセスグループSIGINT試験は行わず、ERRORとしてsummaryへ記録されうる未検証事項をREADME・知識メモへ明記した。複数回連続Ctrl-C、強制終了後の途中棋譜復元、全OSのシグナル配送も未検証である。
+
+新しいSIGINTテストは単独で意図した欠落を検出するが、`signal.raise_signal`による親プロセス内の信号配送とspawn childのhandler確認を組み合わせても、macOS等の端末がforeground process group全体へ信号を送る実動作までは確認しない。並列化前の512手pilotはレビュー修正前source SHAの結果であり、今回の中断処理変更後にpilotを再実行してはいない。対局ロジックは変えていないが、このpilotを今回source上の再測定として扱わない。確認比較の組数・手数上限・総時間予算と、棋力の改善/悪化は未決定・未検証のままである。

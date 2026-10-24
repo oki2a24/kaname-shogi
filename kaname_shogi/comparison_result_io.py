@@ -46,8 +46,10 @@ from .sfen import SfenPosition, format_sfen, parse_sfen
 from .usi_move import format_usi_move, parse_usi_move
 
 _CONDITIONS_FORMAT = "kaname-shogi-comparison-conditions-v2"
+_CONDITIONS_V3_FORMAT = "kaname-shogi-comparison-conditions-v3"
 _GAME_FORMAT = "kaname-shogi-comparison-game-v1"
 _SUMMARY_FORMAT = "kaname-shogi-comparison-summary-v1"
+_SUMMARY_V2_FORMAT = "kaname-shogi-comparison-summary-v2"
 _ANALYSIS_FORMAT = "kaname-shogi-comparison-analysis-v1"
 _CONDITIONS_KEYS = {
     "format",
@@ -70,6 +72,7 @@ _CONDITIONS_KEYS = {
     "randomization",
     "policy_parameters",
 }
+_CONDITIONS_V3_KEYS = _CONDITIONS_KEYS | {"execution"}
 _GAME_KEYS = {
     "format",
     "conditions_sha256",
@@ -111,6 +114,7 @@ _SUMMARY_KEYS = {
     "elapsed_ns",
     "statistical_decision",
 }
+_SUMMARY_V2_KEYS = _SUMMARY_KEYS | {"in_flight_games"}
 
 
 @dataclass(frozen=True)
@@ -119,7 +123,7 @@ class LoadedComparison:
 
     引数:
         input_dir: 読み込んだ完了成果物ディレクトリ。
-        conditions: 厳密検証済みのconditions v2辞書。
+        conditions: 厳密検証済みのconditions v2/v3辞書。
         conditions_sha256: 読込時条件JSONバイト列のSHA-256。
         artifact_hashes: 読込時のconditions・予定局・summaryのファイル名とSHA-256。
         config: 条件スナップショットから復元した比較条件。
@@ -185,8 +189,10 @@ def load_completed_comparison(input_dir: Path) -> LoadedComparison:
         入力ディレクトリ内のJSONだけを読み、ファイルや他の場所を変更しない。
 
     前提条件:
-        独立抽出種一覧を保存したconditions v2を分析対象とする。ファイル名は予定IDから
-        構成し、JSONの任意パス参照を開かない。乱数や壁時計を再実行しない。
+        独立抽出種一覧を保存したconditions v2/v3を分析対象とし、summary v1/v2の完了状態を
+        検証する。v2 conditionsは逐次、v3はprocess-pool 2〜4 workerで、summary版も
+        対応させる。v2 summaryは投入中0が必須。ファイル名は予定IDから構成し、JSONの任意
+        パス参照を開かない。乱数や壁時計を再実行しない。
     """
     root = Path(input_dir)
     if not root.is_dir():
@@ -226,18 +232,31 @@ def load_completed_comparison(input_dir: Path) -> LoadedComparison:
     summary_raw = _read_artifact(root, "summary.json")
     artifact_hashes.append(("summary.json", hashlib.sha256(summary_raw).hexdigest()))
     summary = decode_object(summary_raw, context="比較summary")
-    _require_exact_keys(summary, _SUMMARY_KEYS, "比較summary")
-    if summary["format"] != _SUMMARY_FORMAT:
+    summary_format = summary.get("format")
+    if summary_format == _SUMMARY_FORMAT:
+        _require_exact_keys(summary, _SUMMARY_KEYS, "比較summary")
+    elif summary_format == _SUMMARY_V2_FORMAT:
+        _require_exact_keys(summary, _SUMMARY_V2_KEYS, "比較summary")
+        in_flight_games = summary["in_flight_games"]
+        if type(in_flight_games) is not int or in_flight_games < 0:
+            raise ValueError("summary投入中局数は0以上の整数で指定してください")
+        if in_flight_games != 0:
+            raise ValueError("投入中の局が残るsummaryは分析できません")
+    else:
         raise ValueError("比較summary形式が対応していません")
+    expected_summary_format = (
+        _SUMMARY_V2_FORMAT if config.workers > 1 else _SUMMARY_FORMAT
+    )
+    if summary_format != expected_summary_format:
+        raise ValueError("比較条件とsummary形式の組み合わせが不正です")
     elapsed_ns = summary["elapsed_ns"]
     if type(elapsed_ns) is not int or elapsed_ns < 0:
         raise ValueError("summary経過時間は0以上の有限整数で指定してください")
-    expected_summary = {
-        "format": _SUMMARY_FORMAT,
-        **summary_payload_for_results(config, results, elapsed_ns=elapsed_ns),
-    }
+    expected_summary = summary_payload_for_results(
+        config, results, elapsed_ns=elapsed_ns
+    )
     if not _json_values_equal(summary, expected_summary):
-        raise ValueError("summaryが保存局の再集計と一致しません")
+        raise ValueError("summaryが保存局の再集計または実行件数と一致しません")
 
     pair_scores = _score_pairs(schedule, results, config.candidate)
     return LoadedComparison(
@@ -362,10 +381,17 @@ def analysis_payload(
 def _load_conditions(
     conditions: dict[str, object], input_dir: Path
 ) -> tuple[ComparisonConfig, tuple[ScheduledGame, ...]]:
-    """条件v2全体を検証し、予定生成へ必要な型付き条件を作る。"""
-    _require_exact_keys(conditions, _CONDITIONS_KEYS, "比較条件")
-    if conditions["format"] != _CONDITIONS_FORMAT:
-        raise ValueError("独立抽出種一覧に対応したconditions v2が必要です")
+    """条件v2/v3全体を検証し、予定生成へ必要な型付き条件を作る。"""
+    conditions_format = conditions.get("format")
+    if conditions_format == _CONDITIONS_FORMAT:
+        _require_exact_keys(conditions, _CONDITIONS_KEYS, "比較条件")
+        workers = 1
+    elif conditions_format == _CONDITIONS_V3_FORMAT:
+        _require_exact_keys(conditions, _CONDITIONS_V3_KEYS, "比較条件")
+        workers = _execution_workers(conditions["execution"])
+    else:
+        _require_exact_keys(conditions, _CONDITIONS_KEYS, "比較条件")
+        raise ValueError("独立抽出種一覧に対応したconditions v2/v3が必要です")
     baseline = _policy(conditions["baseline"], "基準方式")
     candidate = _policy(conditions["candidate"], "候補方式")
     if baseline is candidate:
@@ -436,6 +462,7 @@ def _load_conditions(
         output_dir=input_dir,
         positions_path=Path(conditions["positions_file"]),
         positions_json=positions_raw,
+        workers=workers,
         seed_plan=seed_plan,
         seed_list_json=seed_raw,
         seed_list_path=None,
@@ -447,6 +474,18 @@ def _load_conditions(
     if not _json_values_equal(conditions["schedule"], expected_schedule):
         raise ValueError("条件に保存された局予定が種一覧から再生成した予定と違います")
     return config, schedule
+
+
+def _execution_workers(value: object) -> int:
+    """conditions v3の固定spawn実行条件を検証し、worker数を返す。"""
+    execution = _object(value, "実行条件")
+    _require_exact_keys(execution, {"executor", "workers"}, "実行条件")
+    if execution["executor"] != "process-pool":
+        raise ValueError("実行方式はprocess-poolで指定してください")
+    workers = execution["workers"]
+    if type(workers) is not int or not 2 <= workers <= 4:
+        raise ValueError("worker数は2〜4の整数で指定してください")
+    return workers
 
 
 def _validate_condition_metadata(conditions: Mapping[str, object]) -> None:

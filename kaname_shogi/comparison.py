@@ -63,6 +63,7 @@ class ComparisonConfig:
         seed_plan: 方式別乱数種一覧。旧主乱数種方式ではNone。
         seed_list_json: 検証した乱数種一覧JSONの読込時バイト列。
         seed_list_path: 乱数種一覧の入力パス。
+        workers: 一局ずつ比較を実行するプロセス数。省略時は従来どおり逐次実行。
 
     戻り値:
         比較条件を一つの変更不可データへまとめた値。
@@ -89,6 +90,7 @@ class ComparisonConfig:
     seed_plan: SeedPlan | None = None
     seed_list_json: bytes | None = None
     seed_list_path: Path | None = None
+    workers: int = 1
 
 
 @dataclass(frozen=True)
@@ -519,6 +521,7 @@ def summarize(
     *,
     batch_status: BatchStatus,
     unstarted_games: int,
+    in_flight_games: int = 0,
     elapsed_ns: int,
 ) -> dict[str, object]:
     """確定済み局結果を排他的な件数と方式別計時へ集計する。
@@ -528,10 +531,13 @@ def summarize(
         results: 予定順に開始済みの各局から得た確定結果。
         batch_status: 全局完了・中断・故障のいずれか。
         unstarted_games: 予定のうち開始しなかった局数。
+        in_flight_games: 並列実行で投入済み・未回収の局数。逐次実行では0。
         elapsed_ns: バッチ開始から集計時点までの経過ナノ秒。
 
     戻り値:
-        排他的な終了理由、局面・先後・方式別の記述集計を持つJSON用辞書。
+        排他的な終了理由、局面・先後・方式別の記述集計を持つJSON用辞書。開始局数は
+        保存済み結果と投入中局の合計、終了局数は保存済み結果数。複数ワーカーでは
+        投入中局数も含める。
 
     例外:
         ValueError: 件数恒等式、予定ID、重複局、勝者契約または手数記録が不整合の場合。
@@ -540,19 +546,24 @@ def summarize(
         なし。結果・棋譜・条件を変更しない。
 
     前提条件:
-        `results` は開始済み局だけを一局ずつ含み、各 `GameResult` は成功手と計時が
-        そろっている。終了理由は相互排他的に一度数え、連続王手の敗者内訳は別枠で
-        報告しても終了理由合計へ重ねて加えない。勝率や統計的判定は計算しない。
+        `results` は保存済み局だけを一局ずつ含み、各 `GameResult` は成功手と計時が
+        そろっている。保存済み・投入中・未開始の合計は予定局数に一致する。終了理由は
+        相互排他的に一度数え、連続王手の敗者内訳は別枠で報告しても終了理由合計へ
+        重ねて加えない。勝率や統計的判定は計算しない。
     """
     scheduled = make_schedule(config)
     if type(unstarted_games) is not int or unstarted_games < 0:
         raise ValueError("未開始局数は0以上の整数で指定してください")
+    if type(in_flight_games) is not int or in_flight_games < 0:
+        raise ValueError("投入中局数は0以上の整数で指定してください")
     if type(elapsed_ns) is not int or elapsed_ns < 0:
         raise ValueError("経過時間は0以上の整数で指定してください")
     if not isinstance(batch_status, BatchStatus):
         raise ValueError("バッチ状態が不正です")
-    if len(results) + unstarted_games != len(scheduled):
-        raise ValueError("開始局数と未開始局数の合計が予定局数と一致しません")
+    if config.workers == 1 and in_flight_games != 0:
+        raise ValueError("逐次比較に投入中局を指定できません")
+    if len(results) + in_flight_games + unstarted_games != len(scheduled):
+        raise ValueError("保存済み・投入中・未開始局数の合計が予定局数と一致しません")
 
     schedule_by_id = {game.game_id: game for game in scheduled}
     seen_game_ids: set[str] = set()
@@ -655,10 +666,10 @@ def summarize(
             "max_ns": max(times) if times else None,
         }
 
-    return {
+    summary = {
         "status": batch_status.value,
         "planned_games": len(scheduled),
-        "started_games": len(results),
+        "started_games": len(results) + in_flight_games,
         "ended_games": len(results),
         "unstarted_games": unstarted_games,
         "completed_pairs": completed_pairs,
@@ -673,6 +684,9 @@ def summarize(
         "elapsed_ns": elapsed_ns,
         "statistical_decision": None,
     }
+    if config.workers > 1:
+        summary["in_flight_games"] = in_flight_games
+    return summary
 
 
 _POLICY_NAMES = {

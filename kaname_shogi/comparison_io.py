@@ -39,6 +39,7 @@ _POSITION_FORMAT = "kaname-shogi-comparison-positions-v1"
 _CONDITIONS_FORMAT = "kaname-shogi-comparison-conditions-v1"
 _GAME_FORMAT = "kaname-shogi-comparison-game-v1"
 _SUMMARY_FORMAT = "kaname-shogi-comparison-summary-v1"
+_SUMMARY_V2_FORMAT = "kaname-shogi-comparison-summary-v2"
 _POSITION_SET_KEYS = {"format", "id", "positions"}
 _POSITION_KEYS = {"id", "setup_moves", "rationale"}
 _POLICIES = {
@@ -257,6 +258,7 @@ def load_config(argv: Sequence[str]) -> ComparisonConfig:
         seed_plan=seed_plan,
         seed_list_json=seed_list_json,
         seed_list_path=seed_list_path,
+        workers=args.workers,
     )
 
 
@@ -272,6 +274,7 @@ def _make_parser(*, add_help: bool = False) -> _ValueErrorArgumentParser:
     seed_group.add_argument("--seed-list")
     parser.add_argument("--max-plies", required=True)
     parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--workers", type=int, choices=(1, 2, 3, 4), default=1)
     return parser
 
 
@@ -358,8 +361,9 @@ def conditions_payload(
         source_root: `kaname_shogi` パッケージを含むGit作業ルート。
 
     戻り値:
-        旧主乱数種実験ならconditions v1、一括種一覧実験ならconditions v2の新しい
-        JSON互換辞書。v2には読込時の局面・種一覧の正確なUTF-8文字列を含む。
+        逐次主乱数種実験ならconditions v1、逐次種一覧実験ならconditions v2、並列実験
+        ならconditions v3の新しいJSON互換辞書。v2/v3には読込時の局面・種一覧の正確な
+        UTF-8文字列を含む。
 
     副作用:
         読込済み局面バイト列、パッケージ内の全Pythonソース、Git状態、実行環境を読む。
@@ -422,7 +426,7 @@ def conditions_payload(
     if config.seed_plan is None:
         if config.seed is None:
             raise ValueError("条件JSONには主乱数種または乱数種一覧が必要です")
-        return payload
+        return _with_execution_metadata(payload, config.workers)
 
     if config.seed is not None or config.seed_list_json is None:
         raise ValueError("乱数種一覧の条件JSONに必要な保存値がありません")
@@ -449,6 +453,19 @@ def conditions_payload(
             },
         }
     )
+    return _with_execution_metadata(payload, config.workers)
+
+
+def _with_execution_metadata(
+    payload: dict[str, object], workers: int
+) -> dict[str, object]:
+    """複数ワーカー実験だけをconditions v3として区別する。"""
+    if workers == 1:
+        return payload
+    if type(workers) is not int or not 2 <= workers <= 4:
+        raise ValueError("conditionsのワーカー数は2〜4で指定してください")
+    payload["format"] = "kaname-shogi-comparison-conditions-v3"
+    payload["execution"] = {"executor": "process-pool", "workers": workers}
     return payload
 
 
@@ -565,7 +582,8 @@ def summary_payload(summary: Mapping[str, object]) -> dict[str, object]:
         summary: `comparison.summarize()` が返した書式版なしの集計辞書。
 
     戻り値:
-        summary形式版を先頭に加え、入力項目を保持した新しい辞書。
+        `in_flight_games`がない逐次集計はsummary v1、存在する並列集計はv2として
+        形式版を加え、入力項目を保持した新しい辞書。
 
     例外:
         ValueError: 入力がMappingでない、または形式版をすでに含む場合。
@@ -580,7 +598,10 @@ def summary_payload(summary: Mapping[str, object]) -> dict[str, object]:
         raise ValueError("summaryはMappingで指定してください")
     if "format" in summary:
         raise ValueError("summaryには形式版を重ねて指定できません")
-    return {"format": _SUMMARY_FORMAT, **summary}
+    summary_format = (
+        _SUMMARY_V2_FORMAT if "in_flight_games" in summary else _SUMMARY_FORMAT
+    )
+    return {"format": summary_format, **summary}
 
 
 def atomic_write_json(path: Path, payload: Mapping[str, object]) -> None:

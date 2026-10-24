@@ -297,6 +297,16 @@ def _rewrite_conditions_hash(input_dir: Path) -> str:
     return digest
 
 
+def _make_parallel_conditions(input_dir: Path, *, workers: int = 2) -> None:
+    """手書き比較をconditions v3の実行条件へ変換し、局の参照hashを更新する。"""
+    conditions_path = input_dir / "conditions.json"
+    conditions = json.loads(conditions_path.read_bytes())
+    conditions["format"] = "kaname-shogi-comparison-conditions-v3"
+    conditions["execution"] = {"executor": "process-pool", "workers": workers}
+    conditions_path.write_bytes(_json_bytes(conditions))
+    _rewrite_conditions_hash(input_dir)
+
+
 class ComparisonResultReadTests(unittest.TestCase):
     def _require_implementation(self):
         """未実装APIは振る舞いの未実装として表示する。"""
@@ -313,8 +323,10 @@ class ComparisonResultReadTests(unittest.TestCase):
         self._require_implementation()
         with tempfile.TemporaryDirectory() as directory:
             _, input_dir = _write_handwritten_experiment(Path(directory))
-
-            loaded = load_completed_comparison(input_dir)
+            try:
+                loaded = load_completed_comparison(input_dir)
+            except ValueError as error:
+                self.fail(f"既存conditions v2を読み込めません: {error}")
 
         self.assertEqual(loaded.purpose, "pilot")
         self.assertEqual(loaded.baseline, MoveSelectionPolicy.MATERIAL)
@@ -325,6 +337,247 @@ class ComparisonResultReadTests(unittest.TestCase):
             ((0, 1),),
         )
         self.assertEqual(loaded.summary["elapsed_ns"], 999)
+
+    def test_reads_complete_summary_v2_when_no_games_are_in_flight(self):
+        """conditions v3と完了summary v2で投入中0なら全局を分析できる。
+
+        worker条件をConfigへ復元しない、v2件数を理解せず拒否する、または保存局数を
+        再集計しない誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            _, input_dir = _write_handwritten_experiment(Path(directory))
+            _make_parallel_conditions(input_dir)
+            summary_path = input_dir / "summary.json"
+            summary = json.loads(summary_path.read_bytes())
+            summary["format"] = "kaname-shogi-comparison-summary-v2"
+            summary["in_flight_games"] = 0
+            summary_path.write_bytes(_json_bytes(summary))
+
+            try:
+                loaded = load_completed_comparison(input_dir)
+            except ValueError as error:
+                self.fail(f"完了summary v2を受理できません: {error}")
+
+        self.assertEqual(len(loaded.results), 2)
+        self.assertEqual(loaded.summary["in_flight_games"], 0)
+        self.assertEqual(loaded.summary["started_games"], 2)
+        self.assertEqual(loaded.summary["ended_games"], 2)
+        self.assertEqual(loaded.config.workers, 2)
+        self.assertEqual(
+            tuple((score.lower, score.upper) for score in loaded.pair_scores),
+            ((0, 1),),
+        )
+
+    def test_conditions_and_summary_versions_must_match(self):
+        """conditions v2/v3とsummary v1/v2の実行方式組合せを固定する。
+
+        逐次実行metadataを並列版として分析したり、並列実験のworker数を欠くsummaryを
+        完全成果物として受理する誤りを検出する。
+        """
+        self._require_implementation()
+        for parallel_conditions, parallel_summary in (
+            (False, True),
+            (True, False),
+        ):
+            with (
+                self.subTest(
+                    parallel_conditions=parallel_conditions,
+                    parallel_summary=parallel_summary,
+                ),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                _, input_dir = _write_handwritten_experiment(Path(directory))
+                if parallel_conditions:
+                    _make_parallel_conditions(input_dir)
+                summary_path = input_dir / "summary.json"
+                summary = json.loads(summary_path.read_bytes())
+                if parallel_summary:
+                    summary["format"] = "kaname-shogi-comparison-summary-v2"
+                    summary["in_flight_games"] = 0
+                summary_path.write_bytes(_json_bytes(summary))
+
+                with self.assertRaisesRegex(ValueError, "組み合わせ"):
+                    load_completed_comparison(input_dir)
+
+    def test_conditions_v3_rejects_unsupported_execution_metadata(self):
+        """conditions v3のexecutionはprocess-pool 2〜4workerだけを受理する。
+
+        未知/欠落キー、未知executor、boolや範囲外worker数を読み飛ばし、異なる実行方式の
+        成果物を同じ条件として分析する誤りを検出する。
+        """
+        self._require_implementation()
+        cases = (
+            (
+                "missing-execution",
+                lambda conditions: conditions.pop("execution"),
+                "比較条件のキーが不正",
+            ),
+            (
+                "unknown-key",
+                lambda conditions: conditions["execution"].update({"queue": 2}),
+                "実行条件のキーが不正",
+            ),
+            (
+                "missing-key",
+                lambda conditions: conditions["execution"].pop("workers"),
+                "実行条件のキーが不正",
+            ),
+            (
+                "executor",
+                lambda conditions: conditions["execution"].update(
+                    {"executor": "threads"}
+                ),
+                "実行方式",
+            ),
+            (
+                "boolean",
+                lambda conditions: conditions["execution"].update({"workers": True}),
+                "worker数",
+            ),
+            (
+                "one",
+                lambda conditions: conditions["execution"].update({"workers": 1}),
+                "worker数",
+            ),
+            (
+                "five",
+                lambda conditions: conditions["execution"].update({"workers": 5}),
+                "worker数",
+            ),
+        )
+        for name, mutate, error_text in cases:
+            with (
+                self.subTest(case=name),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                _, input_dir = _write_handwritten_experiment(Path(directory))
+                _make_parallel_conditions(input_dir)
+                conditions_path = input_dir / "conditions.json"
+                conditions = json.loads(conditions_path.read_bytes())
+                mutate(conditions)
+                conditions_path.write_bytes(_json_bytes(conditions))
+                _rewrite_conditions_hash(input_dir)
+
+                with self.assertRaisesRegex(ValueError, error_text):
+                    load_completed_comparison(input_dir)
+
+    def test_rejects_summary_v2_unknown_keys_and_invalid_in_flight_values(self):
+        """summary v2の未知キー・欠落キー・bool・負の投入中件数を拒否する。
+
+        入れ子のstrict schemaを緩めたり、boolを整数として扱って不正な成果物を分析する
+        誤りを検出する。
+        """
+        self._require_implementation()
+        cases = (
+            ("unknown", "extra", 1, "キーが不正"),
+            ("missing", "in_flight_games", None, "キーが不正"),
+            ("boolean", "in_flight_games", True, "summary投入中局数"),
+            ("negative", "in_flight_games", -1, "summary投入中局数"),
+        )
+
+        for name, key, value, message in cases:
+            with self.subTest(case=name), tempfile.TemporaryDirectory() as directory:
+                _, input_dir = _write_handwritten_experiment(Path(directory))
+                _make_parallel_conditions(input_dir)
+                summary_path = input_dir / "summary.json"
+                summary = json.loads(summary_path.read_bytes())
+                summary["format"] = "kaname-shogi-comparison-summary-v2"
+                summary["in_flight_games"] = 0
+                if value is None:
+                    summary.pop(key)
+                else:
+                    summary[key] = value
+                summary_path.write_bytes(_json_bytes(summary))
+
+                with self.assertRaisesRegex(ValueError, message):
+                    load_completed_comparison(input_dir)
+
+    def test_parallel_metadata_and_schedule_are_bound_to_saved_games(self):
+        """v3 worker metadata・seed予定と局JSON参照hashを相互照合する。
+
+        条件metadataだけを書き換えて当時の局結果と結合したり、種一覧と違う局予定を
+        完了実験として読む誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            _, input_dir = _write_handwritten_experiment(Path(directory))
+            _make_parallel_conditions(input_dir)
+            conditions_path = input_dir / "conditions.json"
+            conditions = json.loads(conditions_path.read_bytes())
+            conditions["execution"]["workers"] = 4
+            conditions_path.write_bytes(_json_bytes(conditions))
+            with self.assertRaisesRegex(ValueError, "別conditions"):
+                load_completed_comparison(input_dir)
+
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            source_dir = base / "source"
+            source_dir.mkdir()
+            _write_handwritten_experiment(source_dir)
+            _make_parallel_conditions(source_dir, workers=4)
+            target_dir = base / "target"
+            target_dir.mkdir()
+            _write_handwritten_experiment(target_dir)
+            _make_parallel_conditions(target_dir, workers=2)
+            (target_dir / "game-000001.json").write_bytes(
+                (source_dir / "game-000001.json").read_bytes()
+            )
+            with self.assertRaisesRegex(ValueError, "別conditions"):
+                load_completed_comparison(target_dir)
+
+        with tempfile.TemporaryDirectory() as directory:
+            _, input_dir = _write_handwritten_experiment(Path(directory))
+            _make_parallel_conditions(input_dir)
+            conditions_path = input_dir / "conditions.json"
+            conditions = json.loads(conditions_path.read_bytes())
+            conditions["schedule"][0]["candidate_seed"] = 19
+            conditions_path.write_bytes(_json_bytes(conditions))
+            _rewrite_conditions_hash(input_dir)
+            with self.assertRaisesRegex(ValueError, "局予定"):
+                load_completed_comparison(input_dir)
+
+    def test_rejects_parallel_game_reassigned_to_another_schedule_id(self):
+        """局JSONの内部game_idを予定とは別のIDへ付け替えた成果物を拒否する。
+
+        ファイル名だけから予定を割り当て、内部の局IDや方式別seedの対応を確認しない
+        誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            _, input_dir = _write_handwritten_experiment(Path(directory))
+            _make_parallel_conditions(input_dir)
+            summary_path = input_dir / "summary.json"
+            summary = json.loads(summary_path.read_bytes())
+            summary["format"] = "kaname-shogi-comparison-summary-v2"
+            summary["in_flight_games"] = 0
+            summary_path.write_bytes(_json_bytes(summary))
+            game_path = input_dir / "game-000001.json"
+            game = json.loads(game_path.read_bytes())
+            game["game_id"] = "game-000002"
+            game_path.write_bytes(_json_bytes(game))
+
+            with self.assertRaisesRegex(ValueError, "予定値 game_id"):
+                load_completed_comparison(input_dir)
+
+    def test_parallel_summary_counts_are_reaggregated_from_games(self):
+        """v3/v2の完了件数は保存局から再集計し、手書き変更を拒否する。
+
+        summary v2の件数を保存局と照合せず、そのまま比較分析へ渡す誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            _, input_dir = _write_handwritten_experiment(Path(directory))
+            _make_parallel_conditions(input_dir)
+            summary_path = input_dir / "summary.json"
+            summary = json.loads(summary_path.read_bytes())
+            summary["format"] = "kaname-shogi-comparison-summary-v2"
+            summary["in_flight_games"] = 0
+            summary["started_games"] = 3
+            summary_path.write_bytes(_json_bytes(summary))
+
+            with self.assertRaisesRegex(ValueError, "再集計"):
+                load_completed_comparison(input_dir)
 
     def test_maps_winner_side_to_candidate_policy_and_score(self):
         """先後交換した勝者を方式へ対応付けて候補得点を反転する。

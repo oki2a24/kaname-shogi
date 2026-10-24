@@ -874,6 +874,101 @@ class ComparisonSummaryTests(unittest.TestCase):
         self.assertEqual(payload["elapsed_ns"], 987654)
         self.assertIsNone(payload["statistical_decision"])
 
+    def test_parallel_summary_separates_saved_in_flight_and_unstarted_games(self):
+        """並列summaryで保存済み・投入中・未投入を別々に数える。
+
+        投入中を未開始へ加算したり、保存済みと二重計上して予定8局の恒等式を崩す誤りを
+        検出する。件数は棋譜再集計に依存しない独立期待値で固定する。
+        """
+        self._require_implementation()
+        config, schedule = self._config_and_schedule()
+        config = replace(config, workers=4)
+        results = tuple(
+            self._result(config, game, GameEndReason.PLY_LIMIT) for game in schedule[:2]
+        )
+
+        try:
+            payload = summarize(
+                config,
+                results,
+                batch_status=BatchStatus.RUNNING,
+                unstarted_games=3,
+                in_flight_games=3,
+                elapsed_ns=123,
+            )
+        except ValueError as error:
+            self.fail(f"投入中の3局を件数へ反映できません: {error}")
+
+        self.assertEqual(payload["planned_games"], 8)
+        self.assertEqual(payload["started_games"], 5)
+        self.assertEqual(payload["ended_games"], 2)
+        self.assertEqual(payload["in_flight_games"], 3)
+        self.assertEqual(payload["unstarted_games"], 3)
+        self.assertEqual(
+            payload["started_games"] + payload["unstarted_games"],
+            payload["planned_games"],
+        )
+        self.assertEqual(sum(payload["results"].values()), payload["ended_games"])
+        self.assertEqual(
+            payload["ended_games"]
+            + payload["in_flight_games"]
+            + payload["unstarted_games"],
+            payload["planned_games"],
+        )
+
+    def test_parallel_summary_rejects_invalid_in_flight_counts(self):
+        """投入中件数の負値・bool・予定との不一致を拒否する。
+
+        Pythonでboolが整数として混入すること、また件数の誤りを不整合として扱わず
+        完了状態へ保存することを検出する。
+        """
+        self._require_implementation()
+        config, schedule = self._config_and_schedule()
+        config = replace(config, workers=4)
+        results = tuple(
+            self._result(config, game, GameEndReason.PLY_LIMIT) for game in schedule[:2]
+        )
+        invalid_counts = ((-1, 7), (True, 5), (3, 4))
+
+        for in_flight, unstarted in invalid_counts:
+            with self.subTest(in_flight=in_flight, unstarted=unstarted):
+                with self.assertRaises(ValueError):
+                    summarize(
+                        config,
+                        results,
+                        batch_status=BatchStatus.RUNNING,
+                        unstarted_games=unstarted,
+                        in_flight_games=in_flight,
+                        elapsed_ns=1,
+                    )
+
+    def test_completed_parallel_summary_records_zero_in_flight_games(self):
+        """並列実験が終わったsummary v2で投入中0を明示する。
+
+        完了後に投入中フィールドを省いてsummary v1へ戻し、conditions v3と対になる
+        完了形式を曖昧にする誤りを検出する。
+        """
+        self._require_implementation()
+        config, schedule = self._config_and_schedule()
+        config = replace(config, workers=4)
+        results = tuple(
+            self._result(config, game, GameEndReason.PLY_LIMIT) for game in schedule
+        )
+
+        payload = summarize(
+            config,
+            results,
+            batch_status=BatchStatus.COMPLETE,
+            unstarted_games=0,
+            in_flight_games=0,
+            elapsed_ns=456,
+        )
+
+        self.assertEqual(payload["started_games"], 8)
+        self.assertEqual(payload["ended_games"], 8)
+        self.assertEqual(payload.get("in_flight_games"), 0)
+        self.assertEqual(payload["unstarted_games"], 0)
+
     def test_summary_adds_b1_timing_only_when_b1_is_part_of_the_comparison(self):
         """旧集計は五方式を保ち、B1実験だけにB1計時欄を追加する。
 

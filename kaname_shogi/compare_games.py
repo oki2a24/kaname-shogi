@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import hashlib
+import signal
 import sys
 import time
 from collections.abc import Sequence
+from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, wait
+from multiprocessing import get_context
 from pathlib import Path
 
 from .comparison import (
@@ -32,7 +35,7 @@ from .game_record import GameRecord
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """比較条件を検証し、逐次対局と局別JSON・summary保存を実行する。
+    """比較条件を検証し、逐次または並列対局と局別保存を実行する。
 
     引数:
         argv: CLI引数列。Noneならプロセスのコマンドラインを使う。
@@ -46,8 +49,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         標準エラーへ短い日本語表示を行う。
 
     前提条件:
-        通常CLI・USIの入口や設定は変更しない。予定順に逐次実行し、通常千日手の再戦、
-        自動再試行、棋力の統計判定を行わない。中断・故障後は後続局を開始しない。
+        通常CLI・USIの入口や設定は変更しない。workers=1は予定順に逐次実行し、
+        複数workerはspawn process poolを使う。通常千日手の再戦、自動再試行、棋力の
+        統計判定を行わない。
     """
     arguments = list(sys.argv[1:] if argv is None else argv)
     if any(argument in {"-h", "--help"} for argument in arguments):
@@ -98,6 +102,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
 
     positions_by_id = {position.position_id: position for position in config.positions}
+    if config.workers > 1:
+        return _run_parallel_games(
+            config,
+            schedule,
+            positions_by_id,
+            conditions_hash=conditions_hash,
+            started_at_ns=started_at_ns,
+        )
+
     results: list[GameResult] = []
 
     try:
@@ -197,6 +210,314 @@ def _empty_result(
     )
 
 
+def _run_game_worker(
+    schedule: ScheduledGame,
+    position: ComparisonPosition,
+    config: ComparisonConfig,
+) -> GameResult:
+    """spawn子プロセスで一局を実行し、pickle可能な結果だけを返す。"""
+    return run_game(schedule, position, config)
+
+
+def _ignore_worker_sigint() -> None:
+    """spawn workerは端末SIGINTを無視し、親が中断後に局結果を回収できるようにする。"""
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
+def _run_parallel_games(
+    config: ComparisonConfig,
+    schedule: Sequence[ScheduledGame],
+    positions_by_id: dict[str, ComparisonPosition],
+    *,
+    conditions_hash: str,
+    started_at_ns: int,
+) -> int:
+    """spawn process poolで対局し、条件・結果ファイルを親だけが保存する。"""
+    results_by_id: dict[str, GameResult] = {}
+    status = BatchStatus.RUNNING
+    parent_interrupted = False
+    persistence_error: str | None = None
+    with ProcessPoolExecutor(
+        max_workers=config.workers,
+        mp_context=get_context("spawn"),
+        initializer=_ignore_worker_sigint,
+    ) as executor:
+        pending = {}
+        next_schedule_index = 0
+        submission_stopped = False
+
+        def submit_next() -> bool:
+            nonlocal next_schedule_index, submission_stopped
+            if submission_stopped or next_schedule_index >= len(schedule):
+                return False
+            game = schedule[next_schedule_index]
+            deferred_interrupt = None
+
+            def defer_sigint(signum, frame):
+                nonlocal deferred_interrupt
+                deferred_interrupt = (signum, frame)
+
+            previous_sigint_handler = signal.signal(signal.SIGINT, defer_sigint)
+            try:
+                try:
+                    future = executor.submit(
+                        _run_game_worker,
+                        game,
+                        positions_by_id[game.position_id],
+                        config,
+                    )
+                except KeyboardInterrupt:
+                    raise
+                except Exception as error:
+                    # submitがFutureを返せない局も予定単位でERRORとして回収する。
+                    future = Future()
+                    future.set_exception(error)
+                    submission_stopped = True
+
+                # SIGINTを一時保留し、投入済みFutureを必ず親の対応表へ登録してから
+                # 中断処理へ移る。そうしないと局結果を回収できず未開始件数がずれる。
+                pending[future] = game
+                next_schedule_index += 1
+            finally:
+                signal.signal(signal.SIGINT, previous_sigint_handler)
+
+            if deferred_interrupt is not None:
+                if previous_sigint_handler == signal.SIG_IGN:
+                    return True
+                if callable(previous_sigint_handler):
+                    previous_sigint_handler(*deferred_interrupt)
+                else:
+                    raise KeyboardInterrupt
+            return True
+
+        def stop_after_parent_interrupt() -> None:
+            """親割込み後は未開始を取消し、結果回収だけを続ける。"""
+            nonlocal parent_interrupted, status
+            parent_interrupted = True
+            if status is BatchStatus.RUNNING:
+                status = BatchStatus.INTERRUPTED
+            for pending_future in tuple(pending):
+                if pending_future.cancel():
+                    pending.pop(pending_future)
+
+        try:
+            while len(pending) < config.workers and submit_next():
+                pass
+        except KeyboardInterrupt:
+            stop_after_parent_interrupt()
+
+        while pending:
+            try:
+                completed, _ = wait(pending, return_when=FIRST_COMPLETED)
+            except KeyboardInterrupt:
+                stop_after_parent_interrupt()
+                try:
+                    results = [
+                        results_by_id[item.game_id]
+                        for item in schedule
+                        if item.game_id in results_by_id
+                    ]
+                    _save_summary(
+                        config,
+                        schedule,
+                        results,
+                        status,
+                        started_at_ns,
+                        in_flight_games=len(pending),
+                    )
+                except KeyboardInterrupt:
+                    stop_after_parent_interrupt()
+                except Exception as error:
+                    persistence_error = (
+                        f"summary.jsonを保存できません: {type(error).__name__}: {error}"
+                    )
+                continue
+
+            for future in completed:
+                game = pending.pop(future)
+                position = positions_by_id[game.position_id]
+
+                if persistence_error is not None:
+                    try:
+                        future.result()
+                    except BaseException:
+                        pass
+                    continue
+
+                try:
+                    game_result = future.result()
+                except KeyboardInterrupt:
+                    game_result = _empty_result(
+                        game,
+                        position,
+                        GameEndReason.INTERRUPTED,
+                    )
+                except Exception as error:
+                    game_result = _empty_result(
+                        game,
+                        position,
+                        GameEndReason.ERROR,
+                        error=f"{type(error).__name__}: {error}",
+                    )
+
+                try:
+                    atomic_write_json(
+                        config.output_dir / f"{game.game_id}.json",
+                        game_payload(
+                            game_result,
+                            config,
+                            conditions_sha256=conditions_hash,
+                        ),
+                    )
+                except KeyboardInterrupt:
+                    stop_after_parent_interrupt()
+                    game_path = config.output_dir / f"{game.game_id}.json"
+                    if not game_path.exists():
+                        try:
+                            atomic_write_json(
+                                game_path,
+                                game_payload(
+                                    game_result,
+                                    config,
+                                    conditions_sha256=conditions_hash,
+                                ),
+                            )
+                        except KeyboardInterrupt as error:
+                            persistence_error = (
+                                "局JSON保存中に再度割り込まれました "
+                                f"({game.game_id}): {type(error).__name__}: {error}"
+                            )
+                            status = BatchStatus.ERROR
+                        except Exception as error:
+                            persistence_error = (
+                                f"局JSONを保存できません ({game.game_id}): "
+                                f"{type(error).__name__}: {error}"
+                            )
+                            status = BatchStatus.ERROR
+                    if persistence_error is not None:
+                        continue
+                except Exception as error:
+                    persistence_error = (
+                        f"局JSONを保存できません ({game.game_id}): "
+                        f"{type(error).__name__}: {error}"
+                    )
+                    status = BatchStatus.ERROR
+                    for pending_future in tuple(pending):
+                        if pending_future.cancel():
+                            pending.pop(pending_future)
+                    continue
+
+                results_by_id[game.game_id] = game_result
+                if game_result.reason is GameEndReason.ERROR:
+                    status = BatchStatus.ERROR
+                elif (
+                    game_result.reason is GameEndReason.INTERRUPTED
+                    and status is BatchStatus.RUNNING
+                ):
+                    status = BatchStatus.INTERRUPTED
+                elif (
+                    len(results_by_id) == len(schedule)
+                    and status is BatchStatus.RUNNING
+                ):
+                    status = BatchStatus.COMPLETE
+
+                if status in {BatchStatus.ERROR, BatchStatus.INTERRUPTED}:
+                    for pending_future in tuple(pending):
+                        if pending_future.cancel():
+                            pending.pop(pending_future)
+
+                results = [
+                    results_by_id[item.game_id]
+                    for item in schedule
+                    if item.game_id in results_by_id
+                ]
+                try:
+                    _save_summary(
+                        config,
+                        schedule,
+                        results,
+                        status,
+                        started_at_ns,
+                        in_flight_games=len(pending),
+                    )
+                except KeyboardInterrupt:
+                    stop_after_parent_interrupt()
+                except Exception as error:
+                    persistence_error = (
+                        f"summary.jsonを保存できません: {type(error).__name__}: {error}"
+                    )
+                    status = BatchStatus.ERROR
+                    for pending_future in tuple(pending):
+                        if pending_future.cancel():
+                            pending.pop(pending_future)
+
+            if status is BatchStatus.RUNNING and not parent_interrupted:
+                try:
+                    while len(pending) < config.workers and submit_next():
+                        pass
+                except KeyboardInterrupt:
+                    stop_after_parent_interrupt()
+
+    if parent_interrupted and persistence_error is None:
+        results = [
+            results_by_id[item.game_id]
+            for item in schedule
+            if item.game_id in results_by_id
+        ]
+        try:
+            _save_summary(
+                config,
+                schedule,
+                results,
+                status,
+                started_at_ns,
+                in_flight_games=0,
+            )
+        except Exception as error:
+            persistence_error = (
+                f"summary.jsonを保存できません: {type(error).__name__}: {error}"
+            )
+
+    if persistence_error is not None:
+        print(persistence_error, file=sys.stderr)
+        _print_scope_notes(sys.stderr)
+        return 1
+
+    results = [
+        results_by_id[item.game_id]
+        for item in schedule
+        if item.game_id in results_by_id
+    ]
+    error_result = next(
+        (result for result in results if result.reason is GameEndReason.ERROR), None
+    )
+    if error_result is not None:
+        print(
+            f"対局 {error_result.schedule.game_id} が故障終了しました: "
+            f"{error_result.error}",
+            file=sys.stderr,
+        )
+        _print_scope_notes(sys.stderr)
+        return 1
+    interrupted_result = next(
+        (result for result in results if result.reason is GameEndReason.INTERRUPTED),
+        None,
+    )
+    if interrupted_result is not None:
+        print(
+            f"対局 {interrupted_result.schedule.game_id} の途中で中断しました。",
+            file=sys.stderr,
+        )
+        _print_scope_notes(sys.stderr)
+        return 130
+    if parent_interrupted:
+        print("比較を中断しました。実行中の局は回収して保存しました。", file=sys.stderr)
+        _print_scope_notes(sys.stderr)
+        return 130
+    _print_completion(config, schedule, results)
+    return 0
+
+
 def _status_after_game(
     result: GameResult,
     saved_games: int,
@@ -218,6 +539,8 @@ def _save_summary(
     results: Sequence[GameResult],
     status: BatchStatus,
     started_at_ns: int,
+    *,
+    in_flight_games: int = 0,
 ) -> None:
     """保存済み局結果から最新summaryを原子的に作る。"""
     elapsed_ns = max(0, time.monotonic_ns() - started_at_ns)
@@ -225,7 +548,8 @@ def _save_summary(
         config,
         results,
         batch_status=status,
-        unstarted_games=len(schedule) - len(results),
+        unstarted_games=len(schedule) - len(results) - in_flight_games,
+        in_flight_games=in_flight_games,
         elapsed_ns=elapsed_ns,
     )
     atomic_write_json(

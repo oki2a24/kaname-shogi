@@ -2,11 +2,11 @@
 
 ## 現在地
 
-2026-10-24、C1「飛車可動性を接続して比較評価する」の本人承認済み実装計画に沿い、比較CLIへのB1接続・乱数種一覧・分析CLIを実装した。作業場所は `/Users/oki2a24/kaname-shogi`、ブランチは `codex/c1-rook-mobility-evaluation`、開始HEADは `5f136d5`。仕様・回答経緯は[承認済み設計](plans/2026-10-24-c1-rook-mobility-evaluation-design.md)と[学習記録](learning/c1-rook-mobility-evaluation.md)、実施手順は[実装計画](plans/2026-10-24-c1-rook-mobility-evaluation-implementation-plan.md)を参照する。
+2026-10-24、本人が明示承認したC1並列化計画に沿って実装・テスト・pilotを作業ブランチ `codex/c1-rook-mobility-evaluation` で進めた。開始HEADは `7b2286b`。`--workers` は既定1、2〜4はspawnプロセス並列、conditions v3/summary v2を分析readerへ接続する。通常CLI・USI、SFEN、飛車可動性バージョン2は変更していない。仕様は[承認済みC1設計](plans/2026-10-24-c1-rook-mobility-evaluation-design.md)、変更・検証・判断経緯は[並列化計画と実績](plans/2026-10-24-c1-comparison-parallel-workers-implementation-plan.md)と[学習記録](learning/c1-rook-mobility-evaluation.md)を参照する。
 
-タスク1〜5と準備→比較→分析の実プロセス接続は完了した。pipeline test 1件が成功し、同一種一覧で計時情報を除く予定・棋譜・終局理由・勝敗の再現を確認した。条件SHA、勝者方式の対応、未決着区間、組単位の標本数の4変異を一時コピーで検出した。最終レビューのMinorをTDDで修正し、関連40件、全体795件・55モジュール、Ruff三工程、文書リンク807件/見出し8件、差分検査が成功した。最終独立レビューはCritical 0 / Important 0 / Minor 0。検出範囲・未検証事項は[学習記録](learning/c1-rook-mobility-evaluation.md)にある。
+初回の並列化コードで同じ6組・同じ乱数種・512手上限を逐次/4worker実行し、旧pilot・逐次・4workerの棋譜・終局・勝敗・分析得点が一致した。全て12/12局完了、得点区間 `[0,1]`。比較時間は逐次320.167秒、4worker125.555秒で、この一回では約2.55倍だった。後の独立レビューで中断経路を修正したため、これらのpilotはその修正前source SHAによる結果として扱う。通常の完了結果・時間pilotであり、同一seedの反復は独立標本でなく、強さの結論・目標検出力を示さない。確認比較の組数・手数上限・総時間予算は未選定。mainへの統合は別途本人承認を得るまで行わない。
 
-C1のコード・テスト・初期記録は `42fc9e9` などローカルブランチ `codex/c1-rook-mobility-evaluation` に保存済みで、mainへの統合は未実施。pilotは同じ6局面×1組・同じ乱数種で256手と512手を比較した。256手では12局中5局が上限、所要251.999秒。512手では12局すべて終局し、上限到達0、所要319.985秒。後者は前者と同じ棋譜を延長した上限感度確認なので独立標本として合算しない。両方とも6組で分析区間は `[0,1]`、強さ・目標検出力は未判定。512手条件を2,040組へ単純比例した目安は約30.2時間であり、確認比較の組数・手数上限・実行予算は本人の選択待ち。条件・summary・棋譜・分析JSONは `data/comparison/runs/c1-rook-mobility-pilot-2026-10-24/` と `data/comparison/runs/c1-rook-mobility-pilot-512-2026-10-24/` および各隣接ファイルにある。`.venv/bin/ruff --version` は固定版 `0.16.10`、hooksPathは `.githooks`。通常CLIのSFEN入出力と飛車可動性バージョン2は追加しない。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持する。
+独立レビューの指摘に従い、submit/Future登録時のSIGINT保留、submit例外のERROR記録、spawn worker initializerでのSIGINT無視をTDDで追加した。最終レビューはCritical 0・Important 0・Minor 2。残る未検証事項はworker初期化前の短い起動窓における実端末SIGINTと、複数回連続Ctrl-C等で、README・知識メモ・学習記録に記録した。比較CLI31 tests（1.071秒）、全体828 tests/55 modules（73.109秒）、Ruff全検査が成功。最終レビュー記録・利用文書の更新済みで、通常コミットが次の手順。初回の同一seed pilotは修正前source SHAによる履歴結果のままで、強さの結論はない。main統合と確認比較条件は別途承認・選定が必要。`.venv/bin/ruff` は固定版 `0.16.10`、local hooksPathは `.githooks`。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持する。
 
 ## C1開始前の状態（履歴）
 

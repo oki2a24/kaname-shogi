@@ -108,13 +108,17 @@ python3 -m kaname_shogi.compare_games \
   --baseline material --candidate material-rook-mobility \
   --positions data/comparison/c1-rook-mobility-positions-v1.json \
   --pairs-per-position 1 --seed-list results/c1-pilot-seeds.json \
-  --max-plies 256 --output-dir results/c1-pilot
+  --max-plies 256 --workers 4 --output-dir results/c1-pilot
 
 python3 -m kaname_shogi.analyze_comparison \
   --input-dir results/c1-pilot --output results/c1-pilot-analysis.json
 ```
 
 準備CLIは各局面・各組・各方式の乱数種を事前保存し、同じ一覧を比較CLIへ渡します。比較CLIは `--seed` または `--seed-list` の一方を必須とし、二局一組の先後を交換します。結果には局ごとの棋譜、条件、進行summaryが保存されます。分析CLIは完了した全局を照合・再集計して候補方式視点の得点区間を出します。`pilot` は時間・未決着率などを見る目的で、改善/悪化判定は行いません。`confirmation` の95%区間も、今回の6局面を均等に扱う一つの総合比較に限り、局面別成績は記述集計です。上限未決着と双方未裁定は得点 `[0,1]` として幅へ残します。
+
+`--workers` は省略時1で、1〜4を指定できます。2〜4ではspawn方式のプロセス並列で局を実行し、条件・局JSON・summaryの書込みは親CLIに集約します。逐次時はconditions v1/v2・summary v1、複数worker時はconditions v3・summary v2で保存し、分析CLIは対応する組合せだけを受け付けます。並列化はCPU負荷や局ごとの長さに左右され、4倍速を保証しません。Ctrl-Cでは親が新規投入を止め、workerは初期化後にSIGINTを無視して実行中局を完了し、親が回収するため、中断応答が遅れる場合があります。worker初期化前の短い起動中における実端末SIGINTは未検証です。局の故障では新規投入を止めて他workerを回収します。強制終了後の棋譜途中復旧はありません。
+
+分析CLIが受け付けるのは `--seed-list` で乱数種一覧を保存した実験です。従来の `--seed` による逐次・並列実行は対局できますが、現在の分析CLIには接続していません。
 
 結果のJSON契約、終了コード、統計上の仮定と未検証事項は[比較と探索の知識メモ](docs/knowledge/search-comparison.md#対局方式の比較とc1分析)を参照してください。
 

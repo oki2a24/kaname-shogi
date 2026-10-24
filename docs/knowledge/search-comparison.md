@@ -88,13 +88,15 @@ python3 -m kaname_shogi.analyze_comparison \
   --input-dir /path/new-run --output /path/new-analysis.json
 ```
 
-準備CLIは局面群全体を検証した後、OS乱数源から128ビット種をbaseline/candidate用に各組一つずつ抽出し、`pilot` または `confirmation` と局面ファイルのSHA-256を含むJSONへ保存する。同じ数値の種が偶然重なっても引き直さない。出力は新規パス限定。比較CLIは旧来の `--seed` と新しい `--seed-list` のどちらか一方を要求する。種一覧実験では局面JSONのバイト列・順序・ID・局面ごとの組数を一覧と照合してから対局し、条件を `kaname-shogi-comparison-conditions-v2` として保存する。`--seed` 実験は従来のconditions v1を維持する。
+準備CLIは局面群全体を検証した後、OS乱数源から128ビット種をbaseline/candidate用に各組一つずつ抽出し、`pilot` または `confirmation` と局面ファイルのSHA-256を含むJSONへ保存する。同じ数値の種が偶然重なっても引き直さない。出力は新規パス限定。比較CLIは `--seed` と `--seed-list` のどちらか一方を要求する。`--workers` は1〜4、既定値1で、2〜4はspawnプロセス並列を使う。種一覧実験では局面JSONのバイト列・順序・ID・局面ごとの組数を一覧と照合してから対局する。逐次の種一覧条件は `kaname-shogi-comparison-conditions-v2`、複数worker条件はv3とし、`execution` に `executor=process-pool` とworker数を保存する。`--seed` 実験は逐次conditions v1、並列conditions v3を使うが、現在の分析CLIは種一覧を保存したv2/v3だけを受け付けるため、これらの `--seed` 結果は分析できない。
 
 予定の各組は同じ開始盤面・駒配置で二局を行い、方式の先後だけ交換する。二局内は同じ方式別種を保つ。棋譜・summaryを含む出力先は新規パスで、同じ一覧の再実行は再現性の確認であり、独立した追加標本ではない。時間・環境情報を含む全出力のバイト一致は期待しない。準備・比較・分析CLIのヘルプが引数の正本である。
 
+worker数1のsummaryはv1、2〜4のsummaryはv2で `in_flight_games` を含む。分析CLIはconditions v2+summary v1またはconditions v3+summary v2だけを受け付け、予定・局ファイル・conditions SHA・summary件数を再照合する。並列summaryの `in_flight_games` が0でない途中成果物は分析しない。親Ctrl-C・局の故障後は新規投入を止め、開始済みworkerを回収する。worker初期化後はSIGINTを無視して実行中局を完了するため、中断応答が遅れることがある。worker初期化前の短い起動中における実端末からのプロセスグループSIGINTは未検証で、その場合のworker故障はERROR結果として残る可能性がある。強制kill後の途中棋譜復旧は行わない。
+
 ### 分析と適用範囲
 
-分析CLIは完了したv2実験のみを受け付ける。予定全件、局ファイル集合、conditions参照、乱数種、棋譜の合法再生と終局、summary再集計を照合する。欠落・余分・混在・未完了・不整合は分析前に拒否する。結果は入力と別の新規JSONへ保存する。旧conditions v1には今回の独立抽出前提を遡及適用しない。
+分析CLIが現在受け付けるのは、独立種一覧を保存した完了conditions v2/v3実験である。予定全件、局ファイル集合、execution条件、局ごとのconditions参照、乱数種、棋譜の合法再生と終局、summary再集計を照合する。v2 conditionsはsummary v1、v3はsummary v2と組み合わせる。`--seed` によるconditions v1/v3は、形式が条件とworker数を記録していても分析対象外である。欠落・余分・混在・未完了・不整合は分析前に拒否する。結果は入力と別の新規JSONへ保存する。旧conditions v1には今回の独立抽出前提を遡及適用しない。
 
 候補方式の各局得点は勝ち `[1,1]`、負け `[0,0]`、通常千日手 `[1/2,1/2]`、手数上限の未決着と双方連続王手の未裁定 `[0,1]`。後二者を勝敗や0.5へ決め打ちせず下限・上限の両方へ残す。二局一組内の平均得点を一標本として組間を扱い、区間半径は `sqrt(log(40)/(2*n))`。95%の主区間は平均得点の下限から半径を引いた値と、上限平均に半径を足した値を `[0,1]` に切り詰める。確認比較は区間下端が0.5より大きい場合だけ改善支持、上端が0.5より小さい場合だけ悪化支持、それ以外は判断不能。50%は互角の境目であり、95%ではない。pilotは探索的集計だけで強さ判定をしない。
 

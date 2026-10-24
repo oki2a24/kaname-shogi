@@ -6,10 +6,14 @@ import hashlib
 import importlib
 import io
 import json
+import signal
 import subprocess
 import sys
 import tempfile
 import unittest
+from concurrent.futures import Future, ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
+from multiprocessing import get_context
 from pathlib import Path
 from unittest.mock import patch
 
@@ -25,6 +29,11 @@ except ModuleNotFoundError as error:
     compare_games_module = None
 
 main = getattr(compare_games_module, "main", None)
+
+
+def _worker_sigint_is_ignored():
+    """spawn worker内のSIGINT dispositionをbooleanで返す。"""
+    return signal.getsignal(signal.SIGINT) == signal.SIG_IGN
 
 
 class CompareGamesCliTests(unittest.TestCase):
@@ -145,6 +154,150 @@ class CompareGamesCliTests(unittest.TestCase):
                 exit_code = main(argv)
         return exit_code, stdout.getvalue(), stderr.getvalue()
 
+    def _run_controlled_parallel(
+        self,
+        positions,
+        output_dir,
+        *,
+        pairs_per_position,
+        workers,
+        completion_priority=None,
+        runner=None,
+        interrupt_first_wait=False,
+        interrupt_submit_number=None,
+        interrupt_during_submit_number=None,
+        submit_exception_number=None,
+        running_game_ids=(),
+        interrupt_writer_name=None,
+        writer_failure_name=None,
+    ):
+        """Future完了順を同期的に制御する偽executorでCLIを実行する。"""
+        instances = []
+        entries = {}
+        completion_order = []
+        worker_writes = []
+        writer_calls = []
+        summary_writes = []
+        in_worker = False
+        wait_calls = 0
+        submit_calls = 0
+        interrupted_writer_names = set()
+        real_writer = compare_games_module.atomic_write_json
+
+        class ControlledExecutor:
+            def __init__(self, *, max_workers, mp_context, initializer=None):
+                self.max_workers = max_workers
+                self.mp_context = mp_context
+                self.initializer = initializer
+                self.max_pending = 0
+                self.exited = False
+                instances.append(self)
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, traceback):
+                self.exited = True
+                return False
+
+            def submit(self, function, *args):
+                nonlocal submit_calls
+                submit_calls += 1
+                if submit_calls == interrupt_submit_number:
+                    raise KeyboardInterrupt
+                if submit_calls == submit_exception_number:
+                    raise BrokenProcessPool("injected submit failure")
+                future = Future()
+                entries[future] = (function, args)
+                if args[0].game_id in running_game_ids:
+                    future.set_running_or_notify_cancel()
+                self.max_pending = max(
+                    self.max_pending,
+                    sum(not item.done() for item in entries),
+                )
+                if submit_calls == interrupt_during_submit_number:
+                    signal.raise_signal(signal.SIGINT)
+                return future
+
+        def controlled_wait(futures, return_when):
+            nonlocal in_worker, wait_calls
+            if interrupt_first_wait and wait_calls == 0:
+                wait_calls += 1
+                raise KeyboardInterrupt
+            wait_calls += 1
+            already_completed = [future for future in futures if future.done()]
+            if already_completed:
+                future = already_completed[0]
+                return {future}, set(futures) - {future}
+            pending = [future for future in futures if not future.done()]
+
+            def rank(future):
+                game_id = entries[future][1][0].game_id
+                if completion_priority and game_id in completion_priority:
+                    return completion_priority[game_id]
+                return 1000 + int(game_id[-6:])
+
+            future = min(pending, key=rank)
+            function, args = entries[future]
+            in_worker = True
+            try:
+                try:
+                    result = function(*args)
+                except BaseException as error:
+                    future.set_exception(error)
+                else:
+                    future.set_result(result)
+            finally:
+                in_worker = False
+            completion_order.append(args[0].game_id)
+            return {future}, set(futures) - {future}
+
+        def finish_by_limit(schedule, position, config):
+            return self._result(schedule, position, config, GameEndReason.PLY_LIMIT)
+
+        def recording_writer(path, payload):
+            name = Path(path).name
+            writer_calls.append(name)
+            if name == "summary.json":
+                summary_writes.append(dict(payload))
+            if in_worker:
+                worker_writes.append(name)
+            if name == interrupt_writer_name and name not in interrupted_writer_names:
+                interrupted_writer_names.add(name)
+                raise KeyboardInterrupt
+            if name == writer_failure_name:
+                raise OSError(f"{name} write failed")
+            real_writer(path, payload)
+
+        args = self._args(
+            positions,
+            output_dir,
+            **{
+                "--pairs-per-position": str(pairs_per_position),
+                "--workers": str(workers),
+            },
+        )
+        with (
+            patch.object(
+                compare_games_module,
+                "ProcessPoolExecutor",
+                ControlledExecutor,
+                create=True,
+            ),
+            patch.object(compare_games_module, "wait", controlled_wait, create=True),
+        ):
+            exit_code, stdout, stderr = self._capture(
+                args,
+                atomic_writer=recording_writer,
+                runner=runner or finish_by_limit,
+            )
+        instances[0].worker_writes = worker_writes
+        instances[0].writer_calls = writer_calls
+        instances[0].summary_writes = summary_writes
+        instances[0].submit_calls = submit_calls
+        instances[0].stdout = stdout
+        return exit_code, stderr, instances[0], completion_order, worker_writes
+
     def test_help_needs_no_experiment_inputs(self):
         """helpは局面・出力先なしで表示し、実験入力を読まない。"""
         self._require_implementation()
@@ -193,6 +346,573 @@ class CompareGamesCliTests(unittest.TestCase):
             self.assertIn("入力エラー", dangling_stderr)
             self.assertTrue(dangling_output.is_symlink())
             runner.assert_not_called()
+
+    def test_worker_count_accepts_one_through_four_and_rejects_other_values(self):
+        """ワーカー数を1〜4に制限し、不正値では出力や対局を開始しない。
+
+        上限を越えるプロセス数、ゼロ・負数、整数でない入力を受理したり、値の検証前に
+        出力先を作成・対局開始する誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            for workers in range(1, 5):
+                output_dir = Path(directory) / f"valid-{workers}"
+                try:
+                    config = compare_games_module.load_config(
+                        self._args(
+                            positions,
+                            output_dir,
+                            **{"--workers": str(workers)},
+                        )
+                    )
+                except ValueError as error:
+                    self.fail(f"ワーカー数{workers}を受理できません: {error}")
+                self.assertEqual(config.workers, workers)
+                self.assertFalse(output_dir.exists())
+
+            for value in ("0", "5", "-1", "not-an-integer"):
+                with self.subTest(workers=value):
+                    output_dir = Path(directory) / f"invalid-{value}"
+                    args = self._args(
+                        positions,
+                        output_dir,
+                        **{"--workers": value},
+                    )
+                    with patch.object(compare_games_module, "run_game") as runner:
+                        exit_code, _, stderr = self._capture(args)
+
+                    self.assertEqual(exit_code, 2)
+                    self.assertIn("入力エラー", stderr)
+                    self.assertFalse(output_dir.exists())
+                    runner.assert_not_called()
+
+    def test_parallel_results_keep_schedule_identity_when_completion_order_reverses(
+        self,
+    ):
+        """完了順が逆転しても棋譜・方式別種を予定IDへ結び付ける。
+
+        Futureの回収順を予定順と誤認し、別局のID・先後・乱数種で結果ファイルを保存する
+        誤りを決定的な完了順で検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "parallel-results"
+            exit_code, stderr, executor, completion_order, worker_writes = (
+                self._run_controlled_parallel(
+                    positions,
+                    output_dir,
+                    pairs_per_position=2,
+                    workers=2,
+                    completion_priority={
+                        "game-000002": 0,
+                        "game-000001": 1,
+                        "game-000004": 2,
+                        "game-000003": 3,
+                    },
+                )
+            )
+
+            self.assertEqual(exit_code, 0, stderr)
+            self.assertEqual(executor.max_workers, 2)
+            self.assertEqual(executor.mp_context.get_start_method(), "spawn")
+            self.assertEqual(worker_writes, [])
+            self.assertEqual(
+                completion_order,
+                ["game-000002", "game-000001", "game-000004", "game-000003"],
+            )
+            conditions = json.loads((output_dir / "conditions.json").read_bytes())
+            self.assertEqual(conditions["execution"]["workers"], 2)
+            for planned in conditions["schedule"]:
+                saved = json.loads(
+                    (output_dir / f"{planned['game_id']}.json").read_bytes()
+                )
+                self.assertEqual(saved["game_id"], planned["game_id"])
+                self.assertEqual(
+                    (saved["baseline_seed"], saved["candidate_seed"]),
+                    (planned["baseline_seed"], planned["candidate_seed"]),
+                )
+
+    def test_parallel_scheduler_bounds_uncollected_futures_by_worker_count(self):
+        """未回収Futureを最大ワーカー数までに制限する。
+
+        予定全局を先に投入して、キューとFutureだけを無制限に保持する誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "bounded-results"
+
+            exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                positions,
+                output_dir,
+                pairs_per_position=3,
+                workers=2,
+            )
+
+        self.assertEqual(exit_code, 0, stderr)
+        self.assertEqual(executor.max_pending, 2)
+
+    def test_parallel_executor_initializes_workers_to_ignore_sigint(self):
+        """並列executorへworkerのSIGINT無視初期化関数を渡す。
+
+        端末Ctrl-Cがworkerまで届いて実行中局を部分終了させる接続漏れを検出する。
+        初期化関数の中身はspawn実プロセスの専用テストで別に確認する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "worker-sigint-initializer-results"
+
+            exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                positions,
+                output_dir,
+                pairs_per_position=1,
+                workers=2,
+            )
+
+        self.assertEqual(exit_code, 0, stderr)
+        self.assertTrue(callable(executor.initializer))
+        self.assertEqual(executor.initializer.__name__, "_ignore_worker_sigint")
+
+    def test_spawn_worker_initializer_ignores_sigint_in_child(self):
+        """spawnした子プロセス内でSIGINTを無視するhandlerが設定される。
+
+        親だけのhandler変更では端末のprocess group SIGINTから実行中局を守れないため、
+        ProcessPool initializerが子のsignal dispositionを変えることを確認する。
+        """
+        self._require_implementation()
+
+        with ProcessPoolExecutor(
+            max_workers=1,
+            mp_context=get_context("spawn"),
+            initializer=compare_games_module._ignore_worker_sigint,
+        ) as executor:
+            ignores_sigint = executor.submit(_worker_sigint_is_ignored).result(
+                timeout=20
+            )
+
+        self.assertTrue(ignores_sigint)
+
+    def test_parallel_scheduler_leaves_all_artifact_writes_in_parent(self):
+        """並列workerはファイルを書かず親が局JSONとsummaryを保存する。
+
+        複数workerから同じ条件・summaryを書いて競合させたり、局保存を抜かす誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "parent-writes-results"
+
+            exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                positions,
+                output_dir,
+                pairs_per_position=2,
+                workers=2,
+            )
+
+        self.assertEqual(exit_code, 0, stderr)
+        self.assertEqual(executor.worker_writes, [])
+        self.assertEqual(
+            executor.writer_calls,
+            [
+                "conditions.json",
+                "game-000001.json",
+                "summary.json",
+                "game-000002.json",
+                "summary.json",
+                "game-000003.json",
+                "summary.json",
+                "game-000004.json",
+                "summary.json",
+            ],
+        )
+
+    def test_parallel_error_cancels_unstarted_work_and_stops_submissions(self):
+        """ERROR結果後は未開始Futureを取消し、新しい局を投入しない。
+
+        故障後に予定を追加実行したり、取消し成功futureを投入中として残してsummary件数を
+        誤る動作を検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "error-results"
+
+            def fail_first_game(schedule, position, config):
+                if schedule.game_id == "game-000001":
+                    return self._result(
+                        schedule,
+                        position,
+                        config,
+                        GameEndReason.ERROR,
+                        error="fixture worker failure",
+                    )
+                return self._result(schedule, position, config, GameEndReason.PLY_LIMIT)
+
+            exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                positions,
+                output_dir,
+                pairs_per_position=2,
+                workers=2,
+                runner=fail_first_game,
+            )
+
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+            saved_games = sorted(path.name for path in output_dir.glob("game-*.json"))
+
+        self.assertEqual(exit_code, 1)
+        self.assertIn("故障終了", stderr)
+        self.assertEqual(executor.max_pending, 2)
+        self.assertEqual(saved_games, ["game-000001.json"])
+        self.assertEqual(summary["status"], "error")
+        self.assertEqual(summary["started_games"], 1)
+        self.assertEqual(summary["ended_games"], 1)
+        self.assertEqual(summary["in_flight_games"], 0)
+        self.assertEqual(summary["unstarted_games"], 3)
+
+    def test_parallel_future_exception_is_saved_as_error_result(self):
+        """worker Future例外をERROR局として保存し終了コード1にする。
+
+        子プロセスの例外をCLIから漏らしたり、完了バッチを成功と表示する誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "future-error-results"
+
+            def raise_first_game(schedule, position, config):
+                if schedule.game_id == "game-000001":
+                    raise RuntimeError("fixture future failure")
+                return self._result(schedule, position, config, GameEndReason.PLY_LIMIT)
+
+            try:
+                exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                    positions,
+                    output_dir,
+                    pairs_per_position=2,
+                    workers=2,
+                    runner=raise_first_game,
+                )
+            except Exception as error:
+                self.fail(f"worker例外をERROR局にできません: {error}")
+
+            saved = json.loads((output_dir / "game-000001.json").read_bytes())
+
+        self.assertEqual(exit_code, 1)
+        self.assertIn("故障終了", stderr)
+        self.assertEqual(saved["reason"], "error")
+        self.assertIn("RuntimeError: fixture future failure", saved["error"])
+
+    def test_parallel_worker_interruption_cancels_unstarted_work(self):
+        """worker内INTERRUPTED後は未開始局を取消し130で終了する。
+
+        worker中断をERRORや成功へ変換したり、取消し可能なFutureを実行済みに数える誤りを
+        検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "worker-interrupted-results"
+
+            def interrupt_first_game(schedule, position, config):
+                if schedule.game_id == "game-000001":
+                    return self._result(
+                        schedule, position, config, GameEndReason.INTERRUPTED
+                    )
+                return self._result(schedule, position, config, GameEndReason.PLY_LIMIT)
+
+            exit_code, stderr, _, _, _ = self._run_controlled_parallel(
+                positions,
+                output_dir,
+                pairs_per_position=2,
+                workers=2,
+                runner=interrupt_first_game,
+            )
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+            saved_games = sorted(path.name for path in output_dir.glob("game-*.json"))
+
+        self.assertEqual(exit_code, 130)
+        self.assertIn("中断", stderr)
+        self.assertEqual(saved_games, ["game-000001.json"])
+        self.assertEqual(summary["status"], "interrupted")
+        self.assertEqual(summary["started_games"], 1)
+        self.assertEqual(summary["ended_games"], 1)
+        self.assertEqual(summary["in_flight_games"], 0)
+        self.assertEqual(summary["unstarted_games"], 3)
+
+    def test_parent_keyboard_interrupt_drains_running_future_and_saves_summary(self):
+        """親Ctrl-C後は実行中局を回収し、中断summaryを保存して130で終わる。
+
+        親割込みを例外で漏らしたり、結果を回収せずにworkerを待ちっぱなしにする誤りを
+        検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "parent-interrupted-results"
+
+            try:
+                exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                    positions,
+                    output_dir,
+                    pairs_per_position=2,
+                    workers=2,
+                    interrupt_first_wait=True,
+                    running_game_ids={"game-000001"},
+                )
+            except KeyboardInterrupt as error:
+                self.fail(f"親Ctrl-Cを中断summaryへ変換できません: {error}")
+
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+            saved_games = sorted(path.name for path in output_dir.glob("game-*.json"))
+
+        self.assertEqual(exit_code, 130)
+        self.assertIn("中断", stderr)
+        self.assertEqual(saved_games, ["game-000001.json"])
+        self.assertEqual(summary["status"], "interrupted")
+        self.assertEqual(summary["started_games"], 1)
+        self.assertEqual(summary["ended_games"], 1)
+        self.assertEqual(summary["in_flight_games"], 0)
+        self.assertEqual(summary["unstarted_games"], 3)
+        self.assertEqual(
+            {
+                key: executor.summary_writes[0][key]
+                for key in (
+                    "status",
+                    "started_games",
+                    "ended_games",
+                    "in_flight_games",
+                    "unstarted_games",
+                )
+            },
+            {
+                "status": "interrupted",
+                "started_games": 1,
+                "ended_games": 0,
+                "in_flight_games": 1,
+                "unstarted_games": 3,
+            },
+        )
+
+    def test_parent_keyboard_interrupt_during_initial_submission_saves_summary(self):
+        """初回Future投入中の親Ctrl-Cを中断summaryへ記録する。
+
+        waitへ入る前のKeyboardInterruptがexecutor外へ漏れ、conditionsだけを残す誤りを
+        検出する。投入されなかった全局は未開始として独立件数に反映する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "submit-interrupted-results"
+
+            try:
+                exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                    positions,
+                    output_dir,
+                    pairs_per_position=2,
+                    workers=2,
+                    interrupt_submit_number=1,
+                )
+            except KeyboardInterrupt as error:
+                self.fail(f"初回投入時の親Ctrl-CがCLI外へ漏れました: {error}")
+
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+            saved_games = list(output_dir.glob("game-*.json"))
+
+        self.assertEqual(exit_code, 130)
+        self.assertIn("中断", stderr)
+        self.assertTrue(executor.exited)
+        self.assertEqual(saved_games, [])
+        self.assertEqual(summary["status"], "interrupted")
+        self.assertEqual(summary["planned_games"], 4)
+        self.assertEqual(summary["started_games"], 0)
+        self.assertEqual(summary["ended_games"], 0)
+        self.assertEqual(summary["in_flight_games"], 0)
+        self.assertEqual(summary["unstarted_games"], 4)
+
+    def test_parent_sigint_after_submit_side_effect_tracks_and_drains_future(self):
+        """submit後・Future登録前のSIGINTでも投入済み局を追跡して保存する。
+
+        submitの副作用後にFutureをpendingへ登録する前に割り込まれ、局結果を失って
+        summary上で未開始へ誤算入する境界を検出する。二件目の投入で、先行Futureも
+        残る状況を含める。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "submit-side-effect-interrupted-results"
+            original_sigint_handler = signal.getsignal(signal.SIGINT)
+
+            exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                positions,
+                output_dir,
+                pairs_per_position=2,
+                workers=2,
+                interrupt_during_submit_number=2,
+                running_game_ids={"game-000001", "game-000002"},
+            )
+
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+            saved_games = sorted(path.name for path in output_dir.glob("game-*.json"))
+
+        self.assertEqual(exit_code, 130)
+        self.assertIn("中断", stderr)
+        self.assertTrue(executor.exited)
+        self.assertIs(signal.getsignal(signal.SIGINT), original_sigint_handler)
+        self.assertEqual(saved_games, ["game-000001.json", "game-000002.json"])
+        self.assertEqual(summary["status"], "interrupted")
+        self.assertEqual(summary["started_games"], 2)
+        self.assertEqual(summary["ended_games"], 2)
+        self.assertEqual(summary["in_flight_games"], 0)
+        self.assertEqual(summary["unstarted_games"], 2)
+
+    def test_parallel_submit_failure_is_saved_as_error_and_stops_submissions(self):
+        """ProcessPoolExecutor.submit失敗を局のERROR結果へ記録し後続投入を止める。
+
+        submitがFutureを返す前にBrokenProcessPoolを送出した際、例外をCLI外へ漏らす、
+        成功扱いする、または後続予定まで投入する誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "submit-failed-results"
+
+            try:
+                exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                    positions,
+                    output_dir,
+                    pairs_per_position=2,
+                    workers=2,
+                    submit_exception_number=2,
+                    running_game_ids={"game-000001"},
+                )
+            except Exception as error:
+                self.fail(f"submit失敗をERROR結果に変換できません: {error!r}")
+
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+            failed_game = json.loads((output_dir / "game-000002.json").read_bytes())
+
+        self.assertEqual(exit_code, 1)
+        self.assertIn("BrokenProcessPool", stderr)
+        self.assertTrue(executor.exited)
+        self.assertEqual(executor.max_pending, 1)
+        self.assertEqual(executor.submit_calls, 2)
+        self.assertEqual(failed_game["reason"], "error")
+        self.assertIn("injected submit failure", failed_game["error"])
+        self.assertEqual(summary["status"], "error")
+        self.assertEqual(summary["started_games"], 2)
+        self.assertEqual(summary["ended_games"], 2)
+        self.assertEqual(summary["in_flight_games"], 0)
+        self.assertEqual(summary["unstarted_games"], 2)
+
+    def test_parallel_game_and_summary_save_failures_reap_workers_without_success(self):
+        """並列成果物保存失敗は後続投入を止め、worker回収後に1で返る。
+
+        保存失敗後に成功を表示したり、executorを回収せず終了する誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            for failed_name in ("game-000001.json", "summary.json"):
+                with self.subTest(failed_name=failed_name):
+                    output_dir = (
+                        Path(directory) / f"parallel-save-failure-{failed_name}"
+                    )
+                    exit_code, stderr, executor, completion_order, _ = (
+                        self._run_controlled_parallel(
+                            positions,
+                            output_dir,
+                            pairs_per_position=2,
+                            workers=2,
+                            writer_failure_name=failed_name,
+                            running_game_ids={"game-000002"},
+                        )
+                    )
+
+                    self.assertEqual(exit_code, 1)
+                    self.assertEqual(executor.stdout, "")
+                    self.assertIn(failed_name, stderr)
+                    self.assertTrue(executor.exited)
+                    self.assertEqual(executor.max_pending, 2)
+                    self.assertEqual(completion_order, ["game-000001", "game-000002"])
+                    self.assertFalse((output_dir / "game-000002.json").exists())
+
+    def test_parent_keyboard_interrupt_during_parallel_game_save_preserves_game(self):
+        """局JSON保存中の親Ctrl-Cでも確定した局を保存して他局を回収する。
+
+        保存中の割込みが完了済みFutureを失わせ、局別JSONと中断summaryの双方を欠く
+        誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "game-save-interrupted-results"
+
+            try:
+                exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                    positions,
+                    output_dir,
+                    pairs_per_position=2,
+                    workers=2,
+                    interrupt_writer_name="game-000001.json",
+                    running_game_ids={"game-000002"},
+                )
+            except KeyboardInterrupt as error:
+                self.fail(f"局JSON保存中の親Ctrl-CがCLI外へ漏れました: {error}")
+
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+            saved_games = sorted(path.name for path in output_dir.glob("game-*.json"))
+            first_game = json.loads((output_dir / "game-000001.json").read_bytes())
+
+        self.assertEqual(exit_code, 130)
+        self.assertIn("中断", stderr)
+        self.assertTrue(executor.exited)
+        self.assertEqual(saved_games, ["game-000001.json", "game-000002.json"])
+        self.assertEqual(first_game["reason"], "ply_limit")
+        self.assertEqual(summary["status"], "interrupted")
+        self.assertEqual(summary["started_games"], 2)
+        self.assertEqual(summary["ended_games"], 2)
+        self.assertEqual(summary["in_flight_games"], 0)
+        self.assertEqual(summary["unstarted_games"], 2)
+
+    def test_parent_keyboard_interrupt_during_parallel_summary_save_finishes_summary(
+        self,
+    ):
+        """summary保存中の親Ctrl-C後にworkerを回収し最終summaryを残す。
+
+        局JSON保存後のsummary書込割込みがCLI外へ漏れ、完了局の集計を失う誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "summary-save-interrupted-results"
+
+            try:
+                exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                    positions,
+                    output_dir,
+                    pairs_per_position=2,
+                    workers=2,
+                    interrupt_writer_name="summary.json",
+                    running_game_ids={"game-000002"},
+                )
+            except KeyboardInterrupt as error:
+                self.fail(f"summary保存中の親Ctrl-CがCLI外へ漏れました: {error}")
+
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+            saved_games = sorted(path.name for path in output_dir.glob("game-*.json"))
+
+        self.assertEqual(exit_code, 130)
+        self.assertIn("中断", stderr)
+        self.assertTrue(executor.exited)
+        self.assertEqual(saved_games, ["game-000001.json", "game-000002.json"])
+        self.assertEqual(summary["status"], "interrupted")
+        self.assertEqual(summary["started_games"], 2)
+        self.assertEqual(summary["ended_games"], 2)
+        self.assertEqual(summary["in_flight_games"], 0)
+        self.assertEqual(summary["unstarted_games"], 2)
 
     def test_seed_and_seed_list_must_be_selected_exclusively_before_games(self):
         """種方式の両指定・未指定を出力作成と対局前に拒否する。"""

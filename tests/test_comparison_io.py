@@ -4,6 +4,7 @@ import hashlib
 import json
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -705,6 +706,21 @@ class ComparisonInputTests(unittest.TestCase):
             self.assertEqual(config.positions_json, first_snapshot)
             self.assertEqual(tuple(p.position_id for p in config.positions), ("first",))
 
+    def test_load_config_defaults_to_one_worker(self):
+        """ワーカー数省略時は逐次比較を選ぶ。
+
+        既存引数だけで作った比較条件が未定義の実行数を持ち、逐次経路の互換性を
+        損なう状態を検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions_path = self._write_positions(directory, [self._position_entry()])
+            output_path = Path(directory) / "results"
+
+            config = load_config(self._config_args(positions_path, output_path))
+
+        self.assertEqual(getattr(config, "workers", None), 1)
+
     def test_rejects_unknown_argument_and_existing_or_invalid_output_directory(self):
         """未知引数・既存出力先・存在しない親を拒否する。
 
@@ -895,6 +911,41 @@ class ComparisonSerializationTests(unittest.TestCase):
         )
         self.assertEqual(payload["git"], git_metadata)
         self.assertEqual(payload["source_sha256"], expected_source_sha256)
+
+    def test_parallel_conditions_record_exact_process_pool_metadata(self):
+        """2〜4ワーカーの主乱数種conditionsをv3と正確な実行値で記録する。
+
+        並列実行が逐次v1として記録される、または選択したワーカー数と実行方式が
+        保存値から分からなくなる誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            source_root = Path(directory)
+            (source_root / "kaname_shogi").mkdir()
+            for workers in (2, 3, 4):
+                with self.subTest(workers=workers):
+                    config = replace(self._config(), workers=workers)
+                    schedule = make_schedule(config)
+                    with patch.object(
+                        comparison_io_module,
+                        "_git_metadata",
+                        return_value={
+                            "head": "abc",
+                            "dirty": False,
+                            "diagnostic": None,
+                        },
+                    ):
+                        payload = conditions_payload(
+                            config, schedule, source_root=source_root
+                        )
+
+                    self.assertEqual(
+                        payload["format"], "kaname-shogi-comparison-conditions-v3"
+                    )
+                    self.assertEqual(
+                        payload["execution"],
+                        {"executor": "process-pool", "workers": workers},
+                    )
         self.assertEqual(payload["pairs_per_position"], 1)
         self.assertEqual(payload["seed"], 17)
         self.assertEqual(payload["max_plies"], 40)
@@ -1042,6 +1093,51 @@ class ComparisonSerializationTests(unittest.TestCase):
                 for game in payload["schedule"]
             ],
             [(11, 12), (11, 12)],
+        )
+
+    def test_parallel_seed_list_conditions_add_execution_metadata(self):
+        """並列の種一覧conditionsは保存済み実験にexecutionを追加してv3にする。
+
+        一覧方式だけが逐次conditions v2のまま記録され、並列条件を再分析できなくなる
+        誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions_path = ComparisonInputTests._write_positions(
+                directory,
+                [ComparisonInputTests._position_entry("one", ["7g7f"])],
+            )
+            seed_list_path = ComparisonInputTests._write_seed_list(
+                directory, positions_path
+            )
+            args = ComparisonInputTests._config_args(
+                positions_path,
+                Path(directory) / "results",
+                **{
+                    "--baseline": "material",
+                    "--candidate": "material-rook-mobility",
+                    "--pairs-per-position": "1",
+                    "--seed-list": str(seed_list_path),
+                    "--workers": "2",
+                },
+            )
+            args.remove("--seed")
+            args.remove("17")
+            config = load_config(args)
+            source_root = Path(directory) / "source"
+            (source_root / "kaname_shogi").mkdir(parents=True)
+            with patch.object(
+                comparison_io_module,
+                "_git_metadata",
+                return_value={"head": "abc", "dirty": False, "diagnostic": None},
+            ):
+                payload = conditions_payload(
+                    config, make_schedule(config), source_root=source_root
+                )
+
+        self.assertEqual(payload["format"], "kaname-shogi-comparison-conditions-v3")
+        self.assertEqual(
+            payload["execution"], {"executor": "process-pool", "workers": 2}
         )
 
     def test_git_metadata_failure_returns_null_values_and_diagnostic(self):
@@ -1210,6 +1306,29 @@ class ComparisonSerializationTests(unittest.TestCase):
         )
         self.assertNotIn("win_rate", payload)
         self.assertNotIn("statistically_significant", payload)
+
+    def test_summary_payload_uses_v2_when_in_flight_count_is_present(self):
+        """投入中局数を含む並列summaryをv2として保存する。
+
+        並列実行の未回収局数を含む集計がv1として誤記録され、読込側が件数を検証できなく
+        なる誤りを検出する。
+        """
+        self._require_implementation()
+        summary = {
+            "status": "running",
+            "planned_games": 8,
+            "started_games": 5,
+            "ended_games": 2,
+            "in_flight_games": 3,
+            "unstarted_games": 3,
+        }
+
+        payload = summary_payload(summary)
+
+        self.assertEqual(
+            payload,
+            {"format": "kaname-shogi-comparison-summary-v2", **summary},
+        )
 
     def test_atomic_json_write_replaces_and_cleans_up_after_write_or_replace_failure(
         self,

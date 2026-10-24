@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import math
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 from unittest.mock import patch
 
 from kaname_shogi import comparison_result_io
 from kaname_shogi.analyze_comparison import main
-from tests.test_comparison_result_io import _write_handwritten_experiment
+from tests.test_comparison_result_io import (
+    _make_parallel_conditions,
+    _write_handwritten_experiment,
+)
 
 
 class AnalyzeComparisonCliTests(unittest.TestCase):
@@ -151,6 +156,41 @@ class AnalyzeComparisonCliTests(unittest.TestCase):
                 {path.name: path.read_bytes() for path in input_dir.iterdir()},
                 snapshots,
             )
+
+    def test_rejects_in_flight_or_running_summary_v2_before_analysis_output(self):
+        """投入中または実行中のsummary v2は分析結果を作らない。
+
+        完了前の比較を確定データとして分析したり、投入中局を無視して強さ判定へ渡す
+        誤りを検出する。
+        """
+        cases = (
+            ("in-flight", "投入中の局が残るsummary"),
+            ("running", "summaryが保存局の再集計または実行件数と一致しません"),
+        )
+        for name, error_text in cases:
+            with self.subTest(case=name), tempfile.TemporaryDirectory() as directory:
+                input_dir = Path(directory) / "input"
+                input_dir.mkdir()
+                _write_handwritten_experiment(input_dir)
+                _make_parallel_conditions(input_dir)
+                summary_path = input_dir / "summary.json"
+                summary = json.loads(summary_path.read_bytes())
+                summary["format"] = "kaname-shogi-comparison-summary-v2"
+                summary["in_flight_games"] = 1 if name == "in-flight" else 0
+                if name == "running":
+                    summary["status"] = "running"
+                summary_path.write_text(json.dumps(summary), encoding="utf-8")
+                output = Path(directory) / "analysis.json"
+                stderr = io.StringIO()
+
+                with redirect_stderr(stderr):
+                    status = main(
+                        ["--input-dir", str(input_dir), "--output", str(output)]
+                    )
+
+                self.assertEqual(status, 2)
+                self.assertIn(error_text, stderr.getvalue())
+                self.assertFalse(output.exists())
 
     def test_input_error_creates_no_output_and_existing_output_is_preserved(self):
         """入力/既存出力先の不正は2を返し、既存ファイルを上書きしない。
