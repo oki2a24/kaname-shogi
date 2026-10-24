@@ -133,7 +133,7 @@ self.assertEqual(
 - [x] **2. Redを確認。** `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_material_rook_mobility.py -v`。初期ImportError以外のassert失敗を確認する。
 - [x] **3. 最小実装。** 設定クラスと合成操作のみ。係数はフィールドから読み、式へ10/1を重複して埋め込まない。
 - [x] **4. Green・Refactor・独立レビュー。** 同コマンドとTask 1を確認。既存駒得テストは駒価値・持ち駒復元を補完、今回は係数・新項目と手種後の接続を検証する。
-- [ ] **5. 品質検査・コミット。** 共通Ruff手順と記録更新後、当該2ファイルと記録を通常コミット。
+- [x] **5. 品質検査・コミット。** 共通Ruff手順と記録更新後、当該2ファイルと記録を通常コミット。
 
 **GREEN条件:** 既定/別重み・成り/打ち/取り・視点・不変性が成功、Critical/Importantが0。
 
@@ -147,7 +147,7 @@ self.assertEqual(
 
 evaluateは読み取り専用・整数を返す・開始側視点に従うという呼出契約。実行時の型検査や独自例外階層は増やさない。通常点のみを担当し、詰み優先は選択側が維持する。候補なしは評価・適用・詰み確認・抽選をせずNone。各候補を複製へ適用し、詰みなら(1,0)、それ以外は(0,evaluate(after,perspective))で比較。最高同点だけ元の順序で集め、一回choiceする。呼出側の評価例外・不正候補の既存例外は伝播する。
 
-- [ ] **1. 失敗するテストを作る。** 下記のassertを仕様として固定する。
+- [x] **1. 失敗するテストを作る。** 下記のassertを仕様として固定する。
 
 | テスト名 | アサーション |
 | --- | --- |
@@ -158,7 +158,7 @@ evaluateは読み取り専用・整数を返す・開始側視点に従うとい
 | `test_mate_outranks_unbounded_normal_score` | 実詰み局面は下記。候補の詰み/通常を既存操作で確認し、通常評価が10**30でも詰み候補。先後両方、候補順両方。詰み候補には通常評価を呼ばない |
 | `test_empty_candidates_have_no_effects` | 空候補はNone、rng.choice/evaluate/position_after_move/is_checkmateを呼ばない |
 | `test_noncheck_no_reply_uses_evaluator` | 玉なし先手飛５五、候補５四だけ。相手は合法手なしだが非詰みで、evaluateは一回・先手視点で呼ばれ、通常選択される |
-| `test_preserves_source_and_branches` | 歩取り・成り・駒打ちを含む別々の固定局面で、元SFEN・両持ち駒・手番・候補を保存し、評価後に同一。評価関数へ渡った複数局面の相互独立性も確認 |
+| `test_preserves_source_and_branches` | 歩取り・成り・駒打ちを含む別々の固定局面で元局面と各結果を確認し、複数の歩打ち候補では評価器から一枝を変更して他枝と元局面への漏れを確認。異種の捕獲・成り・打ちを兄弟候補とする組合せは直接確認しない |
 | `test_propagates_failures` | 評価操作のRuntimeError、未知候補型のTypeError、既存適用が拒否する不合法候補のValueErrorを伝播。抽選しない |
 
 詰みの固定配置：先手玉９九、先手飛５三、先手金４三、後手玉５一、後手歩４一・６一・４二・６二。候補は５三飛→５二（詰み）と５三飛→６三（通常）。後手ケースは180度回転・所属交換。期待詰みは５二飛を金４三が支え、後手玉の退路を後手歩が塞ぐことから独立に説明する。実局面と注入評価を組み合わせ、勝ち区分と任意整数の大小を確認する。同点の複数詰みは、この局面での５二飛成/不成を両候補としてchoiceへ両方渡す別ケースを作る。
@@ -180,9 +180,9 @@ choice.assert_called_once_with((blocked, opened))
 
 このchoiceのアサーションは、material_balanceへ差し替えた別呼出だけを対象にする。新評価呼出と同じmock履歴へ混ぜない。
 
-- [ ] **2. Redを確認。** `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_one_ply_selection.py -v`。返値・choice引数・区分・視点のassert失敗を記録する。
-- [ ] **3. 最小実装。** 上記シグネチャの選択操作のみ。movegenの既存choose_moveやenumは編集しない。合成評価のimportなし。
-- [ ] **4. Green・Refactor・独立レビュー。** 同コマンド成功。差替で新評価への隠れた依存がないこと、詰み確認の防御探索以外の応手読みを追加していないことをレビューする。
+- [x] **2. Redを確認。** `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_one_ply_selection.py -v`。返値・choice引数・区分・視点のassert失敗を記録する。
+- [x] **3. 最小実装。** 上記シグネチャの選択操作のみ。movegenの既存choose_moveやenumは編集しない。合成評価のimportなし。
+- [x] **4. Green・Refactor・独立レビュー。** 同コマンド成功。差替で新評価への隠れた依存がないこと、詰み確認の防御探索以外の応手読みを追加していないことをレビューする。
 - [ ] **5. 品質検査・コミット。** 共通Ruff手順・記録更新後に当該2ファイルと記録を通常コミット。
 
 **GREEN条件:** 実局面での選択・評価差替・詰み順序・境界・不変性・故障伝播が成功、Critical/Importantが0。
@@ -223,4 +223,4 @@ choice.assert_called_once_with((blocked, opened))
 - セルフレビューでピン局面の双方候補数を15/15へ訂正した。また、詰み比較の通常候補に当初考えた９九玉→９八は相手詰みが継続するため不適切だった。既存操作による一時照合で、５三飛→６三と後手鏡像は合法・非詰み、５二飛成/不成と後手鏡像は合法・詰みと確認して固定した。新テスト実行や新実装の検証ではない。
 - 専用コマンドは標準discoverで新規モジュールを指定する形式。実行時のパス・Python・テスト名を再確認し、期待されるassert失敗/成功を記録する。製品テストは承認前のため未実行。
 
-本人は本計画を承認し、ネイティブ実行を選択した。Task 1はRed/Green、Refactor要否、独立レビュー、品質検査、記録を完了し、9テスト成功後に `8f39c9b` として通常コミットした。Task 2はbehavioral Redを確認後、設定と合成操作を実装した。専用5、Task 1の9、既存評価2テスト、全Ruff検査が成功し、独立レビューはCritical 0 / Important 0 / Minor 0。Task 2の記録更新後、通常コミットする。
+本人は本計画を承認し、ネイティブ実行を選択した。Task 1はRed/Green、Refactor要否、独立レビュー、品質検査、記録を完了し、9テスト成功後に `8f39c9b` として通常コミットした。Task 2はbehavioral Redを確認後、設定と合成操作を実装した。専用5、Task 1の9、既存評価2テスト、全Ruff検査が成功し、独立レビューはCritical 0 / Important 0 / Minor 0。記録を含めて `e9a3d45` として通常コミットした。Task 3はRed/GreenとRuff検査、専用10・Task 1の9・Task 2の5・既存評価2の成功を確認。独立レビューはCritical 0 / Important 0 / Minor 1で、捕獲・成り・打ちを含む異種兄弟枝同士の相互干渉が未検証との指摘を、範囲内の軽微な残件として記録した。Task 3の記録後に通常コミットする。
