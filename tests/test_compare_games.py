@@ -6,6 +6,8 @@ import hashlib
 import importlib
 import io
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -66,6 +68,30 @@ class CompareGamesCliTests(unittest.TestCase):
         }
         values.update(overrides)
         return [item for pair in values.items() for item in pair]
+
+    @staticmethod
+    def _seed_list_file(directory, positions_path):
+        """このCLI fixture専用の手書き一組乱数種一覧を保存する。"""
+        payload = {
+            "format": "kaname-shogi-comparison-seeds-v1",
+            "purpose": "pilot",
+            "positions_sha256": hashlib.sha256(positions_path.read_bytes()).hexdigest(),
+            "position_ids": ["initial"],
+            "pairs_per_position": 1,
+            "source": "os",
+            "bits": 128,
+            "pairs": [
+                {
+                    "position_id": "initial",
+                    "repetition_index": 0,
+                    "baseline_seed": 11,
+                    "candidate_seed": 12,
+                }
+            ],
+        }
+        path = Path(directory) / "seed-list.json"
+        path.write_text(json.dumps(payload), encoding="utf-8")
+        return path
 
     @staticmethod
     def _result(schedule, position, config, reason, *, tokens=(), error=None):
@@ -132,7 +158,11 @@ class CompareGamesCliTests(unittest.TestCase):
         load_config.assert_not_called()
 
     def test_invalid_arguments_do_not_create_output_or_start_games(self):
-        """未知引数と既存出力先を入力エラー2で拒否する。"""
+        """未知引数・既存パス・壊れたリンクを入力エラー2で拒否する。
+
+        Path.existsがリンク先不在の既存出力を見落とし、mkdir失敗を実行エラー1へ
+        誤分類する不具合を検出する。拒否後もリンクを保ち、対局を開始しない。
+        """
         self._require_implementation()
         with tempfile.TemporaryDirectory() as directory:
             positions = self._positions_file(directory)
@@ -152,6 +182,163 @@ class CompareGamesCliTests(unittest.TestCase):
                 existing_exit, _, _ = self._capture(self._args(positions, output_dir))
             self.assertEqual(existing_exit, 2)
             runner.assert_not_called()
+
+            dangling_output = Path(directory) / "dangling-output"
+            dangling_output.symlink_to(Path(directory) / "missing-target")
+            with patch.object(compare_games_module, "run_game") as runner:
+                dangling_exit, _, dangling_stderr = self._capture(
+                    self._args(positions, dangling_output)
+                )
+            self.assertEqual(dangling_exit, 2)
+            self.assertIn("入力エラー", dangling_stderr)
+            self.assertTrue(dangling_output.is_symlink())
+            runner.assert_not_called()
+
+    def test_seed_and_seed_list_must_be_selected_exclusively_before_games(self):
+        """種方式の両指定・未指定を出力作成と対局前に拒否する。"""
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            seed_list = self._seed_list_file(directory, positions)
+            for index, include_seed in enumerate((True, False)):
+                with self.subTest(include_seed=include_seed):
+                    output_dir = Path(directory) / f"invalid-seed-mode-{index}"
+                    args = self._args(
+                        positions,
+                        output_dir,
+                        **{
+                            "--candidate": "material-rook-mobility",
+                            "--seed-list": str(seed_list),
+                        },
+                    )
+                    if not include_seed:
+                        args.remove("--seed")
+                        args.remove("17")
+                        args.remove("--seed-list")
+                        args.remove(str(seed_list))
+                    with patch.object(compare_games_module, "run_game") as runner:
+                        exit_code, _, stderr = self._capture(args)
+
+                    self.assertEqual(exit_code, 2)
+                    self.assertIn("入力エラー", stderr)
+                    self.assertFalse(output_dir.exists())
+                    runner.assert_not_called()
+
+    def test_incomplete_seed_list_rejects_the_batch_before_output_or_games(self):
+        """最後の組が欠ける一覧を全対局開始前に拒否する。"""
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            seed_list = self._seed_list_file(directory, positions)
+            payload = json.loads(seed_list.read_text(encoding="utf-8"))
+            payload["pairs"] = []
+            seed_list.write_text(json.dumps(payload), encoding="utf-8")
+            output_dir = Path(directory) / "invalid-incomplete-list"
+            args = self._args(
+                positions,
+                output_dir,
+                **{
+                    "--candidate": "material-rook-mobility",
+                    "--seed-list": str(seed_list),
+                },
+            )
+            args.remove("--seed")
+            args.remove("17")
+
+            with patch.object(compare_games_module, "run_game") as runner:
+                exit_code, _, stderr = self._capture(args)
+
+            self.assertEqual(exit_code, 2)
+            self.assertIn("入力エラー", stderr)
+            self.assertFalse(output_dir.exists())
+            runner.assert_not_called()
+
+    def test_real_process_runs_b1_from_seed_list_and_rejects_reuse_of_output(self):
+        """実CLIがB1の一覧予定を保存し、既存結果先への再実行を拒否する。
+
+        実プロセスの引数接続・conditions v2・二局一組の種・棋譜・summary保存を検査し、
+        同じ保存先を再利用して前実験を上書きする誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions_path = self._positions_file(directory)
+            seed_list_path = self._seed_list_file(directory, positions_path)
+            output_dir = Path(directory) / "results"
+            args = self._args(
+                positions_path,
+                output_dir,
+                **{
+                    "--candidate": "material-rook-mobility",
+                    "--seed-list": str(seed_list_path),
+                },
+            )
+            args.remove("--seed")
+            args.remove("17")
+            command = [sys.executable, "-m", "kaname_shogi.compare_games", *args]
+            source_root = Path(__file__).resolve().parents[1]
+
+            completed = subprocess.run(
+                command,
+                cwd=source_root,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            conditions_bytes = (output_dir / "conditions.json").read_bytes()
+            conditions = json.loads(conditions_bytes)
+            self.assertEqual(
+                conditions["format"], "kaname-shogi-comparison-conditions-v2"
+            )
+            self.assertIsNone(conditions["seed"])
+            self.assertEqual(
+                conditions["policy_parameters"]["candidate"],
+                {"material": 10, "mobility": 1, "mate_priority": True},
+            )
+            self.assertEqual(
+                conditions["randomization"]["seed_list_sha256"],
+                hashlib.sha256(seed_list_path.read_bytes()).hexdigest(),
+            )
+            self.assertEqual(
+                [
+                    (game["baseline_seed"], game["candidate_seed"])
+                    for game in conditions["schedule"]
+                ],
+                [(11, 12), (11, 12)],
+            )
+            conditions_hash = hashlib.sha256(conditions_bytes).hexdigest()
+            for game_number in (1, 2):
+                game = json.loads(
+                    (output_dir / f"game-{game_number:06d}.json").read_text(
+                        encoding="utf-8"
+                    )
+                )
+                self.assertEqual(game["candidate"], "material-rook-mobility")
+                self.assertEqual(game["conditions_sha256"], conditions_hash)
+                self.assertEqual(
+                    (game["baseline_seed"], game["candidate_seed"]), (11, 12)
+                )
+            summary = json.loads((output_dir / "summary.json").read_text())
+            self.assertEqual(summary["status"], "complete")
+            self.assertEqual(summary["started_games"], 2)
+            saved_conditions = (output_dir / "conditions.json").read_bytes()
+
+            repeated = subprocess.run(
+                command,
+                cwd=source_root,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+
+            self.assertEqual(repeated.returncode, 2)
+            self.assertIn("入力エラー", repeated.stderr)
+            self.assertEqual(
+                (output_dir / "conditions.json").read_bytes(), saved_conditions
+            )
 
     def test_success_saves_conditions_games_then_each_updated_summary(self):
         """条件を先に保存し、各局JSONの後にsummaryを更新して最後に完了する。"""
@@ -211,6 +398,44 @@ class CompareGamesCliTests(unittest.TestCase):
             self.assertIn("統計的な強さ判定は未実施", stdout)
             self.assertIn("時計制御なし", stdout)
             self.assertIn("再戦しません", stdout)
+
+    def test_b1_candidate_runs_and_is_recorded_by_the_comparison_cli(self):
+        """比較CLIからB1を選び、条件・実際の手計時・集計へ記録する。
+
+        CLI名だけの登録で選択器へ渡らない、またはB1の実行を既存五方式として保存する
+        接続不良を、二局の実対局における独立した方式名で検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions_path = self._positions_file(directory)
+            output_dir = Path(directory) / "b1-results"
+            argv = self._args(
+                positions_path,
+                output_dir,
+                **{
+                    "--candidate": "material-rook-mobility",
+                    "--max-plies": "2",
+                },
+            )
+
+            exit_code, _, stderr = self._capture(argv)
+
+            self.assertEqual(exit_code, 0, stderr)
+            conditions = json.loads(
+                (output_dir / "conditions.json").read_text(encoding="utf-8")
+            )
+            game = json.loads(
+                (output_dir / "game-000001.json").read_text(encoding="utf-8")
+            )
+            summary = json.loads(
+                (output_dir / "summary.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(conditions["candidate"], "material-rook-mobility")
+            self.assertEqual(
+                [timing["policy"] for timing in game["move_times"]],
+                ["material", "material-rook-mobility"],
+            )
+            self.assertIn("material-rook-mobility", summary["move_time_by_policy"])
 
     def test_repetition_is_recorded_once_without_automatic_rematch(self):
         """通常千日手を一局の結果として一度記録し、自動再戦しない。"""

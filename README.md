@@ -77,7 +77,7 @@ python3 -m kaname_shogi.search.compare --sfen "8k/9/9/9/9/9/9/9/K8 b - 1"
 
 ### 開発用の比較対局
 
-既存の五つの一手選択方式を、合法な準備手順で指定した開始局面から対局させる専用CLIです。リポジトリ直下で、例の動作確認用局面セットを使う場合は次のように実行します。
+登録済みの一手選択方式を、合法な準備手順で指定した開始局面から対局させる専用CLIです。リポジトリ直下で、例の動作確認用局面セットを使う場合は次のように実行します。
 
 ```sh
 python3 -m kaname_shogi.compare_games \
@@ -92,6 +92,31 @@ python3 -m kaname_shogi.compare_games \
 指定局面は `data/comparison/start-positions-v1.json` と同じ形式のUTF-8 JSONで、平手初期局面から合法手順を再生して作ります。出力先は新しいパスを指定してください。`conditions.json`、局ごとの `game-NNNNNN.json`、実行のたびに更新する `summary.json` を保存します。通常千日手は勝者なしの別件数として一局で終了し、指し直し・自動再戦をしません。4回目の通常出現では続行し、5回目は直近4出現を判定します。片側の連続王手負けは相手側の方式の勝ち、双方連続王手は勝者なしの未裁定として別件数にします。手数上限は未決着として記録します。
 
 このコマンドは条件に沿った動作確認と記述的な集計を行うもので、棋力の統計判定や方式の自動採用はしません。千日手出現回数は一局内の判定であり、独立した複数対局の証拠とは数えません。入力不正は終了コード2、対局・保存の故障は1、Ctrl-Cは130です。具体的なJSON契約と検証範囲は[承認済みP2実装計画と実績](docs/plans/2026-10-22-comparison-cli-implementation-plan.md)を参照してください。
+
+### 飛車可動性を比較する開発用実験
+
+C1では、現行の一手駒得 `material` と飛車可動性を含む `material-rook-mobility` を比較できます。通常対局CLI・USIでは選べません。予備比較と確認比較は別の乱数種一覧を使います。
+
+```sh
+mkdir -p results
+python3 -m kaname_shogi.prepare_comparison_seeds \
+  --positions data/comparison/c1-rook-mobility-positions-v1.json \
+  --pairs-per-position 1 --purpose pilot \
+  --output results/c1-pilot-seeds.json
+
+python3 -m kaname_shogi.compare_games \
+  --baseline material --candidate material-rook-mobility \
+  --positions data/comparison/c1-rook-mobility-positions-v1.json \
+  --pairs-per-position 1 --seed-list results/c1-pilot-seeds.json \
+  --max-plies 256 --output-dir results/c1-pilot
+
+python3 -m kaname_shogi.analyze_comparison \
+  --input-dir results/c1-pilot --output results/c1-pilot-analysis.json
+```
+
+準備CLIは各局面・各組・各方式の乱数種を事前保存し、同じ一覧を比較CLIへ渡します。比較CLIは `--seed` または `--seed-list` の一方を必須とし、二局一組の先後を交換します。結果には局ごとの棋譜、条件、進行summaryが保存されます。分析CLIは完了した全局を照合・再集計して候補方式視点の得点区間を出します。`pilot` は時間・未決着率などを見る目的で、改善/悪化判定は行いません。`confirmation` の95%区間も、今回の6局面を均等に扱う一つの総合比較に限り、局面別成績は記述集計です。上限未決着と双方未裁定は得点 `[0,1]` として幅へ残します。
+
+結果のJSON契約、終了コード、統計上の仮定と未検証事項は[比較と探索の知識メモ](docs/knowledge/search-comparison.md#対局方式の比較とc1分析)を参照してください。
 
 反復深化の比較は、次の専用コマンドで実行します。
 

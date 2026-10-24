@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from kaname_shogi import comparison_io as comparison_io_module
+from kaname_shogi import movegen
 from kaname_shogi.comparison import (
     ComparisonConfig,
     ComparisonPosition,
@@ -16,8 +17,9 @@ from kaname_shogi.comparison import (
     MoveTiming,
     make_schedule,
 )
+from kaname_shogi.evaluation import material_balance
 from kaname_shogi.game_record import GameRecord
-from kaname_shogi.model import Side, Square, create_initial_position
+from kaname_shogi.model import PieceType, Side, Square, create_initial_position
 from kaname_shogi.movegen import MoveSelectionPolicy
 from kaname_shogi.usi_move import parse_usi_move
 
@@ -32,6 +34,7 @@ conditions_payload = getattr(comparison_io_module, "conditions_payload", None)
 game_payload = getattr(comparison_io_module, "game_payload", None)
 summary_payload = getattr(comparison_io_module, "summary_payload", None)
 atomic_write_json = getattr(comparison_io_module, "atomic_write_json", None)
+positions_from_bytes = getattr(comparison_io_module, "positions_from_bytes", None)
 
 
 class ComparisonInputTests(unittest.TestCase):
@@ -59,6 +62,41 @@ class ComparisonInputTests(unittest.TestCase):
         }
         path = Path(directory) / "positions.json"
         path.write_text(json.dumps(payload), encoding="utf-8")
+        return path
+
+    @staticmethod
+    def _write_seed_list(
+        directory, positions_path, *, pairs_per_position=1, pairs=None
+    ):
+        """手書きの乱数種一覧を局面ファイルの現在内容へ結び付ける。"""
+        position_payload = json.loads(positions_path.read_bytes())
+        position_ids = [entry["id"] for entry in position_payload["positions"]]
+        if pairs is None:
+            pairs = [
+                {
+                    "position_id": position_id,
+                    "repetition_index": repetition_index,
+                    "baseline_seed": 11 + index * 2,
+                    "candidate_seed": 12 + index * 2,
+                }
+                for index, (position_id, repetition_index) in enumerate(
+                    (position_id, repetition_index)
+                    for position_id in position_ids
+                    for repetition_index in range(pairs_per_position)
+                )
+            ]
+        payload = {
+            "format": "kaname-shogi-comparison-seeds-v1",
+            "purpose": "pilot",
+            "positions_sha256": hashlib.sha256(positions_path.read_bytes()).hexdigest(),
+            "position_ids": position_ids,
+            "pairs_per_position": pairs_per_position,
+            "source": "os",
+            "bits": 128,
+            "pairs": pairs,
+        }
+        path = Path(directory) / "seed-list.json"
+        path.write_bytes(json.dumps(payload, ensure_ascii=False).encode("utf-8"))
         return path
 
     @staticmethod
@@ -145,6 +183,340 @@ class ComparisonInputTests(unittest.TestCase):
                 ),
             ],
         )
+
+    def test_public_positions_from_bytes_matches_path_and_legacy_reader(self):
+        """公開バイト列入口と既存パス・内部互換入口が同じ局面を返す。
+
+        準備CLIだけ異なる検証経路を使う、または旧内部入口の挙動を変える誤りを検出する。
+        """
+        self.assertIsNotNone(positions_from_bytes, "公開バイト列局面読込が未実装です")
+        self._require_implementation()
+        path = Path(__file__).parents[1] / "data/comparison/start-positions-v1.json"
+        raw = path.read_bytes()
+
+        def stable_fields(positions):
+            """盤面オブジェクトの同一性に依存しない局面スナップショットを返す。"""
+            return tuple(
+                (
+                    position.position_id,
+                    position.setup_moves,
+                    position.rationale,
+                    position.start_sfen,
+                    position.initial_move_number,
+                )
+                for position in positions
+            )
+
+        public_positions = positions_from_bytes(raw)
+        self.assertEqual(
+            stable_fields(public_positions), stable_fields(load_positions(path))
+        )
+        self.assertEqual(
+            stable_fields(public_positions),
+            stable_fields(comparison_io_module._positions_from_bytes(raw)),
+        )
+
+    def test_loads_c1_positions_preserving_four_starters_and_two_balanced_additions(
+        self,
+    ):
+        """C1局面セットは既存4局面を保ち、独立期待値の二局面を追加する。
+
+        既存ID・手順・理由・SFENの改変、追加局面の順序や手順の違い、駒得差・
+        飛車可動性・合法手数の不一致を検出する。
+        """
+        root = Path(__file__).parents[1]
+        try:
+            positions = load_positions(
+                root / "data/comparison/c1-rook-mobility-positions-v1.json"
+            )
+        except (FileNotFoundError, ValueError) as error:
+            self.fail(f"C1局面セットを読み込めません: {error}")
+        starters = load_positions(root / "data/comparison/start-positions-v1.json")
+
+        def identity(position):
+            return (
+                position.position_id,
+                position.setup_moves,
+                position.rationale,
+                position.start_sfen,
+                position.initial_move_number,
+            )
+
+        self.assertEqual(len(positions), 6)
+        self.assertEqual(
+            tuple(position.position_id for position in positions),
+            (
+                "initial",
+                "open-bishops",
+                "closed-bishop",
+                "pawn-exchanges",
+                "developed-before-exchanges",
+                "developed-after-exchanges",
+            ),
+        )
+        self.assertEqual(
+            tuple(map(identity, positions[:4])), tuple(map(identity, starters))
+        )
+
+        before, after = positions[4:]
+        expected_common_moves = (
+            "7g7f",
+            "3c3d",
+            "2g2f",
+            "8c8d",
+            "2f2e",
+            "8d8e",
+            "6i7h",
+            "4a3b",
+            "3i3h",
+            "7a7b",
+            "3g3f",
+            "7c7d",
+            "3h3g",
+            "7b7c",
+            "3g4f",
+            "7c6d",
+            "5g5f",
+            "5c5d",
+            "5i6h",
+            "5a4b",
+        )
+        self.assertEqual(before.setup_moves, expected_common_moves)
+        self.assertEqual(len(before.setup_moves), 20)
+        self.assertEqual(len(after.setup_moves), 26)
+        self.assertEqual(after.setup_moves[:20], expected_common_moves)
+        self.assertEqual(
+            after.setup_moves[20:],
+            ("2e2d", "2c2d", "2h2d", "8e8f", "8g8f", "8b8f"),
+        )
+        self.assertEqual(
+            before.start_sfen,
+            "ln1g2snl/1r3kgb1/p2p1p1pp/2psp1p2/1p5P1/2P1PSP2/"
+            "PP1P1P2P/1BGK3R1/LNS2G1NL b - 21",
+        )
+        self.assertEqual(
+            after.start_sfen,
+            "ln1g2snl/5kgb1/p2p1p2p/2psp1pR1/9/1rP1PSP2/"
+            "P2P1P2P/1BGK5/LNS2G1NL b 2P2p 27",
+        )
+        for position, legal_count, rook_count in (
+            (before, 41, 6),
+            (after, 54, 8),
+        ):
+            self.assertEqual(
+                len(movegen.legal_moves(position.start_position)), legal_count
+            )
+            self.assertEqual(material_balance(position.start_position, Side.SENTE), 0)
+            for side in Side:
+                self.assertFalse(
+                    movegen.is_in_check(position.start_position.board, side)
+                )
+            mobility_by_side = {Side.SENTE: 0, Side.GOTE: 0}
+            for file in range(1, 10):
+                for rank in range(1, 10):
+                    square = Square(file, rank)
+                    piece = position.start_position.board.piece_at(square)
+                    if piece is not None and piece.piece_type is PieceType.ROOK:
+                        mobility_by_side[piece.side] += len(
+                            movegen.rook_move_candidates(
+                                position.start_position.board, square
+                            )
+                        )
+            self.assertEqual(
+                mobility_by_side, {Side.SENTE: rook_count, Side.GOTE: rook_count}
+            )
+
+    def test_load_config_accepts_material_rook_mobility_policy(self):
+        """比較条件の方式名からB1を選べるようにする。
+
+        B1を登録し忘れ比較CLIから候補方式を指定できない誤りを検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            positions_path = self._write_positions(directory, [self._position_entry()])
+            args = self._config_args(
+                positions_path,
+                Path(directory) / "results",
+                **{"--candidate": "material-rook-mobility"},
+            )
+            try:
+                config = load_config(args)
+            except ValueError as error:
+                self.fail(f"B1方式名を比較条件として受け入れません: {error}")
+
+        self.assertIs(config.candidate, MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY)
+
+    def test_load_config_accepts_a_seed_list_matching_the_position_snapshot(self):
+        """一致する乱数種一覧を検証し読込時の両ファイルを保持する。
+
+        種一覧方式が受け付けられない、または検証した内容ではなく後から読み直した
+        入力を条件へ使う誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions_path = self._write_positions(
+                directory, [self._position_entry("one")]
+            )
+            seed_list_path = self._write_seed_list(directory, positions_path)
+            positions_snapshot = positions_path.read_bytes()
+            seed_list_snapshot = seed_list_path.read_bytes()
+            args = self._config_args(
+                positions_path,
+                Path(directory) / "results",
+                **{
+                    "--pairs-per-position": "1",
+                    "--seed-list": str(seed_list_path),
+                },
+            )
+            args.remove("--seed")
+            args.remove("17")
+
+            config = load_config(args)
+
+        self.assertIsNone(config.seed)
+        self.assertEqual(config.positions_json, positions_snapshot)
+        self.assertEqual(config.seed_list_json, seed_list_snapshot)
+        self.assertEqual(config.seed_list_path, seed_list_path)
+        self.assertEqual(
+            [
+                (
+                    pair.position_id,
+                    pair.repetition_index,
+                    pair.baseline_seed,
+                    pair.candidate_seed,
+                )
+                for pair in config.seed_plan.pairs
+            ],
+            [("one", 0, 11, 12)],
+        )
+
+    def test_seed_or_seed_list_is_required_exclusively_before_output(self):
+        """主種と一覧はちょうど一方だけを要求し、出力先を作らない。
+
+        二方式を同時に指定して曖昧な予定を作る、または乱数条件を省略して実行する
+        誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions_path = self._write_positions(
+                directory, [self._position_entry("one")]
+            )
+            seed_list_path = self._write_seed_list(directory, positions_path)
+            cases = (
+                {"--seed-list": str(seed_list_path)},
+                {},
+            )
+            for index, overrides in enumerate(cases):
+                with self.subTest(overrides=overrides):
+                    output_path = Path(directory) / f"invalid-{index}"
+                    args = self._config_args(positions_path, output_path, **overrides)
+                    if not overrides:
+                        args.remove("--seed")
+                        args.remove("17")
+                    with self.assertRaises(ValueError):
+                        load_config(args)
+                    self.assertFalse(output_path.exists())
+
+    def test_seed_list_rejects_changed_position_bytes_and_incomplete_pairs(self):
+        """局面バイト差や最後の組の欠落を対局条件として拒否する。
+
+        IDが同じという理由で異なる局面内容を流用する、または一覧にない組を暗黙補完
+        して対局予定を作る誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions_path = self._write_positions(
+                directory, [self._position_entry("one")]
+            )
+            seed_list_path = self._write_seed_list(directory, positions_path)
+            position_payload = json.loads(positions_path.read_bytes())
+            position_payload["positions"][0]["rationale"] = "同じIDの別内容"
+            positions_path.write_text(json.dumps(position_payload), encoding="utf-8")
+            output_path = Path(directory) / "changed-position"
+            args = self._config_args(
+                positions_path,
+                output_path,
+                **{"--seed-list": str(seed_list_path)},
+            )
+            args.remove("--seed")
+            args.remove("17")
+            with self.assertRaises(ValueError):
+                load_config(args)
+            self.assertFalse(output_path.exists())
+
+            original_positions_path = self._write_positions(
+                directory, [self._position_entry("one")]
+            )
+            incomplete_list = self._write_seed_list(
+                directory,
+                original_positions_path,
+                pairs_per_position=2,
+                pairs=[
+                    {
+                        "position_id": "one",
+                        "repetition_index": 0,
+                        "baseline_seed": 11,
+                        "candidate_seed": 12,
+                    }
+                ],
+            )
+            incomplete_output = Path(directory) / "incomplete-pairs"
+            incomplete_args = self._config_args(
+                original_positions_path,
+                incomplete_output,
+                **{
+                    "--pairs-per-position": "2",
+                    "--seed-list": str(incomplete_list),
+                },
+            )
+            incomplete_args.remove("--seed")
+            incomplete_args.remove("17")
+            with self.assertRaises(ValueError):
+                load_config(incomplete_args)
+            self.assertFalse(incomplete_output.exists())
+
+    def test_seed_list_rejects_duplicate_pair_and_invalid_seed_before_output(self):
+        """重複組・bool・128ビット範囲外の種を条件入力として拒否する。
+
+        同じ局面・反復の重複割当て、boolの整数扱い、128ビット上限を含む種を受理し、
+        一覧と予定の対応を曖昧にする誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions_path = self._write_positions(
+                directory, [self._position_entry("one")]
+            )
+            complete_list = self._write_seed_list(
+                directory, positions_path, pairs_per_position=2
+            )
+            original = json.loads(complete_list.read_bytes())
+            cases = []
+            duplicate = json.loads(json.dumps(original))
+            duplicate["pairs"][1]["repetition_index"] = 0
+            cases.append(("duplicate", duplicate))
+            boolean_seed = json.loads(json.dumps(original))
+            boolean_seed["pairs"][0]["baseline_seed"] = True
+            cases.append(("bool", boolean_seed))
+            out_of_range_seed = json.loads(json.dumps(original))
+            out_of_range_seed["pairs"][1]["candidate_seed"] = 1 << 128
+            cases.append(("out-of-range", out_of_range_seed))
+
+            for name, payload in cases:
+                with self.subTest(name=name):
+                    complete_list.write_text(json.dumps(payload), encoding="utf-8")
+                    output_path = Path(directory) / f"invalid-{name}"
+                    args = self._config_args(
+                        positions_path,
+                        output_path,
+                        **{
+                            "--pairs-per-position": "2",
+                            "--seed-list": str(complete_list),
+                        },
+                    )
+                    args.remove("--seed")
+                    args.remove("17")
+                    with self.assertRaises(ValueError):
+                        load_config(args)
+                    self.assertFalse(output_path.exists())
 
     def test_rejects_duplicate_json_keys(self):
         """同名JSONキーを持つ局面セットを拒否する。
@@ -564,6 +936,112 @@ class ComparisonSerializationTests(unittest.TestCase):
         self.assertEqual(
             payload["git"],
             {"head": None, "dirty": None, "diagnostic": "git is unavailable"},
+        )
+
+    def test_seed_list_conditions_v2_keeps_exact_input_snapshots_and_b1_weights(self):
+        """一覧実験は正確な局面・種一覧とB1重みをconditions v2へ保存する。
+
+        入力ファイルを読み直して後からの変更を記録する、一覧ハッシュ・予定種・方式
+        重みを取り違える、または既存条件キーを失う誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions_path = ComparisonInputTests._write_positions(
+                directory,
+                [ComparisonInputTests._position_entry("one", ["7g7f"])],
+            )
+            seed_list_path = ComparisonInputTests._write_seed_list(
+                directory, positions_path
+            )
+            positions_snapshot = positions_path.read_bytes()
+            seed_list_snapshot = seed_list_path.read_bytes()
+            output_path = Path(directory) / "results"
+            args = ComparisonInputTests._config_args(
+                positions_path,
+                output_path,
+                **{
+                    "--baseline": "material",
+                    "--candidate": "material-rook-mobility",
+                    "--pairs-per-position": "1",
+                    "--seed-list": str(seed_list_path),
+                },
+            )
+            args.remove("--seed")
+            args.remove("17")
+            config = load_config(args)
+            positions_path.write_bytes(b"replaced position input")
+            seed_list_path.write_bytes(b"replaced seed input")
+            source_root = Path(directory) / "source"
+            (source_root / "kaname_shogi").mkdir(parents=True)
+            git_metadata = {
+                "head": "0123456789abcdef",
+                "dirty": True,
+                "diagnostic": None,
+            }
+            with patch.object(
+                comparison_io_module, "_git_metadata", return_value=git_metadata
+            ):
+                payload = conditions_payload(
+                    config, make_schedule(config), source_root=source_root
+                )
+
+        self.assertEqual(
+            set(payload),
+            {
+                "format",
+                "baseline",
+                "candidate",
+                "positions_file",
+                "positions_sha256",
+                "positions",
+                "pairs_per_position",
+                "seed",
+                "max_plies",
+                "schedule",
+                "timing",
+                "clock",
+                "repetition",
+                "git",
+                "runtime",
+                "source_sha256",
+                "positions_json",
+                "randomization",
+                "policy_parameters",
+            },
+        )
+        self.assertEqual(payload["format"], "kaname-shogi-comparison-conditions-v2")
+        self.assertEqual(payload["positions_json"], positions_snapshot.decode("utf-8"))
+        self.assertEqual(
+            payload["positions_sha256"], hashlib.sha256(positions_snapshot).hexdigest()
+        )
+        self.assertIsNone(payload["seed"])
+        self.assertEqual(
+            payload["randomization"],
+            {
+                "purpose": "pilot",
+                "source": "os",
+                "bits": 128,
+                "seed_list_sha256": hashlib.sha256(seed_list_snapshot).hexdigest(),
+                "seed_list_json": seed_list_snapshot.decode("utf-8"),
+            },
+        )
+        self.assertEqual(
+            payload["policy_parameters"],
+            {
+                "baseline": {},
+                "candidate": {
+                    "material": 10,
+                    "mobility": 1,
+                    "mate_priority": True,
+                },
+            },
+        )
+        self.assertEqual(
+            [
+                (game["baseline_seed"], game["candidate_seed"])
+                for game in payload["schedule"]
+            ],
+            [(11, 12), (11, 12)],
         )
 
     def test_git_metadata_failure_returns_null_values_and_diagnostic(self):

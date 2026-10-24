@@ -6,7 +6,16 @@ from unittest.mock import patch
 
 from kaname_shogi import game_search
 from kaname_shogi import movegen as mg
-from kaname_shogi.model import BasicPieceType, Board, Position, Side, Square
+from kaname_shogi.material_rook_mobility import evaluate_material_rook_mobility
+from kaname_shogi.model import (
+    BasicPieceType,
+    Board,
+    Piece,
+    PieceType,
+    Position,
+    Side,
+    Square,
+)
 from kaname_shogi.move import BoardMove
 from kaname_shogi.search.result import (
     ControlledCompletion,
@@ -42,12 +51,277 @@ def snapshot(position: Position):
     )
 
 
+class RecordingChoice:
+    """抽選候補と呼出回数を記録し、候補先頭を返すテスト用操作。"""
+
+    def __init__(self):
+        self.calls = 0
+        self.seen = ()
+
+    def choice(self, candidates):
+        self.calls += 1
+        self.seen = tuple(candidates)
+        return candidates[0]
+
+
 class GameSearchTests(unittest.TestCase):
     def new_policy(self, name):
         """新方針が存在することを確認してから、その値を返す。"""
         policy = getattr(mg.MoveSelectionPolicy, name, None)
         self.assertIsNotNone(policy, f"{name}方針を追加してください")
         return policy
+
+    def _choose_b1(self, position, moves, rng):
+        """未接続方針のValueErrorを期待する失敗テストへ変換して呼ぶ。"""
+        policy = self.new_policy("MATERIAL_ROOK_MOBILITY")
+        try:
+            return game_search.choose_move(position, moves, policy, rng)
+        except ValueError as error:
+            self.fail(f"有効なB1選択を拒否しました: {error}")
+
+    @staticmethod
+    def _mate_capture_case(side):
+        """即詰み手と、より大きな駒得を得る非詰み手を返す。"""
+        board = Board()
+        for square, piece_type, owner in (
+            (Square(9, 9), PieceType.KING, Side.SENTE),
+            (Square(5, 3), PieceType.ROOK, Side.SENTE),
+            (Square(4, 3), PieceType.GOLD, Side.SENTE),
+            (Square(5, 1), PieceType.KING, Side.GOTE),
+            (Square(4, 1), PieceType.PAWN, Side.GOTE),
+            (Square(6, 1), PieceType.PAWN, Side.GOTE),
+            (Square(4, 2), PieceType.PAWN, Side.GOTE),
+            (Square(6, 2), PieceType.PAWN, Side.GOTE),
+            (Square(6, 3), PieceType.ROOK, Side.GOTE),
+        ):
+            board.set_piece(square, Piece(piece_type, owner))
+        position = Position(board, Side.SENTE)
+        if side is Side.SENTE:
+            return (
+                position,
+                BoardMove(Square(5, 3), Square(5, 2), False),
+                BoardMove(Square(5, 3), Square(6, 3), False),
+            )
+
+        rotated = Board()
+        for file in range(1, 10):
+            for rank in range(1, 10):
+                piece = board.piece_at(Square(file, rank))
+                if piece is not None:
+                    owner = Side.GOTE if piece.side is Side.SENTE else Side.SENTE
+                    rotated.set_piece(
+                        Square(10 - file, 10 - rank), Piece(piece.piece_type, owner)
+                    )
+        return (
+            Position(rotated, Side.GOTE),
+            BoardMove(Square(5, 7), Square(5, 8), False),
+            BoardMove(Square(5, 7), Square(4, 7), False),
+        )
+
+    def test_b1_dispatch_preserves_full_best_set(self):
+        """B1は手計算した最大7手だけを一度抽選し、元局面を保つ。
+
+        駒得だけへの誤配線、最高候補の欠落・余計な混入、抽選の複数回実行、
+        候補評価による元局面の変更を検出する。最大176点は駒得16×10と
+        可動性16×1、期待する7手は飛車が玉に遮られず横8方向を確保する配置から
+        独立に定めている。
+        """
+        position = parse_sfen("8k/9/9/9/9/9/4P4/4R4/K8 b - 1").position
+        before = snapshot(position)
+        moves = mg.legal_moves(position)
+
+        class RecordingChoice:
+            """抽選候補と呼出回数を記録し、候補内の一手を返す。"""
+
+            def __init__(self):
+                self.calls = 0
+                self.seen = ()
+
+            def choice(self, candidates):
+                self.calls += 1
+                self.seen = tuple(candidates)
+                return candidates[0]
+
+        expected_moves = {
+            BoardMove(Square(5, 8), Square(1, 8), False),
+            BoardMove(Square(5, 8), Square(2, 8), False),
+            BoardMove(Square(5, 8), Square(3, 8), False),
+            BoardMove(Square(5, 8), Square(4, 8), False),
+            BoardMove(Square(5, 8), Square(6, 8), False),
+            BoardMove(Square(5, 8), Square(7, 8), False),
+            BoardMove(Square(5, 8), Square(8, 8), False),
+        }
+        rng = RecordingChoice()
+
+        selected = self._choose_b1(position, moves, rng)
+
+        self.assertEqual(set(rng.seen), expected_moves)
+        self.assertEqual(rng.calls, 1)
+        self.assertIn(selected, expected_moves)
+        self.assertEqual(snapshot(position), before)
+
+    def test_b1_empty_candidates_return_none_without_randomness(self):
+        """B1の候補なしを通常手なしとして返し、乱数を使わない。
+
+        B1を四手探索側へ誤分類して例外にすることや、空候補で抽選する誤りを検出する。
+        """
+        policy = self.new_policy("MATERIAL_ROOK_MOBILITY")
+        position = kings_only(Side.SENTE)
+
+        class RecordingChoice:
+            """抽選が発生したかだけを記録する。"""
+
+            def __init__(self):
+                self.calls = 0
+
+            def choice(self, candidates):
+                self.calls += 1
+                return candidates[0]
+
+        rng = RecordingChoice()
+
+        try:
+            selected = game_search.choose_move(position, (), policy, rng)
+        except ValueError as error:
+            self.fail(f"空候補を返さずB1を拒否しました: {error}")
+
+        self.assertIsNone(selected)
+        self.assertEqual(rng.calls, 0)
+
+    def test_b1_dispatch_preserves_full_best_set_for_gote(self):
+        """後手でも独立に手計算した最高7手だけを一度抽選する。
+
+        先手視点固定を検出する。後手飛車５二から横へ動き、自玉１一に遮られず
+        16マスを保つ7手を期待値として固定する。
+        """
+        position = parse_sfen("8k/4r4/4p4/9/9/9/9/9/K8 w - 1").position
+        moves = mg.legal_moves(position)
+        expected_moves = {
+            BoardMove(Square(5, 2), Square(2, 2), False),
+            BoardMove(Square(5, 2), Square(3, 2), False),
+            BoardMove(Square(5, 2), Square(4, 2), False),
+            BoardMove(Square(5, 2), Square(6, 2), False),
+            BoardMove(Square(5, 2), Square(7, 2), False),
+            BoardMove(Square(5, 2), Square(8, 2), False),
+            BoardMove(Square(5, 2), Square(9, 2), False),
+        }
+        rng = RecordingChoice()
+
+        selected = self._choose_b1(position, moves, rng)
+
+        self.assertEqual(set(rng.seen), expected_moves)
+        self.assertEqual(rng.calls, 1)
+        self.assertIn(selected, expected_moves)
+
+    def test_b1_prefers_one_point_pawn_advance_for_both_sides(self):
+        """駒得同値なら飛車の移動先が1増える歩の前進を先後とも選ぶ。
+
+        一手駒得だけへの誤配線、先手視点の固定、候補順による選択を検出する。
+        固定SFENで、先手の歩５七→５六は170対169、後手の歩５三→５四も
+        170対169と手計算した期待値に照合する。
+        """
+        cases = (
+            (
+                Side.SENTE,
+                "8k/9/9/9/9/9/4P4/4R4/K8 b - 1",
+                BoardMove(Square(5, 7), Square(5, 6), False),
+                BoardMove(Square(9, 9), Square(8, 9), False),
+            ),
+            (
+                Side.GOTE,
+                "8k/4r4/4p4/9/9/9/9/9/K8 w - 1",
+                BoardMove(Square(5, 3), Square(5, 4), False),
+                BoardMove(Square(1, 1), Square(2, 1), False),
+            ),
+        )
+        for side, sfen, pawn_move, king_move in cases:
+            with self.subTest(side=side):
+                position = parse_sfen(sfen).position
+                self.assertIn(pawn_move, mg.legal_moves(position))
+                self.assertIn(king_move, mg.legal_moves(position))
+                self.assertEqual(
+                    evaluate_material_rook_mobility(
+                        mg.position_after_move(position, pawn_move), side
+                    ),
+                    170,
+                )
+                self.assertEqual(
+                    evaluate_material_rook_mobility(
+                        mg.position_after_move(position, king_move), side
+                    ),
+                    169,
+                )
+                rng = RecordingChoice()
+
+                selected = self._choose_b1(position, (king_move, pawn_move), rng)
+
+                self.assertEqual(rng.seen, (pawn_move,))
+                self.assertEqual(rng.calls, 1)
+                self.assertEqual(selected, pawn_move)
+
+    def test_b1_retains_weak_rook_safety_example(self):
+        """26手局面では危険な２三不成を安全候補より2点高く採点する。
+
+        B1接続で駒得・可動性の符号が変わる誤りを検出する。比較は二候補だけで、
+        全合法手からこの手を必ず選ぶことや安全性評価の実装を主張しない。
+        """
+        position = parse_sfen(
+            "ln1g2snl/5kgb1/p2p1p2p/2psp1pR1/9/1rP1PSP2/"
+            "P2P1P2P/1BGK5/LNS2G1NL b 2P2p 27"
+        ).position
+        risky = BoardMove(Square(2, 4), Square(2, 3), False)
+        safer = BoardMove(Square(2, 4), Square(2, 6), False)
+        self.assertIn(risky, mg.legal_moves(position))
+        self.assertIn(safer, mg.legal_moves(position))
+        self.assertEqual(
+            evaluate_material_rook_mobility(
+                mg.position_after_move(position, risky), Side.SENTE
+            ),
+            1,
+        )
+        self.assertEqual(
+            evaluate_material_rook_mobility(
+                mg.position_after_move(position, safer), Side.SENTE
+            ),
+            -1,
+        )
+        rng = RecordingChoice()
+
+        selected = self._choose_b1(position, (safer, risky), rng)
+
+        self.assertEqual(rng.seen, (risky,))
+        self.assertEqual(rng.calls, 1)
+        self.assertEqual(selected, risky)
+
+    def test_b1_prioritizes_mate_over_higher_material_capture_for_both_sides(self):
+        """B1は駒得361点の非詰み手より49点の即詰み手を先後とも優先する。
+
+        通常点だけで詰み手を落とす誤り、先手固定、巨大な通常点が勝敗優先を
+        上回る誤りを検出する。詰み判定と通常評価は実処理を使う。
+        """
+        for side in Side:
+            with self.subTest(side=side):
+                position, mate, capture = self._mate_capture_case(side)
+                self.assertIn(mate, mg.legal_moves(position))
+                self.assertIn(capture, mg.legal_moves(position))
+                self.assertTrue(mg.is_checkmate(mg.position_after_move(position, mate)))
+                self.assertFalse(
+                    mg.is_checkmate(mg.position_after_move(position, capture))
+                )
+                mate_score = evaluate_material_rook_mobility(
+                    mg.position_after_move(position, mate), side
+                )
+                capture_score = evaluate_material_rook_mobility(
+                    mg.position_after_move(position, capture), side
+                )
+                self.assertEqual((mate_score, capture_score), (49, 361))
+                rng = RecordingChoice()
+
+                selected = self._choose_b1(position, (capture, mate), rng)
+
+                self.assertEqual(rng.seen, (mate,))
+                self.assertEqual(rng.calls, 1)
+                self.assertEqual(selected, mate)
 
     def test_legacy_policies_delegate_unchanged(self):
         """旧三方式は同じ引数を一度だけ旧入口へ渡し結果をそのまま返す。

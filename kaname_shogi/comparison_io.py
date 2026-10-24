@@ -25,6 +25,8 @@ from .comparison import (
     _side_name,
     make_schedule,
 )
+from .comparison_artifact_io import decode_object
+from .comparison_seeds import parse_seed_plan, validate_seed_plan
 from .game_record import GameRecord
 from .model import BasicPieceType, Position, Square, create_initial_position
 from .move import BoardMove, DropMove
@@ -42,6 +44,7 @@ _POSITION_KEYS = {"id", "setup_moves", "rationale"}
 _POLICIES = {
     "random": movegen.MoveSelectionPolicy.RANDOM,
     "material": movegen.MoveSelectionPolicy.MATERIAL,
+    "material-rook-mobility": movegen.MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,
     "two-ply-material": movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
     "full-width-4": movegen.MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
     "alpha-beta-4": movegen.MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
@@ -79,17 +82,29 @@ def load_positions(path: Path) -> tuple[ComparisonPosition, ...]:
         比較開始SFEN・由来手数を確定する。
     """
     raw = Path(path).read_bytes()
-    return _positions_from_bytes(raw)
+    return positions_from_bytes(raw)
 
 
-def _positions_from_bytes(raw: bytes) -> tuple[ComparisonPosition, ...]:
-    """読込済み局面セットの一つのバイト列を解析し、全項目を検証する。"""
-    try:
-        payload = json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_object)
-    except (UnicodeDecodeError, json.JSONDecodeError) as error:
-        raise ValueError(f"局面セットJSONを読み込めません: {error}") from error
-    if not isinstance(payload, dict):
-        raise ValueError("局面セットのトップレベルはJSONオブジェクトで指定してください")
+def positions_from_bytes(raw: bytes) -> tuple[ComparisonPosition, ...]:
+    """一つの局面JSONバイト列を共通の厳密読込へ通して全項目を検証する。
+
+    引数:
+        raw: 局面セットのUTF-8 JSONバイト列。
+
+    戻り値:
+        配列順の準備手順と生成局面を保持する変更不可タプル。
+
+    例外:
+        ValueError: JSON、必須値、重複、局面準備手順または準備中終局が不正な場合。
+
+    副作用:
+        bytesを読み、平手初期局面から合法手順を再生する。入力値を変更しない。
+
+    前提条件:
+        ファイル読込の有無にかかわらず同じ解析・合法性検証を行い、比較開始前の履歴を
+        一局の新しい初期履歴として扱えるよう局面と表示手数を確定する。
+    """
+    payload = decode_object(raw, context="局面セット")
     _require_exact_keys(payload, _POSITION_SET_KEYS, "局面セット")
     if payload["format"] != _POSITION_FORMAT:
         raise ValueError("局面セット形式が対応していません")
@@ -165,6 +180,11 @@ def _positions_from_bytes(raw: bytes) -> tuple[ComparisonPosition, ...]:
     return tuple(loaded)
 
 
+def _positions_from_bytes(raw: bytes) -> tuple[ComparisonPosition, ...]:
+    """旧内部呼出しの互換名を保って公開バイト列入口へ委譲する。"""
+    return positions_from_bytes(raw)
+
+
 def load_config(argv: Sequence[str]) -> ComparisonConfig:
     """必須CLI条件と局面セット全件を検証し比較条件データを返す。
 
@@ -172,7 +192,8 @@ def load_config(argv: Sequence[str]) -> ComparisonConfig:
         argv: `--baseline`等のオプションと値からなるCLI引数列。
 
     戻り値:
-        有効な局面・方式・回数・種・手数上限・未使用の出力先を含む条件データ。
+        有効な局面・方式・回数・主乱数種または種一覧・手数上限・未使用の出力先を
+        含む条件データ。種一覧の場合は入力バイト列と検証済みSeedPlanも保持する。
 
     例外:
         ValueError: 引数・値・局面セットまたは出力先の条件が無効な場合。
@@ -181,6 +202,10 @@ def load_config(argv: Sequence[str]) -> ComparisonConfig:
     副作用:
         引数と局面ファイルを読む。出力先を作らず、同名ファイルも上書きしない。
         すべての入力検証が終わってから呼出側が出力先を作れるよう、条件を先に確定する。
+
+    前提条件:
+        `--seed`と`--seed-list`はちょうど一方を指定する。種一覧は局面JSONの全バイト列、
+        順序付きID、局面ごとの組数に一致する。
     """
     parser = _make_parser()
     args = parser.parse_args(list(argv))
@@ -192,14 +217,29 @@ def load_config(argv: Sequence[str]) -> ComparisonConfig:
     pairs_per_position = _parse_nonnegative_int(
         args.pairs_per_position, "組数", minimum=1
     )
-    seed = _parse_nonnegative_int(args.seed, "乱数種", minimum=0)
     max_plies = _parse_nonnegative_int(args.max_plies, "手数上限", minimum=1)
     positions_path = Path(args.positions)
     positions_json = positions_path.read_bytes()
     positions = _positions_from_bytes(positions_json)
+    seed_plan = None
+    seed_list_json = None
+    seed_list_path = None
+    if args.seed is not None:
+        seed = _parse_nonnegative_int(args.seed, "乱数種", minimum=0)
+    else:
+        seed = None
+        seed_list_path = Path(args.seed_list)
+        seed_list_json = seed_list_path.read_bytes()
+        seed_plan = parse_seed_plan(seed_list_json)
+        validate_seed_plan(
+            seed_plan,
+            position_ids=tuple(position.position_id for position in positions),
+            positions_sha256=hashlib.sha256(positions_json).hexdigest(),
+            pairs_per_position=pairs_per_position,
+        )
 
     output_dir = Path(args.output_dir)
-    if output_dir.exists():
+    if os.path.lexists(output_dir):
         raise ValueError("出力先は存在しないパスを指定してください")
     if not output_dir.parent.exists() or not output_dir.parent.is_dir():
         raise ValueError("出力先の親ディレクトリは事前に作成してください")
@@ -214,6 +254,9 @@ def load_config(argv: Sequence[str]) -> ComparisonConfig:
         output_dir=output_dir,
         positions_path=positions_path,
         positions_json=positions_json,
+        seed_plan=seed_plan,
+        seed_list_json=seed_list_json,
+        seed_list_path=seed_list_path,
     )
 
 
@@ -224,7 +267,9 @@ def _make_parser(*, add_help: bool = False) -> _ValueErrorArgumentParser:
     parser.add_argument("--candidate", choices=tuple(_POLICIES), required=True)
     parser.add_argument("--positions", required=True)
     parser.add_argument("--pairs-per-position", required=True)
-    parser.add_argument("--seed", required=True)
+    seed_group = parser.add_mutually_exclusive_group(required=True)
+    seed_group.add_argument("--seed")
+    seed_group.add_argument("--seed-list")
     parser.add_argument("--max-plies", required=True)
     parser.add_argument("--output-dir", required=True)
     return parser
@@ -238,16 +283,6 @@ def _parse_nonnegative_int(value: str, name: str, *, minimum: int) -> int:
     if parsed < minimum:
         raise ValueError(f"{name}は{minimum}以上で指定してください")
     return parsed
-
-
-def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
-    """JSONオブジェクト内の重複キーを拒否して辞書を作る。"""
-    result = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f"JSONキーが重複しています: {key}")
-        result[key] = value
-    return result
 
 
 def _require_exact_keys(payload: dict, expected: set[str], context: str) -> None:
@@ -323,7 +358,8 @@ def conditions_payload(
         source_root: `kaname_shogi` パッケージを含むGit作業ルート。
 
     戻り値:
-        条件のハッシュ対象内容を持つ新しいJSON互換辞書。
+        旧主乱数種実験ならconditions v1、一括種一覧実験ならconditions v2の新しい
+        JSON互換辞書。v2には読込時の局面・種一覧の正確なUTF-8文字列を含む。
 
     副作用:
         読込済み局面バイト列、パッケージ内の全Pythonソース、Git状態、実行環境を読む。
@@ -334,11 +370,12 @@ def conditions_payload(
         `kaname_shogi` パッケージがある。ソース指紋は未追跡を含む全 `.py` を
         POSIX相対パス順にし、4バイトのパス長・パス・8バイトの内容長・内容を連結する。
         Git情報が取れない場合はnull値と診断を記録し、実験条件の他部分は残す。
+        v2では検証済み一覧と方式の実効評価重みも保存する。
     """
     if tuple(schedule) != make_schedule(config):
         raise ValueError("条件JSONの予定が比較条件から生成した予定と一致しません")
     package_root = Path(source_root) / "kaname_shogi"
-    return {
+    payload: dict[str, object] = {
         "format": _CONDITIONS_FORMAT,
         "baseline": _policy_name(config.baseline),
         "candidate": _policy_name(config.candidate),
@@ -382,6 +419,44 @@ def conditions_payload(
         },
         "source_sha256": _source_sha256(package_root),
     }
+    if config.seed_plan is None:
+        if config.seed is None:
+            raise ValueError("条件JSONには主乱数種または乱数種一覧が必要です")
+        return payload
+
+    if config.seed is not None or config.seed_list_json is None:
+        raise ValueError("乱数種一覧の条件JSONに必要な保存値がありません")
+    try:
+        positions_json = config.positions_json.decode("utf-8")
+        seed_list_json = config.seed_list_json.decode("utf-8")
+    except UnicodeDecodeError as error:
+        raise ValueError("検証済み入力JSONをUTF-8へ戻せません") from error
+
+    payload.update(
+        {
+            "format": "kaname-shogi-comparison-conditions-v2",
+            "positions_json": positions_json,
+            "randomization": {
+                "purpose": config.seed_plan.purpose,
+                "source": "os",
+                "bits": 128,
+                "seed_list_sha256": hashlib.sha256(config.seed_list_json).hexdigest(),
+                "seed_list_json": seed_list_json,
+            },
+            "policy_parameters": {
+                "baseline": _policy_parameters(config.baseline),
+                "candidate": _policy_parameters(config.candidate),
+            },
+        }
+    )
+    return payload
+
+
+def _policy_parameters(policy: movegen.MoveSelectionPolicy) -> dict[str, object]:
+    """方式の実効評価値をconditions v2用の値として返す。"""
+    if policy is movegen.MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY:
+        return {"material": 10, "mobility": 1, "mate_priority": True}
+    return {}
 
 
 def game_payload(

@@ -2,6 +2,14 @@
 
 ## 現在地
 
+2026-10-24、C1「飛車可動性を接続して比較評価する」の本人承認済み実装計画に沿い、比較CLIへのB1接続・乱数種一覧・分析CLIを実装した。作業場所は `/Users/oki2a24/kaname-shogi`、ブランチは `codex/c1-rook-mobility-evaluation`、開始HEADは `5f136d5`。仕様・回答経緯は[承認済み設計](plans/2026-10-24-c1-rook-mobility-evaluation-design.md)と[学習記録](learning/c1-rook-mobility-evaluation.md)、実施手順は[実装計画](plans/2026-10-24-c1-rook-mobility-evaluation-implementation-plan.md)を参照する。
+
+タスク1〜5と準備→比較→分析の実プロセス接続は完了した。pipeline test 1件が成功し、同一種一覧で計時情報を除く予定・棋譜・終局理由・勝敗の再現を確認した。条件SHA、勝者方式の対応、未決着区間、組単位の標本数の4変異を一時コピーで検出した。最終レビューのMinorをTDDで修正し、関連40件、全体795件・55モジュール、Ruff三工程、文書リンク806件/見出し8件、差分検査が成功した。最終独立レビューはCritical 0 / Important 0 / Minor 0。検出範囲・未検証事項は[学習記録](learning/c1-rook-mobility-evaluation.md)にある。
+
+現在はC1変更が未コミットで、HEADは開始コミット `5f136d5`。`.venv/bin/ruff --version` は固定版 `0.16.10`、hooksPathは `.githooks`。次はC1対象ファイルだけを通常コミットしてソースを固定し、承認済みpilot（6局面×1組、12局、各256手）を実行する。pilot結果を示した後、確認比較の組数・上限・時間予算を本人が決めるまで待つ。通常CLIのSFEN入出力と飛車可動性バージョン2は追加しない。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持する。
+
+## C1開始前の状態（履歴）
+
 2026-10-24、主線A1「駒得以外の局面評価を一項目から学び設計する」の飛車可動性について、本人承認済み計画に従うB1実装・検証・記録を作業ブランチで完了し、本人承認後にローカルmainへ統合した。未成飛車の可動性差、名前付き重みによる駒得との合成評価、評価関数を差し替えられる一手選択を個別ファイルへ追加した。詳細は[学習・本人回答・実装・検証記録](learning/rook-mobility-design.md)、[確定知識](knowledge/rook-mobility-evaluation.md)、[承認済み設計](plans/2026-10-24-rook-mobility-design.md)、[実装計画と実績](plans/2026-10-24-rook-mobility-implementation-plan.md)を参照する。
 
 作業場所は `/Users/oki2a24/kaname-shogi`、現在の作業ブランチは `main`。C1引き継ぎ開始時のGit状態と未追跡の保持物は[C1引き継ぎ](handover-c1-rook-mobility-evaluation.md)を参照する。実装コミットは `8f39c9b`、`e9a3d45`、`bc6651b`、統合時点は `06453c9`。統合先で全体テスト729件・48モジュールが14.634秒で成功し、Ruff（90ファイル変更なし）・差分検査・文書リンク790件/アンカー5件（欠落0）も成功した。代表変異7件は意図したassertion failureですべて検出済み。独立コードレビューはCritical 0 / Important 0 / Minor 1、最終文書レビューはCritical 0 / Important 0で追加指摘なし。Minorは異なる手種の兄弟枝を混在させた相互干渉の直接検査がない範囲上の残件として学習記録に残した。pushはしていない。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持している。

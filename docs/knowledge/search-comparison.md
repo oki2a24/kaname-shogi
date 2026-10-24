@@ -66,3 +66,38 @@
 2026-10-18に探索部品として `iterative_deepening.search_controlled` と `alpha_beta.search_controlled` を追加した。比較コマンドは従来の停止なし入口を使い続ける。停止なし反復は遅延取得で完了記録を一件ずつ渡し、手なしでも深さ1の記録を一件渡す。制御付き反復は準備を含めて同期実行し、最終終了結果を一件返す。準備の手なしは完了記録なしで終了する。
 
 反復・再帰・優先手順序・完了累計の本体を共有する。準備と中断反復は累計に含めず、中断時は最新完了記録または予備手を使う。詳細は[探索停止](search-stop.md)、[承認済み設計](../plans/2026-10-18-iterative-deepening-stop-time-control-design.md)、[実装・検証記録](../learning/iterative-deepening-stop-time-control-implementation.md)を参照。比較コマンドに時計オプションはない。通常対局への接続仕様と検証範囲は[四手探索の接続設計](../plans/2026-10-19-four-ply-search-game-integration-design.md)と[実装・学習記録](../learning/four-ply-search-game-integration-plan.md)を参照する。
+
+## 対局方式の比較とC1分析
+
+`python -m kaname_shogi.compare_games` は開発用の一手選択方式を指定局面群で比較する。現在の方式名は `random`、`material`、`material-rook-mobility`、`two-ply-material`、`full-width-4`、`alpha-beta-4`。`material-rook-mobility` はB1全体（駒得と未成飛車の移動先候補数の合成、および一手詰み優先）を比較CLIの選択経路へ接続する。通常CLI・USIの選択肢には加えていない。
+
+### 乱数種一覧と実行
+
+```sh
+python3 -m kaname_shogi.prepare_comparison_seeds \
+  --positions data/comparison/c1-rook-mobility-positions-v1.json \
+  --pairs-per-position 1 --purpose pilot --output /path/new-seeds.json
+
+python3 -m kaname_shogi.compare_games \
+  --baseline material --candidate material-rook-mobility \
+  --positions data/comparison/c1-rook-mobility-positions-v1.json \
+  --pairs-per-position 1 --seed-list /path/new-seeds.json \
+  --max-plies 256 --output-dir /path/new-run
+
+python3 -m kaname_shogi.analyze_comparison \
+  --input-dir /path/new-run --output /path/new-analysis.json
+```
+
+準備CLIは局面群全体を検証した後、OS乱数源から128ビット種をbaseline/candidate用に各組一つずつ抽出し、`pilot` または `confirmation` と局面ファイルのSHA-256を含むJSONへ保存する。同じ数値の種が偶然重なっても引き直さない。出力は新規パス限定。比較CLIは旧来の `--seed` と新しい `--seed-list` のどちらか一方を要求する。種一覧実験では局面JSONのバイト列・順序・ID・局面ごとの組数を一覧と照合してから対局し、条件を `kaname-shogi-comparison-conditions-v2` として保存する。`--seed` 実験は従来のconditions v1を維持する。
+
+予定の各組は同じ開始盤面・駒配置で二局を行い、方式の先後だけ交換する。二局内は同じ方式別種を保つ。棋譜・summaryを含む出力先は新規パスで、同じ一覧の再実行は再現性の確認であり、独立した追加標本ではない。時間・環境情報を含む全出力のバイト一致は期待しない。準備・比較・分析CLIのヘルプが引数の正本である。
+
+### 分析と適用範囲
+
+分析CLIは完了したv2実験のみを受け付ける。予定全件、局ファイル集合、conditions参照、乱数種、棋譜の合法再生と終局、summary再集計を照合する。欠落・余分・混在・未完了・不整合は分析前に拒否する。結果は入力と別の新規JSONへ保存する。旧conditions v1には今回の独立抽出前提を遡及適用しない。
+
+候補方式の各局得点は勝ち `[1,1]`、負け `[0,0]`、通常千日手 `[1/2,1/2]`、手数上限の未決着と双方連続王手の未裁定 `[0,1]`。後二者を勝敗や0.5へ決め打ちせず下限・上限の両方へ残す。二局一組内の平均得点を一標本として組間を扱い、区間半径は `sqrt(log(40)/(2*n))`。95%の主区間は平均得点の下限から半径を引いた値と、上限平均に半径を足した値を `[0,1]` に切り詰める。確認比較は区間下端が0.5より大きい場合だけ改善支持、上端が0.5より小さい場合だけ悪化支持、それ以外は判断不能。50%は互角の境目であり、95%ではない。pilotは探索的集計だけで強さ判定をしない。
+
+この区間は組間の独立抽出を仮定し、今回の6局面を均等に扱う一つの総合比較に限る。局面別・先後別は記述集計で、個別の95%保証を持たない。参照値2,035組は、未決着なし・真の得点率55%・検出力80%という仮定下でHoeffding不等式から得る十分条件であり、必要最小値でも棋力向上の保証でもない。未決着のある実験はその組数でも目標検出力を保証しない。時間上限・対局完了時間・局面群の実戦代表性・真の棋力差は別途未検証である。
+
+終了コードは準備/分析CLIが正常0、引数・入力不正2、実行/保存故障1、Ctrl-C 130。比較CLIは既存の対局保存契約を使い、対局・保存故障1、入力不正2、Ctrl-C 130。設計と実装経緯は[C1承認済み設計](../plans/2026-10-24-c1-rook-mobility-evaluation-design.md)、[実装計画](../plans/2026-10-24-c1-rook-mobility-evaluation-implementation-plan.md)、[学習記録](../learning/c1-rook-mobility-evaluation.md)にある。

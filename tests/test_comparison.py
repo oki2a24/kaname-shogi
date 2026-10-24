@@ -2,12 +2,13 @@
 
 import random
 import unittest
+from dataclasses import replace
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import patch
 
 from kaname_shogi import comparison as comparison_module
 from kaname_shogi.comparison import GameResult, MoveTiming
+from kaname_shogi.comparison_seeds import PairSeeds, SeedPlan
 from kaname_shogi.game_record import GameRecord
 from kaname_shogi.model import (
     Board,
@@ -19,6 +20,7 @@ from kaname_shogi.model import (
     create_initial_position,
 )
 from kaname_shogi.movegen import MoveSelectionPolicy, legal_moves
+from kaname_shogi.repetition import RepetitionOutcome
 from kaname_shogi.usi_move import parse_usi_move
 
 ComparisonConfig = getattr(comparison_module, "ComparisonConfig", None)
@@ -93,6 +95,82 @@ class ComparisonScheduleTests(unittest.TestCase):
                 ("game-000008", "gote-start", 3, 2, Side.SENTE, Side.GOTE, 23, 24),
             ],
         )
+
+    def test_seed_list_keeps_policy_seeds_across_swapped_games(self):
+        """一覧の方式別種を二局で保ち、先後だけを交換する。
+
+        一覧順の誤り、方式別種を局ごとに割り当て直す誤り、二局目に盤面を反転する
+        誤りを手書き予定との比較で検出する。
+        """
+        self._require_implementation()
+        initial = create_initial_position()
+        gote_start = initial.copy()
+        gote_start.side_to_move = Side.GOTE
+        positions = (
+            ComparisonPosition("initial", (), "初期局面", initial, "sfen-initial", 1),
+            ComparisonPosition(
+                "gote-start", ("7g7f",), "後手番", gote_start, "sfen-gote", 2
+            ),
+        )
+        seed_plan = SeedPlan(
+            "pilot",
+            "a" * 64,
+            ("initial", "gote-start"),
+            2,
+            (
+                PairSeeds("initial", 0, 11, 12),
+                PairSeeds("initial", 1, 13, 14),
+                PairSeeds("gote-start", 0, 15, 16),
+                PairSeeds("gote-start", 1, 17, 18),
+            ),
+        )
+        config = ComparisonConfig(
+            baseline=MoveSelectionPolicy.MATERIAL,
+            candidate=MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,
+            positions=positions,
+            pairs_per_position=2,
+            seed=None,
+            max_plies=40,
+            output_dir=Path("results"),
+            positions_path=Path("positions.json"),
+            positions_json=b"{}",
+            seed_plan=seed_plan,
+        )
+
+        games = make_schedule(config)
+
+        self.assertEqual(
+            [(game.baseline_seed, game.candidate_seed) for game in games],
+            [
+                (11, 12),
+                (11, 12),
+                (13, 14),
+                (13, 14),
+                (15, 16),
+                (15, 16),
+                (17, 18),
+                (17, 18),
+            ],
+        )
+        self.assertEqual(
+            [(game.baseline_side, game.candidate_side) for game in games],
+            [
+                (Side.SENTE, Side.GOTE),
+                (Side.GOTE, Side.SENTE),
+                (Side.GOTE, Side.SENTE),
+                (Side.SENTE, Side.GOTE),
+                (Side.SENTE, Side.GOTE),
+                (Side.GOTE, Side.SENTE),
+                (Side.GOTE, Side.SENTE),
+                (Side.SENTE, Side.GOTE),
+            ],
+        )
+        self.assertEqual(
+            [game.position_id for game in games],
+            ["initial"] * 4 + ["gote-start"] * 4,
+        )
+        self.assertIs(positions[0].start_position.side_to_move, Side.SENTE)
+        self.assertIs(positions[1].start_position.side_to_move, Side.GOTE)
 
 
 class ComparisonGameTests(unittest.TestCase):
@@ -325,7 +403,7 @@ class ComparisonGameTests(unittest.TestCase):
         class UnresolvedTracker:
             def __init__(self, initial_position):
                 del initial_position
-                self._outcome = SimpleNamespace(
+                self._outcome = RepetitionOutcome(
                     kind=RepetitionOutcomeKind.CONTINUE, losing_side=None
                 )
 
@@ -335,7 +413,7 @@ class ComparisonGameTests(unittest.TestCase):
 
             def add_position(self, position):
                 del position
-                self._outcome = SimpleNamespace(
+                self._outcome = RepetitionOutcome(
                     kind=RepetitionOutcomeKind.UNRESOLVED_DOUBLE_PERPETUAL_CHECK,
                     losing_side=None,
                 )
@@ -795,6 +873,54 @@ class ComparisonSummaryTests(unittest.TestCase):
         )
         self.assertEqual(payload["elapsed_ns"], 987654)
         self.assertIsNone(payload["statistical_decision"])
+
+    def test_summary_adds_b1_timing_only_when_b1_is_part_of_the_comparison(self):
+        """旧集計は五方式を保ち、B1実験だけにB1計時欄を追加する。
+
+        enumへ方式を追加した影響で旧実験の出力キーが変わる、またはB1実験の計時欄が
+        欠ける誤りを、未開始の固定予定に対する集計キーの独立期待値で検出する。
+        """
+        self._require_implementation()
+        config, schedule = self._config_and_schedule()
+
+        def empty_summary(current_config):
+            """局を開始せず予定分を未開始として集計する。"""
+            try:
+                return summarize(
+                    current_config,
+                    (),
+                    batch_status=BatchStatus.INTERRUPTED,
+                    unstarted_games=len(make_schedule(current_config)),
+                    elapsed_ns=0,
+                )
+            except KeyError as error:
+                self.fail(f"方式名が集計へ登録されていません: {error}")
+
+        old_summary = empty_summary(config)
+        self.assertEqual(
+            set(old_summary["move_time_by_policy"]),
+            {
+                "random",
+                "material",
+                "two-ply-material",
+                "full-width-4",
+                "alpha-beta-4",
+            },
+        )
+
+        b1_config = replace(config, baseline=MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY)
+        b1_summary = empty_summary(b1_config)
+        self.assertEqual(
+            set(b1_summary["move_time_by_policy"]),
+            {
+                "random",
+                "material",
+                "two-ply-material",
+                "full-width-4",
+                "alpha-beta-4",
+                "material-rook-mobility",
+            },
+        )
 
     def test_summary_rejects_missing_or_duplicate_started_games(self):
         """開始局数・未実行数と予定件数の不整合を拒否する。

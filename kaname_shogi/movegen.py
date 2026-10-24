@@ -27,13 +27,14 @@ from .search_control import SearchControl, SearchSignal
 
 
 class MoveSelectionPolicy(Enum):
-    """対局で使う五つの一手選択方式を表す値。強さの保証は表さない。"""
+    """対局で使う六つの一手選択方式を表す値。強さの保証は表さない。"""
 
     RANDOM = auto()
     MATERIAL = auto()
     TWO_PLY_MATERIAL = auto()
     FOUR_PLY_FULL_WIDTH = auto()
     FOUR_PLY_ALPHA_BETA = auto()
+    MATERIAL_ROOK_MOBILITY = auto()
 
 
 _DROP_PIECE_TYPES = (
@@ -585,13 +586,16 @@ def choose_move(
     引数:
         position: 合法手の元になった局面。候補評価では変更しない。
         moves: その局面の合法手を表す変更不可タプル。
-        policy: 一様ランダム・一手駒得・二手先読み（駒得）の方針データ。
+        policy: 一様ランダム・一手駒得・二手先読み（駒得）・駒得と飛車可動性の
+            一手評価のいずれか。
         rng: 乱数選択を呼び出し側で再現可能にする生成器。
 
     戻り値:
         空のmovesならNone。RANDOMなら既存選択器の一手、MATERIALなら元の手番から
-        見た一手後の駒得差が最大の手。TWO_PLY_MATERIALなら相手の全応手後の
-        最悪評価が最大の手。同点最高候補だけから一様に抽選する。
+        見た一手後の駒得差が最大の手。MATERIAL_ROOK_MOBILITYなら一手後の駒得と
+        飛車可動性の合成値を開始側視点で評価し、一手詰みを優先する。
+        TWO_PLY_MATERIALなら相手の全応手後の最悪評価が最大の手。同点最高候補だけから
+        一様に抽選する。
 
     副作用:
         positionとmovesを変更しない。抽選時だけrngの状態を進める。
@@ -599,7 +603,9 @@ def choose_move(
     前提条件:
         movesはpositionの合法手を渡す。MATERIALは各候補をPosition.copy()へ一度
         適用して局面点を計算し、相手の応手を含む探索をしない。既存選択との互換性
-        を保つためRANDOMはchoose_weak_moveへ委譲する。TWO_PLY_MATERIALは
+        を保つためRANDOMはchoose_weak_moveへ委譲する。MATERIAL_ROOK_MOBILITYは
+        評価関数を差し替えられる既存の一手選択操作へ委譲し、B1の評価部品と
+        一手詰み優先を再利用する。TWO_PLY_MATERIALは
         開始側視点のまま自分一手＋相手一手まで読み、詰みの勝ちを通常駒得より
         高く、詰みの負けを低く扱う。詰みでない手なしは静的駒得で比較する。
         勝ち同士・負け同士は同点とし、詰みまでの距離は比較しない。
@@ -610,6 +616,16 @@ def choose_move(
         return choose_weak_move(moves, rng)
     if policy == MoveSelectionPolicy.TWO_PLY_MATERIAL:
         return _choose_two_ply_material_move(position, moves, rng)
+    if policy == MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY:
+        from .material_rook_mobility import evaluate_material_rook_mobility
+        from .one_ply_selection import choose_one_ply_move
+
+        return choose_one_ply_move(
+            position,
+            moves,
+            rng,
+            evaluate=evaluate_material_rook_mobility,
+        )
     if policy != MoveSelectionPolicy.MATERIAL:
         raise ValueError("未知の一手選択方針です")
 

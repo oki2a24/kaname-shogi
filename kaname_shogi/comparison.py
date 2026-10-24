@@ -8,11 +8,12 @@ from enum import Enum
 from pathlib import Path
 
 from . import game_search
+from .comparison_seeds import SeedPlan
 from .game_record import GameRecord
 from .model import Position, Side
 from .move import BoardMove, DropMove, Move
 from .movegen import MoveSelectionPolicy, is_in_check, legal_moves
-from .repetition import RepetitionOutcomeKind, RepetitionTracker
+from .repetition import RepetitionOutcome, RepetitionOutcomeKind, RepetitionTracker
 
 
 @dataclass(frozen=True)
@@ -54,11 +55,14 @@ class ComparisonConfig:
         baseline/candidate: 比較対象となる別々の既存一手選択方式。
         positions: 実験に使う順序固定の局面集合。
         pairs_per_position: 各局面で先後を交換する対局組数。
-        seed: 0以上の主乱数種。
+        seed: 0以上の主乱数種。乱数種一覧方式ではNone。
         max_plies: 比較開始後の成功手数の上限。
         output_dir: まだ存在しない出力先。
         positions_path: 読み込んだ局面セットの入力パス。
         positions_json: 検証した局面セットの読込時バイト列。
+        seed_plan: 方式別乱数種一覧。旧主乱数種方式ではNone。
+        seed_list_json: 検証した乱数種一覧JSONの読込時バイト列。
+        seed_list_path: 乱数種一覧の入力パス。
 
     戻り値:
         比較条件を一つの変更不可データへまとめた値。
@@ -67,7 +71,8 @@ class ComparisonConfig:
         なし。出力先は作成せず、入力元バイト列も変更しない。
 
     前提条件:
-        CLI検証済みであり、両方式は異なり、組数・手数上限は正、種は非負。
+        CLI検証済みであり、両方式は異なり、組数・手数上限は正。
+        `seed`と`seed_plan`のちょうど一方を使う。
         入力ファイルの読込後に外部で同ファイルが変わっても、positions_jsonが
         検証済み局面を復元できる実験条件の正本となる。
     """
@@ -76,11 +81,14 @@ class ComparisonConfig:
     candidate: MoveSelectionPolicy
     positions: tuple[ComparisonPosition, ...]
     pairs_per_position: int
-    seed: int
+    seed: int | None
     max_plies: int
     output_dir: Path
     positions_path: Path
     positions_json: bytes
+    seed_plan: SeedPlan | None = None
+    seed_list_json: bytes | None = None
+    seed_list_path: Path | None = None
 
 
 @dataclass(frozen=True)
@@ -120,7 +128,7 @@ def make_schedule(config: ComparisonConfig) -> tuple[ScheduledGame, ...]:
     """検証済み条件から先後を交換する一局単位の予定を順番に作る。
 
     引数:
-        config: 局面の順序と各局面の組数、主乱数種を持つ比較条件。
+        config: 局面順、組数、主乱数種または検証済み種一覧を持つ比較条件。
 
     戻り値:
         各局面を配列順、反復を0から昇順、組の一局目・二局目の順に並べた予定。
@@ -129,18 +137,31 @@ def make_schedule(config: ComparisonConfig) -> tuple[ScheduledGame, ...]:
         なし。条件・局面・乱数生成器を変更しない。
 
     前提条件:
-        `config` は入力検証済みであり、組数は1以上、乱数種は0以上である。
-        組番号qは局面番号pと反復番号rからp*K+rで定め、方式別乱数種は
-        baselineがS+2*q、candidateがS+2*q+1。一組の二局で両方式の種を維持し、
-        二局目は方式の先後だけを反転する。開始盤面・駒所有は反転しない。
+        `config` は入力検証済みであり、組数は1以上である。旧方式では組番号qを
+        局面番号pと反復番号rからp*K+rで定め、方式別乱数種をbaselineがS+2*q、
+        candidateがS+2*q+1とする。一覧方式では一致済み一覧の順序付き種を使う。
+        どちらも一組の二局で方式別種を維持し、二局目は先後だけを反転する。
+        開始盤面・駒所有は反転しない。
     """
     scheduled: list[ScheduledGame] = []
     for position_index, position in enumerate(config.positions):
         for repetition_index in range(config.pairs_per_position):
             pair_number = position_index * config.pairs_per_position + repetition_index
             first_baseline_side = Side.SENTE if pair_number % 2 == 0 else Side.GOTE
-            baseline_seed = config.seed + 2 * pair_number
-            candidate_seed = config.seed + 2 * pair_number + 1
+            if config.seed_plan is None:
+                if config.seed is None:
+                    raise ValueError("比較予定には主乱数種または乱数種一覧が必要です")
+                baseline_seed = config.seed + 2 * pair_number
+                candidate_seed = config.seed + 2 * pair_number + 1
+            else:
+                pair_seeds = config.seed_plan.pairs[pair_number]
+                if (
+                    pair_seeds.position_id != position.position_id
+                    or pair_seeds.repetition_index != repetition_index
+                ):
+                    raise ValueError("乱数種一覧の予定順が比較条件と一致しません")
+                baseline_seed = pair_seeds.baseline_seed
+                candidate_seed = pair_seeds.candidate_seed
             for game_number, baseline_side in enumerate(
                 (first_baseline_side, _opposite(first_baseline_side)), start=1
             ):
@@ -175,6 +196,106 @@ class GameEndReason(Enum):
     INTERRUPTED = "interrupted"
     ERROR = "error"
     UNRESOLVED_DOUBLE_PERPETUAL_CHECK = "unresolved_double_perpetual_check"
+
+
+def repetition_terminal(
+    outcome: RepetitionOutcome,
+) -> tuple[GameEndReason, Side | None] | None:
+    """反復判定の終局理由と勝者先後を比較対局の値へ変換する。
+
+    引数:
+        outcome: 千日手判定器が返した現在局面の判定。
+
+    戻り値:
+        継続中はNone。通常千日手・双方連続王手の未裁定では勝者なし、片側連続王手
+        負けでは敗者の反対側を勝者として返す。
+
+    例外:
+        ValueError: 判定データの型、種類、連続王手敗者が契約外の場合。
+
+    副作用:
+        なし。反復履歴や局面を変更しない。
+
+    前提条件:
+        反復終局を盤面の合法手有無や手数上限より先に評価し、通常千日手・双方未裁定へ
+        勝者を補わない。
+    """
+    if not isinstance(outcome, RepetitionOutcome) or not isinstance(
+        outcome.kind, RepetitionOutcomeKind
+    ):
+        raise ValueError("反復判定データが不正です")
+    if outcome.kind is RepetitionOutcomeKind.REPETITION:
+        if outcome.losing_side is not None:
+            raise ValueError("通常千日手に敗者側を指定できません")
+        return GameEndReason.REPETITION, None
+    if outcome.kind is RepetitionOutcomeKind.PERPETUAL_CHECK_LOSS:
+        if not isinstance(outcome.losing_side, Side):
+            raise ValueError("連続王手負けの敗者側がありません")
+        return GameEndReason.PERPETUAL_CHECK_LOSS, _opposite(outcome.losing_side)
+    if outcome.kind is RepetitionOutcomeKind.UNRESOLVED_DOUBLE_PERPETUAL_CHECK:
+        if outcome.losing_side is not None:
+            raise ValueError("双方連続王手の未裁定に敗者側を指定できません")
+        return GameEndReason.UNRESOLVED_DOUBLE_PERPETUAL_CHECK, None
+    if outcome.losing_side is not None:
+        raise ValueError("継続・非敗北の反復判定に敗者を指定できません")
+    if outcome.kind in {
+        RepetitionOutcomeKind.CONTINUE,
+        RepetitionOutcomeKind.FOURFOLD_CONTINUE,
+    }:
+        return None
+    raise ValueError("反復判定の種類が未対応です")
+
+
+def board_terminal(
+    position: Position,
+    *,
+    has_legal_moves: bool,
+    plies: int,
+    max_plies: int,
+) -> tuple[GameEndReason, Side | None] | None:
+    """既に生成した合法手の有無と上限から盤面終局を変換する。
+
+    引数:
+        position: 判定対象となる現在局面。
+        has_legal_moves: 同じ計時区間で求めた合法手一覧が空でないか。
+        plies: 比較開始後に確定した成功手数。
+        max_plies: 成功手数の上限。
+
+    戻り値:
+        合法手なしなら詰みまたは合法手なしと反対側勝ち、上限到達なら未決着上限、
+        それ以外はNone。
+
+    例外:
+        ValueError: 局面、合法手有無、手数または上限が契約外の場合。
+
+    副作用:
+        なし。合法手一覧は生成せず、受け取った局面も変更しない。
+
+    前提条件:
+        千日手判定後に呼ばれ、合法手なしを手数上限より優先する。呼び出し側が直前に
+        合法手を生成してその真偽だけを渡すことで、探索の計時境界を維持する。
+    """
+    if (
+        not isinstance(position, Position)
+        or not isinstance(position.side_to_move, Side)
+        or type(has_legal_moves) is not bool
+        or type(plies) is not int
+        or plies < 0
+        or type(max_plies) is not int
+        or max_plies < 1
+    ):
+        raise ValueError("盤面終局判定の入力が不正です")
+    if not has_legal_moves:
+        side = position.side_to_move
+        reason = (
+            GameEndReason.CHECKMATE
+            if is_in_check(position.board, side)
+            else GameEndReason.NO_LEGAL_MOVE
+        )
+        return reason, _opposite(side)
+    if plies >= max_plies:
+        return GameEndReason.PLY_LIMIT, None
+    return None
 
 
 class BatchStatus(Enum):
@@ -284,12 +405,6 @@ def run_game(
         """その先後を担当する方式を返す。"""
         return config.baseline if side is schedule.baseline_side else config.candidate
 
-    def policy_for_winner(side: Side | None) -> MoveSelectionPolicy | None:
-        """勝者の先後を担当した方式を返す。"""
-        if side is None:
-            return None
-        return policy_for(side)
-
     def result(
         reason: GameEndReason,
         *,
@@ -303,28 +418,12 @@ def run_game(
             record=record,
             reason=reason,
             winner_side=winner_side,
-            winner_policy=policy_for_winner(winner_side),
+            winner_policy=policy_for(winner_side) if winner_side is not None else None,
             plies=len(record.moves),
             move_times_ns=tuple(move_times),
             unfinished_calculation_ns=unfinished_calculation_ns,
             error=error,
         )
-
-    def repetition_result(kind: RepetitionOutcomeKind) -> GameResult | None:
-        """反復APIの終局判定を比較対局の勝敗契約へ変換する。"""
-        if kind is RepetitionOutcomeKind.REPETITION:
-            return result(GameEndReason.REPETITION)
-        if kind is RepetitionOutcomeKind.PERPETUAL_CHECK_LOSS:
-            outcome = tracker.current_outcome
-            if outcome.losing_side is None:
-                raise ValueError("連続王手負けの敗者側がありません")
-            return result(
-                GameEndReason.PERPETUAL_CHECK_LOSS,
-                winner_side=_opposite(outcome.losing_side),
-            )
-        if kind is RepetitionOutcomeKind.UNRESOLVED_DOUBLE_PERPETUAL_CHECK:
-            return result(GameEndReason.UNRESOLVED_DOUBLE_PERPETUAL_CHECK)
-        return None
 
     def failure_duration(start_ns: int | None) -> int | None:
         """未確定の探索に対する経過時間を可能な範囲で読む。"""
@@ -336,9 +435,10 @@ def run_game(
             return None
 
     while True:
-        terminal = repetition_result(tracker.current_outcome.kind)
+        terminal = repetition_terminal(tracker.current_outcome)
         if terminal is not None:
-            return terminal
+            reason, winner_side = terminal
+            return result(reason, winner_side=winner_side)
 
         current_position = record.current_position
         side = current_position.side_to_move
@@ -346,14 +446,15 @@ def run_game(
         try:
             start_ns = clock_ns()
             candidates = legal_moves(current_position)
-            if not candidates:
-                checked = is_in_check(current_position.board, side)
-                reason = (
-                    GameEndReason.CHECKMATE if checked else GameEndReason.NO_LEGAL_MOVE
-                )
-                return result(reason, winner_side=_opposite(side))
-            if len(record.moves) >= config.max_plies:
-                return result(GameEndReason.PLY_LIMIT)
+            terminal = board_terminal(
+                current_position,
+                has_legal_moves=bool(candidates),
+                plies=len(record.moves),
+                max_plies=config.max_plies,
+            )
+            if terminal is not None:
+                reason, winner_side = terminal
+                return result(reason, winner_side=winner_side)
 
             policy = policy_for(side)
             selected = game_search.choose_move(
@@ -391,7 +492,7 @@ def run_game(
             else:
                 raise ValueError("探索結果の指し手型が不正です")
             candidate_position = candidate_record.current_position
-            outcome = tracker.add_position(candidate_position)
+            tracker.add_position(candidate_position)
         except KeyboardInterrupt:
             unfinished_calculation_ns = elapsed_ns
             return result(GameEndReason.INTERRUPTED)
@@ -410,9 +511,6 @@ def run_game(
                 elapsed_ns=elapsed_ns,
             )
         )
-        terminal = repetition_result(outcome.kind)
-        if terminal is not None:
-            return terminal
 
 
 def summarize(
@@ -473,8 +571,18 @@ def summarize(
     perpetual_check_losses = {Side.SENTE: 0, Side.GOTE: 0}
     pair_game_numbers: dict[int, set[int]] = {}
     incomplete_pairs: set[int] = set()
+    policies = tuple(
+        policy
+        for policy in MoveSelectionPolicy
+        if policy is not MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY
+    )
+    if MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY in {
+        config.baseline,
+        config.candidate,
+    }:
+        policies += (MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,)
     policy_times: dict[MoveSelectionPolicy, list[int]] = {
-        policy: [] for policy in MoveSelectionPolicy
+        policy: [] for policy in policies
     }
 
     winning_reasons = {
@@ -525,6 +633,8 @@ def summarize(
             perpetual_check_losses[losing_side] += 1
 
         for move_timing in game_result.move_times_ns:
+            if move_timing.policy not in policy_times:
+                raise ValueError("計時方式が比較条件の方式と一致しません")
             policy_times[move_timing.policy].append(move_timing.elapsed_ns)
 
     completed_pairs = sum(
@@ -568,6 +678,7 @@ def summarize(
 _POLICY_NAMES = {
     MoveSelectionPolicy.RANDOM: "random",
     MoveSelectionPolicy.MATERIAL: "material",
+    MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY: "material-rook-mobility",
     MoveSelectionPolicy.TWO_PLY_MATERIAL: "two-ply-material",
     MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH: "full-width-4",
     MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA: "alpha-beta-4",
