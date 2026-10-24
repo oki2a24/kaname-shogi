@@ -92,7 +92,7 @@ self.assertEqual(rook_mobility_balance(a, Side.GOTE), -13)
 - [x] **2. Redを確認。** `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_rook_mobility.py -v`。各対象振る舞いのassert失敗を記録する。
 - [x] **3. 最小実装。** 上記シグネチャを実装。候補の再実装やlegal_moves呼出はしない。
 - [x] **4. Green・Refactor・独立レビュー。** 同コマンド成功を確認。既存の飛車候補テスト（`test_movegen.RookMoveCandidatesTests`）が盤端・遮蔽を補完する一方、先後集計・対象選別・手番非依存は今回固有と点検する。
-- [ ] **5. 品質検査・コミット。** 共通のRuff手順、差分確認、学習記録を更新し、当該2ファイルと記録だけをステージして通常コミット。
+- [x] **5. 品質検査・コミット。** 共通のRuff手順、差分確認、学習記録を更新し、当該2ファイルと記録だけをステージして通常コミット。
 
 **GREEN条件:** 全固定値・読み取り契約が成功し、独立レビューのCritical/Importantが0。
 
@@ -107,7 +107,7 @@ self.assertEqual(rook_mobility_balance(a, Side.GOTE), -13)
 - `@dataclass(frozen=True) class RookMobilityWeights`：設定データ。`material: int = 10`、`mobility: int = 1`。bool等の非int、material≤0、mobility<0はValueError（計画でのアシスタント判断）。mobility=0を許し、比較時に項目を外せる。
 - `evaluate_material_rook_mobility(position: Position, perspective: Side, *, weights: RookMobilityWeights = RookMobilityWeights()) -> int`：通常点を返す読み取り操作。詰み・探索・乱数は扱わない。既定値は不変データなので共有してよい。
 
-- [ ] **1. 失敗するテストを作る。** 下記の独立期待値を使う。
+- [x] **1. 失敗するテストを作る。** 下記の独立期待値を使う。
 
 | テスト名 | アサーション |
 | --- | --- |
@@ -130,9 +130,9 @@ self.assertEqual(
 )
 ```
 
-- [ ] **2. Redを確認。** `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_material_rook_mobility.py -v`。初期ImportError以外のassert失敗を確認する。
-- [ ] **3. 最小実装。** 設定クラスと合成操作のみ。係数はフィールドから読み、式へ10/1を重複して埋め込まない。
-- [ ] **4. Green・Refactor・独立レビュー。** 同コマンドとTask 1を確認。既存駒得テストは駒価値・持ち駒復元を補完、今回は係数・新項目と手種後の接続を検証する。
+- [x] **2. Redを確認。** `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_material_rook_mobility.py -v`。初期ImportError以外のassert失敗を確認する。
+- [x] **3. 最小実装。** 設定クラスと合成操作のみ。係数はフィールドから読み、式へ10/1を重複して埋め込まない。
+- [x] **4. Green・Refactor・独立レビュー。** 同コマンドとTask 1を確認。既存駒得テストは駒価値・持ち駒復元を補完、今回は係数・新項目と手種後の接続を検証する。
 - [ ] **5. 品質検査・コミット。** 共通Ruff手順と記録更新後、当該2ファイルと記録を通常コミット。
 
 **GREEN条件:** 既定/別重み・成り/打ち/取り・視点・不変性が成功、Critical/Importantが0。
@@ -223,4 +223,4 @@ choice.assert_called_once_with((blocked, opened))
 - セルフレビューでピン局面の双方候補数を15/15へ訂正した。また、詰み比較の通常候補に当初考えた９九玉→９八は相手詰みが継続するため不適切だった。既存操作による一時照合で、５三飛→６三と後手鏡像は合法・非詰み、５二飛成/不成と後手鏡像は合法・詰みと確認して固定した。新テスト実行や新実装の検証ではない。
 - 専用コマンドは標準discoverで新規モジュールを指定する形式。実行時のパス・Python・テスト名を再確認し、期待されるassert失敗/成功を記録する。製品テストは承認前のため未実行。
 
-本人は本計画を承認し、ネイティブ実行を選択した。Task 1のRed/Green、Refactor要否、独立レビュー、品質検査、記録更新は完了し、専用9テストが成功した。Task 1の通常コミットはこのチェックボックス更新後に行う。Task 2以降へ進む前に完了を取り違えないよう、各Taskの実測とレビューを記録する。
+本人は本計画を承認し、ネイティブ実行を選択した。Task 1はRed/Green、Refactor要否、独立レビュー、品質検査、記録を完了し、9テスト成功後に `8f39c9b` として通常コミットした。Task 2はbehavioral Redを確認後、設定と合成操作を実装した。専用5、Task 1の9、既存評価2テスト、全Ruff検査が成功し、独立レビューはCritical 0 / Important 0 / Minor 0。Task 2の記録更新後、通常コミットする。
