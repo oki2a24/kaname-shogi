@@ -6,7 +6,7 @@
 
 初回の並列化コードで同じ6組・同じ乱数種・512手上限を逐次/4worker実行し、旧pilot・逐次・4workerの棋譜・終局・勝敗・分析得点が一致した。全て12/12局完了、得点区間 `[0,1]`。比較時間は逐次320.167秒、4worker125.555秒で、この一回では約2.55倍だった。後の独立レビューで中断経路を修正したため、これらのpilotはその修正前source SHAによる結果として扱う。通常の完了結果・時間pilotであり、同一seedの反復は独立標本でなく、強さの結論・目標検出力を示さない。確認比較の組数・手数上限・総時間予算は未選定。mainへの統合は別途本人承認を得るまで行わない。
 
-独立レビューの指摘に従い、submit/Future登録時のSIGINT保留、submit例外のERROR記録、spawn worker initializerでのSIGINT無視をTDDで追加した。最終レビューはCritical 0・Important 0・Minor 2。残る未検証事項はworker初期化前の短い起動窓における実端末SIGINTと、複数回連続Ctrl-C等で、README・知識メモ・学習記録に記録した。比較CLI31 tests（1.071秒）、全体828 tests/55 modules（73.109秒）、Ruff全検査が成功。最終レビュー記録・利用文書の更新済みで、通常コミットが次の手順。初回の同一seed pilotは修正前source SHAによる履歴結果のままで、強さの結論はない。main統合と確認比較条件は別途承認・選定が必要。`.venv/bin/ruff` は固定版 `0.16.10`、local hooksPathは `.githooks`。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持する。
+独立レビューの指摘に従い、submit/Future登録時のSIGINT保留、submit例外のERROR記録、spawn worker initializerでのSIGINT無視をTDDで追加した。最終レビューはCritical 0・Important 0・Minor 2。残る未検証事項はworker初期化前の短い起動窓における実端末SIGINTと、複数回連続Ctrl-C等で、README・知識メモ・学習記録に記録した。比較CLI31 tests（1.071秒）、全体828 tests/55 modules（73.109秒）、Ruff全検査が成功した。実装・pilot・レビュー記録は作業ブランチ `codex/c1-rook-mobility-evaluation` の `7daa70a` に通常フック付きでコミット済み。初回の同一seed pilotは修正前source SHAによる履歴結果のままで、強さの結論はない。main統合と確認比較条件は別途承認・選定が必要。`.venv/bin/ruff` は固定版 `0.16.10`、local hooksPathは `.githooks`。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持する。
 
 ## C1開始前の状態（履歴）
 
