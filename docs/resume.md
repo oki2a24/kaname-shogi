@@ -2,7 +2,7 @@
 
 ## 現在地（2026-10-25）
 
-本人の承認を受け、C1比較CLI並列化ブランチ `codex/c1-rook-mobility-evaluation` を2026-10-25にローカル `main` へfast-forward統合した。統合前のmain `5f136d5` から `350021a` まで進み、実装コミット `7daa70a` と記録コミット `350021a` を含む。作業ブランチも残している。リモートへpushしていない。統合前の作業ブランチで全体828 tests/55 modulesが73.776秒、統合後のmainで同じ828 tests/55 modulesが73.639秒で成功した。main上で `.venv/bin/ruff format --check .`（103ファイル）と `.venv/bin/ruff check .` も成功した。統合結果と検証詳細は[並列化計画と実績](plans/2026-10-24-c1-comparison-parallel-workers-implementation-plan.md)と[学習記録](learning/c1-rook-mobility-evaluation.md)に記録する。
+本人の承認を受け、C1比較CLI並列化ブランチ `codex/c1-rook-mobility-evaluation` を2026-10-25にローカル `main` へfast-forward統合した。統合前のmain `5f136d5` から `350021a` まで進み、実装コミット `7daa70a` と記録コミット `350021a` を含む。作業ブランチも残している。リモートへpushしていない。統合前の作業ブランチで全体828 tests/55 modulesが73.776秒、統合後のmainで同じ828 tests/55 modulesが73.639秒で成功した。main上で `.venv/bin/ruff format --check .`（103ファイル）と `.venv/bin/ruff check .` も成功した。統合実装の理解確認は本人回答と補足を[学習記録](learning/c1-rook-mobility-evaluation.md)へ記録済み。並列化実装は統合・検証・理解確認まで完了したが、独立種一覧による確認比較の条件選定と強さの判断は未完了。統合結果と検証詳細は[並列化計画と実績](plans/2026-10-24-c1-comparison-parallel-workers-implementation-plan.md)も参照する。
 
 `--workers` は既定1、2〜4はspawnプロセス並列、conditions v3/summary v2を分析readerへ接続する。通常CLI・USI、SFEN、飛車可動性バージョン2は変更していない。仕様は[承認済みC1設計](plans/2026-10-24-c1-rook-mobility-evaluation-design.md)、変更・検証・判断経緯は[並列化計画と実績](plans/2026-10-24-c1-comparison-parallel-workers-implementation-plan.md)と[学習記録](learning/c1-rook-mobility-evaluation.md)を参照する。
 
