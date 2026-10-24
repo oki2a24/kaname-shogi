@@ -2,11 +2,11 @@
 
 ## 現在地
 
-2026-10-24、主線A1「駒得以外の局面評価を一項目から学び設計する」の飛車可動性について、本人承認済み計画に従うB1実装・検証・記録を作業ブランチで完了した。未成飛車の可動性差、名前付き重み付き駒得評価、評価関数を差し替えられる一手選択を個別ファイルへ追加した。詳細は[学習・本人回答・実装・検証記録](learning/rook-mobility-design.md)、[確定知識](knowledge/rook-mobility-evaluation.md)、[承認済み設計](plans/2026-10-24-rook-mobility-design.md)、[実装計画と実績](plans/2026-10-24-rook-mobility-implementation-plan.md)を参照する。
+2026-10-24、主線A1「駒得以外の局面評価を一項目から学び設計する」の飛車可動性について、本人承認済み計画に従うB1実装・検証・記録を作業ブランチで完了し、本人承認後にローカルmainへ統合した。未成飛車の可動性差、名前付き重みによる駒得との合成評価、評価関数を差し替えられる一手選択を個別ファイルへ追加した。詳細は[学習・本人回答・実装・検証記録](learning/rook-mobility-design.md)、[確定知識](knowledge/rook-mobility-evaluation.md)、[承認済み設計](plans/2026-10-24-rook-mobility-design.md)、[実装計画と実績](plans/2026-10-24-rook-mobility-implementation-plan.md)を参照する。
 
-作業場所は `/Users/oki2a24/kaname-shogi`、ブランチは `codex/a1-rook-mobility-design`。実装コミットは `8f39c9b`、`e9a3d45`、`bc6651b`。標準全体テストは729件・48モジュール成功、Ruff検査成功、代表変異7件はすべて意図したassertion failureで検出した。独立コードレビューはCritical 0 / Important 0 / Minor 1で、最終文書レビューはCritical 0 / Important 0・追加指摘なし。Minorは異なる手種の兄弟枝を混在させた相互干渉の直接検査がない範囲上の残件として学習記録に残した。文書リンク790件・アンカー5件は欠落0で、独立全体テストも729件・48モジュールで成功した。本人の別承認が必要なためmainへは未統合で、pushもしていない。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は開始時から保持している。
+作業場所は `/Users/oki2a24/kaname-shogi`、現在のブランチは `main`。実装コミットは `8f39c9b`、`e9a3d45`、`bc6651b`、統合時点は `06453c9`。統合先で全体テスト729件・48モジュールが14.634秒で成功し、Ruff（90ファイル変更なし）・差分検査・文書リンク790件/アンカー5件（欠落0）も成功した。代表変異7件は意図したassertion failureですべて検出済み。独立コードレビューはCritical 0 / Important 0 / Minor 1、最終文書レビューはCritical 0 / Important 0で追加指摘なし。Minorは異なる手種の兄弟枝を混在させた相互干渉の直接検査がない範囲上の残件として学習記録に残した。pushはしていない。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持している。
 
-B1の実装完了はA1全体の完了を意味しない。main統合後の確認と最後の理解確認、C1のCLI/USI接続・比較評価は未完了である。通常CLIのSFEN入出力と「可動性バージョン2」は今回に含めない将来候補として[next-topics](next-topics.md)へ保持する。P2以前の記述は履歴であり、現在の段階は本節と学習記録を正本とする。
+B1のmain統合と統合先検証は完了した。最後の理解確認はこれから一問出し、本人の回答を待つ。C1のCLI/USI接続・比較評価は未着手である。通常CLIのSFEN入出力と「可動性バージョン2」は今回に含めない将来候補として[next-topics](next-topics.md)へ保持する。P2以前の記述は履歴であり、現在の段階は本節と学習記録を正本とする。
 
 ## A1開始時の背景（2026-10-23、履歴）
 
