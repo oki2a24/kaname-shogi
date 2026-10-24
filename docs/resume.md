@@ -6,7 +6,7 @@
 
 `--workers` は既定1、2〜4はspawnプロセス並列、conditions v3/summary v2を分析readerへ接続する。通常CLI・USI、SFEN、飛車可動性バージョン2は変更していない。仕様は[承認済みC1設計](plans/2026-10-24-c1-rook-mobility-evaluation-design.md)、変更・検証・判断経緯は[並列化計画と実績](plans/2026-10-24-c1-comparison-parallel-workers-implementation-plan.md)と[学習記録](learning/c1-rook-mobility-evaluation.md)を参照する。
 
-同じ6組・乱数種・512手上限での逐次/4worker pilotでは、旧pilot・逐次・4workerの棋譜・終局・勝敗・分析得点が一致し、全て12/12局完了、得点区間 `[0,1]` だった。比較時間は逐次320.167秒、4worker125.555秒で、この一回では約2.55倍。後の独立レビューで中断経路を修正したため、このpilotは修正前source SHAによる再現性・時間確認として扱う。同一seed反復は独立標本でなく、強さの結論・目標検出力を示さない。本人は確認比較を2,040組（6局面各340組）、各局の手数上限を512手と選択済み。確認比較時のworker数と総時間の運用予算は未選定。現行CLIに総時間の強制停止オプションはない。
+同じ6組・乱数種・512手上限での逐次/4worker pilotでは、旧pilot・逐次・4workerの棋譜・終局・勝敗・分析得点が一致し、全て12/12局完了、得点区間 `[0,1]` だった。比較時間は逐次320.167秒、4worker125.555秒で、この一回では約2.55倍。後の独立レビューで中断経路を修正したため、このpilotは修正前source SHAによる再現性・時間確認として扱う。同一seed反復は独立標本でなく、強さの結論・目標検出力を示さない。本人は確認比較を2,040組（6局面各340組）、各局の手数上限を512手、worker数を4と選択済み。長時間実行は本人がターミナルから行い、完了をアシスタントへ知らせる方式を希望している。総時間の運用予算と中断後の再開機能の要否・仕様は未決定。現行CLIに総時間の強制停止やバッチ再開の機能はない。
 
 独立レビューの指摘に従い、submit/Future登録時のSIGINT保留、submit例外のERROR記録、spawn worker initializerでのSIGINT無視をTDDで追加した。最終レビューはCritical 0・Important 0・Minor 2。残る未検証事項はworker初期化前の短い起動窓における実端末SIGINTと複数回連続Ctrl-C等で、README・知識メモ・学習記録に記録した。比較CLI31 tests（1.071秒）、ブランチ上の全体828 tests/55 modules（73.109秒）、Ruff全検査が成功した。`.venv/bin/ruff` は固定版 `0.16.10`、local hooksPathは `.githooks`。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持する。
 
