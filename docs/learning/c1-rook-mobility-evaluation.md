@@ -245,3 +245,27 @@ TDDでは `--resume` 未認識、保存条件/局復元APIの不足、既存出�
 **独立レビューと対応：** 初回レビューはCritical 0 / Important 2 / Minor 1。逐次payload構築中断時の前局データ再利用、親SIGINTをFutureの中断例外と誤認して完成結果を捨てる経路、lock解除assertionの配置を指摘された。二つの割込み経路は追加テストで修正前Red・修正後Greenを確認し、lock assertionは一時ディレクトリ削除前へ移した。再レビューはCritical 0 / Important 0 / Minor 1。Future自身に保存されたKeyboardInterruptの分岐を直接検査するテストを追加し、親側割込みテストとの両側を確認した。最終再確認はCritical 0 / Important 0 / Minor 0。Refactor後の抽出追加は不要と判断した。最終コード差分と実績は承認済み[局単位再開計画](../plans/2026-10-25-c1-comparison-resume-plan.md)に記録する。
 
 2026-10-25、検証・独立レビュー・文書記録をそろえ、作業ブランチ `codex/c1-comparison-resume` へコミットした。Git hookの整形・基本検査も成功した。mainへの統合は別途承認待ちで、2,040組の確認比較とB1の強さ判断は未実施。
+
+### C1確認比較のseed一覧を作成（2026-10-25）
+
+再開機能を補助として完了扱いにし、C1の本道であるB1の対局成績評価へ戻る。本人が選んだ確認条件は、baseline `material`、candidate `material-rook-mobility`、6局面各340組（計2,040組・4,080局）、各局512手上限、4worker。
+
+合意済みの準備CLIを実行し、独立なOS乱数源から事前抽出した確認用seed一覧を一度だけ作成した。ファイルは `data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25-seeds.json`、形式v1、purpose=`confirmation`、6局面各340組、2,040組、SHA-256 `aa886d34d51692ab6835d4d50c90a379d9350d64dac05e6515329780a9aab430`、サイズ433,219 bytes。対局はまだ開始していない。seed一覧を取り直すと別実験になるので、確認比較ではこの保存済みファイルを使う。
+
+長時間実行は本人が端末から行う。最初の実行と、終了後の分析は次のコマンドを使う。中断した場合は同一条件で最後の比較コマンドに `--resume` を足す。出力先は新規パスである。
+
+```sh
+.venv/bin/python -m kaname_shogi.compare_games \
+  --baseline material --candidate material-rook-mobility \
+  --positions data/comparison/c1-rook-mobility-positions-v1.json \
+  --pairs-per-position 340 \
+  --seed-list data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25-seeds.json \
+  --max-plies 512 --workers 4 \
+  --output-dir data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25
+
+.venv/bin/python -m kaname_shogi.analyze_comparison \
+  --input-dir data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25 \
+  --output data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25-analysis.json
+```
+
+過去の512手pilotからの目安は4workerで約11.9時間だが、レビュー修正前sourceの6組計測を単純比例した値であり、所要時間・未決着率・検出力を保証しない。比較CLIに総時間による自動停止はない。今回の実行で得た確認区間・未決着率からB1の改善支持/悪化支持/判断不能を判断する。再開機能の動作確認や同一seedの再実行は棋力比較に数えない。

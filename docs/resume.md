@@ -2,13 +2,17 @@
 
 ## 現在地（2026-10-25）
 
+現在の本道は、C1「飛車可動性を接続して比較評価する」の確認比較を実行し、B1の対局成績への効果を判断すること。本人選定済みの条件はbaseline `material` 対 candidate `material-rook-mobility`、独立seed一覧、6局面各340組（計2,040組・4,080局）、各局512手上限、4worker。確認用seed一覧 `data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25-seeds.json` は作成済みで、SHA-256は `aa886d34d51692ab6835d4d50c90a379d9350d64dac05e6515329780a9aab430`。対局はまだ始めていない。本人が端末から実行し、全局完了後に分析する。最初の実行では `--resume` を付けず、中断した場合だけ同じ条件に `--resume` を加える。実行・分析コマンドは[C1学習記録](learning/c1-rook-mobility-evaluation.md)にある。
+
+所要時間の約11.9時間という値は、レビュー修正前sourceで測った6組のpilotを単純比例した4workerの粗い目安であり、完了時間・未決着率・検出力を保証しない。比較CLIに総時間による自動停止はない。今回の確認比較とB1の採否判断は未完了であり、結果を記録するまでは次の評価項目へ進まない。通常CLIのSFEN入出力と飛車可動性バージョン2は今回に加えていない。
+
+### 長時間実行を支える補助機能：局単位再開
+
 本人の承認を受け、C1比較CLIの局単位再開機能を作業ブランチ `codex/c1-comparison-resume` で実装・検証・独立レビューし、同ブランチへコミットした。作業開始時HEADは `69729a7` で、実装前は `main` と同じ位置だった。今回の変更はmainへ統合しておらず、統合は別途承認を待つ。`.antigravity/tasks/` と `.venv.backup-2026-10-22/` は既存の未追跡内容として保持している。
 
 `--resume` は同じ出力先・方式・局面内容・seed/seed一覧・組数・手数上限・worker数・実行環境・Pythonソース指紋を照合する。保存済みの完了局は保持し、欠落・中断・故障局だけを同じseedで局頭から実行する。conditionsと完成局JSONは検証後に保持し、summary欠落時は局JSONから集計し直す。同時実行は `.comparison.lock` で拒否し、強制終了後の残存ロックはPIDを確認して人が除去する。再開summary v3の `elapsed_lower_bound=true` は、強制終了で欠落した経過時間があり得ることを表す。実装仕様・判断理由は[承認済み計画](plans/2026-10-25-c1-comparison-resume-plan.md)、コード・テスト・検証の経緯は[C1学習記録](learning/c1-rook-mobility-evaluation.md)、比較CLI全体の利用契約は[知識メモ](knowledge/search-comparison.md)を参照する。
 
 比較関連78テストが成功し、全体851テスト・56モジュールが74.213秒で成功した。Ruff import整理・format（105ファイル）・check・format確認、`git diff --check`も成功した。逐次と4workerの小規模実対局を各2局行い、連続実行と保存局欠落後の再開で棋譜・終局・勝者・手数・組得点が一致し、分析readerはsummary v3を読み下限時間表示を保持した。欠落局を作って再開し、実端末Ctrl-Cではなくテスト注入で割込み経路を検査した。隔離コピーの代表変異4件（全局再投入、条件照合省略、conditions再生成、完成局二重加算）は対応テストで検出した。独立レビューは最終Critical 0 / Important 0 / Minor 0。実績とレビュー対応は[学習記録](learning/c1-rook-mobility-evaluation.md)と[局単位再開計画](plans/2026-10-25-c1-comparison-resume-plan.md)にある。
-
-本人が選択した確認比較は独立seed一覧を用いる2,040組（6局面各340組）、各局512手上限、4worker。長時間実行は本人がターミナルから行い、完了後に知らせる。今回の再開機能検証は棋力比較ではない。2,040組の確認比較・B1改善判断はまだ未実施であり、実端末Ctrl-Cや強制終了を伴う長時間実験も行っていない。通常CLI/USI、通常CLIのSFEN入出力、飛車可動性バージョン2は今回の対象に含めていない。
 
 ## C1開始前の状態（履歴）
 
