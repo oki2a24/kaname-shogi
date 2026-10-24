@@ -192,3 +192,9 @@ Ruff `0.16.10` でimport順確認、103ファイルのformat確認、全checkを
 最終独立レビューはCritical 0・Important 0・Minor 2。コード上の統合阻害はないと判断された。Minorの一つはレビュー中の件数・結果未記録であり、この節と計画・README・知識メモ・再開案内の更新で対応する。残る一つはinitializer実行前の短いworker起動窓で実端末SIGINTが届く可能性。起動直後の実プロセスグループSIGINT試験は行わず、ERRORとしてsummaryへ記録されうる未検証事項をREADME・知識メモへ明記した。複数回連続Ctrl-C、強制終了後の途中棋譜復元、全OSのシグナル配送も未検証である。
 
 新しいSIGINTテストは単独で意図した欠落を検出するが、`signal.raise_signal`による親プロセス内の信号配送とspawn childのhandler確認を組み合わせても、macOS等の端末がforeground process group全体へ信号を送る実動作までは確認しない。並列化前の512手pilotはレビュー修正前source SHAの結果であり、今回の中断処理変更後にpilotを再実行してはいない。対局ロジックは変えていないが、このpilotを今回source上の再測定として扱わない。確認比較の組数・手数上限・総時間予算と、棋力の改善/悪化は未決定・未検証のままである。
+
+### 本人承認によるローカルmain統合（2026-10-25）
+
+本人はC1並列化実装をローカル `main` へ統合することを明示承認した。`codex/c1-rook-mobility-evaluation` はmain `5f136d5` から `350021a` までfast-forwardされた。作業ブランチは保持し、pushはしていない。統合直前のブランチで全体 `scripts/run_tests_parallel.py` は828 tests / 55 modules・73.776秒、統合後のmainでは828 tests / 55 modules・73.639秒で成功した。mainで `.venv/bin/ruff format --check .`（103ファイル）と `.venv/bin/ruff check .` も成功した。
+
+統合の対象は比較CLIの `--workers`（既定1、最大4）、並列conditions/summary形式と分析読込、割込み・worker故障処理、および関連するテスト・pilot資料・説明文書。通常CLIのSFEN入出力と飛車可動性バージョン2は追加していない。統合後も確認比較の組数・手数上限・総時間予算は未選定で、強さの結論は得ていない。過去pilotの比較結果はレビュー修正前source SHAに基づく記録として維持する。
