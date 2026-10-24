@@ -57,13 +57,14 @@ class ComparisonConfig:
         pairs_per_position: 各局面で先後を交換する対局組数。
         seed: 0以上の主乱数種。乱数種一覧方式ではNone。
         max_plies: 比較開始後の成功手数の上限。
-        output_dir: まだ存在しない出力先。
+        output_dir: 通常実行では未使用パス、再開では既存実験ディレクトリ。
         positions_path: 読み込んだ局面セットの入力パス。
         positions_json: 検証した局面セットの読込時バイト列。
         seed_plan: 方式別乱数種一覧。旧主乱数種方式ではNone。
         seed_list_json: 検証した乱数種一覧JSONの読込時バイト列。
         seed_list_path: 乱数種一覧の入力パス。
         workers: 一局ずつ比較を実行するプロセス数。省略時は従来どおり逐次実行。
+        resume: 既存条件・保存局を照合して未完了局だけを再実行する指定。
 
     戻り値:
         比較条件を一つの変更不可データへまとめた値。
@@ -91,6 +92,7 @@ class ComparisonConfig:
     seed_list_json: bytes | None = None
     seed_list_path: Path | None = None
     workers: int = 1
+    resume: bool = False
 
 
 @dataclass(frozen=True)

@@ -58,12 +58,14 @@ class AnalyzeComparisonCliTests(unittest.TestCase):
                     "by_side",
                     "move_time_by_policy",
                     "elapsed_ns",
+                    "elapsed_lower_bound",
                 },
             )
-            self.assertEqual(payload["format"], "kaname-shogi-comparison-analysis-v1")
+            self.assertEqual(payload["format"], "kaname-shogi-comparison-analysis-v2")
             self.assertEqual(payload["purpose"], "pilot")
             self.assertEqual(payload["planned_games"], 2)
             self.assertEqual(payload["completed_pairs"], 1)
+            self.assertIs(payload["elapsed_lower_bound"], False)
             self.assertEqual(payload["confidence_level"], 0.95)
             self.assertEqual(payload["method"], "hoeffding-paired-bounds-v1")
             self.assertEqual(
@@ -156,6 +158,33 @@ class AnalyzeComparisonCliTests(unittest.TestCase):
                 {path.name: path.read_bytes() for path in input_dir.iterdir()},
                 snapshots,
             )
+
+    def test_analysis_preserves_resume_elapsed_lower_bound(self):
+        """再開summaryの時間下限フラグを分析成果物へ伝播する。
+
+        再開不能時間を含むelapsed_nsを、全所要時間と誤読できる分析JSONにする誤りを
+        検出する。旧summaryでは下限ではないと明示する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            summary_path = input_dir / "summary.json"
+            summary = json.loads(summary_path.read_bytes())
+            summary.update(
+                format="kaname-shogi-comparison-summary-v3",
+                in_flight_games=0,
+                elapsed_lower_bound=True,
+            )
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
+            output = Path(directory) / "analysis.json"
+
+            status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+            self.assertEqual(status, 0)
+            payload = json.loads(output.read_bytes())
+
+        self.assertIs(payload["elapsed_lower_bound"], True)
 
     def test_rejects_in_flight_or_running_summary_v2_before_analysis_output(self):
         """投入中または実行中のsummary v2は分析結果を作らない。

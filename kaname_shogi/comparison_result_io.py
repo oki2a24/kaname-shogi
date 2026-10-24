@@ -50,7 +50,8 @@ _CONDITIONS_V3_FORMAT = "kaname-shogi-comparison-conditions-v3"
 _GAME_FORMAT = "kaname-shogi-comparison-game-v1"
 _SUMMARY_FORMAT = "kaname-shogi-comparison-summary-v1"
 _SUMMARY_V2_FORMAT = "kaname-shogi-comparison-summary-v2"
-_ANALYSIS_FORMAT = "kaname-shogi-comparison-analysis-v1"
+_SUMMARY_V3_FORMAT = "kaname-shogi-comparison-summary-v3"
+_ANALYSIS_FORMAT = "kaname-shogi-comparison-analysis-v2"
 _CONDITIONS_KEYS = {
     "format",
     "baseline",
@@ -115,6 +116,7 @@ _SUMMARY_KEYS = {
     "statistical_decision",
 }
 _SUMMARY_V2_KEYS = _SUMMARY_KEYS | {"in_flight_games"}
+_SUMMARY_V3_KEYS = _SUMMARY_V2_KEYS | {"elapsed_lower_bound"}
 
 
 @dataclass(frozen=True)
@@ -141,7 +143,8 @@ class LoadedComparison:
 
     前提条件:
         旧conditions v1、中断・故障、欠落・余分な局、外部リンク、条件不一致を
-        受け入れず、確定済みの全組だけを保持する。
+        受け入れず、確定済みの全組だけを保持する。summary v1/v2/v3を検証し、v3の
+        経過時間下限フラグも分析JSONへ引き継ぐ。
     """
 
     input_dir: Path
@@ -189,7 +192,7 @@ def load_completed_comparison(input_dir: Path) -> LoadedComparison:
         入力ディレクトリ内のJSONだけを読み、ファイルや他の場所を変更しない。
 
     前提条件:
-        独立抽出種一覧を保存したconditions v2/v3を分析対象とし、summary v1/v2の完了状態を
+        独立抽出種一覧を保存したconditions v2/v3を分析対象とし、summary v1/v2/v3の完了状態を
         検証する。v2 conditionsは逐次、v3はprocess-pool 2〜4 workerで、summary版も
         対応させる。v2 summaryは投入中0が必須。ファイル名は予定IDから構成し、JSONの任意
         パス参照を開かない。乱数や壁時計を再実行しない。
@@ -242,12 +245,19 @@ def load_completed_comparison(input_dir: Path) -> LoadedComparison:
             raise ValueError("summary投入中局数は0以上の整数で指定してください")
         if in_flight_games != 0:
             raise ValueError("投入中の局が残るsummaryは分析できません")
+    elif summary_format == _SUMMARY_V3_FORMAT:
+        _require_exact_keys(summary, _SUMMARY_V3_KEYS, "比較summary")
+        in_flight_games = summary["in_flight_games"]
+        if type(in_flight_games) is not int or in_flight_games != 0:
+            raise ValueError("再開summaryの投入中局数は0で指定してください")
+        if type(summary["elapsed_lower_bound"]) is not bool:
+            raise ValueError("再開summaryの経過時間下限フラグが不正です")
     else:
         raise ValueError("比較summary形式が対応していません")
     expected_summary_format = (
         _SUMMARY_V2_FORMAT if config.workers > 1 else _SUMMARY_FORMAT
     )
-    if summary_format != expected_summary_format:
+    if summary_format not in {expected_summary_format, _SUMMARY_V3_FORMAT}:
         raise ValueError("比較条件とsummary形式の組み合わせが不正です")
     elapsed_ns = summary["elapsed_ns"]
     if type(elapsed_ns) is not int or elapsed_ns < 0:
@@ -255,6 +265,11 @@ def load_completed_comparison(input_dir: Path) -> LoadedComparison:
     expected_summary = summary_payload_for_results(
         config, results, elapsed_ns=elapsed_ns
     )
+    if summary_format == _SUMMARY_V3_FORMAT:
+        expected_summary["format"] = _SUMMARY_V3_FORMAT
+        expected_summary["elapsed_lower_bound"] = summary["elapsed_lower_bound"]
+        if config.workers == 1:
+            expected_summary["in_flight_games"] = 0
     if not _json_values_equal(summary, expected_summary):
         raise ValueError("summaryが保存局の再集計または実行件数と一致しません")
 
@@ -313,6 +328,7 @@ def analysis_payload(
 
     前提条件:
         局面別・先後別集計は記述値として扱い、95%信頼水準の主判定を重複適用しない。
+        再開summary v3のelapsed_lower_boundを必須表示し、旧summaryではfalseを表示する。
         現在ソースの違いは記録するだけで、当時のソース識別と違っても拒否しない。
     """
     if not isinstance(loaded, LoadedComparison) or not isinstance(
@@ -375,6 +391,7 @@ def analysis_payload(
         "by_side": _candidate_side_summaries(loaded),
         "move_time_by_policy": loaded.summary["move_time_by_policy"],
         "elapsed_ns": loaded.elapsed_ns,
+        "elapsed_lower_bound": loaded.summary.get("elapsed_lower_bound", False),
     }
 
 
@@ -572,6 +589,7 @@ def _load_game(
     config: ComparisonConfig,
     *,
     conditions_sha256: str,
+    allow_incomplete: bool = False,
 ) -> GameResult:
     """一局の保存値を予定・合法棋譜・終局・計時と照合してGameResultにする。"""
     _require_exact_keys(payload, _GAME_KEYS, f"{expected_schedule.game_id}局")
@@ -617,7 +635,30 @@ def _load_game(
     plies = payload["plies"]
     if type(plies) is not int or plies != len(record.moves):
         raise ValueError(f"{expected_schedule.game_id}局の手数と棋譜が一致しません")
-    if payload["unfinished_calculation"] is not None or payload["error"] is not None:
+    reason = _reason(payload["reason"])
+    unfinished_calculation = payload["unfinished_calculation"]
+    error = payload["error"]
+    is_incomplete = reason in {GameEndReason.INTERRUPTED, GameEndReason.ERROR}
+    if is_incomplete:
+        if not allow_incomplete:
+            raise ValueError(
+                f"{expected_schedule.game_id}局に未確定計算または故障が残っています"
+            )
+        if (
+            unfinished_calculation is not None
+            and type(unfinished_calculation) is not int
+        ):
+            raise ValueError(f"{expected_schedule.game_id}局の未確定計算時間が不正です")
+        if reason is GameEndReason.ERROR:
+            if not isinstance(error, str) or not error:
+                raise ValueError(f"{expected_schedule.game_id}局の故障診断がありません")
+        elif error is not None:
+            raise ValueError(f"{expected_schedule.game_id}局の中断に故障診断があります")
+        if payload["winner_side"] is not None or payload["winner_policy"] is not None:
+            raise ValueError(
+                f"{expected_schedule.game_id}局の未完了結果に勝者があります"
+            )
+    elif unfinished_calculation is not None or error is not None:
         raise ValueError(
             f"{expected_schedule.game_id}局に未確定計算または故障が残っています"
         )
@@ -628,11 +669,15 @@ def _load_game(
         config,
         position,
         record,
+        allow_nonterminal=is_incomplete,
     )
-    reason = _reason(payload["reason"])
     winner_side = _optional_side(payload["winner_side"], "勝者先後")
     winner_policy = _optional_policy(payload["winner_policy"], "勝者方式")
-    if terminal != (reason, winner_side):
+    if is_incomplete:
+        # 最後の成功手が終局に達した直後、次ループの終局確認が割り込まれることがある。
+        # 末尾の終局は再実行対象として受け入れ、終局後の着手は再生時に拒否する。
+        winner_side = winner_policy = None
+    elif terminal != (reason, winner_side):
         raise ValueError(
             f"{expected_schedule.game_id}局の終局理由または勝者が棋譜と違います"
         )
@@ -655,8 +700,8 @@ def _load_game(
         winner_policy=winner_policy,
         plies=plies,
         move_times_ns=move_times,
-        unfinished_calculation_ns=None,
-        error=None,
+        unfinished_calculation_ns=unfinished_calculation,
+        error=error,
     )
 
 
@@ -666,7 +711,9 @@ def _validate_and_replay(
     config: ComparisonConfig,
     comparison_position: ComparisonPosition,
     record: GameRecord,
-) -> tuple[tuple[GameEndReason, Side | None], tuple[MoveTiming, ...]]:
+    *,
+    allow_nonterminal: bool = False,
+) -> tuple[tuple[GameEndReason, Side | None] | None, tuple[MoveTiming, ...]]:
     """棋譜履歴を最初から再生し、途中終局・各手計時・最終終局を照合する。"""
     if type(timings_value) is not list or len(timings_value) != len(record.moves):
         raise ValueError(f"{schedule.game_id}局の成功手と計時件数が一致しません")
@@ -743,7 +790,7 @@ def _validate_and_replay(
             )
         )
 
-    if terminal is None:
+    if terminal is None and not allow_nonterminal:
         raise ValueError(f"{schedule.game_id}局の棋譜末尾で終局が成立していません")
     if replay.current_position.side_to_move is not record.current_position.side_to_move:
         raise ValueError(f"{schedule.game_id}局の合法再生結果が保存棋譜と違います")

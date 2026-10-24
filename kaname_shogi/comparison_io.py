@@ -40,6 +40,7 @@ _CONDITIONS_FORMAT = "kaname-shogi-comparison-conditions-v1"
 _GAME_FORMAT = "kaname-shogi-comparison-game-v1"
 _SUMMARY_FORMAT = "kaname-shogi-comparison-summary-v1"
 _SUMMARY_V2_FORMAT = "kaname-shogi-comparison-summary-v2"
+_SUMMARY_V3_FORMAT = "kaname-shogi-comparison-summary-v3"
 _POSITION_SET_KEYS = {"format", "id", "positions"}
 _POSITION_KEYS = {"id", "setup_moves", "rationale"}
 _POLICIES = {
@@ -240,7 +241,10 @@ def load_config(argv: Sequence[str]) -> ComparisonConfig:
         )
 
     output_dir = Path(args.output_dir)
-    if os.path.lexists(output_dir):
+    if args.resume:
+        if not output_dir.is_dir() or output_dir.is_symlink():
+            raise ValueError("再開先は既存の実験ディレクトリで指定してください")
+    elif os.path.lexists(output_dir):
         raise ValueError("出力先は存在しないパスを指定してください")
     if not output_dir.parent.exists() or not output_dir.parent.is_dir():
         raise ValueError("出力先の親ディレクトリは事前に作成してください")
@@ -259,6 +263,7 @@ def load_config(argv: Sequence[str]) -> ComparisonConfig:
         seed_list_json=seed_list_json,
         seed_list_path=seed_list_path,
         workers=args.workers,
+        resume=args.resume,
     )
 
 
@@ -275,6 +280,11 @@ def _make_parser(*, add_help: bool = False) -> _ValueErrorArgumentParser:
     parser.add_argument("--max-plies", required=True)
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--workers", type=int, choices=(1, 2, 3, 4), default=1)
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="既存の同条件・同ソース比較を局単位で再開する",
+    )
     return parser
 
 
@@ -582,8 +592,8 @@ def summary_payload(summary: Mapping[str, object]) -> dict[str, object]:
         summary: `comparison.summarize()` が返した書式版なしの集計辞書。
 
     戻り値:
-        `in_flight_games`がない逐次集計はsummary v1、存在する並列集計はv2として
-        形式版を加え、入力項目を保持した新しい辞書。
+        `elapsed_lower_bound`がある再開集計はsummary v3、ない場合は
+        `in_flight_games`の有無に応じてv1/v2として形式版を加えた新しい辞書。
 
     例外:
         ValueError: 入力がMappingでない、または形式版をすでに含む場合。
@@ -592,15 +602,19 @@ def summary_payload(summary: Mapping[str, object]) -> dict[str, object]:
         なし。入力mappingを変更しない。
 
     前提条件:
-        勝率・統計的判断を追加せず、集計をJSONへ渡す形式版だけを補う。
+        勝率・統計的判断を追加せず、集計をJSONへ渡す形式版だけを補う。再開後は保存
+        時間が下限であることをv3形式で識別する。
     """
     if not isinstance(summary, Mapping):
         raise ValueError("summaryはMappingで指定してください")
     if "format" in summary:
         raise ValueError("summaryには形式版を重ねて指定できません")
-    summary_format = (
-        _SUMMARY_V2_FORMAT if "in_flight_games" in summary else _SUMMARY_FORMAT
-    )
+    if "elapsed_lower_bound" in summary:
+        summary_format = _SUMMARY_V3_FORMAT
+    else:
+        summary_format = (
+            _SUMMARY_V2_FORMAT if "in_flight_games" in summary else _SUMMARY_FORMAT
+        )
     return {"format": summary_format, **summary}
 
 

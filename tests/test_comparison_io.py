@@ -721,6 +721,34 @@ class ComparisonInputTests(unittest.TestCase):
 
         self.assertEqual(getattr(config, "workers", None), 1)
 
+    def test_load_config_accepts_resume_only_for_existing_output_directory(self):
+        """再開は既存出力先だけで受理し、通常実行は上書きしない。
+
+        --resumeを認識しない、または欠落出力先で新規実験を誤って始める挙動を検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions_path = self._write_positions(directory, [self._position_entry()])
+            existing_output = Path(directory) / "existing"
+            existing_output.mkdir()
+            args = self._config_args(positions_path, existing_output) + ["--resume"]
+
+            config = load_config(args)
+
+            self.assertTrue(config.resume)
+            self.assertEqual(config.output_dir, existing_output)
+
+            missing_output = Path(directory) / "missing"
+            missing_args = self._config_args(positions_path, missing_output) + [
+                "--resume"
+            ]
+            with self.assertRaisesRegex(ValueError, "再開先"):
+                load_config(missing_args)
+            self.assertFalse(missing_output.exists())
+
+            with self.assertRaisesRegex(ValueError, "出力先"):
+                load_config(self._config_args(positions_path, existing_output))
+
     def test_rejects_unknown_argument_and_existing_or_invalid_output_directory(self):
         """未知引数・既存出力先・存在しない親を拒否する。
 

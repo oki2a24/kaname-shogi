@@ -17,7 +17,14 @@ from multiprocessing import get_context
 from pathlib import Path
 from unittest.mock import patch
 
-from kaname_shogi.comparison import GameEndReason, GameResult, MoveTiming
+from kaname_shogi import comparison as comparison_module
+from kaname_shogi.comparison import (
+    GameEndReason,
+    GameResult,
+    MoveTiming,
+    make_schedule,
+)
+from kaname_shogi.comparison_result_io import load_completed_comparison
 from kaname_shogi.game_record import GameRecord
 from kaname_shogi.usi_move import parse_usi_move
 
@@ -79,23 +86,24 @@ class CompareGamesCliTests(unittest.TestCase):
         return [item for pair in values.items() for item in pair]
 
     @staticmethod
-    def _seed_list_file(directory, positions_path):
-        """このCLI fixture専用の手書き一組乱数種一覧を保存する。"""
+    def _seed_list_file(directory, positions_path, *, pairs_per_position=1):
+        """このCLI fixture専用の手書き乱数種一覧を保存する。"""
         payload = {
             "format": "kaname-shogi-comparison-seeds-v1",
             "purpose": "pilot",
             "positions_sha256": hashlib.sha256(positions_path.read_bytes()).hexdigest(),
             "position_ids": ["initial"],
-            "pairs_per_position": 1,
+            "pairs_per_position": pairs_per_position,
             "source": "os",
             "bits": 128,
             "pairs": [
                 {
                     "position_id": "initial",
-                    "repetition_index": 0,
-                    "baseline_seed": 11,
-                    "candidate_seed": 12,
+                    "repetition_index": index,
+                    "baseline_seed": 11 + index * 2,
+                    "candidate_seed": 12 + index * 2,
                 }
+                for index in range(pairs_per_position)
             ],
         }
         path = Path(directory) / "seed-list.json"
@@ -169,7 +177,10 @@ class CompareGamesCliTests(unittest.TestCase):
         submit_exception_number=None,
         running_game_ids=(),
         interrupt_writer_name=None,
+        interrupt_payload_game_id=None,
+        interrupt_future_result_game_id=None,
         writer_failure_name=None,
+        resume=False,
     ):
         """Future完了順を同期的に制御する偽executorでCLIを実行する。"""
         instances = []
@@ -182,7 +193,10 @@ class CompareGamesCliTests(unittest.TestCase):
         wait_calls = 0
         submit_calls = 0
         interrupted_writer_names = set()
+        interrupted_payload_ids = set()
+        interrupted_result_ids = set()
         real_writer = compare_games_module.atomic_write_json
+        real_payload_builder = compare_games_module.game_payload
 
         class ControlledExecutor:
             def __init__(self, *, max_workers, mp_context, initializer=None):
@@ -247,13 +261,36 @@ class CompareGamesCliTests(unittest.TestCase):
                     future.set_exception(error)
                 else:
                     future.set_result(result)
+                    game_id = args[0].game_id
+                    if (
+                        game_id == interrupt_future_result_game_id
+                        and game_id not in interrupted_result_ids
+                    ):
+                        interrupted_result_ids.add(game_id)
+                        original_result = future.result
+                        should_interrupt = True
+
+                        def interrupt_result_once(timeout=None):
+                            nonlocal should_interrupt
+                            if should_interrupt:
+                                should_interrupt = False
+                                raise KeyboardInterrupt
+                            return original_result(timeout)
+
+                        future.result = interrupt_result_once
             finally:
                 in_worker = False
             completion_order.append(args[0].game_id)
             return {future}, set(futures) - {future}
 
         def finish_by_limit(schedule, position, config):
-            return self._result(schedule, position, config, GameEndReason.PLY_LIMIT)
+            return self._result(
+                schedule,
+                position,
+                config,
+                GameEndReason.PLY_LIMIT,
+                tokens=("7g7f", "3c3d"),
+            )
 
         def recording_writer(path, payload):
             name = Path(path).name
@@ -269,6 +306,18 @@ class CompareGamesCliTests(unittest.TestCase):
                 raise OSError(f"{name} write failed")
             real_writer(path, payload)
 
+        def interrupting_payload_builder(result, config, *, conditions_sha256):
+            game_id = result.schedule.game_id
+            if (
+                game_id == interrupt_payload_game_id
+                and game_id not in interrupted_payload_ids
+            ):
+                interrupted_payload_ids.add(game_id)
+                raise KeyboardInterrupt
+            return real_payload_builder(
+                result, config, conditions_sha256=conditions_sha256
+            )
+
         args = self._args(
             positions,
             output_dir,
@@ -277,6 +326,8 @@ class CompareGamesCliTests(unittest.TestCase):
                 "--workers": str(workers),
             },
         )
+        if resume:
+            args.append("--resume")
         with (
             patch.object(
                 compare_games_module,
@@ -285,6 +336,11 @@ class CompareGamesCliTests(unittest.TestCase):
                 create=True,
             ),
             patch.object(compare_games_module, "wait", controlled_wait, create=True),
+            patch.object(
+                compare_games_module,
+                "game_payload",
+                interrupting_payload_builder,
+            ),
         ):
             exit_code, stdout, stderr = self._capture(
                 args,
@@ -642,6 +698,40 @@ class CompareGamesCliTests(unittest.TestCase):
         self.assertEqual(summary["in_flight_games"], 0)
         self.assertEqual(summary["unstarted_games"], 3)
 
+    def test_parallel_future_keyboard_interrupt_is_saved_as_worker_interruption(self):
+        """Future自身のKeyboardInterruptはworker中断局へ変換する。
+
+        親Ctrl-Cと取り違えて完成Futureをpendingに残し、回収を繰り返す誤りを検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "future-worker-interrupted-results"
+
+            def interrupt_worker(schedule, position, config):
+                raise KeyboardInterrupt
+
+            exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                positions,
+                output_dir,
+                pairs_per_position=1,
+                workers=2,
+                runner=interrupt_worker,
+            )
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+            interrupted_game = json.loads(
+                (output_dir / "game-000001.json").read_bytes()
+            )
+
+        self.assertEqual(exit_code, 130)
+        self.assertIn("中断", stderr)
+        self.assertTrue(executor.exited)
+        self.assertEqual(interrupted_game["game_id"], "game-000001")
+        self.assertEqual(interrupted_game["reason"], "interrupted")
+        self.assertEqual(summary["status"], "interrupted")
+        self.assertEqual(summary["ended_games"], 1)
+        self.assertEqual(summary["in_flight_games"], 0)
+        self.assertEqual(summary["unstarted_games"], 1)
+
     def test_parent_keyboard_interrupt_drains_running_future_and_saves_summary(self):
         """親Ctrl-C後は実行中局を回収し、中断summaryを保存して130で終わる。
 
@@ -678,7 +768,7 @@ class CompareGamesCliTests(unittest.TestCase):
         self.assertEqual(summary["unstarted_games"], 3)
         self.assertEqual(
             {
-                key: executor.summary_writes[0][key]
+                key: executor.summary_writes[-1][key]
                 for key in (
                     "status",
                     "started_games",
@@ -690,8 +780,8 @@ class CompareGamesCliTests(unittest.TestCase):
             {
                 "status": "interrupted",
                 "started_games": 1,
-                "ended_games": 0,
-                "in_flight_games": 1,
+                "ended_games": 1,
+                "in_flight_games": 0,
                 "unstarted_games": 3,
             },
         )
@@ -876,6 +966,69 @@ class CompareGamesCliTests(unittest.TestCase):
         self.assertEqual(summary["ended_games"], 2)
         self.assertEqual(summary["in_flight_games"], 0)
         self.assertEqual(summary["unstarted_games"], 2)
+
+    def test_parent_keyboard_interrupt_during_future_result_serialization_retries_it(
+        self,
+    ):
+        """Future回収後のpayload構築割込みでも完成結果を保持する。
+
+        Futureをpendingから早く外したため、結果JSONへ変換する途中の割込みで局と
+        summaryの双方を失う誤りを検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "payload-interrupted-results"
+            exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                positions,
+                output_dir,
+                pairs_per_position=2,
+                workers=2,
+                interrupt_payload_game_id="game-000001",
+                running_game_ids={"game-000002"},
+            )
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+            saved_games = sorted(path.name for path in output_dir.glob("game-*.json"))
+
+        self.assertEqual(exit_code, 130)
+        self.assertIn("中断", stderr)
+        self.assertTrue(executor.exited)
+        self.assertEqual(saved_games, ["game-000001.json", "game-000002.json"])
+        self.assertEqual(summary["status"], "interrupted")
+        self.assertEqual(summary["ended_games"], 2)
+        self.assertEqual(summary["in_flight_games"], 0)
+
+    def test_parent_keyboard_interrupt_during_future_result_read_retries_completed_game(
+        self,
+    ):
+        """完了Futureのresult読出し中の親Ctrl-C後も同じ完了結果を回収する。
+
+        親側KeyboardInterruptをworker中断として空結果へ置き換え、完了棋譜を失う誤りを
+        検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "future-result-read-interrupted-results"
+            exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                positions,
+                output_dir,
+                pairs_per_position=2,
+                workers=2,
+                interrupt_future_result_game_id="game-000001",
+                running_game_ids={"game-000002"},
+            )
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+            first_game = json.loads((output_dir / "game-000001.json").read_bytes())
+            saved_games = sorted(path.name for path in output_dir.glob("game-*.json"))
+
+        self.assertEqual(exit_code, 130)
+        self.assertIn("中断", stderr)
+        self.assertTrue(executor.exited)
+        self.assertEqual(saved_games, ["game-000001.json", "game-000002.json"])
+        self.assertEqual(first_game["reason"], "ply_limit")
+        self.assertEqual(first_game["plies"], 2)
+        self.assertEqual(summary["status"], "interrupted")
+        self.assertEqual(summary["ended_games"], 2)
+        self.assertEqual(summary["in_flight_games"], 0)
 
     def test_parent_keyboard_interrupt_during_parallel_summary_save_finishes_summary(
         self,
@@ -1418,6 +1571,501 @@ class CompareGamesCliTests(unittest.TestCase):
                     else:
                         self.assertFalse((output_dir / failed_name).exists())
                         self.assertFalse((output_dir / "summary.json").exists())
+
+    def test_resume_keeps_completed_games_and_runs_only_remaining_games(self):
+        """中断済みの局を再実行し完成局を保持して残りだけ続ける。
+
+        最初から全局を再実行する、またはconditionsを再生成して局ハッシュを壊す挙動を
+        検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "resume-results"
+            seed_list = self._seed_list_file(directory, positions, pairs_per_position=2)
+            args = self._args(
+                positions,
+                output_dir,
+                **{
+                    "--pairs-per-position": "2",
+                    "--seed-list": str(seed_list),
+                },
+            )
+            seed_index = args.index("--seed")
+            del args[seed_index : seed_index + 2]
+            calls = []
+
+            def interrupt_after_two(schedule, position, config):
+                calls.append(schedule.game_id)
+                if len(calls) == 3:
+                    return self._result(
+                        schedule, position, config, GameEndReason.INTERRUPTED
+                    )
+                return self._result(
+                    schedule,
+                    position,
+                    config,
+                    GameEndReason.PLY_LIMIT,
+                    tokens=("7g7f", "3c3d"),
+                )
+
+            first_exit, _, _ = self._capture(args, runner=interrupt_after_two)
+            self.assertEqual(first_exit, 130)
+            self.assertEqual(calls, ["game-000001", "game-000002", "game-000003"])
+            initial_elapsed = json.loads(
+                (output_dir / "summary.json").read_text(encoding="utf-8")
+            )["elapsed_ns"]
+            original_seed_bytes = seed_list.read_bytes()
+            changed_seed = json.loads(original_seed_bytes)
+            changed_seed["pairs"][0]["baseline_seed"] += 100
+            seed_list.write_text(json.dumps(changed_seed), encoding="utf-8")
+            with patch.object(compare_games_module, "run_game") as runner:
+                changed_seed_exit, _, _ = self._capture(args + ["--resume"])
+            self.assertEqual(changed_seed_exit, 2)
+            runner.assert_not_called()
+            seed_list.write_bytes(original_seed_bytes)
+
+            interrupted_game_path = output_dir / "game-000003.json"
+            interrupted_game_bytes = interrupted_game_path.read_bytes()
+            failed_save_calls = []
+            real_writer = compare_games_module.atomic_write_json
+
+            def fail_interrupted_game_write(path, payload):
+                if Path(path).name == "game-000003.json":
+                    raise OSError("注入した局保存失敗")
+                real_writer(path, payload)
+
+            with (
+                contextlib.redirect_stdout(io.StringIO()),
+                contextlib.redirect_stderr(io.StringIO()),
+            ):
+                with (
+                    patch.object(
+                        compare_games_module,
+                        "atomic_write_json",
+                        fail_interrupted_game_write,
+                    ),
+                    patch.object(
+                        compare_games_module,
+                        "run_game",
+                        side_effect=lambda game, position, config: (
+                            failed_save_calls.append(game.game_id)
+                            or self._result(
+                                game,
+                                position,
+                                config,
+                                GameEndReason.PLY_LIMIT,
+                                tokens=("7g7f", "3c3d"),
+                            )
+                        ),
+                    ),
+                ):
+                    failed_save_exit = main(args + ["--resume"])
+            self.assertEqual(failed_save_exit, 1)
+            self.assertEqual(failed_save_calls, ["game-000003"])
+            self.assertEqual(interrupted_game_path.read_bytes(), interrupted_game_bytes)
+            self.assertFalse((output_dir / ".comparison.lock").exists())
+
+            completed_bytes = {
+                name: (output_dir / name).read_bytes()
+                for name in ("game-000001.json", "game-000002.json")
+            }
+
+            resumed_calls = []
+
+            def interrupt_again(schedule, position, config):
+                resumed_calls.append(schedule.game_id)
+                return self._result(
+                    schedule, position, config, GameEndReason.INTERRUPTED
+                )
+
+            second_exit, _, _ = self._capture(
+                args + ["--resume"], runner=interrupt_again
+            )
+            self.assertEqual(second_exit, 130)
+            self.assertEqual(resumed_calls, ["game-000003"])
+
+            final_calls = []
+
+            def finish_third(schedule, position, config):
+                return self._result(
+                    schedule,
+                    position,
+                    config,
+                    GameEndReason.PLY_LIMIT,
+                    tokens=("7g7f", "3c3d"),
+                )
+
+            failure_message = io.StringIO()
+
+            def fail_summary_write(path, payload):
+                if Path(path).name == "summary.json":
+                    raise OSError("注入したsummary保存失敗")
+                real_writer(path, payload)
+
+            with (
+                contextlib.redirect_stdout(io.StringIO()),
+                contextlib.redirect_stderr(failure_message),
+            ):
+                with (
+                    patch.object(
+                        compare_games_module,
+                        "atomic_write_json",
+                        fail_summary_write,
+                    ),
+                    patch.object(
+                        compare_games_module, "run_game", side_effect=finish_third
+                    ),
+                ):
+                    summary_failure_exit = main(args + ["--resume"])
+            self.assertEqual(summary_failure_exit, 1)
+            self.assertIn("summary.json", failure_message.getvalue())
+            self.assertFalse((output_dir / ".comparison.lock").exists())
+
+            def finish_pending(schedule, position, config):
+                final_calls.append(schedule.game_id)
+                return self._result(
+                    schedule,
+                    position,
+                    config,
+                    GameEndReason.PLY_LIMIT,
+                    tokens=("7g7f", "3c3d"),
+                )
+
+            resumed_exit, _, resumed_stderr = self._capture(
+                args + ["--resume"], runner=finish_pending
+            )
+
+            self.assertEqual(resumed_exit, 0, resumed_stderr)
+            self.assertEqual(final_calls, ["game-000004"])
+            summary = json.loads(
+                (output_dir / "summary.json").read_text(encoding="utf-8")
+            )
+            self.assertGreaterEqual(summary["elapsed_ns"], initial_elapsed)
+            self.assertEqual(summary["format"], "kaname-shogi-comparison-summary-v3")
+            self.assertIs(summary["elapsed_lower_bound"], True)
+            loaded = load_completed_comparison(output_dir)
+            self.assertEqual(len(loaded.results), 4)
+            self.assertIs(loaded.summary["elapsed_lower_bound"], True)
+            self.assertEqual(
+                {name: (output_dir / name).read_bytes() for name in completed_bytes},
+                completed_bytes,
+            )
+
+    def test_keyboard_interrupt_while_validating_resume_returns_130_and_releases_lock(
+        self,
+    ):
+        """再開前の保存局検証を中断したら130で終了し実行ロックを解放する。
+
+        大きな成果物の合法再生中にCtrl-CがCLI外へ漏れ、tracebackや残存lockを
+        生む誤りを検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "resume-validation-interrupted"
+            args = self._args(positions, output_dir)
+
+            def finish(game, position, config):
+                return self._result(
+                    game,
+                    position,
+                    config,
+                    GameEndReason.PLY_LIMIT,
+                    tokens=("7g7f", "3c3d"),
+                )
+
+            first_exit, _, _ = self._capture(args, runner=finish)
+            self.assertEqual(first_exit, 0)
+            stderr = io.StringIO()
+            with (
+                patch.object(
+                    compare_games_module,
+                    "load_resume_state",
+                    side_effect=KeyboardInterrupt,
+                ),
+                contextlib.redirect_stdout(io.StringIO()),
+                contextlib.redirect_stderr(stderr),
+            ):
+                exit_code = main(args + ["--resume"])
+            self.assertFalse((output_dir / ".comparison.lock").exists())
+
+        self.assertEqual(exit_code, 130)
+        self.assertIn("中断", stderr.getvalue())
+
+    def test_sequential_payload_interrupt_does_not_reuse_previous_game_payload(
+        self,
+    ):
+        """2局目のpayload構築を中断しても1局目JSONを流用しない。
+
+        逐次ループの古いpayload再利用により局IDと棋譜が食い違う結果を保存する誤りを
+        検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "sequential-payload-interrupted-results"
+            args = self._args(positions, output_dir)
+            real_payload_builder = compare_games_module.game_payload
+            interrupted = False
+
+            def finish(schedule, position, config):
+                return self._result(
+                    schedule,
+                    position,
+                    config,
+                    GameEndReason.PLY_LIMIT,
+                    tokens=("7g7f", "3c3d"),
+                )
+
+            def interrupt_second_payload(result, config, *, conditions_sha256):
+                nonlocal interrupted
+                if result.schedule.game_id == "game-000002" and not interrupted:
+                    interrupted = True
+                    raise KeyboardInterrupt
+                return real_payload_builder(
+                    result, config, conditions_sha256=conditions_sha256
+                )
+
+            with patch.object(
+                compare_games_module,
+                "game_payload",
+                side_effect=interrupt_second_payload,
+            ):
+                exit_code, _, stderr = self._capture(args, runner=finish)
+
+            first_game = json.loads((output_dir / "game-000001.json").read_bytes())
+            second_game = json.loads((output_dir / "game-000002.json").read_bytes())
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+
+        self.assertEqual(exit_code, 130)
+        self.assertIn("中断", stderr)
+        self.assertEqual(first_game["game_id"], "game-000001")
+        self.assertEqual(second_game["game_id"], "game-000002")
+        self.assertEqual(first_game["plies"], 2)
+        self.assertEqual(second_game["plies"], 2)
+        self.assertEqual(summary["status"], "interrupted")
+        self.assertEqual(summary["ended_games"], 2)
+
+    def test_sequential_resume_retries_interrupted_replacement_of_old_incomplete_game(
+        self,
+    ):
+        """再開中の保存割込み後に完成局を置換してからsummaryへ加える。
+
+        既存の中断局ファイルが残っているだけで新しい完成結果を保存済みと数える誤りを
+        検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "sequential-resume-interrupt-save"
+            args = self._args(positions, output_dir)
+
+            def finished(game, position, config):
+                return self._result(
+                    game,
+                    position,
+                    config,
+                    GameEndReason.PLY_LIMIT,
+                    tokens=("7g7f", "3c3d"),
+                )
+
+            first_exit, _, _ = self._capture(args, runner=finished)
+            self.assertEqual(first_exit, 0)
+
+            game_path = output_dir / "game-000001.json"
+            incomplete = json.loads(game_path.read_bytes())
+            saved_record = GameRecord.from_payload(incomplete["record"])
+            incomplete.update(
+                reason="interrupted",
+                winner_side=None,
+                winner_policy=None,
+                plies=0,
+                record=GameRecord(saved_record.initial_position).to_payload(),
+                move_times=[],
+                unfinished_calculation=100,
+                error=None,
+            )
+            game_path.write_text(json.dumps(incomplete), encoding="utf-8")
+            writer_calls = []
+            real_writer = compare_games_module.atomic_write_json
+
+            def interrupt_first_replacement(path, payload):
+                if Path(path).name == game_path.name:
+                    writer_calls.append(Path(path).name)
+                    if len(writer_calls) == 1:
+                        raise KeyboardInterrupt
+                real_writer(path, payload)
+
+            resumed_exit, _, _ = self._capture(
+                args + ["--resume"],
+                atomic_writer=interrupt_first_replacement,
+                runner=finished,
+            )
+
+            saved_game = json.loads(game_path.read_bytes())
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+
+        self.assertEqual(resumed_exit, 130)
+        self.assertEqual(writer_calls, ["game-000001.json", "game-000001.json"])
+        self.assertEqual(saved_game["reason"], "ply_limit")
+        self.assertEqual(summary["status"], "interrupted")
+        self.assertEqual(summary["ended_games"], 2)
+
+    def test_parallel_resume_retries_interrupted_replacement_of_old_incomplete_game(
+        self,
+    ):
+        """並列再開は置換成功後に完成結果を保持・集計する。
+
+        古い中断ファイルの存在だけで保存割込みを成功扱いする誤りを検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "parallel-resume-interrupt-save"
+            first_exit, _, _, _, _ = self._run_controlled_parallel(
+                positions,
+                output_dir,
+                pairs_per_position=2,
+                workers=2,
+            )
+            self.assertEqual(first_exit, 0)
+
+            game_path = output_dir / "game-000001.json"
+            incomplete = json.loads(game_path.read_bytes())
+            saved_record = GameRecord.from_payload(incomplete["record"])
+            incomplete.update(
+                reason="interrupted",
+                winner_side=None,
+                winner_policy=None,
+                plies=0,
+                record=GameRecord(saved_record.initial_position).to_payload(),
+                move_times=[],
+                unfinished_calculation=100,
+                error=None,
+            )
+            game_path.write_text(json.dumps(incomplete), encoding="utf-8")
+
+            exit_code, stderr, executor, _, _ = self._run_controlled_parallel(
+                positions,
+                output_dir,
+                pairs_per_position=2,
+                workers=2,
+                interrupt_writer_name=game_path.name,
+                resume=True,
+            )
+            saved_game = json.loads(game_path.read_bytes())
+            summary = json.loads((output_dir / "summary.json").read_bytes())
+
+        self.assertEqual(exit_code, 130)
+        self.assertIn("中断", stderr)
+        self.assertTrue(executor.exited)
+        self.assertEqual(saved_game["reason"], "ply_limit")
+        self.assertEqual(summary["status"], "interrupted")
+        self.assertEqual(summary["ended_games"], 4)
+
+    def test_run_game_interrupted_during_terminal_check_can_be_resumed(self):
+        """手数上限後の終局確認を中断した局を再開対象として受け入れる。
+
+        成功手を確定した次の合法手生成でCtrl-Cが起き、保存された棋譜末尾が手数上限に
+        達している正規の中断結果を破損扱いする誤りを検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "terminal-check-resume"
+            args = self._args(positions, output_dir, **{"--max-plies": "1"})
+            original_legal_moves = comparison_module.legal_moves
+            calls = 0
+
+            def interrupt_second_legal_move(position):
+                nonlocal calls
+                calls += 1
+                if calls == 2:
+                    raise KeyboardInterrupt
+                return original_legal_moves(position)
+
+            with patch.object(
+                comparison_module,
+                "legal_moves",
+                side_effect=interrupt_second_legal_move,
+            ):
+                first_exit, _, _ = self._capture(args)
+
+            self.assertEqual(first_exit, 130)
+            interrupted = json.loads((output_dir / "game-000001.json").read_bytes())
+            self.assertEqual(interrupted["reason"], "interrupted")
+            self.assertEqual(interrupted["plies"], 1)
+
+            resumed_exit, _, stderr = self._capture(args + ["--resume"])
+            self.assertEqual(resumed_exit, 0, stderr)
+
+    def test_parallel_resume_skips_completed_games_and_rebuilds_final_summary(self):
+        """4worker再開も完了局を飛ばし、最終summaryを全局から再集計する。
+
+        並列経路だけ既存局を再投入したり、部分summaryを完了結果として残す誤りを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            positions = self._positions_file(directory)
+            output_dir = Path(directory) / "parallel-resume"
+            seed_list = self._seed_list_file(directory, positions, pairs_per_position=2)
+            args = self._args(
+                positions,
+                output_dir,
+                **{
+                    "--pairs-per-position": "2",
+                    "--workers": "4",
+                    "--seed-list": str(seed_list),
+                },
+            )
+            seed_index = args.index("--seed")
+            del args[seed_index : seed_index + 2]
+            config = compare_games_module.load_config(args)
+            schedule = make_schedule(config)
+            conditions = compare_games_module.conditions_payload(
+                config,
+                schedule,
+                source_root=Path(__file__).parents[1],
+            )
+            output_dir.mkdir()
+            compare_games_module.atomic_write_json(
+                output_dir / "conditions.json", conditions
+            )
+            conditions_hash = hashlib.sha256(
+                (output_dir / "conditions.json").read_bytes()
+            ).hexdigest()
+            first_result = self._result(
+                schedule[0],
+                config.positions[0],
+                config,
+                GameEndReason.PLY_LIMIT,
+                tokens=("7g7f", "3c3d"),
+            )
+            first_path = output_dir / f"{schedule[0].game_id}.json"
+            compare_games_module.atomic_write_json(
+                first_path,
+                compare_games_module.game_payload(
+                    first_result,
+                    config,
+                    conditions_sha256=conditions_hash,
+                ),
+            )
+            first_bytes = first_path.read_bytes()
+
+            exit_code, _, stderr = self._capture(args + ["--resume"])
+
+            self.assertEqual(exit_code, 0, stderr)
+            self.assertEqual(first_path.read_bytes(), first_bytes)
+            self.assertEqual(len(list(output_dir.glob("game-*.json"))), 4)
+            summary = json.loads(
+                (output_dir / "summary.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(summary["status"], "complete")
+            self.assertEqual(summary["started_games"], 4)
+            self.assertEqual(summary["ended_games"], 4)
+            self.assertEqual(summary["unstarted_games"], 0)
+            self.assertEqual(len(load_completed_comparison(output_dir).results), 4)
+
+            with patch.object(compare_games_module, "run_game") as runner:
+                again_exit, _, again_stderr = self._capture(args + ["--resume"])
+            self.assertEqual(again_exit, 0, again_stderr)
+            runner.assert_not_called()
 
 
 if __name__ == "__main__":

@@ -92,14 +92,14 @@ python3 -m kaname_shogi.analyze_comparison \
 
 予定の各組は同じ開始盤面・駒配置で二局を行い、方式の先後だけ交換する。二局内は同じ方式別種を保つ。棋譜・summaryを含む出力先は新規パスで、同じ一覧の再実行は再現性の確認であり、独立した追加標本ではない。時間・環境情報を含む全出力のバイト一致は期待しない。準備・比較・分析CLIのヘルプが引数の正本である。
 
-worker数1のsummaryはv1、2〜4のsummaryはv2で `in_flight_games` を含む。分析CLIはconditions v2+summary v1またはconditions v3+summary v2だけを受け付け、予定・局ファイル・conditions SHA・summary件数を再照合する。並列summaryの `in_flight_games` が0でない途中成果物は分析しない。親Ctrl-C・局の故障後は新規投入を止め、開始済みworkerを回収する。worker初期化後はSIGINTを無視して実行中局を完了するため、中断応答が遅れることがある。worker初期化前の短い起動中における実端末からのプロセスグループSIGINTは未検証で、その場合のworker故障はERROR結果として残る可能性がある。強制kill後の途中棋譜復旧は行わない。
+通常のworker数1のsummaryはv1、2〜4はv2で `in_flight_games` を含む。再開後は逐次・並列ともsummary v3となり、`elapsed_lower_bound=true` を保存する。並列の進捗summaryは回収前の `in_flight_games` を示し、全worker回収後のsummaryだけが0となる。分析CLIは、seed-list形式のconditions v2+summary v1/v3、conditions v3+summary v2/v3を受け付け、予定・局ファイル・conditions SHA・summary件数を再照合する。`--seed`によるconditions v1/v3は形式上worker数を記録していても、seed-list専用の分析CLIでは読めない。並列summaryの `in_flight_games` が0でない途中成果物は分析しない。分析JSON v2は `elapsed_lower_bound` を含み、旧summary v1/v2ではfalse、再開summary v3の下限時間ではtrueを記録する。`--resume` は同じ出力先と条件を指定し、保存済みconditionsのsource_sha256、実行環境、方式、局面バイト列、seedまたはseed一覧、全予定、組数、手数上限、worker数を照合する。Git HEADやdirty状態の違いだけでは拒否しない。保存済みの完了局は保持し、中断・故障・欠落局だけを同じseedで開始局面からやり直す。局JSONは予定・条件ハッシュ・合法棋譜・終局を検証する。破損・予定外局・シンボリックリンクは拒否する。summaryが欠落・古い場合は局JSONから再構成する。同じ出力先への同時実行は `.comparison.lock` で拒否し、強制終了後のロックはPIDを人が確認するまで自動解除しない。Ctrl-Cは新規投入を止めて開始済みworkerを回収する。強制終了で保存されなかった局は次回に開始局面から再実行するため、その間の経過時間はsummaryに残らず、再開後の時間は下限として扱う。
 
 ### 分析と適用範囲
 
-分析CLIが現在受け付けるのは、独立種一覧を保存した完了conditions v2/v3実験である。予定全件、局ファイル集合、execution条件、局ごとのconditions参照、乱数種、棋譜の合法再生と終局、summary再集計を照合する。v2 conditionsはsummary v1、v3はsummary v2と組み合わせる。`--seed` によるconditions v1/v3は、形式が条件とworker数を記録していても分析対象外である。欠落・余分・混在・未完了・不整合は分析前に拒否する。結果は入力と別の新規JSONへ保存する。旧conditions v1には今回の独立抽出前提を遡及適用しない。
+分析CLIが現在受け付けるのは、独立種一覧を保存した完了conditions v2/v3実験である。予定全件、局ファイル集合、execution条件、局ごとのconditions参照、乱数種、棋譜の合法再生と終局、summary再集計を照合する。通常時はv2 conditions+summary v1、v3+summary v2を組み合わせる。再開後はどちらの条件版もsummary v3を使え、下限時間フラグを含めて再集計する。`--seed` によるconditions v1/v3は、形式が条件とworker数を記録していても分析対象外である。欠落・余分・混在・未完了・不整合は分析前に拒否する。結果は入力と別の新規JSONへ保存する。旧conditions v1には今回の独立抽出前提を遡及適用しない。
 
 候補方式の各局得点は勝ち `[1,1]`、負け `[0,0]`、通常千日手 `[1/2,1/2]`、手数上限の未決着と双方連続王手の未裁定 `[0,1]`。後二者を勝敗や0.5へ決め打ちせず下限・上限の両方へ残す。二局一組内の平均得点を一標本として組間を扱い、区間半径は `sqrt(log(40)/(2*n))`。95%の主区間は平均得点の下限から半径を引いた値と、上限平均に半径を足した値を `[0,1]` に切り詰める。確認比較は区間下端が0.5より大きい場合だけ改善支持、上端が0.5より小さい場合だけ悪化支持、それ以外は判断不能。50%は互角の境目であり、95%ではない。pilotは探索的集計だけで強さ判定をしない。
 
 この区間は組間の独立抽出を仮定し、今回の6局面を均等に扱う一つの総合比較に限る。局面別・先後別は記述集計で、個別の95%保証を持たない。参照値2,035組は、未決着なし・真の得点率55%・検出力80%という仮定下でHoeffding不等式から得る十分条件であり、必要最小値でも棋力向上の保証でもない。未決着のある実験はその組数でも目標検出力を保証しない。時間上限・対局完了時間・局面群の実戦代表性・真の棋力差は別途未検証である。
 
-終了コードは準備/分析CLIが正常0、引数・入力不正2、実行/保存故障1、Ctrl-C 130。比較CLIは既存の対局保存契約を使い、対局・保存故障1、入力不正2、Ctrl-C 130。設計と実装経緯は[C1承認済み設計](../plans/2026-10-24-c1-rook-mobility-evaluation-design.md)、[実装計画](../plans/2026-10-24-c1-rook-mobility-evaluation-implementation-plan.md)、[学習記録](../learning/c1-rook-mobility-evaluation.md)にある。
+終了コードは準備/分析CLIが正常0、引数・入力不正2、実行/保存故障1、Ctrl-C 130。比較CLIは既存の対局保存契約を使い、対局・保存故障1、入力不正2、Ctrl-C 130。設計と実装経緯は[C1承認済み設計](../plans/2026-10-24-c1-rook-mobility-evaluation-design.md)、[比較実装計画](../plans/2026-10-24-c1-rook-mobility-evaluation-implementation-plan.md)、[局単位再開計画](../plans/2026-10-25-c1-comparison-resume-plan.md)、[学習記録](../learning/c1-rook-mobility-evaluation.md)にある。
