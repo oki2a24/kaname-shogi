@@ -2,6 +2,14 @@
 
 ## 現在地
 
+2026-10-24、主線A1で本人が依存の少ない「飛車だけの可動性」を選定した。[学習・本人回答](learning/rook-mobility-design.md)と[本人承認済み設計](plans/2026-10-24-rook-mobility-design.md)を参照する。独立設計確認Critical/Important/Minor 0/0/0を経て、本人は設計全体に「yes」と回答し、ロジックを別ファイルにして抜き差ししやすくすることを希望した。[実装計画案](plans/2026-10-24-rook-mobility-implementation-plan.md)を作成し、次はその明示承認と実行方式の選択を待つ。TDD・コード・テスト変更・実装は未承認。設計承認を実装計画承認へ流用しない。
+
+作業場所は `/Users/oki2a24/kaname-shogi`、文書整理用ブランチは `codex/a1-rook-mobility-design`、開始HEADは41910f4。文書は未コミット、mainへの取り込み・pushなし。既存の未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持。Ruff0.16.10とフック.githooksを今回確認した。製品コード未変更で全体テストは再実行していない。
+
+「可動性バージョン2」は本人提案の将来候補として保持し、今回の最小版へ自動追加しない。通常CLIのSFEN入出力も別テーマのまま。後続候補は[next-topics](next-topics.md)を参照する。下記のP2終了・A1開始前の記述は開始時の履歴であり、現在の選定・承認段階は本節と学習記録を正本とする。
+
+## A1開始時の背景（2026-10-23、履歴）
+
 2026-10-22、P1「比較方法と比較用CLIを学び設計する」は設計承認・最後の理解確認・回答記録まで完了済み。[P1学習記録](learning/engine-comparison-design.md)と[承認済み比較設計](plans/2026-10-21-engine-comparison-design.md)を参照する。補助テーマ「千日手ルールを学び設計する」は一次資料・現行コード・将棋ソフト実装を確認し、本人回答と判断理由を[学習記録](learning/repetition-rule-design.md)へ保存した。設計案・実装計画の明示承認を受け、Task 1〜5を作業ブランチ `codex/repetition-rule` で実装・検証・レビュー・記録し、`4080c4a` としてコミットした。本人承認後、`1b69147` からローカルmainへfast-forwardし、統合先 `7985cb9` で全体661件・42モジュール（15.034秒）、Ruff整形確認78ファイル・check、差分検査が成功した。最終独立レビューはCritical 0 / Important 0 / Minor 2（Deferred）。
 
 最後の理解確認と回答記録まで完了した。[千日手テーマの学習記録](learning/repetition-rule-design.md)を参照。本人は2026-10-23にP2比較CLI実装計画全体と、双方連続王手の未裁定を独立結果・集計件数にする仕様調整を「承認する」と明示した。承認済み計画に従って実装し、独立レビュー・修正・全体検証後、別途本人承認を受けてローカルmainへ統合し、統合先検証と最後の理解確認まで完了した。最終独立レビューはCritical 0 / Important 0 / Minor 0。本人はP2完了後に主線の最初の評価項目A1へ戻ると指定した。通常CLIのSFEN入出力は将来の別候補として保持し、P2へ含めない。P2の詳細は[計画・実績](plans/2026-10-22-comparison-cli-implementation-plan.md)と[学習記録](learning/engine-comparison-design.md)、A1の再開背景は[引き継ぎ](handover-a1-non-material-position-evaluation.md)を参照する。
@@ -36,6 +44,6 @@
 
 直近の製品検証は取り込み先80e3db0で全体546件30.083秒OK、Ruff63ファイル整形確認・check、差分検査成功。代表変異11件と独立全体レビューは取り込み前の実績（最終Critical/Important/Minor 0/0/0）。これらを新セッションの実測として流用しない。以降は文書変更だけで、製品テストは再実行していない。過去の設計と反復深化補強の履歴は学習記録と各開始時引き継ぎからたどる。
 
-## 次にすること
+## A1開始前に指定した再開手順（履歴）
 
 P2実装コミット `3adbd23` は、本人の別途承認を受け2026-10-23に `e595f8e` からローカルmainへfast-forward統合した。統合先で `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py` が705件・45モジュール（14.548秒）成功し、Ruff整形確認84ファイル・check、`git diff --check` も成功した。pushはしていない。最後の理解確認では、本人が「4回目で千日手ではあるが、続行も可能なため、5回目で終了とするため」と回答し、補足とともに[学習記録](learning/engine-comparison-design.md)へ保存した。本人はP2の後に戻る主線目標をA1と指定済みである。次の新セッションは[A1引き継ぎ](handover-a1-non-material-position-evaluation.md)のプロンプトから始める。引き継ぎ準備開始時の状態は `main`、HEAD `c4cd68b`、`origin/main` より7コミット先行で、既存未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` を保持していた。再開時にGit状態を再確認する。
