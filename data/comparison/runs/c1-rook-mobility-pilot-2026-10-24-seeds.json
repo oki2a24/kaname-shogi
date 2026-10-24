@@ -1,0 +1,54 @@
+{
+  "format": "kaname-shogi-comparison-seeds-v1",
+  "purpose": "pilot",
+  "positions_sha256": "4a1be9c3f9f4c04e97121d926475f83f49bda648f65400ab0f7572a7e6b6e53e",
+  "position_ids": [
+    "initial",
+    "open-bishops",
+    "closed-bishop",
+    "pawn-exchanges",
+    "developed-before-exchanges",
+    "developed-after-exchanges"
+  ],
+  "pairs_per_position": 1,
+  "source": "os",
+  "bits": 128,
+  "pairs": [
+    {
+      "position_id": "initial",
+      "repetition_index": 0,
+      "baseline_seed": 269905461791325978394116568680945706512,
+      "candidate_seed": 158580673566570504876046224558081849083
+    },
+    {
+      "position_id": "open-bishops",
+      "repetition_index": 0,
+      "baseline_seed": 298033152574335717372176033642985950556,
+      "candidate_seed": 2952434686972022082446938224118762444
+    },
+    {
+      "position_id": "closed-bishop",
+      "repetition_index": 0,
+      "baseline_seed": 336851485787231178126629542282431713778,
+      "candidate_seed": 311069280698055545146880388093243702542
+    },
+    {
+      "position_id": "pawn-exchanges",
+      "repetition_index": 0,
+      "baseline_seed": 230636228331984239476273850227317386058,
+      "candidate_seed": 180476076020119974185388942358572166663
+    },
+    {
+      "position_id": "developed-before-exchanges",
+      "repetition_index": 0,
+      "baseline_seed": 162204496174954990959166164980772720191,
+      "candidate_seed": 312433373076344295523910169518146630698
+    },
+    {
+      "position_id": "developed-after-exchanges",
+      "repetition_index": 0,
+      "baseline_seed": 299518094178762691913981968464078275652,
+      "candidate_seed": 264290831960570153383416386790404717863
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "format": "kaname-shogi-comparison-summary-v1",
+  "status": "complete",
+  "planned_games": 12,
+  "started_games": 12,
+  "ended_games": 12,
+  "unstarted_games": 0,
+  "completed_pairs": 6,
+  "partial_pairs": 0,
+  "results": {
+    "checkmate": 5,
+    "no_legal_move": 2,
+    "perpetual_check_loss": 0,
+    "repetition": 0,
+    "ply_limit": 5,
+    "interrupted": 0,
+    "error": 0,
+    "unresolved_double_perpetual_check": 0
+  },
+  "perpetual_check_losses": {
+    "sente": 0,
+    "gote": 0
+  },
+  "by_position": {
+    "initial": {
+      "started_games": 2,
+      "results": {
+        "checkmate": 0,
+        "no_legal_move": 0,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 2,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    },
+    "open-bishops": {
+      "started_games": 2,
+      "results": {
+        "checkmate": 1,
+        "no_legal_move": 1,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    },
+    "closed-bishop": {
+      "started_games": 2,
+      "results": {
+        "checkmate": 1,
+        "no_legal_move": 0,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 1,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    },
+    "pawn-exchanges": {
+      "started_games": 2,
+      "results": {
+        "checkmate": 2,
+        "no_legal_move": 0,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    },
+    "developed-before-exchanges": {
+      "started_games": 2,
+      "results": {
+        "checkmate": 0,
+        "no_legal_move": 1,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 1,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    },
+    "developed-after-exchanges": {
+      "started_games": 2,
+      "results": {
+        "checkmate": 1,
+        "no_legal_move": 0,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 1,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    }
+  },
+  "by_side": {
+    "sente": {
+      "games": 12,
+      "wins": 3,
+      "losses": 4,
+      "no_winner": 5
+    },
+    "gote": {
+      "games": 12,
+      "wins": 4,
+      "losses": 3,
+      "no_winner": 5
+    }
+  },
+  "move_time_by_policy": {
+    "random": {
+      "successful_moves": 0,
+      "total_ns": 0,
+      "average_ns": null,
+      "max_ns": null
+    },
+    "material": {
+      "successful_moves": 1107,
+      "total_ns": 61318403216,
+      "average_ns": 55391511.48690154,
+      "max_ns": 141204500
+    },
+    "two-ply-material": {
+      "successful_moves": 0,
+      "total_ns": 0,
+      "average_ns": null,
+      "max_ns": null
+    },
+    "full-width-4": {
+      "successful_moves": 0,
+      "total_ns": 0,
+      "average_ns": null,
+      "max_ns": null
+    },
+    "alpha-beta-4": {
+      "successful_moves": 0,
+      "total_ns": 0,
+      "average_ns": null,
+      "max_ns": null
+    },
+    "material-rook-mobility": {
+      "successful_moves": 1107,
+      "total_ns": 166611357083,
+      "average_ns": 150507097.63595304,
+      "max_ns": 1210957958
+    }
+  },
+  "elapsed_ns": 251998752875,
+  "statistical_decision": null
+}
