@@ -217,7 +217,7 @@ repetition_terminalを先に、board_terminalを後に評価する。後者は�
 - [x] Refactor要否確認後の独立コードレビューでCritical/Important/Minorと対応を記録する。初回レビューはCritical 0・Important 0・Minor 1。`comparison_io.load_config` が `Path.exists()` で出力先を調べるため、dangling symlinkを見逃し、mkdir失敗を入力不正2ではなく実行保存失敗1にする指摘だった。CLIの公開動作テストを追加し、旧実装で終了1となるRed、`os.path.lexists()`への変更後に終了2となるGreenを確認した。リンクが残り、対局が始まらないことも同じテストで確認した。最終独立レビューはCritical 0・Important 0・Minor 0で、修正を確認した。レビュアーはテストを実行していない。
 - [x] Ruff整理・format/check、`git diff --check`、`python3 scripts/run_tests_parallel.py`、文書リンク確認を実施した。Ruff三工程は成功、全体795件・55モジュールは17.518秒で成功、9文書806相対リンク・8見出しリンクは欠落0件。順序依存・並列差やランナー変更はないため逐次全体を追加しない。Python 3.9の実行互換は未検証として残す。
 - [x] 3コマンドの使用法・引数・形式・終了コード・分析の仮定と限界をREADME/知識へ、実績・承認・回答・レビューを学習記録へ保存した。
-- [ ] 内容確認後、C1対象ファイルのみ通常コミットする。main統合は別の本人承認後に行い、取り込み先で検証する。
+- [x] 内容確認後、C1対象31ファイルのみ通常コミット `42fc9e9`（`feat: 比較CLIで飛車可動性を評価する`）へ保存した。main統合は別の本人承認後に行い、取り込み先で検証する。
 - [ ] 実装・検証済みのソースを固定し、6局面×各1組・max-plies256・purpose pilotの新一覧で予備比較を行う。コマンドの実際の絶対パスと出力先を事前案内する。出力先は作成時に新規であることを確認する。
 
 ```text

@@ -6,7 +6,7 @@
 
 タスク1〜5と準備→比較→分析の実プロセス接続は完了した。pipeline test 1件が成功し、同一種一覧で計時情報を除く予定・棋譜・終局理由・勝敗の再現を確認した。条件SHA、勝者方式の対応、未決着区間、組単位の標本数の4変異を一時コピーで検出した。最終レビューのMinorをTDDで修正し、関連40件、全体795件・55モジュール、Ruff三工程、文書リンク806件/見出し8件、差分検査が成功した。最終独立レビューはCritical 0 / Important 0 / Minor 0。検出範囲・未検証事項は[学習記録](learning/c1-rook-mobility-evaluation.md)にある。
 
-現在はC1変更が未コミットで、HEADは開始コミット `5f136d5`。`.venv/bin/ruff --version` は固定版 `0.16.10`、hooksPathは `.githooks`。次はC1対象ファイルだけを通常コミットしてソースを固定し、承認済みpilot（6局面×1組、12局、各256手）を実行する。pilot結果を示した後、確認比較の組数・上限・時間予算を本人が決めるまで待つ。通常CLIのSFEN入出力と飛車可動性バージョン2は追加しない。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持する。
+C1のコード・テスト・初期記録はコミット `42fc9e9`（`feat: 比較CLIで飛車可動性を評価する`）へ保存済み。ブランチ `codex/c1-rook-mobility-evaluation`、mainへの統合は未実施。`.venv/bin/ruff --version` は固定版 `0.16.10`、hooksPathは `.githooks`。次は承認済みpilot（6局面×1組、12局、各256手）を実行する。pilot結果を示した後、確認比較の組数・上限・時間予算を本人が決めるまで待つ。通常CLIのSFEN入出力と飛車可動性バージョン2は追加しない。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持する。
 
 ## C1開始前の状態（履歴）
 
