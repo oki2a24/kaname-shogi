@@ -166,7 +166,7 @@ python3 -m kaname_shogi.analyze_comparison --input-dir data/comparison/runs/c1-r
 
 新コードではこの一回の実測で4workerが逐次の約2.55倍速だった。CPU負荷、局ごとの処理量、OS、Python版に依存し、4倍速や他環境の時間を保証しない。Python 3.15.0・macOS 27.0.1 arm64で実行した。両分析の得点平均は `[0.5, 0.5]`、95%区間は `[0,1]`、判定はpilotで、強さを判定しない。同一乱数種の反復を独立標本として数えない。2,040組の実測時間・確認比較の目標検出力・強さの改善/悪化は未確認のままである。
 
-成果物は逐次 `data/comparison/runs/c1-rook-mobility-pilot-512-workers-1-2026-10-24/` と隣接する `-analysis.json`、4worker `data/comparison/runs/c1-rook-mobility-pilot-512-workers-4-2026-10-24/` と隣接する分析JSON。確認比較の組数・手数上限・総時間予算はまだ選んでいない。実装は現在の作業ブランチに記録し、mainへの統合は別途本人承認を得てから行う。
+成果物は逐次 `data/comparison/runs/c1-rook-mobility-pilot-512-workers-1-2026-10-24/` と隣接する `-analysis.json`、4worker `data/comparison/runs/c1-rook-mobility-pilot-512-workers-4-2026-10-24/` と隣接する分析JSON。確認比較の組数・手数上限・総時間予算はまだ選んでいない。2026-10-24時点では実装を作業ブランチに記録し、mainへの統合は別途本人承認待ちだった。統合実績は後段に記録する。
 
 
 ### 最終検証（2026-10-24、独立レビュー前）
