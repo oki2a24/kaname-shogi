@@ -98,7 +98,7 @@
 - 独立レビュー初回はCritical 0 / Important 2 / Minor 1。逐次payload再構築、親SIGINTとFuture内例外の識別、lock assertion位置を修正した。新しい二つの割込み挙動テストは修正前Red・修正後Green。Future内KeyboardInterruptの対称ケースは既存分岐を保つため初回Greenとなり、親割込みと両側の挙動を確認した。
 - 再レビューはCritical 0 / Important 0 / Minor 1。Future自身が保持するKeyboardInterruptを直接検査するケースを追加後、最終再確認でCritical 0 / Important 0 / Minor 0。
 - 全体検証は `python3 scripts/run_tests_parallel.py` で851 tests / 56 modulesが成功。比較関連4モジュールは78 testsで成功。Ruff import整理・format・check・format確認、`git diff --check`、文書リンク確認も成功。
-- 実端末からのSIGINT配送、複数回連続Ctrl-C、SIGKILL・停電、2,040組の実行と棋力評価は行っていない。作業ブランチへコミット済みだがmainへ統合していない。
+- 実端末からのSIGINT配送、複数回連続Ctrl-C、SIGKILL・停電、2,040組の実行と棋力評価は行っていない。計画記録時点では作業ブランチへのコミットまで完了し、main統合前だった。その後、2026-10-25に本人承認を受けてローカルmainへfast-forward統合し、統合先の全体851テスト・56モジュールが成功した。詳細は[C1学習記録](../learning/c1-rook-mobility-evaluation.md#c1比較cliのmain統合2026-10-25)を参照する。
 
 ## 限界と主線への帰還
 

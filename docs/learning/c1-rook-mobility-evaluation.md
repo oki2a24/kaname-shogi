@@ -244,7 +244,7 @@ TDDでは `--resume` 未認識、保存条件/局復元APIの不足、既存出�
 
 **独立レビューと対応：** 初回レビューはCritical 0 / Important 2 / Minor 1。逐次payload構築中断時の前局データ再利用、親SIGINTをFutureの中断例外と誤認して完成結果を捨てる経路、lock解除assertionの配置を指摘された。二つの割込み経路は追加テストで修正前Red・修正後Greenを確認し、lock assertionは一時ディレクトリ削除前へ移した。再レビューはCritical 0 / Important 0 / Minor 1。Future自身に保存されたKeyboardInterruptの分岐を直接検査するテストを追加し、親側割込みテストとの両側を確認した。最終再確認はCritical 0 / Important 0 / Minor 0。Refactor後の抽出追加は不要と判断した。最終コード差分と実績は承認済み[局単位再開計画](../plans/2026-10-25-c1-comparison-resume-plan.md)に記録する。
 
-2026-10-25、検証・独立レビュー・文書記録をそろえ、作業ブランチ `codex/c1-comparison-resume` へコミットした。Git hookの整形・基本検査も成功した。mainへの統合は別途承認待ちで、2,040組の確認比較とB1の強さ判断は未実施。
+2026-10-25、検証・独立レビュー・文書記録をそろえ、作業ブランチ `codex/c1-comparison-resume` へコミットした。Git hookの整形・基本検査も成功した。コミット時点ではmainへの統合承認待ちで、2,040組の確認比較とB1の強さ判断は未実施だった。
 
 ### C1確認比較のseed一覧を作成（2026-10-25）
 
@@ -269,3 +269,9 @@ TDDでは `--resume` 未認識、保存条件/局復元APIの不足、既存出�
 ```
 
 過去の512手pilotからの目安は4workerで約11.9時間だが、レビュー修正前sourceの6組計測を単純比例した値であり、所要時間・未決着率・検出力を保証しない。比較CLIに総時間による自動停止はない。今回の実行で得た確認区間・未決着率からB1の改善支持/悪化支持/判断不能を判断する。再開機能の動作確認や同一seedの再実行は棋力比較に数えない。
+
+### C1比較CLIのmain統合（2026-10-25）
+
+本人の「mainへの統合して」という承認を受け、ローカルmain `69729a7` に作業ブランチ `codex/c1-comparison-resume` をfast-forward統合した。統合先コミットは `9e959b2`。局単位再開機能、確認比較用seed一覧、関連記録がmainへ入った。
+
+統合前に全体851テスト・56モジュールが74.388秒で成功した。統合後のmain上でも `python3 scripts/run_tests_parallel.py` を実行し、851テスト・56モジュールが74.766秒で成功した。`.venv/bin/ruff format --check .` は105ファイルが整形済み、`.venv/bin/ruff check .` はAll checks passed、`git diff --check`も成功した。統合はローカルのみでpushしていない。2,040組の確認比較とB1の強さ判断は引き続き未実施。

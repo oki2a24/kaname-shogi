@@ -8,11 +8,11 @@
 
 ### 長時間実行を支える補助機能：局単位再開
 
-本人の承認を受け、C1比較CLIの局単位再開機能を作業ブランチ `codex/c1-comparison-resume` で実装・検証・独立レビューし、同ブランチへコミットした。作業開始時HEADは `69729a7` で、実装前は `main` と同じ位置だった。今回の変更はmainへ統合しておらず、統合は別途承認を待つ。`.antigravity/tasks/` と `.venv.backup-2026-10-22/` は既存の未追跡内容として保持している。
+本人の承認を受け、C1比較CLIの局単位再開機能を作業ブランチ `codex/c1-comparison-resume` で実装・検証・独立レビューし、seed一覧と実行手順を含めてコミットした。2026-10-25、本人の指示を受け、作業開始時のmain `69729a7` からローカルmainへfast-forward統合した。統合先コミットは `9e959b2`。統合後の全体テストは851件・56モジュールが74.766秒で成功し、Ruff format check（105ファイル）・check・`git diff --check`も成功した。pushはしていない。`.antigravity/tasks/` と `.venv.backup-2026-10-22/` は既存の未追跡内容として保持している。
 
 `--resume` は同じ出力先・方式・局面内容・seed/seed一覧・組数・手数上限・worker数・実行環境・Pythonソース指紋を照合する。保存済みの完了局は保持し、欠落・中断・故障局だけを同じseedで局頭から実行する。conditionsと完成局JSONは検証後に保持し、summary欠落時は局JSONから集計し直す。同時実行は `.comparison.lock` で拒否し、強制終了後の残存ロックはPIDを確認して人が除去する。再開summary v3の `elapsed_lower_bound=true` は、強制終了で欠落した経過時間があり得ることを表す。実装仕様・判断理由は[承認済み計画](plans/2026-10-25-c1-comparison-resume-plan.md)、コード・テスト・検証の経緯は[C1学習記録](learning/c1-rook-mobility-evaluation.md)、比較CLI全体の利用契約は[知識メモ](knowledge/search-comparison.md)を参照する。
 
-比較関連78テストが成功し、全体851テスト・56モジュールが74.213秒で成功した。Ruff import整理・format（105ファイル）・check・format確認、`git diff --check`も成功した。逐次と4workerの小規模実対局を各2局行い、連続実行と保存局欠落後の再開で棋譜・終局・勝者・手数・組得点が一致し、分析readerはsummary v3を読み下限時間表示を保持した。欠落局を作って再開し、実端末Ctrl-Cではなくテスト注入で割込み経路を検査した。隔離コピーの代表変異4件（全局再投入、条件照合省略、conditions再生成、完成局二重加算）は対応テストで検出した。独立レビューは最終Critical 0 / Important 0 / Minor 0。実績とレビュー対応は[学習記録](learning/c1-rook-mobility-evaluation.md)と[局単位再開計画](plans/2026-10-25-c1-comparison-resume-plan.md)にある。
+作業ブランチ上の実装検証では、比較関連78テストと全体851テスト・56モジュールが74.213秒で成功した。Ruff import整理・format（105ファイル）・check・format確認、`git diff --check`も成功した。逐次と4workerの小規模実対局を各2局行い、連続実行と保存局欠落後の再開で棋譜・終局・勝者・手数・組得点が一致し、分析readerはsummary v3を読み下限時間表示を保持した。欠落局を作って再開し、実端末Ctrl-Cではなくテスト注入で割込み経路を検査した。隔離コピーの代表変異4件（全局再投入、条件照合省略、conditions再生成、完成局二重加算）は対応テストで検出した。独立レビューは最終Critical 0 / Important 0 / Minor 0。実績とレビュー対応は[学習記録](learning/c1-rook-mobility-evaluation.md)と[局単位再開計画](plans/2026-10-25-c1-comparison-resume-plan.md)にある。
 
 ## C1開始前の状態（履歴）
 
