@@ -2,9 +2,13 @@
 
 ## 現在地（2026-10-25）
 
-現在の本道は、C1「飛車可動性を接続して比較評価する」の確認比較を実行し、B1の対局成績への効果を判断すること。本人選定済みの条件はbaseline `material` 対 candidate `material-rook-mobility`、独立seed一覧、6局面各340組（計2,040組・4,080局）、各局512手上限、4worker。確認用seed一覧 `data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25-seeds.json` は作成済みで、SHA-256は `aa886d34d51692ab6835d4d50c90a379d9350d64dac05e6515329780a9aab430`。対局はまだ始めていない。本人が端末から実行し、全局完了後に分析する。最初の実行では `--resume` を付けず、中断した場合だけ同じ条件に `--resume` を加える。実行・分析コマンドは[C1学習記録](learning/c1-rook-mobility-evaluation.md)にある。
+現在の本道は、C1「飛車可動性を接続して比較評価する」の分析CLI完了を待ち、結果からB1の効果を判断すること。本人が09:00頃から端末で実行した確認比較は、15:18:16 JSTのsummaryで全4,080局・2,040組完了、進行中・未開始・片局のみの組は0を確認した。summaryの比較時間は22,441.673秒（約6時間14分）。条件はbaseline `material` 対 candidate `material-rook-mobility`、独立seed一覧、6局面各340組、各局512手上限、4worker。結果は `data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25/` に未追跡で保持している。
 
-所要時間の約11.9時間という値は、レビュー修正前sourceで測った6組のpilotを単純比例した4workerの粗い目安であり、完了時間・未決着率・検出力を保証しない。比較CLIに総時間による自動停止はない。今回の確認比較とB1の採否判断は未完了であり、結果を記録するまでは次の評価項目へ進まない。通常CLIのSFEN入出力と飛車可動性バージョン2は今回に加えていない。
+現行分析CLIは `python3 -m kaname_shogi.analyze_comparison` で実行中（開始時の実行セッション74980、PID84790）。出力予定は `data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25-analysis.json`。次に進む際は実行セッション・プロセス・出力JSONの現物を再確認し、二重起動せず完了結果を読む。`.venv/bin/python` は削除済みHomebrew Python 3.15.0_1を参照して起動できず、利用可能なPython 3.15.1の `python3` で分析を開始した。READMEの手順で旧環境を `.venv.backup-2026-10-25-broken-python-3150` へ退避し、新しい `.venv` をPython 3.15.1・固定版Ruff 0.16.10で再作成した。フック設定は `.githooks` を維持している。
+
+本人の依頼で、分析完了待ちを本筋に保持しながら補助として[分析CLIの短時間化調査](learning/c1-analysis-performance-investigation.md)を実施した。調査記録用ブランチは `codex/c1-analysis-performance-investigation`。現行関数の計測だけで、製品コード・テストは未変更。短縮方式は未選定で、設計・実装計画は未承認。分析結果が出る前にB1改善やC1完了を認定しない。
+
+実行前に示した約11.9時間という値は、レビュー修正前sourceで測った6組のpilotを単純比例した4workerの粗い目安であり、完了時間・未決着率・検出力を保証しない。比較CLIに総時間による自動停止はない。分析結果の確認とB1の採否判断は未完了であり、結果を記録するまでは次の評価項目へ進まない。通常CLIのSFEN入出力と飛車可動性バージョン2は今回に加えていない。
 
 ### 長時間実行を支える補助機能：局単位再開
 
