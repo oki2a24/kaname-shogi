@@ -1,14 +1,18 @@
 # 学習・開発の再開案内
 
-## 現在地（2026-10-25）
+## 現在地（2026-10-26）
 
-現在の本道は、C1「飛車可動性を接続して比較評価する」の分析CLI完了を待ち、結果からB1の効果を判断すること。本人が09:00頃から端末で実行した確認比較は、15:18:16 JSTのsummaryで全4,080局・2,040組完了、進行中・未開始・片局のみの組は0を確認した。summaryの比較時間は22,441.673秒（約6時間14分）。条件はbaseline `material` 対 candidate `material-rook-mobility`、独立seed一覧、6局面各340組、各局512手上限、4worker。結果は `data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25/` に未追跡で保持している。
+現在の本道は、C1「飛車可動性を接続して比較評価する」の確認比較・分析を終え、B1の採否をどう扱うか決めること。本人が09:00頃から端末で実行した確認比較は、15:18:16 JSTのsummaryで全4,080局・2,040組完了、進行中・未開始・片局のみの組は0。summaryの比較時間は22,441.673秒（約6時間14分）。条件はbaseline `material` 対 candidate `material-rook-mobility`、独立seed一覧、6局面各340組、各局512手上限、4worker。結果は `data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25/` に未追跡で保持している。
 
-現行分析CLIは `python3 -m kaname_shogi.analyze_comparison` で実行中（開始時の実行セッション74980、PID84790）。出力予定は `data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25-analysis.json`。次に進む際は実行セッション・プロセス・出力JSONの現物を再確認し、二重起動せず完了結果を読む。`.venv/bin/python` は削除済みHomebrew Python 3.15.0_1を参照して起動できず、利用可能なPython 3.15.1の `python3` で分析を開始した。READMEの手順で旧環境を `.venv.backup-2026-10-25-broken-python-3150` へ退避し、新しい `.venv` をPython 3.15.1・固定版Ruff 0.16.10で再作成した。フック設定は `.githooks` を維持している。
+旧版と短縮版の分析は両方とも4,080局・2,040組、95%区間 `[0.4902742642945405, 0.6058041670780084]`、判定`inconclusive`。`analyzer` だけを除く旧新版JSONの全項目は一致した。conditions・全4,080局・summary計4,082件のSHA-256は新版の記録でも実ファイルと全件一致した。候補方式wins=2123、losses=1731、手数上限226局。区間が50%を含むため、B1の改善・悪化は確認できていない。旧版コマンド後の `status=$?` はzsh予約変数への代入エラーだったが、分析CLIは完了表示・保存まで成功している。今後のC1確認比較・分析CLIの長時間実行は人間の端末実行を基本とし、こちらから勝手に起動・監視しない。
 
-本人の依頼で、分析完了待ちを本筋に保持しながら補助として[分析CLIの短時間化調査](learning/c1-analysis-performance-investigation.md)を実施した。作業ブランチは `codex/c1-analysis-performance-investigation`。「合法な次の記録手を根拠に中間局面の全列挙を減らす案」の[設計](plans/2026-10-25-c1-analysis-legal-witness-design.md)は、正確さについての説明を経て本人承認済み。[実装計画](plans/2026-10-25-c1-analysis-legal-witness-implementation-plan.md)は本人が全体承認し、git worktreeでの実装を希望した。別worktreeを作りTDDを開始する段階。元ディレクトリのPythonソースは保持し、旧新版の全成果物比較は元分析完了後に行う。分析結果が出る前にB1改善やC1完了を認定しない。
+`.venv/bin/python` は削除済みHomebrew Python 3.15.0_1を参照して起動できなかったため、旧CLIは利用可能なPython 3.15.1 `python3` で開始した。元cloneではREADME手順で `.venv` を修復し、固定版Ruff 0.16.10と `.githooks` を確認した。
 
-実行前に示した約11.9時間という値は、レビュー修正前sourceで測った6組のpilotを単純比例した4workerの粗い目安であり、完了時間・未決着率・検出力を保証しない。比較CLIに総時間による自動停止はない。分析結果の確認とB1の採否判断は未完了であり、結果を記録するまでは次の評価項目へ進まない。通常CLIのSFEN入出力と飛車可動性バージョン2は今回に加えていない。
+本人承認済み実装計画に従い、補助作業を `/Users/oki2a24/.codex/worktrees/c1-analysis-speedup/kaname-shogi` のブランチ `codex/c1-analysis-legal-witness` で実装した。全体858件/57モジュール（22.525秒）、Ruff、代表6局×4回の旧新版読込検証と結果一致、入力SHA不変、4代表変異のassertion検出、独立レビュー最終Critical 0 / Important 0 / Minor 0まで確認済み。全4,080局の新版分析を本人端末で実行し、旧JSONと `analyzer` を除く全項目が一致、入力SHAも4,082件全件一致した。6局のwall中央値合計は旧21.020秒・新0.371秒（約56.61倍）。コードと記録は作業ブランチ上で、main統合は未承認。元の `/Users/oki2a24/kaname-shogi` のPythonソースと確認比較原本は変更していない。
+
+新版分析の保存JSON更新時刻は2026-10-25 22:05:06 JST。本人報告の開始時刻は22:00頃のため約5分は目安にとどまり、CLI自身の所要時間は不明。分析JSONの `elapsed_ns` は比較対局時間であって分析時間ではない。B1の今回の判定は「判断不能」である。C1をこの結果で閉じるか追加比較を設計するかは未選択。短縮化のコードはworktreeにあり、計画に従う通常コミット前の最終文書・差分確認を進め、main統合は本人の別承認を待つ。通常CLIのSFEN入出力と飛車可動性バージョン2は今回に足さない。
+
+実行前に示した約11.9時間は、レビュー修正前sourceで測った6組の比較pilotを単純比例した粗い目安であり、分析CLIの時間推定には使えない。比較CLIに総時間による自動停止はない。B1の今回の分析判定は「判断不能」で、改善・悪化を主張できない。C1の結果をどう扱うかと最後の理解確認が残る。通常CLIのSFEN入出力と飛車可動性バージョン2は今回に加えていない。
 
 ### 長時間実行を支える補助機能：局単位再開
 

@@ -281,6 +281,91 @@ class ComparisonResumeConditionTests(unittest.TestCase):
                 original_bytes,
             )
 
+    def test_keeps_multimove_incomplete_games_pending_on_resume(self):
+        """複数手の中断・故障局を未完了として再投入し、完成局を保持する。
+
+        readerの最終局面最適化によって、中間局面に合法手列挙がなくても記録された
+        複数手を受理でき、未完了局を完成扱いせず完成済み棋譜も上書きしないことを検出する。
+        """
+        self._require_implementation()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output = root / "results"
+            output.mkdir()
+            config = replace(self._config(output, pairs_per_position=2), max_plies=4)
+            schedule = make_schedule(config)
+            conditions = conditions_payload(
+                config, schedule, source_root=Path(__file__).parents[1]
+            )
+            atomic_write_json(output / "conditions.json", conditions)
+            conditions_hash = hashlib.sha256(
+                (output / "conditions.json").read_bytes()
+            ).hexdigest()
+            position = config.positions[0]
+
+            def result_for(index, reason):
+                record = GameRecord(position.start_position)
+                timings = []
+                tokens = ("7g7f", "3c3d", "2g2f", "8c8d")[: (4 if index == 0 else 3)]
+                for ply, token in enumerate(tokens, start=1):
+                    move = parse_usi_move(token)
+                    side = record.current_position.side_to_move
+                    policy = (
+                        config.baseline
+                        if side is schedule[index].baseline_side
+                        else config.candidate
+                    )
+                    record.apply_move(
+                        move.source, move.destination, promote=move.promote
+                    )
+                    timings.append(MoveTiming(ply, side, policy, move, 11 * ply))
+                return GameResult(
+                    schedule=schedule[index],
+                    start_sfen=position.start_sfen,
+                    initial_move_number=position.initial_move_number,
+                    record=record,
+                    reason=reason,
+                    winner_side=None,
+                    winner_policy=None,
+                    plies=len(record.moves),
+                    move_times_ns=tuple(timings),
+                    unfinished_calculation_ns=None,
+                    error="fixture error" if reason is GameEndReason.ERROR else None,
+                )
+
+            completed_payload = game_payload(
+                result_for(0, GameEndReason.PLY_LIMIT),
+                config,
+                conditions_sha256=conditions_hash,
+            )
+            completed_path = output / f"{schedule[0].game_id}.json"
+            atomic_write_json(completed_path, completed_payload)
+            completed_bytes = completed_path.read_bytes()
+            for index, reason in (
+                (1, GameEndReason.INTERRUPTED),
+                (2, GameEndReason.ERROR),
+            ):
+                atomic_write_json(
+                    output / f"{schedule[index].game_id}.json",
+                    game_payload(
+                        result_for(index, reason),
+                        config,
+                        conditions_sha256=conditions_hash,
+                    ),
+                )
+
+            state = load_resume_state(config, source_root=Path(__file__).parents[1])
+
+            self.assertEqual(
+                tuple(result.schedule.game_id for result in state.completed_results),
+                (schedule[0].game_id,),
+            )
+            self.assertEqual(
+                tuple(game.game_id for game in state.pending_schedule),
+                tuple(game.game_id for game in schedule[1:]),
+            )
+            self.assertEqual(completed_path.read_bytes(), completed_bytes)
+
     def test_rejects_corrupt_and_unexpected_game_artifacts(self):
         """条件不一致の局JSONや予定外IDを再開対象へ混ぜない。
 

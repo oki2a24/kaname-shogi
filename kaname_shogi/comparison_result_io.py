@@ -714,16 +714,22 @@ def _validate_and_replay(
     *,
     allow_nonterminal: bool = False,
 ) -> tuple[tuple[GameEndReason, Side | None] | None, tuple[MoveTiming, ...]]:
-    """棋譜履歴を最初から再生し、途中終局・各手計時・最終終局を照合する。"""
-    if type(timings_value) is not list or len(timings_value) != len(record.moves):
+    """棋譜履歴を再生し、合法手・途中終局・計時・最終終局を照合する。
+
+    GameRecord.from_payloadが全記録手を合法適用済みのため、中間局面は次の記録手を
+    合法手ありの根拠にできる。末尾局面は後続手がなく、終局判定の根拠に合法手全列挙を行う。
+    """
+    moves = record.moves
+    move_count = len(moves)
+    if type(timings_value) is not list or len(timings_value) != move_count:
         raise ValueError(f"{schedule.game_id}局の成功手と計時件数が一致しません")
     replay = GameRecord(record.initial_position)
     tracker = RepetitionTracker(replay.current_position)
     move_times: list[MoveTiming] = []
     terminal: tuple[GameEndReason, Side | None] | None = None
 
-    for ply in range(1, len(record.moves) + 1):
-        recorded_move = record.moves[ply - 1]
+    for ply in range(1, move_count + 1):
+        recorded_move = moves[ply - 1]
         timing_value = timings_value[ply - 1]
         if terminal is not None:
             raise ValueError(f"{schedule.game_id}局が既終局後も指し継いでいます")
@@ -773,10 +779,12 @@ def _validate_and_replay(
         outcome = tracker.add_position(current)
         terminal = repetition_terminal(outcome)
         if terminal is None:
-            candidates = legal_moves(current)
+            has_legal_moves = True
+            if ply == move_count:
+                has_legal_moves = bool(legal_moves(current))
             terminal = board_terminal(
                 current,
-                has_legal_moves=bool(candidates),
+                has_legal_moves=has_legal_moves,
                 plies=ply,
                 max_plies=config.max_plies,
             )
@@ -797,12 +805,12 @@ def _validate_and_replay(
     if format_sfen(
         SfenPosition(
             replay.current_position,
-            comparison_position.initial_move_number + len(record.moves),
+            comparison_position.initial_move_number + move_count,
         )
     ) != format_sfen(
         SfenPosition(
             record.current_position,
-            comparison_position.initial_move_number + len(record.moves),
+            comparison_position.initial_move_number + move_count,
         )
     ):
         raise ValueError(f"{schedule.game_id}局の合法再生局面が保存棋譜と違います")

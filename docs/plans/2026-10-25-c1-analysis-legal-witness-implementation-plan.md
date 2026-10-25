@@ -42,16 +42,17 @@
 
 共通movegen、GameRecord、比較実行器のコードを変更する必要が生じたら、この計画の範囲へ黙って加えず理由と変更案を提示する。
 
-## タスク1：合法な次の手を根拠にするreaderと契約検証
+## タスク 1：合法な次の手を根拠にするreaderと契約検証
 
 **消費するインターフェース:** 現行の `_load_game(payload, expected_schedule, config, *, conditions_sha256, allow_incomplete=False) -> GameResult` と `GameRecord.from_payload(payload) -> GameRecord`。
 
 **変更するインターフェース:** `_validate_and_replay(timings_value, schedule, config, comparison_position, record, *, allow_nonterminal=False) -> tuple[tuple[GameEndReason, Side | None] | None, tuple[MoveTiming, ...]]` のシグネチャを維持。新しい公開APIは作らない。
 
-- [ ] 元分析セッション・プロセス・出力JSONを確認する。別worktreeを作り、元ソースを変えず先行実装する。元分析が完了したらその終了状態と旧分析JSONを本筋として先に報告・保存確認し、エラーなら原因確認を優先する。原本を書き換えたり検証を迂回したりしない。worktree内の実装前Pythonソースを旧版 `0d8be5b` と照合し、性能比較用に `git archive 0d8be5b kaname_shogi` から一時ディレクトリへ旧ソースだけを展開する。
-- [ ] `.venv/bin/python --version`、`.venv/bin/ruff --version` と固定版、`core.hooksPath=.githooks` を確認する。修復済み環境の既存851テスト成功は調査時の実績であり、実装後の検証に代用しない。
-- [ ] 新規テストモジュールに局ケース用の非公開helperを置く。`_replay_case(moves: tuple[str, ...], *, max_plies: int, reason: GameEndReason, position: Position | None = None, winner_side: Side | None = None, candidate_side: Side = Side.GOTE) -> tuple[dict[str, object], ScheduledGame, ComparisonConfig]`。既存合法操作で棋譜を作り、計時は第k手に `11*k` ns、条件SHAは `"a" * 64`、初期手数1、baseline=material/candidate=material-rook-mobility。生の局payloadを組み立て、比較writerや採点関数から期待値を作らない。
-- [ ] 下記の維持契約テストを旧コードで実行する。初回Greenはその事実を記録する。失敗したらfixtureの合法性と独立期待値を先に調べ、最適化コードをまだ書かない。
+- [x] 元分析session74980・PID84790の稼働と出力未作成を確認した。本人希望の別worktreeを作成し、元ディレクトリのPythonソースを変更せず先行実装した。worktreeの変更前Pythonソースは旧版 `0d8be5b` と一致し、`git archive 0d8be5b kaname_shogi` を性能比較用に展開した。
+- [x] 元分析は本人端末から完了。CLIは4,080局・2,040組、95%得点区間 `[0.490, 0.606]`、判断不能を表示し、JSONを保存した。analysis JSON記録と条件・全4,080局・summaryのSHAを再照合し4,082件すべて一致。zshの `status` 代入エラーはCLI終了後の表示部分。
+- [x] `.venv/bin/python --version`、`.venv/bin/ruff --version` と固定版、`core.hooksPath=.githooks` を確認した。worktree `.venv` はPython 3.15.1・固定版Ruff 0.16.10、shared hook `.githooks`。調査時の全851テスト成功とは別に、実装後テストを実行した。
+- [x] 新規テストモジュールに計画どおりの局helperを置いた。合法操作で棋譜を作り、時刻・条件SHA・手番方式を構成し、独立期待値をreaderのwriter/採点出力から作らない。
+- [x] 維持契約テストを旧コードで実行した。違法中間手/駒打ち、上限、先後反転した末尾終局、中断・error境界は初回Greenと記録した。
 
 | テスト名 | fixtureと主要assertion |
 | --- | --- |
@@ -63,29 +64,30 @@
 
 末尾fixtureは二つ用いる。詰みは既存readerテストの配置（後手玉5一、先手玉9九・飛5三・金4三、後手歩4一・6一・4二・6二）から `5c5b`、期待はCHECKMATE・先手勝ち。非王手の合法手なしは先手玉1一・歩2一/1二/2二、後手玉9八、後手番から `9h9i`、期待はNO_LEGAL_MOVE・後手勝ち。反転ケースは全駒の先後を交換し、筋/段を各 `10-元の値` に写す。期待勝者も反転し、候補方式への対応もassertする。
 
-- [ ] `test_uses_validated_next_move_and_enumerates_only_final_position` を作成する。合法3手 `7g7f 3c3d 2g2f`・上限3を `_load_game` へ通し、reader内の `legal_moves` を実関数でwrapして呼出しと局面を記録する。主要期待値は `self.assertEqual(spy.call_count, 1)`、`self.assertEqual(result.reason, GameEndReason.PLY_LIMIT)`、`self.assertEqual(result.plies, 3)`、保存計時 `(11,22,33)`。調べた局面の手番はGOTE、先手歩は7六・2六、後手歩は3四にあることを直接assertする。
-- [ ] `.venv/bin/python -m unittest discover -s tests -p 'test_comparison_result_replay.py' -v` を実行し、旧コードの直接列挙3回と期待1回のassertion差でRedになることを確認する。importやfixture作成失敗をRedと呼ばない。
-- [ ] 最小実装する。`moves = record.moves` を一度取得し、その履歴長を使用する。毎手の計時確認・合法再生・反復判定を維持し、反復終局がなければ中間局面は根拠付きのTrue、末尾は現行全列挙の真偽を `board_terminal` へ渡す。未完了・0手・最終局面照合の分岐を維持する。関連docstringを設計に合わせる。
-- [ ] 同じテスト群でGreenを確認する。中間列挙が減り、維持契約テストも成功したことを別々に記録する。
-- [ ] `test_repeated_terminal_skips_direct_legal_enumeration` を追加する。上記の4周16手で末尾が反復終局なら、readerの直接列挙呼出し0回、理由REPETITION・勝者Noneをassertする。最適化後に追加する場合は初回Greenと記録する。
-- [ ] `test_keeps_multimove_incomplete_games_pending_on_resume` を既存再開テストへ追加する。4局予定・共通上限4に、`7g7f 3c3d 2g2f 8c8d` の完成4手上限局、最初の3手のINTERRUPTED局、同じ3手のERROR局、欠落局を各一つ保存する。期待する完成ID集合は1件、再投入ID列は後者3件。保存済み完成局のバイト列保持もassertする。旧挙動維持なら初回Greenと記録する。
-- [ ] 関連テストを実行する：`.venv/bin/python -m unittest discover -s tests -p 'test_comparison_result*.py' -v`、同様に `test_comparison_resume.py`、`test_analyze_comparison.py`、`test_compare_games.py`、`test_comparison_pipeline.py`。
-- [ ] Refactor要否を確認する。今回の二分岐のために汎用キャッシュ・新しい公開型・全reader分割を追加しない。必要な最小整理と理由を記録する。
+- [x] `test_uses_validated_next_move_and_enumerates_only_final_position` を作成した。旧コードはreaderの直接 `legal_moves` 3回で期待1回との差により意図したassertion Redを確認した。
+- [x] 最小実装した。`moves = record.moves` と履歴長を一度取得し、毎手の計時・合法再生・反復・上限・後続手拒否を維持。反復終局なしの中間は根拠付きTrue、末尾のみ全列挙、未完了・0手・末尾照合も維持した。
+- [x] 同じテスト群でGreenを確認した。3手例は直接列挙3回から1回へ、反復末尾は0回。維持契約テストも成功した。
+- [x] `test_repeated_terminal_skips_direct_legal_enumeration` を追加し、16手反復終局のreader直接列挙0回、REPETITION・勝者なしを検査した。最適化後の初回Greenとして記録した。
+- [x] `test_keeps_multimove_incomplete_games_pending_on_resume` を追加した。4手完成局を保持し、3手の中断・errorと欠落局の3局だけを再投入し、完成局JSONのバイト列保持を検査した。
+- [x] 比較reader、再開、分析CLI、compare CLI、pipelineの関連88テストを実行し成功した。
+- [x] Refactor要否を確認した。二分岐に対する汎用キャッシュ・公開型・reader分割は不要。変更は `moves` 参照の一本化と中間/末尾分岐、根拠のdocstringに限定した。
 
-## タスク2：検出力・性能・全成果物の一致・独立レビュー
+## タスク 2：検出力・性能・全成果物の一致・独立レビュー
 
 **消費:** タスク1の変更と同一の既存reader/analysis CLI。新しい製品インターフェースは作らない。
 
-- [ ] 隔離コピーで代表変異を一つずつ入れる：(1)末尾も合法手あり固定、(2)中間の手数上限確認を省略、(3)反復終局確認を省略、(4)旧全列挙を毎手実行へ戻す。順に末尾fixture・上限後継続・反復後継続・直接列挙1回のテストが意図したassertionに失敗することを確認し、各復元後は成功を確認する。読込失敗は検出成功に含めない。
-- [ ] import変更時は `.venv/bin/ruff check --select I --fix .`、続けて `.venv/bin/ruff format .`、`.venv/bin/ruff check .` と差分確認を行う。
-- [ ] `.venv/bin/python scripts/run_tests_parallel.py` で全テストを実行する。テストを除外・skipせず、失敗や共有状態の疑いがある場合だけ標準逐次を併用する。
-- [ ] 一時計測スクリプトを `/private/tmp/c1_analysis_witness_benchmark.py` に置く。旧ソースroot・新ソースroot・入力ディレクトリを引数で受け、各版を別Python subprocessの作業ディレクトリからimportする。入力JSONと条件を読み、計測区間は `_load_game` 呼出しだけとする。テスト用製品コードは追加しない。
-- [ ] 固定6局（000129/001007/001501/002125/002745/003923）を4ラウンド測る。各ラウンドで両版を一回ずつ実行し、版の順序を旧→新、新→旧、旧→新、新→旧と交互にする。同じPython、同じ入力、同じ呼出し条件を使い、各局のwall/CPU時間・4回の中央値・6局合計を記録する。秒数を単体テストの合否条件にせず、短縮の再現性を確認する。
-- [ ] 各代表局について、予定ID・開始SFEN・棋譜payload・理由・勝者先後/方式・手数・全計時・未確定計算/故障値が旧版と完全一致すること、入力SHAが計測前後で同じことを確認する。短縮しても不一致があれば受け入れない。
-- [ ] 元分析の旧JSONが正常保存されていることを確認し、新版で同じ全4,080局を別の新規出力 `data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25-analysis-legal-witness.json` へ分析する。既存出力は上書きしない。
-- [ ] 旧/新の分析JSONから `analyzer` メタデータだけを除いた辞書が完全一致することをassertする。入力SHA一覧・件数・得点区間・判定・記述集計・比較時の計時がすべて比較対象になる。新版source/Git識別は変更されることを記録し、分析を独立した追加標本に数えない。
-- [ ] `requesting-code-review` に従い独立レビューを行う。契約・代表ケース・検出する誤り・既存テストの補完・未検証を渡す。Critical/Importantを解消し、変更に見合う再検証・再レビュー後に記録を確定する。
-- [ ] Refactorの判断、Red/初回Green/Green、変異結果、性能の生値、全成果物の一致、レビュー各重大度と対応を設計・本計画・調査/C1学習記録へ残す。知識・resume・索引の現在地を更新し、リンク・差分を検証する。
+- [x] 隔離コピーで4代表変異を一つずつ実施した。末尾固定は終局理由/勝者assertion、上限確認省略は `ValueError not raised`、反復終局変換省略は反復結果assertion、旧全列挙復帰は `3 != 1` の呼出し回数assertionで検出。importやfixture読込失敗ではない。
+- [x] import変更後 `.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、format check（106ファイル）と差分確認を実行し成功した。
+- [x] `.venv/bin/python scripts/run_tests_parallel.py` で全858件・57モジュールを22.525秒で実行し成功した。除外・skipなし。
+- [x] 一時計測スクリプト `/private/tmp/c1_analysis_witness_benchmark.py` を作成した。旧/新rootは別Python subprocess、読込/JSON decode外、`_load_game` 呼出し内だけを計時した。製品CLI/APIは追加していない。
+- [x] 固定6局を指定順で4ラウンド計測し、各局のwall/CPUの全4測定と中央値・6局中央値合計を記録した。単体テストに時間閾値は設けていない。
+- [x] 6局ごとに予定ID・開始SFEN・棋譜・終局・勝者/方式・手数・全計時・未確定計算/故障値の検証済み結果signatureが旧新版で一致し、conditionsと代表局のSHAが計測前後で同じことを確認した。
+- [x] 本人が新版readerで同じ全4,080局を未使用の別出力へ端末実行した。出力は `data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25-analysis-legal-witness.json`、表示終了コード0、4080局・2040組。
+- [x] 旧/新版分析JSONを比較し、`analyzer` だけを除いた全項目が一致した。条件・4,080局・summaryのSHA-256も計4,082件を実ファイルから再計算して全件一致。両JSONの得点区間・判定・集計・比較経過時間記録が同一で、source SHAだけが異なるanalyzerメタデータを独立標本として数えていない。
+- [x] `requesting-code-review` に従って独立レビューを実施。初回Critical 0 / Important 0 / Minor 1のdocstring不整合を修正し、再確認後Critical 0 / Important 0 / Minor 0。検証範囲と未検証事項も提示した。
+- [x] Refactorの判断、Red/初回Green/Green、変異結果、性能の生値、独立レビューと対応を設計・本計画・調査/C1学習記録へ記録した。知識・resume・索引の現在地も更新し、7文書のローカルMarkdownリンク709件と差分を検証した。
+- [x] 全4,080局の旧新版分析JSONの一致結果を記録し、関連文書・索引・再開案内を更新した。
+- [x] 最終の文書差分検査・Markdownローカルリンク770件（欠落0）を確認した。
 - [ ] 意図したコード・テスト・文書だけを通常コミットする。hookを回避しない。main統合は実装・検証・レビュー・記録を示し本人承認後に行い、統合先で検証する。
 
 ## セルフレビューと承認段階
@@ -93,3 +95,13 @@
 設計の中間/末尾/反復/上限/未完了局はタスク1、統計と入力整合・性能・全成果物はタスク2に対応する。存在根拠の効率性を直接呼出し回数で検査し、速度と分析値の一致は別に測る。実装者が合理的に決めるのはfixture内の補助関数配置と、一時計測ログの形式だけで、受理条件・終局優先順位・対象範囲を変更しない。
 
 計画提示時点では文書確認だけを行い、上のコマンドを実行済みとは扱わなかった。その後、本人が計画全体を明示承認し、worktreeでの実装を希望した。作業場所変更は本人の追加指示として記録し、振る舞い・検証範囲は承認済み計画のまま実行する。
+
+**2026-10-25 17:09 JSTの本筋状態確認：** 元分析PID84790とsession74980が確認できず、旧分析JSONも出力されていなかった。プロセス終了の原因・終了コードは不明であった。原本4,080局は保持され、summaryは完了・投入中0。
+
+**2026-10-25 17:12 JSTの再実行：** 本人端末に終了ログがないため、旧ソースHEAD `14e7210` の元ディレクトリからCLIを再実行した。実行session29130は10秒後のpollで継続中、出力JSON未作成。原本4,080局は保持され、summaryは完了・投入中0。旧分析の成功保存後に全体旧新版照合を行う。
+
+**2026-10-25 17:16 JSTの中止：** 本人は長時間実行を中止し、人間自身で端末から実行したいと指示した。対象PID3283へSIGINTを送り、session29130の出力「分析を中断しました。」と終了コード130を確認した。PID停止、旧分析JSON未作成も確認済み。次は本人の端末実行を待つ。
+
+**本人端末での旧分析完了：** 4,080局・2,040組、区間 `[0.490274264295, 0.605804167078]`、判定`inconclusive`。analysis JSONに記録された条件・4,080局・summaryの全4,082 SHA-256が実ファイルと一致した。本人が人間端末実行を基本と希望したため、新版readerの分析CLIは次のコマンドで本人が実行する。
+
+本人は新版readerの分析CLIを2026-10-25 22:00頃に端末から開始し、後日完了を報告した。出力JSON・入力SHA・旧新版の全項目一致を検証済み。CLI表示は4080局・2040組、終了コード0だった。

@@ -102,4 +102,6 @@ python3 -m kaname_shogi.analyze_comparison \
 
 この区間は組間の独立抽出を仮定し、今回の6局面を均等に扱う一つの総合比較に限る。局面別・先後別は記述集計で、個別の95%保証を持たない。参照値2,035組は、未決着なし・真の得点率55%・検出力80%という仮定下でHoeffding不等式から得る十分条件であり、必要最小値でも棋力向上の保証でもない。未決着のある実験はその組数でも目標検出力を保証しない。時間上限・対局完了時間・局面群の実戦代表性・真の棋力差は別途未検証である。
 
+分析・再開readerは、保存棋譜の `GameRecord.from_payload` で全手を既存の合法操作により検証・再生する。続く `_validate_and_replay` は計時・手番・方式・棋譜一致、各手の合法適用・反復・手数上限、末尾SFEN・終局・勝者照合を保持する。次の記録手がある中間局面では、その合法再生済みの一手を合法手存在の根拠にし、存在確認だけの全合法手列挙を省く。末尾は実際に列挙し、反復終局は従来どおり盤面終局判定を行わない。中断・故障局を読む局単位再開も同じreaderを使う。これは保存結果を読む処理の短縮で、対局実行側の探索・時計境界や通常CLI/USIの選択肢を変えない。実装の記録は[C1分析短時間化の学習記録](../learning/c1-analysis-performance-investigation.md)、承認仕様は[設計](../plans/2026-10-25-c1-analysis-legal-witness-design.md)を参照する。全4,080局の旧新版分析JSONは `analyzer` を除く全項目が一致した。統計判定は判断不能で、B1改善の根拠ではない。
+
 終了コードは準備/分析CLIが正常0、引数・入力不正2、実行/保存故障1、Ctrl-C 130。比較CLIは既存の対局保存契約を使い、対局・保存故障1、入力不正2、Ctrl-C 130。設計と実装経緯は[C1承認済み設計](../plans/2026-10-24-c1-rook-mobility-evaluation-design.md)、[比較実装計画](../plans/2026-10-24-c1-rook-mobility-evaluation-implementation-plan.md)、[局単位再開計画](../plans/2026-10-25-c1-comparison-resume-plan.md)、[学習記録](../learning/c1-rook-mobility-evaluation.md)にある。
