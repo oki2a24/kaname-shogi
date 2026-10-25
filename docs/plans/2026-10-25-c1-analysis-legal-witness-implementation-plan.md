@@ -1,6 +1,6 @@
 # C1分析CLIの合法手存在確認を短縮する実装計画
 
-> **AIエージェントへの指示:** 承認後、このセッションの担当者が `superpowerssuperpowers:executing-plans` と `superpowerssuperpowers:test-driven-development` を使用して順に実装する。各ステップのチェックボックスで実績を追跡する。現時点では実装計画の承認待ちであり、TDD・製品コード・テスト変更は始めない。
+> **AIエージェントへの指示:** 承認後、このセッションの担当者が `superpowerssuperpowers:executing-plans` と `superpowerssuperpowers:test-driven-development` を使用して順に実装する。各ステップのチェックボックスで実績を追跡する。2026-10-25、本人が実装計画全体を承認し、git worktreeでの実装を希望した。元の分析器が読む作業ディレクトリを保持し、別worktreeでTDDを開始する。
 
 **目標:** 保存棋譜の検証契約を維持し、中間局面の合法手全列挙を検証済みの次の記録手による存在確認へ置き換える。
 
@@ -18,7 +18,7 @@
 - 日本語docstring、英語テスト名と日本語の振る舞い・検出対象の説明を付ける。
 - 読込エラーだけを振る舞いのRedとしない。既存挙動で成功する契約検査は初回Greenと記録する。
 - 稼働中の元分析器は最終出力時にもディスク上のソース指紋を読む。その分析が完了するまで現在の作業ディレクトリのPythonソースを変更しない。
-- 実装は元分析の完了を確認した後、現在の `/Users/oki2a24/kaname-shogi`、ブランチ `codex/c1-analysis-performance-investigation` で担当者が順に行う。先行実装のためのworktree追加はこの計画に含めない。
+- 本人の追加希望に従い、`codex/c1-analysis-performance-investigation` の承認記録コミットを起点に別worktree・作業ブランチを作り、担当者が順に実装する。元の `/Users/oki2a24/kaname-shogi` のPythonソースは変更しない。実際の絶対パスとコマンドを作成後に案内する。
 - 確認比較の原本・seedを変更せず、新たな対局は行わない。大きな未追跡成果物と仮想環境バックアップを誤ってステージしない。
 
 ## レビューフォーカス
@@ -48,7 +48,7 @@
 
 **変更するインターフェース:** `_validate_and_replay(timings_value, schedule, config, comparison_position, record, *, allow_nonterminal=False) -> tuple[tuple[GameEndReason, Side | None] | None, tuple[MoveTiming, ...]]` のシグネチャを維持。新しい公開APIは作らない。
 
-- [ ] 元分析セッション・プロセス・出力JSONを確認する。完了したらその終了状態と旧分析JSONを本筋として先に報告・保存確認する。元分析がエラーで終わった場合は本筋の原因確認を先に行い、原本を書き換えたり検証を迂回して最適化を進めたりしない。実装開始前のPythonソースを旧版 `0d8be5b` と照合し、性能比較用に `git archive 0d8be5b kaname_shogi` から一時ディレクトリへ旧ソースだけを展開する。
+- [ ] 元分析セッション・プロセス・出力JSONを確認する。別worktreeを作り、元ソースを変えず先行実装する。元分析が完了したらその終了状態と旧分析JSONを本筋として先に報告・保存確認し、エラーなら原因確認を優先する。原本を書き換えたり検証を迂回したりしない。worktree内の実装前Pythonソースを旧版 `0d8be5b` と照合し、性能比較用に `git archive 0d8be5b kaname_shogi` から一時ディレクトリへ旧ソースだけを展開する。
 - [ ] `.venv/bin/python --version`、`.venv/bin/ruff --version` と固定版、`core.hooksPath=.githooks` を確認する。修復済み環境の既存851テスト成功は調査時の実績であり、実装後の検証に代用しない。
 - [ ] 新規テストモジュールに局ケース用の非公開helperを置く。`_replay_case(moves: tuple[str, ...], *, max_plies: int, reason: GameEndReason, position: Position | None = None, winner_side: Side | None = None, candidate_side: Side = Side.GOTE) -> tuple[dict[str, object], ScheduledGame, ComparisonConfig]`。既存合法操作で棋譜を作り、計時は第k手に `11*k` ns、条件SHAは `"a" * 64`、初期手数1、baseline=material/candidate=material-rook-mobility。生の局payloadを組み立て、比較writerや採点関数から期待値を作らない。
 - [ ] 下記の維持契約テストを旧コードで実行する。初回Greenはその事実を記録する。失敗したらfixtureの合法性と独立期待値を先に調べ、最適化コードをまだ書かない。
@@ -92,4 +92,4 @@
 
 設計の中間/末尾/反復/上限/未完了局はタスク1、統計と入力整合・性能・全成果物はタスク2に対応する。存在根拠の効率性を直接呼出し回数で検査し、速度と分析値の一致は別に測る。実装者が合理的に決めるのはfixture内の補助関数配置と、一時計測ログの形式だけで、受理条件・終局優先順位・対象範囲を変更しない。
 
-現時点では計画作成・文書確認だけを行った。上のコマンドは承認後の実行手順であり、未作成テストや一時計測スクリプトを実行済みと扱わない。実装計画全体の本人承認を待つ。
+計画提示時点では文書確認だけを行い、上のコマンドを実行済みとは扱わなかった。その後、本人が計画全体を明示承認し、worktreeでの実装を希望した。作業場所変更は本人の追加指示として記録し、振る舞い・検証範囲は承認済み計画のまま実行する。

@@ -6,7 +6,7 @@
 
 現行分析CLIは `python3 -m kaname_shogi.analyze_comparison` で実行中（開始時の実行セッション74980、PID84790）。出力予定は `data/comparison/runs/c1-rook-mobility-confirmation-2026-10-25-analysis.json`。次に進む際は実行セッション・プロセス・出力JSONの現物を再確認し、二重起動せず完了結果を読む。`.venv/bin/python` は削除済みHomebrew Python 3.15.0_1を参照して起動できず、利用可能なPython 3.15.1の `python3` で分析を開始した。READMEの手順で旧環境を `.venv.backup-2026-10-25-broken-python-3150` へ退避し、新しい `.venv` をPython 3.15.1・固定版Ruff 0.16.10で再作成した。フック設定は `.githooks` を維持している。
 
-本人の依頼で、分析完了待ちを本筋に保持しながら補助として[分析CLIの短時間化調査](learning/c1-analysis-performance-investigation.md)を実施した。作業ブランチは `codex/c1-analysis-performance-investigation`。「合法な次の記録手を根拠に中間局面の全列挙を減らす案」の[設計](plans/2026-10-25-c1-analysis-legal-witness-design.md)は、正確さについての説明を経て本人承認済み。[実装計画](plans/2026-10-25-c1-analysis-legal-witness-implementation-plan.md)を作成し、全体の明示承認を待つ。製品コード・テスト・TDDは未着手で、実装は元分析の完了確認後に同じディレクトリで進める計画。分析結果が出る前にB1改善やC1完了を認定しない。
+本人の依頼で、分析完了待ちを本筋に保持しながら補助として[分析CLIの短時間化調査](learning/c1-analysis-performance-investigation.md)を実施した。作業ブランチは `codex/c1-analysis-performance-investigation`。「合法な次の記録手を根拠に中間局面の全列挙を減らす案」の[設計](plans/2026-10-25-c1-analysis-legal-witness-design.md)は、正確さについての説明を経て本人承認済み。[実装計画](plans/2026-10-25-c1-analysis-legal-witness-implementation-plan.md)は本人が全体承認し、git worktreeでの実装を希望した。別worktreeを作りTDDを開始する段階。元ディレクトリのPythonソースは保持し、旧新版の全成果物比較は元分析完了後に行う。分析結果が出る前にB1改善やC1完了を認定しない。
 
 実行前に示した約11.9時間という値は、レビュー修正前sourceで測った6組のpilotを単純比例した4workerの粗い目安であり、完了時間・未決着率・検出力を保証しない。比較CLIに総時間による自動停止はない。分析結果の確認とB1の採否判断は未完了であり、結果を記録するまでは次の評価項目へ進まない。通常CLIのSFEN入出力と飛車可動性バージョン2は今回に加えていない。
 
