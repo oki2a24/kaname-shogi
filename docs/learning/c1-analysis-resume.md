@@ -64,3 +64,11 @@ main起点候補の最終コード変更後、関連 `.venv/bin/python -m unitte
 本人の「分析CLIの局単位再開機能もマージしたい」という指示を受け、統合候補 `codex/c1-analysis-resume-integration` をローカルmainへfast-forwardした。mainは `ba03ee9` から `441345e` へ進み、再開機能・そのレビュー修正・利用資料を取り込んだ。統合に使ったworktreeは `/Users/oki2a24/.codex/worktrees/c1-analysis-speedup/kaname-shogi`。元の `/Users/oki2a24/kaname-shogi` はbranch `codex/c1-analysis-performance-investigation` の未コミット記録・実験データを保持し、変更していない。pushはしていない。
 
 取り込み先mainで `.venv/bin/python -m unittest -q tests.test_analysis_resume tests.test_analyze_comparison tests.test_comparison_result_io` が65件、`python3 scripts/run_tests_parallel.py` が58モジュール898件・22.530秒で成功した。`.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`（108ファイル変更なし）、`.venv/bin/ruff check .`、`git diff --check` も成功。main統合後の状態更新後に9文書のローカルリンク808件を確認し、欠落0件。索引からの分析CLI再開仕様見出しリンクも存在する。文書のみの追記のため製品テストは再実行していない。実データ分析・比較は実行していない。C1の棋力改善判定が「判断不能」であることと、分析CLIの中断・再開機能がmainに統合されたことは別の結論である。
+
+## 最後の理解確認（2026-10-27）
+
+質問：分析CLI再開機能のmain統合によって、C1の棋力判定も変わったと言えるか。
+
+本人の回答：「言えない。」
+
+補足：その理解で正しい。分析CLI再開は検証済み棋譜の中断・再開を扱い、候補方式の指し手選択や対局成績を変える機能ではない。初回確認比較と独立追試の区間が50%を含むため、C1の判定は引き続き「判断不能」である。本人の追加質問への確認では、C1の比較接続コード `material-rook-mobility` は現在のmainに含まれている。比較方式の登録は[比較CLIの案内](../../README.md)と[比較・分析の知識メモ](../knowledge/search-comparison.md)にあり、C1実装コミット `42fc9e9` は現在のmainの祖先である。局単位再開の統合コミット `441345e` は別の補助機能で、統合後もC1の強さ判定は変わらない。
