@@ -467,9 +467,16 @@ def _has_legal_move(position: Position, *, check_uchi_fuzume: bool) -> bool:
     """指定方針で、手番側に合法手があるかを返す非公開操作。
 
     打ち歩詰めの確認中に、公開の `legal_moves` を再帰呼び出ししないための
-    内部境界である。通常の有無判定は `legal_moves` の空・非空へ委譲する。
+    内部境界である。通常の有無判定では最初の合法手が見つかった時点で探索を
+    終了し、合法手がないときだけ全候補を調べる。
     """
-    return bool(_legal_moves(position, check_uchi_fuzume=check_uchi_fuzume))
+    result = _legal_moves_controlled(
+        position,
+        check_uchi_fuzume=check_uchi_fuzume,
+        control=None,
+        _first_only=True,
+    )
+    return bool(result.moves)
 
 
 def legal_moves(position: Position) -> tuple[Move, ...]:

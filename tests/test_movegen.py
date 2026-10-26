@@ -3043,6 +3043,30 @@ class LegalMoveListTests(unittest.TestCase):
 
 
 class LegalMoveEnumerationTests(unittest.TestCase):
+    def test_uses_first_only_search_when_a_board_move_exists(self):
+        """盤上に合法手がある場合、手の有無だけを最初の一手で確定する。
+
+        全合法手を列挙してから真偽値へ変換する旧経路と、早期探索で元局面を
+        変更する誤りを検出する。
+        """
+        board = Board()
+        board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
+        board.set_piece(Square(5, 5), Piece(PieceType.PAWN, Side.SENTE))
+        position = Position(board, Side.SENTE)
+        before = _position_snapshot(position)
+        self.assertGreater(len(movegen.legal_moves(position)), 1)
+
+        with patch.object(
+            movegen,
+            "_legal_moves_controlled",
+            wraps=movegen._legal_moves_controlled,
+        ) as legal_search:
+            self.assertTrue(movegen._has_legal_move(position, check_uchi_fuzume=True))
+
+        self.assertIs(legal_search.call_args.kwargs.get("_first_only"), True)
+        self.assertEqual(_position_snapshot(position), before)
+
     def test_finds_legal_board_move_without_changing_position(self):
         """盤上の一手があれば合法手ありと判定し、局面を変更しない。
 
