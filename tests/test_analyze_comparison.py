@@ -277,6 +277,169 @@ class AnalyzeComparisonCliTests(unittest.TestCase):
             self.assertFalse(output.exists())
             self.assertTrue(checkpoint.is_dir())
 
+    def test_interrupted_final_save_can_resume_without_replay(self):
+        """最終JSON保存の割込み後、完了局を再生せず保存だけを再試行する。
+
+        最終保存割込みで有効なcheckpointを失う、再試行時に完了局を再生する、または保存前の
+        部分JSONを完成結果として残す誤りを検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            fresh_output = Path(directory) / "fresh.json"
+            checkpoint = output.with_name(output.name + ".checkpoint")
+            stderr = io.StringIO()
+
+            with (
+                patch.object(
+                    comparison_result_io,
+                    "write_new_json",
+                    side_effect=KeyboardInterrupt,
+                ),
+                redirect_stderr(stderr),
+            ):
+                interrupted_status = main(
+                    ["--input-dir", str(input_dir), "--output", str(output)]
+                )
+
+            self.assertEqual(interrupted_status, 130)
+            self.assertIn("完了済み2局", stderr.getvalue())
+            self.assertFalse(output.exists())
+            self.assertEqual(len(tuple((checkpoint / "games").glob("*.json"))), 2)
+
+            with patch.object(
+                comparison_result_io,
+                "_load_game",
+                wraps=comparison_result_io._load_game,
+            ) as load_game:
+                resumed_status = main(
+                    [
+                        "--input-dir",
+                        str(input_dir),
+                        "--output",
+                        str(output),
+                        "--resume",
+                    ]
+                )
+
+            self.assertEqual(resumed_status, 0)
+            load_game.assert_not_called()
+            self.assertFalse(checkpoint.exists())
+            self.assertEqual(
+                main(["--input-dir", str(input_dir), "--output", str(fresh_output)]),
+                0,
+            )
+            resumed = json.loads(output.read_bytes())
+            fresh = json.loads(fresh_output.read_bytes())
+            self.assertEqual(resumed["inputs"], fresh["inputs"])
+            resumed.pop("analyzer")
+            fresh.pop("analyzer")
+            self.assertEqual(resumed, fresh)
+
+    def test_source_change_during_analysis_prevents_final_output(self):
+        """開始時からfinalize時までのソース指紋が変われば保存を拒否する。"""
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            checkpoint = output.with_name(output.name + ".checkpoint")
+            stderr = io.StringIO()
+            fingerprints = []
+
+            def change_fingerprint(_path):
+                fingerprints.append(None)
+                return "a" * 64 if len(fingerprints) <= 3 else "b" * 64
+
+            with (
+                patch.object(
+                    comparison_result_io.comparison_io,
+                    "_source_sha256",
+                    side_effect=change_fingerprint,
+                ),
+                redirect_stderr(stderr),
+            ):
+                status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+            self.assertEqual(status, 2)
+            self.assertIn("ソース", stderr.getvalue())
+            self.assertFalse(output.exists())
+            self.assertEqual(len(fingerprints), 4)
+            self.assertEqual(len(tuple((checkpoint / "games").glob("*.json"))), 2)
+
+    def test_summary_mismatch_prevents_final_output_after_all_games(self):
+        """全局をcheckpointしても、元summaryとの再集計不一致なら完成扱いしない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            summary_path = input_dir / "summary.json"
+            summary = json.loads(summary_path.read_bytes())
+            summary["started_games"] = 3
+            summary_path.write_text(json.dumps(summary), encoding="utf-8")
+            output = Path(directory) / "analysis.json"
+            checkpoint = output.with_name(output.name + ".checkpoint")
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+            self.assertEqual(status, 2)
+            self.assertIn("summary", stderr.getvalue())
+            self.assertFalse(output.exists())
+            self.assertEqual(len(tuple((checkpoint / "games").glob("*.json"))), 2)
+
+    def test_checkpoint_cleanup_failure_keeps_successful_output(self):
+        """最終JSON後のcheckpoint削除失敗を成功結果の喪失にしない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            checkpoint = output.with_name(output.name + ".checkpoint")
+            stderr = io.StringIO()
+
+            with (
+                patch.object(
+                    comparison_result_io.AnalysisCheckpointStore,
+                    "remove",
+                    side_effect=OSError("injected cleanup failure"),
+                ),
+                redirect_stderr(stderr),
+            ):
+                status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+            self.assertEqual(status, 0)
+            self.assertTrue(output.is_file())
+            self.assertTrue(checkpoint.is_dir())
+            self.assertIn("checkpointを削除できません", stderr.getvalue())
+
+    def test_interruption_during_checkpoint_cleanup_keeps_successful_output(self):
+        """最終JSON保存後の削除中断を、再開不能な失敗として案内しない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            stderr = io.StringIO()
+
+            with (
+                patch.object(
+                    comparison_result_io.AnalysisCheckpointStore,
+                    "remove",
+                    side_effect=KeyboardInterrupt,
+                ),
+                redirect_stderr(stderr),
+            ):
+                status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+            self.assertEqual(status, 0)
+            self.assertTrue(output.is_file())
+            self.assertIn("分析結果は保存済み", stderr.getvalue())
+            self.assertNotIn("--resume", stderr.getvalue())
+
     def test_checkpoint_write_failure_returns_one_and_keeps_completed_games(self):
         """checkpoint保存故障は1を返し、完成済み局だけを残す。"""
         with tempfile.TemporaryDirectory() as directory:

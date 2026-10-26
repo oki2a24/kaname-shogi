@@ -1782,6 +1782,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             analysis = analyze_scores(loaded.pair_scores, purpose=loaded.purpose)
             payload = analysis_payload(loaded, analysis, source_root=source_root)
+            expected_source_sha256 = manifest["source_sha256"]
+            analyzer = payload["analyzer"]
+            if (
+                not isinstance(expected_source_sha256, str)
+                or not isinstance(analyzer, dict)
+                or analyzer.get("source_sha256") != expected_source_sha256
+                or comparison_io._source_sha256(source_root / "kaname_shogi")
+                != expected_source_sha256
+            ):
+                raise ValueError(
+                    "分析中にPythonソースが変わったため、最終結果を保存しません"
+                )
             try:
                 write_new_json(args.output, payload)
             except KeyboardInterrupt:
@@ -1792,6 +1804,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 return 1
             try:
                 checkpoint.remove()
+            except KeyboardInterrupt:
+                print(
+                    "分析結果は保存済みです。checkpoint削除が中断されたため、"
+                    f"不要なcheckpointを手動で確認してください: {checkpoint_path}",
+                    file=sys.stderr,
+                )
             except (OSError, ValueError) as error:
                 print(
                     f"分析結果は保存しましたがcheckpointを削除できません。"

@@ -6,6 +6,7 @@ import hashlib
 import json
 import tempfile
 import unittest
+from fractions import Fraction
 from pathlib import Path
 
 from kaname_shogi import (
@@ -617,16 +618,18 @@ class ComparisonResultReadTests(unittest.TestCase):
         record = GameRecord(position)
         record.apply_move(Square(5, 3), Square(5, 2))
 
-        for game_id, candidate_side, expected_score in (
-            ("game-000001", Side.SENTE, (1, 1)),
-            ("game-000002", Side.GOTE, (0, 0)),
+        schedules = []
+        summaries = []
+        for game_id, game_number, candidate_side, expected_score in (
+            ("game-000001", 1, Side.SENTE, (1, 1)),
+            ("game-000002", 2, Side.GOTE, (0, 0)),
         ):
             baseline_side = Side.GOTE if candidate_side is Side.SENTE else Side.SENTE
             schedule = ScheduledGame(
                 game_id=game_id,
                 position_id="mate-in-one",
                 pair_number=0,
-                game_number_in_pair=1,
+                game_number_in_pair=game_number,
                 baseline_side=baseline_side,
                 candidate_side=candidate_side,
                 baseline_seed=11,
@@ -664,16 +667,38 @@ class ComparisonResultReadTests(unittest.TestCase):
             result = comparison_result_io._load_game(
                 payload, schedule, config, conditions_sha256="a" * 64
             )
+            summary = comparison_result_io._summarize_analysis_game(result, config)
+            cached_summary = comparison_result_io._analysis_game_summary_from_payload(
+                comparison_result_io._analysis_game_summary_payload(summary),
+                schedule,
+                config,
+            )
             self.assertEqual(
                 game_score_bounds(
-                    result.reason, result.winner_policy, config.candidate
+                    cached_summary.reason,
+                    cached_summary.winner_policy,
+                    config.candidate,
                 ),
                 expected_score,
             )
             self.assertEqual(
-                result.winner_policy,
+                cached_summary.winner_side,
+                Side.SENTE,
+            )
+            self.assertIs(
+                cached_summary.winner_policy,
                 config.candidate if candidate_side is Side.SENTE else config.baseline,
             )
+            self.assertEqual(cached_summary.schedule, schedule)
+            schedules.append(schedule)
+            summaries.append(cached_summary)
+
+        pair_scores = comparison_result_io._score_pairs(
+            schedules, summaries, config.candidate
+        )
+        self.assertEqual(len(pair_scores), 1)
+        self.assertEqual(pair_scores[0].lower, Fraction(1, 2))
+        self.assertEqual(pair_scores[0].upper, Fraction(1, 2))
 
     def test_rejects_one_game_from_another_experiment(self):
         """一局だけ条件参照が違う完了結果を混ぜない。

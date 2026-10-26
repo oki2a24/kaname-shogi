@@ -120,6 +120,22 @@ python3 -m kaname_shogi.analyze_comparison \
 
 長時間比較は同じコマンドへ `--resume` を足すと、保存済みの出力先から再開できます。方式・局面内容・seed一覧・組数・手数上限・worker数・実行環境・Pythonソース指紋を照合し、不一致なら結果を変更せず停止します。合法性を再検証した完了局は保持し、未着手局と中断・故障局だけを同じseedで開始局面から実行します。Ctrl-Cは新しい局を止めて実行中の局を完了するまで待ちます。強制終了で結果が保存されなかった局は次回に最初からやり直します。再開したsummary v3は `elapsed_lower_bound` を記録します。強制終了前の最後の保存以降の時間は復元できないため、表示時間は下限です。`.comparison.lock` が残った場合は、PIDが動作中でないことを確認してから削除してください。
 
+分析CLIも検証済み局を出力JSONの隣にある `<出力名>.checkpoint/` へ保存します。Ctrl-Cで終了コード130になったら、同じ入力と出力を指定し、`--resume` を付けて再実行してください。保存済み局は元JSONのSHA-256を照合して棋譜の合法再生を省き、残りの局を検証します。入力・summary・Pythonソースfingerprintが違う場合、またはcheckpointが壊れている場合は、checkpointを残して終了コード2で停止します。再開するか、進捗を捨てて初回からやり直すかを確認してから、不要と判断したcheckpointだけを手動で削除してください。
+
+```sh
+python3 -m kaname_shogi.analyze_comparison \
+  --input-dir results/c1-pilot \
+  --output results/c1-pilot-analysis.json
+
+# Ctrl-C後は同じパスへ --resume を追加する
+python3 -m kaname_shogi.analyze_comparison \
+  --input-dir results/c1-pilot \
+  --output results/c1-pilot-analysis.json \
+  --resume
+```
+
+分析結果の新規保存が成功するとcheckpointを削除します。保存中に中断した場合は完成JSONを作らず、保存済み局から最終保存を再試行します。最終JSONが既に存在する場合は上書きしないため、削除に失敗したcheckpointが残っていても同じ出力先へ再実行しないでください。最終JSON保存後のcleanup中にCtrl-Cが入った場合は保存済みとして終了コード0を返し、残ったcheckpointの確認を案内します。強制終了後に `<出力名>.lock` が残った場合は、ファイル内のPIDが動作中でないことを確認してから手動で解除します。長時間の比較・分析CLIは本人が端末から実行します。
+
 分析CLIが受け付けるのは `--seed-list` で乱数種一覧を保存した実験です。従来の `--seed` による逐次・並列実行は対局できますが、現在の分析CLIには接続していません。
 
 結果のJSON契約、終了コード、統計上の仮定と未検証事項は[比較と探索の知識メモ](docs/knowledge/search-comparison.md#対局方式の比較とc1分析)を参照してください。

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+import errno
 import hashlib
 import json
 import os
@@ -106,8 +108,9 @@ def analysis_run_lock(output: Path) -> Iterator[None]:
             f"分析ロックを作成できません: {lock_path}: {error}"
         ) from error
 
-    created_stat = os.fstat(descriptor)
+    created_stat: os.stat_result | None = None
     try:
+        created_stat = os.fstat(descriptor)
         with os.fdopen(descriptor, "w", encoding="ascii") as lock_file:
             if lock_file.write(token) != len(token):
                 raise OSError("分析ロックを最後まで書き込めませんでした")
@@ -115,10 +118,12 @@ def analysis_run_lock(output: Path) -> Iterator[None]:
             os.fsync(lock_file.fileno())
     except OSError as error:
         try:
-            _remove_owned_lock(lock_path, token, created_stat, require_token=False)
+            _cleanup_failed_lock_initialization(
+                lock_path, descriptor, token, created_stat
+            )
         except OSError as cleanup_error:
             raise AnalysisCheckpointWriteError(
-                f"分析ロックを書き込めません ({error}); 部分fileを除去できません "
+                f"分析ロックを書き込めません ({error}); 後始末に失敗しました "
                 f"({cleanup_error}): {lock_path}"
             ) from error
         raise AnalysisCheckpointWriteError(
@@ -126,9 +131,15 @@ def analysis_run_lock(output: Path) -> Iterator[None]:
         ) from error
     except BaseException:
         try:
-            _remove_owned_lock(lock_path, token, created_stat, require_token=False)
-        except OSError:
-            pass
+            _cleanup_failed_lock_initialization(
+                lock_path, descriptor, token, created_stat
+            )
+        except OSError as cleanup_error:
+            print(
+                f"分析ロック初期化中の後始末に失敗しました。lockとPIDを確認してください: "
+                f"{lock_path}: {cleanup_error}",
+                file=sys.stderr,
+            )
         raise
 
     try:
@@ -166,6 +177,52 @@ def _remove_owned_lock(
         pass
 
 
+def _close_descriptor(descriptor: int) -> None:
+    """fdopen前後を問わず、lock descriptorが開いていれば閉じる。"""
+    try:
+        os.close(descriptor)
+    except OSError as error:
+        if error.errno != errno.EBADF:
+            raise
+
+
+def _cleanup_failed_lock_initialization(
+    lock_path: Path,
+    descriptor: int,
+    token: str,
+    created_stat: os.stat_result | None,
+) -> None:
+    """FDと自分が作ったlockの後始末を両方試し、失敗を呼出側へ伝える。"""
+    errors = []
+    try:
+        _close_descriptor(descriptor)
+    except OSError as error:
+        errors.append(error)
+    try:
+        if created_stat is None:
+            _remove_uninitialized_lock(lock_path)
+        else:
+            _remove_owned_lock(lock_path, token, created_stat, require_token=False)
+    except OSError as error:
+        errors.append(error)
+    if errors:
+        raise OSError("; ".join(str(error) for error in errors)) from errors[0]
+
+
+def _remove_uninitialized_lock(lock_path: Path) -> None:
+    """fstat前の失敗時に空のlockを除去する。
+
+    fstat前はfdのinodeを取得できないため、exclusive open後に別プロセスが同じpathへ
+    空の通常fileを差し替えないことを前提にする。lock初期化中の外部path操作は非対応。
+    """
+    try:
+        current_stat = lock_path.lstat()
+        if stat.S_ISREG(current_stat.st_mode) and current_stat.st_size == 0:
+            lock_path.unlink()
+    except FileNotFoundError:
+        pass
+
+
 class AnalysisCheckpointStore:
     """一つの分析実行に属するmanifestと局単位checkpointを管理する。
 
@@ -181,12 +238,13 @@ class AnalysisCheckpointStore:
 
     def __init__(self, root: Path) -> None:
         self.root = Path(root)
+        self._manifest_cache: Mapping[str, object] | None = None
 
     def read_manifest(self) -> Mapping[str, object]:
         """保存済みmanifestを形式・checksum検証後に返す。
 
         戻り値:
-            作成時に保存した入力条件・予定・分析器指紋のmapping。
+            作成時に保存した入力条件・予定・分析器指紋の独立mapping。
 
         例外:
             ValueError: root、manifest形式、またはchecksumが不正な場合。
@@ -198,7 +256,9 @@ class AnalysisCheckpointStore:
         前提条件:
             呼出側が、返されたmanifestと現在の分析入力を照合する。
         """
-        return self._read_manifest()
+        manifest = self._read_manifest()
+        self._manifest_cache = copy.deepcopy(manifest)
+        return copy.deepcopy(manifest)
 
     @classmethod
     def create(
@@ -226,7 +286,7 @@ class AnalysisCheckpointStore:
         destination = Path(root)
         if not isinstance(manifest, Mapping):
             raise ValueError("分析checkpoint manifestはMappingで指定してください")
-        manifest_value = dict(manifest)
+        manifest_value = copy.deepcopy(dict(manifest))
         envelope = {
             "format": _CHECKPOINT_FORMAT,
             "manifest": manifest_value,
@@ -251,7 +311,13 @@ class AnalysisCheckpointStore:
             raise AnalysisCheckpointWriteError(
                 f"分析checkpointを作成できません: {destination}: {error}"
             ) from error
-        return cls(destination)
+        except BaseException:
+            if created or (destination.is_dir() and not destination.is_symlink()):
+                shutil.rmtree(destination, ignore_errors=True)
+            raise
+        store = cls(destination)
+        store._manifest_cache = copy.deepcopy(manifest_value)
+        return store
 
     @classmethod
     def resume(
@@ -286,6 +352,7 @@ class AnalysisCheckpointStore:
             raise ValueError(
                 "分析checkpoint manifestが現在の入力・sourceと一致しません"
             )
+        store._validate_store()
         return store
 
     def save_game(self, game_id: str, payload: Mapping[str, object]) -> None:
@@ -348,7 +415,8 @@ class AnalysisCheckpointStore:
             OSError: checkpoint fileが読めない場合。
 
         副作用:
-            checkpointのmanifestと一局JSONを読み取る。ファイルを変更しない。
+            root・games構造と一局JSONを読み取る。manifestはcreate/resumeで検証・保持し、
+            各局の読込ごとには再解析しない。checkpointを変更しない。
 
         前提条件:
             入力比較側のJSON hashとの照合は呼出側で行う。
@@ -390,13 +458,13 @@ class AnalysisCheckpointStore:
             OSError: games directoryを列挙できない場合。
 
         副作用:
-            manifestとgames directoryのentryを読み取る。局JSON本文は読み込まない。
+            検証済みmanifest内のscheduleとgames directoryのentryを参照する。局JSON本文は読み込まない。
 
         前提条件:
             個々の局JSON形式・checksum・現在の入力hashは、各IDを`load_game`した後に照合する。
             scheduleにないIDは使わず、予定上の欠落局は未完了として許可する。
         """
-        manifest = self._read_manifest()
+        manifest = self._cached_manifest()
         schedule = manifest.get("schedule")
         if type(schedule) is not list:
             raise ValueError("分析checkpoint manifestに局scheduleがありません")
@@ -470,11 +538,20 @@ class AnalysisCheckpointStore:
         return value["manifest"]
 
     def _validate_store(self) -> None:
-        """manifestとgames directoryの固定構造を検証する。"""
-        self._read_manifest()
+        """初回のmanifest検証後はrootとgames directoryの固定構造を検証する。"""
+        if self._manifest_cache is None:
+            self._manifest_cache = self._read_manifest()
+        elif self.root.is_symlink() or not self.root.is_dir():
+            raise ValueError("分析checkpoint rootが通常directoryではありません")
         games = self.root / "games"
         if games.is_symlink() or not games.is_dir():
             raise ValueError("分析checkpoint games directoryが不正です")
+
+    def _cached_manifest(self) -> Mapping[str, object]:
+        """create/resume時に検証したmanifestを局ごとの操作で再利用する。"""
+        if self._manifest_cache is None:
+            self._manifest_cache = self._read_manifest()
+        return self._manifest_cache
 
     @staticmethod
     def _validate_checksum(value: Mapping[str, object]) -> None:

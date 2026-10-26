@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import io
 import json
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 from unittest.mock import patch
 
@@ -73,6 +75,21 @@ class AnalysisCheckpointStoreTests(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 store.read_manifest()
+
+    def test_manifest_cache_isolated_from_input_and_returned_mapping(self):
+        """入力mappingや公開読込値の変更が内部schedule cacheへ漏れない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "analysis.json.checkpoint"
+            manifest = self._manifest()
+            store = self._store_type().create(root, manifest)
+            store.save_game("game-000001", self._game_payload())
+
+            manifest["schedule"][0]["game_id"] = "game-000002"
+            self.assertEqual(store.completed_game_ids(), frozenset({"game-000001"}))
+
+            returned_manifest = store.read_manifest()
+            returned_manifest["schedule"][0]["game_id"] = "game-000003"
+            self.assertEqual(store.completed_game_ids(), frozenset({"game-000001"}))
 
     def test_resume_rejects_manifest_mismatch(self):
         """入力識別値が変わった状態を別の比較条件として再開しない。"""
@@ -238,6 +255,145 @@ class AnalysisCheckpointStoreTests(unittest.TestCase):
                     self.fail("lock初期書込失敗後に分析へ入ってはいけません")
 
             self.assertFalse(lock_path.exists())
+
+    def test_run_lock_closes_descriptor_and_removes_file_when_fstat_fails(self):
+        """lock作成直後のfstat失敗でもFDと部分lockを残さない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "analysis.json"
+            lock_path = output.with_name(output.name + ".lock")
+            run_lock = self._lock()
+            real_open = analysis_resume.os.open
+            opened_descriptors = []
+
+            def track_open(*args, **kwargs):
+                descriptor = real_open(*args, **kwargs)
+                opened_descriptors.append(descriptor)
+                return descriptor
+
+            with (
+                patch.object(analysis_resume.os, "open", side_effect=track_open),
+                patch.object(
+                    analysis_resume.os,
+                    "fstat",
+                    side_effect=OSError("injected fstat failure"),
+                ),
+                self.assertRaises(analysis_resume.AnalysisCheckpointWriteError),
+            ):
+                with run_lock(output):
+                    self.fail("fstat失敗後に分析へ入ってはいけません")
+
+            self.assertFalse(lock_path.exists())
+            self.assertEqual(len(opened_descriptors), 1)
+            with self.assertRaises(OSError):
+                analysis_resume.os.fstat(opened_descriptors[0])
+
+    def test_run_lock_cleans_up_when_fstat_is_interrupted(self):
+        """lock作成直後のKeyboardInterruptでも部分lockとFDを残さない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "analysis.json"
+            lock_path = output.with_name(output.name + ".lock")
+            run_lock = self._lock()
+            real_open = analysis_resume.os.open
+            opened_descriptors = []
+
+            def track_open(*args, **kwargs):
+                descriptor = real_open(*args, **kwargs)
+                opened_descriptors.append(descriptor)
+                return descriptor
+
+            with (
+                patch.object(analysis_resume.os, "open", side_effect=track_open),
+                patch.object(
+                    analysis_resume.os, "fstat", side_effect=KeyboardInterrupt
+                ),
+                self.assertRaises(KeyboardInterrupt),
+            ):
+                with run_lock(output):
+                    self.fail("fstat割込み後に分析へ入ってはいけません")
+
+            self.assertFalse(lock_path.exists())
+            self.assertEqual(len(opened_descriptors), 1)
+            with self.assertRaises(OSError):
+                analysis_resume.os.fstat(opened_descriptors[0])
+
+    def test_run_lock_reports_descriptor_cleanup_error_after_interruption(self):
+        """割込み時にFD後始末も失敗した可能性を利用者へ知らせる。"""
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "analysis.json"
+            lock_path = output.with_name(output.name + ".lock")
+            run_lock = self._lock()
+            real_close = analysis_resume.os.close
+            stderr = io.StringIO()
+
+            def close_then_fail(descriptor):
+                real_close(descriptor)
+                raise OSError("injected close failure")
+
+            with (
+                patch.object(
+                    analysis_resume.os, "fstat", side_effect=KeyboardInterrupt
+                ),
+                patch.object(analysis_resume.os, "close", side_effect=close_then_fail),
+                redirect_stderr(stderr),
+                self.assertRaises(KeyboardInterrupt),
+            ):
+                with run_lock(output):
+                    self.fail("fstat割込み後に分析へ入ってはいけません")
+
+            self.assertFalse(lock_path.exists())
+            self.assertIn("後始末", stderr.getvalue())
+
+    def test_per_game_operations_do_not_reparse_manifest(self):
+        """store生成後の局保存・読込でschedule全体を含むmanifestを再解析しない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "analysis.json.checkpoint"
+            store = self._store_type().create(root, self._manifest())
+            with patch.object(
+                store, "_read_manifest", wraps=store._read_manifest
+            ) as read_manifest:
+                store.save_game("game-000001", self._game_payload())
+                self.assertEqual(store.load_game("game-000001"), self._game_payload())
+                self.assertEqual(store.completed_game_ids(), frozenset({"game-000001"}))
+
+            self.assertEqual(read_manifest.call_count, 0)
+
+    def test_create_cleans_partial_checkpoint_when_manifest_save_is_interrupted(self):
+        """manifest作成中の割込み後に再開不能なroot directoryを残さない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "analysis.json.checkpoint"
+            store_type = self._store_type()
+
+            with (
+                patch.object(
+                    analysis_resume.comparison_io,
+                    "atomic_write_json",
+                    side_effect=KeyboardInterrupt,
+                ),
+                self.assertRaises(KeyboardInterrupt),
+            ):
+                store_type.create(root, self._manifest())
+
+            self.assertFalse(root.exists())
+
+    def test_create_cleans_root_when_interrupted_immediately_after_mkdir(self):
+        """root作成直後、作成済み記録前の割込みでも空rootを残さない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "analysis.json.checkpoint"
+            real_mkdir = Path.mkdir
+
+            def create_then_interrupt(path, *args, **kwargs):
+                result = real_mkdir(path, *args, **kwargs)
+                if path == root:
+                    raise KeyboardInterrupt
+                return result
+
+            with (
+                patch.object(Path, "mkdir", new=create_then_interrupt),
+                self.assertRaises(KeyboardInterrupt),
+            ):
+                self._store_type().create(root, self._manifest())
+
+            self.assertFalse(root.exists())
 
     def test_run_lock_preserves_stale_lock_for_human_inspection(self):
         """残存lockを自動削除せず、人のPID確認を要求する。"""
