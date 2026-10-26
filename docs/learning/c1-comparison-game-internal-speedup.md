@@ -99,4 +99,14 @@ profileは607秒（約10分7秒）かかり、当初の無計測比例目安約1
 
 上記「未検証」「結果確認は未実施」は、この記録を作成した時点の状態である。その後、本人が初回比較と独立追試の旧版分析CLI完了を確認した。追試の4,080局分析では旧版・短縮版JSONの `analyzer` 以外の全項目が一致し、各出力でconditions・4,080局・summaryのSHA-256計4,082件も実ファイルと一致した。初回比較でも旧版・短縮版の全項目と入力SHAが一致している。両比較の統計判定は判断不能で、本人はC1を一旦区切ると決めた。結果の詳細は[C1学習記録](c1-rook-mobility-evaluation.md)と[分析CLI短時間化記録](c1-analysis-performance-investigation.md)を参照する。
 
-この変更は、比較CLIの共有movegenを使う局内最適化であり、分析CLIの再開機能とは別である。両CLI高速化をmain起点へまとめた統合候補ブランチは作成済みだが、まだmainへ統合していない。候補全体の検証結果は[再開案内](../resume.md)に記録する。
+この変更は、比較CLIの共有movegenを使う局内最適化であり、分析CLIの再開機能とは別である。
+
+### ローカルmainへの統合・取り込み先検証（2026-10-27）
+
+本人の明示承認を受け、分析reader短縮化と本変更をmain起点の統合候補 `codex/c1-cli-speedups-integration` に集め、独立レビューと候補検証後にローカルmainへfast-forwardした。元mainは `0d8be5b`、コード統合コミットは `ca94847`。分析CLI局単位再開は取り込まず、既存の比較CLI局単位 `--resume` は維持した。pushはしていない。
+
+候補ブランチ全体で859件・57モジュールのテストが21.302秒で成功した。mainへ統合した後も `python3 scripts/run_tests_parallel.py` が859件・57モジュール、20.918秒で成功した。`.venv/bin/ruff check .`、`.venv/bin/ruff format --check .`（106ファイル）、`git diff --check`も成功した。候補全体の文書12件・788リンクと、統合後に変更した文書5件・754リンクのファイル・見出し参照は未解決0件。
+
+独立コードレビューはコード統合前の `35dab5d` を対象に実施し、Critical 0 / Important 0 / Minor 1だった。Minorはこの記録が後続の旧版分析CLI完了を反映していない点で、後日結果と参照先を追記して`ca94847`で解消した。コードの変更はレビュー後に加えていない。
+
+取り込み作業は `/Users/oki2a24/.codex/worktrees/c1-analysis-speedup/kaname-shogi` で行った。元の `/Users/oki2a24/kaname-shogi` はbranch `codex/c1-analysis-performance-investigation` の未コミット文書と比較データを保持し、変更・clean・resetしていない。詳細な現在状態は[再開案内](../resume.md)を参照する。

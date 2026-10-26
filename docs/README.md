@@ -37,7 +37,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 A1/B1の飛車可動性の実装・main統合・検証・理解確認は完了した。C1の初回確認比較と独立追試はともに95%区間が50%を含み、B1全体の改善・悪化は判断不能。本人はこの結論でC1を一旦区切ると決めた。結果は[再開案内](resume.md)と[C1学習記録](learning/c1-rook-mobility-evaluation.md)を参照する。
 
-現在、分析CLIの合法手存在確認の短縮と、比較CLIの合法手有無判定の早期終了を、main起点の統合候補ブランチ `codex/c1-cli-speedups-integration` で検証している。分析CLI再開機能は今回の候補に含めていない。候補ブランチはまだmainへ統合していない。各変更の設計・実測・レビュー記録は下の索引を参照する。
+分析CLIの合法手存在確認短縮と比較CLIの合法手判定早期終了は、本人承認を受けて2026-10-27にローカルmainへ統合した（`ca94847`、未push）。統合先で全体テスト859件・57モジュール、Ruff、差分検査が成功した。分析CLI再開機能は含めず、比較CLI既存の局単位 `--resume` は維持している。各変更の設計・実測・レビュー記録は下の索引を参照する。
 
 長時間の比較・分析CLIは本人が端末で実行することを基本とし、こちらから勝手に起動・監視しない。比較CLI局単位 `--resume` は本人承認後、2026-10-25にローカルmainへfast-forward統合済み（`9e959b2`、pushなし）。
 
@@ -65,8 +65,8 @@ A1/B1の飛車可動性の実装・main統合・検証・理解確認は完了�
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
 | C1：飛車可動性の接続・比較評価（確認比較・分析完了、統計判定は判断不能。局単位再開は補助としてmain統合済み） | [学習・個別合意・pilot実績](learning/c1-rook-mobility-evaluation.md) | [比較CLI・分析](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-24-c1-rook-mobility-evaluation-design.md) | [C1実装計画](plans/2026-10-24-c1-rook-mobility-evaluation-implementation-plan.md)、[承認済み並列化計画・実績](plans/2026-10-24-c1-comparison-parallel-workers-implementation-plan.md)、[再開機能計画](plans/2026-10-25-c1-comparison-resume-plan.md) | [開始時の背景](handover-c1-rook-mobility-evaluation.md) |
-| C1分析CLIの短時間化（補助・全4,080局照合済み。統合候補に含み、main起点で再検証中） | [読解・TDD・性能測定・レビュー記録](learning/c1-analysis-performance-investigation.md) | [現行の検証契約](knowledge/search-comparison.md) | [承認済み合法手存在確認設計](plans/2026-10-25-c1-analysis-legal-witness-design.md) | [承認済み計画・実績](plans/2026-10-25-c1-analysis-legal-witness-implementation-plan.md) | — |
-| C1比較対局CLIの局内高速化（固定6局の同値性・計測・レビュー済み。統合候補に含み、main起点で再検証中） | [6局計測・合意・実施・レビュー記録](learning/c1-comparison-game-internal-speedup.md) | [比較CLI・分析](knowledge/search-comparison.md) | [計測設計・実測](plans/2026-10-26-c1-comparison-game-internal-speedup-design.md) | [承認済み実装計画・実績](plans/2026-10-26-movegen-has-legal-move-short-circuit.md) | —
+| C1分析CLIの短時間化（補助・全4,080局照合済み。main統合・統合先全体検証済み） | [読解・TDD・性能測定・レビュー記録](learning/c1-analysis-performance-investigation.md) | [現行の検証契約](knowledge/search-comparison.md) | [承認済み合法手存在確認設計](plans/2026-10-25-c1-analysis-legal-witness-design.md) | [承認済み計画・実績](plans/2026-10-25-c1-analysis-legal-witness-implementation-plan.md) | — |
+| C1比較対局CLIの局内高速化（固定6局の同値性・計測・レビュー済み。main統合・統合先全体検証済み） | [6局計測・合意・実施・レビュー記録](learning/c1-comparison-game-internal-speedup.md) | [比較CLI・分析](knowledge/search-comparison.md) | [計測設計・実測](plans/2026-10-26-c1-comparison-game-internal-speedup-design.md) | [承認済み実装計画・実績](plans/2026-10-26-movegen-has-legal-move-short-circuit.md) | —
 | A1：飛車だけの可動性（学習・設計・B1統合・検証・理解確認まで完了） | [学習・本人回答・個別合意](learning/rook-mobility-design.md) | — | [承認済み設計](plans/2026-10-24-rook-mobility-design.md) | [実装計画・結果](plans/2026-10-24-rook-mobility-implementation-plan.md) | [開始時の背景](handover-a1-non-material-position-evaluation.md) |
 | Pythonユニットテストの並列実行（main統合・取り込み先637件検証・最後の理解確認回答済み） | [実装・計測・レビュー・本人回答記録](learning/python-unittest-parallel-runner.md) | [検出力点検](knowledge/test-coverage-review.md) | — | [実装計画・実施記録](plans/2026-10-21-parallel-unittest-runner-implementation-plan.md) | — |
 | CLIの乱数・モード比較テストを固定時計で決定的にする（実装・全体検証・独立レビュー・main統合済み） | [後日実装修正記録](learning/cli-search-time-control-design.md) | [検出力点検](knowledge/test-coverage-review.md) | — | [実装計画・実施結果](plans/2026-10-21-cli-test-clock-determinism-implementation-plan.md) | — |
