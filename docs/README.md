@@ -35,7 +35,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-A1/B1の飛車可動性の実装・main統合・検証・理解確認は完了した。C1の初回確認比較と独立追試はともに95%区間が50%を含み、B1全体の改善・悪化は判断不能。本人はこの結論でC1を一旦区切ると決めた。結果は[再開案内](resume.md)と[C1学習記録](learning/c1-rook-mobility-evaluation.md)を参照する。
+A1/B1の飛車可動性の実装・main統合・検証・理解確認は完了した。C1の初回確認比較と独立追試はともに95%区間が50%を含み、B1全体の改善・悪化は判断不能。本人はこの結論でC1を一旦区切り、次の主線A2を選んだ。結果と現在地は[再開案内](resume.md)、[次テーマ候補](next-topics.md)、[C1学習記録](learning/c1-rook-mobility-evaluation.md)を参照する。
 
 分析CLIの合法手存在確認短縮と比較CLIの合法手判定早期終了は、本人承認を受けて2026-10-27にローカルmainへ統合した（`ca94847`、未push）。統合先で全体テスト859件・57モジュール、Ruff、差分検査が成功した。分析CLI再開機能は含めず、比較CLI既存の局単位 `--resume` は維持している。各変更の設計・実測・レビュー記録は下の索引を参照する。
 
@@ -66,6 +66,7 @@ A1/B1の飛車可動性の実装・main統合・検証・理解確認は完了�
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
+| A2：次の駒得以外の評価項目を一つ選ぶ（主線・本人選定済み。項目は未選定） | — | [評価項目の候補と方針](roadmap-non-material-position-evaluation.md) | — | — | [A2開始時の引き継ぎ](handover-a2-non-material-position-evaluation.md) |
 | C1：飛車可動性の接続・比較評価（確認比較・分析完了、統計判定は判断不能。分析CLI再開は補助） | [学習・個別合意・pilot実績](learning/c1-rook-mobility-evaluation.md) | [比較CLI・分析](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-24-c1-rook-mobility-evaluation-design.md) | [C1実装計画](plans/2026-10-24-c1-rook-mobility-evaluation-implementation-plan.md)、[承認済み並列化計画・実績](plans/2026-10-24-c1-comparison-parallel-workers-implementation-plan.md)、[再開機能計画](plans/2026-10-25-c1-comparison-resume-plan.md) | [開始時の背景](handover-c1-rook-mobility-evaluation.md) |
 | C1分析CLIの短時間化（補助・全4,080局照合済み。main統合・統合先全体検証済み） | [読解・TDD・性能測定・レビュー記録](learning/c1-analysis-performance-investigation.md) | [現行の検証契約](knowledge/search-comparison.md) | [承認済み合法手存在確認設計](plans/2026-10-25-c1-analysis-legal-witness-design.md) | [承認済み計画・実績](plans/2026-10-25-c1-analysis-legal-witness-implementation-plan.md) | — |
 | C1分析CLIの局単位再開（補助・2026-10-27 main統合済み、`441345e`） | [実装・検出力・レビュー記録](learning/c1-analysis-resume.md) | [分析CLI再開契約](knowledge/search-comparison.md#分析cliの局単位再開) | [承認済み設計](plans/2026-10-26-analysis-cli-resume-design.md) | [承認済み実装計画](plans/2026-10-26-analysis-cli-resume-implementation-plan.md) | — |

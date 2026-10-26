@@ -2,23 +2,13 @@
 
 ## 現在地（2026-10-27）
 
-本人は2026-10-26、C1「飛車可動性を接続して比較評価する」を現時点の「判断不能」という結論で一旦区切ると決めた。初回確認比較は4,080局・2,040組、95%区間 `[0.4902742642945405, 0.6058041670780084]`。独立追試も4,080局・2,040組、95%区間 `[0.48659779370630524, 0.5526178925682046]`。両区間とも50%を含み、B1全体の改善・悪化は確認できていない。候補勝ちは初回2,123、追試2,108。二つの独立比較は合算していない。現時点で追加比較は予定せず、この結果で一旦区切る。詳細は[C1学習記録](learning/c1-rook-mobility-evaluation.md)と[追試設計](plans/2026-10-26-c1-rook-mobility-follow-up-comparison-design.md)を参照する。
+主線「駒得以外の局面評価を一項目ずつ育てる」は、A1/B1の飛車可動性を実装・統合した後、C1の比較まで完了した。C1初回確認比較と独立追試はそれぞれ4,080局・2,040組で、95%得点区間はいずれも50%を含んだ。本人はC1を「判断不能」で一旦区切り、二つの比較は合算せず、追加比較も現在予定していない。これはB1が改善しなかったという証明ではない。[C1学習記録](learning/c1-rook-mobility-evaluation.md)と[追試設計](plans/2026-10-26-c1-rook-mobility-follow-up-comparison-design.md)を参照する。
 
-分析CLIの合法手存在確認短縮と比較CLI共有 `movegen` の合法手有無判定早期終了は、本人承認により2026-10-27にローカルmainへ統合済み（`ca94847`）。続けて分析CLI局単位再開機能も、本人の統合指示を受け、main起点の候補からfast-forwardした。分析CLI再開機能の統合コミットは `441345e`。統合先の関連テスト65件・全体テスト898件/58モジュール、Ruff、差分検査が成功した。pushはしていない。現在のmain checkoutは `/Users/oki2a24/.codex/worktrees/c1-analysis-speedup/kaname-shogi`。元の `/Users/oki2a24/kaname-shogi` はbranch `codex/c1-analysis-performance-investigation` の未コミット文書・比較データを保持しており、切替・clean・resetしていない。
+C1に付随して着手した比較CLI局単位再開、分析CLI短時間化、比較CLI局内高速化、分析CLI局単位再開はすべてローカルmainへ統合済み（`9e959b2`、`ca94847`、`441345e`）。分析CLI再開後の統合先全体テストは898件・58モジュールで成功した。mainへの統合後もpushしていない。長時間の比較・分析CLIは本人が端末で実行し、アシスタントは起動・監視しない。詳細と測定限界は[C1比較と局単位再開](learning/c1-rook-mobility-evaluation.md)、[分析CLI短時間化](learning/c1-analysis-performance-investigation.md)、[比較CLI局内高速化](learning/c1-comparison-game-internal-speedup.md)、[分析CLI局単位再開](learning/c1-analysis-resume.md)を参照する。
 
-分析readerは固定6局×4回の中央値合計でwall 21.020秒から0.371秒（約56.61倍）だった。これは局読込検証の計測であり、CLI全体の実行時間倍率ではない。全4,080局の旧新版分析は `analyzer` 以外の全項目が一致し、conditions・全局・summaryのSHA-256計4,082件も一致した。比較CLIのmovegen変更は固定6局で指し手列・対局結果の一致を確認した。単回測定のwall時間は164.437秒から100.908秒（約38.6%減）、全4,080局での再計測ではない。根拠と範囲は[分析CLI記録](learning/c1-analysis-performance-investigation.md)と[比較CLI記録](learning/c1-comparison-game-internal-speedup.md)を参照する。
+本人は主線へ戻ることを選び、次テーマA2「次の駒得以外の評価項目を一つ選ぶ」を選定した。A2では候補の学習と選定から始める。具体的な評価項目、改善仮説、局面、尺度、設計は未決定であり、選定は設計・実装の承認ではない。次のセッションは[A2引き継ぎ](handover-a2-non-material-position-evaluation.md)から始める。
 
-二つの変更は元ブランチでそれぞれ全体テスト・Ruff・独立レビュー済み。統合候補では全体テスト859件・57モジュールが21.302秒、main上の再検証では859件・57モジュールが20.918秒で成功した。`.venv/bin/ruff check .`、`.venv/bin/ruff format --check .`（106ファイル）、`git diff --check`も成功した。文書リンク確認は候補全体12文書・788リンク、統合後に変更した5文書・754リンクとも未解決0件。独立統合レビューはCritical 0 / Important 0 / Minor 1で、旧分析CLIが未完了とする記述を学習記録へ追記してから統合した。詳細は[比較CLI局内高速化記録](learning/c1-comparison-game-internal-speedup.md)を参照する。初回と追試の結果およびC1を区切る判断は[C1学習記録](learning/c1-rook-mobility-evaluation.md)に保存した。
-
-長時間の比較・分析CLIは本人が端末で実行し、アシスタントは起動・監視しない。比較CLIの局単位 `--resume` はローカルmainへ統合済み（`9e959b2`）、分析CLIの局単位再開も統合済み（`441345e`）。どちらもpushしていない。通常CLIのSFEN入出力と飛車可動性バージョン2は今回に加えていない。
-
-### 長時間実行を支える補助機能：局単位再開
-
-本人の承認を受け、C1比較CLIの局単位再開機能を作業ブランチ `codex/c1-comparison-resume` で実装・検証・独立レビューし、seed一覧と実行手順を含めてコミットした。2026-10-25、本人の指示を受け、作業開始時のmain `69729a7` からローカルmainへfast-forward統合した。統合先コミットは `9e959b2`。統合後の全体テストは851件・56モジュールが74.766秒で成功し、Ruff format check（105ファイル）・check・`git diff --check`も成功した。pushはしていない。`.antigravity/tasks/` と `.venv.backup-2026-10-22/` は既存の未追跡内容として保持している。
-
-`--resume` は同じ出力先・方式・局面内容・seed/seed一覧・組数・手数上限・worker数・実行環境・Pythonソース指紋を照合する。保存済みの完了局は保持し、欠落・中断・故障局だけを同じseedで局頭から実行する。conditionsと完成局JSONは検証後に保持し、summary欠落時は局JSONから集計し直す。同時実行は `.comparison.lock` で拒否し、強制終了後の残存ロックはPIDを確認して人が除去する。再開summary v3の `elapsed_lower_bound=true` は、強制終了で欠落した経過時間があり得ることを表す。実装仕様・判断理由は[承認済み計画](plans/2026-10-25-c1-comparison-resume-plan.md)、コード・テスト・検証の経緯は[C1学習記録](learning/c1-rook-mobility-evaluation.md)、比較CLI全体の利用契約は[知識メモ](knowledge/search-comparison.md)を参照する。
-
-作業ブランチ上の実装検証では、比較関連78テストと全体851テスト・56モジュールが74.213秒で成功した。Ruff import整理・format（105ファイル）・check・format確認、`git diff --check`も成功した。逐次と4workerの小規模実対局を各2局行い、連続実行と保存局欠落後の再開で棋譜・終局・勝者・手数・組得点が一致し、分析readerはsummary v3を読み下限時間表示を保持した。欠落局を作って再開し、実端末Ctrl-Cではなくテスト注入で割込み経路を検査した。隔離コピーの代表変異4件（全局再投入、条件照合省略、conditions再生成、完成局二重加算）は対応テストで検出した。独立レビューは最終Critical 0 / Important 0 / Minor 0。実績とレビュー対応は[学習記録](learning/c1-rook-mobility-evaluation.md)と[局単位再開計画](plans/2026-10-25-c1-comparison-resume-plan.md)にある。
+作業先はローカル`main`の `/Users/oki2a24/.codex/worktrees/c1-analysis-speedup/kaname-shogi`。元の `/Users/oki2a24/kaname-shogi` は `codex/c1-analysis-performance-investigation` 上の未コミット文書・比較データを保持しているため、作業先と混同せず現状を保つ。通常CLIのSFEN入出力と飛車可動性バージョン2は、別の将来候補として保留中である。
 
 ## C1開始前の状態（履歴）
 
