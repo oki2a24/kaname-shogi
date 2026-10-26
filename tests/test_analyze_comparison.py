@@ -63,6 +63,232 @@ class AnalyzeComparisonCliTests(unittest.TestCase):
             self.assertTrue(checkpoint.is_dir())
             self.assertFalse(output.exists())
 
+    def test_interruption_keeps_only_fully_validated_game_checkpoint(self):
+        """中断時は合法再生済みの局だけを再開checkpointへ保存する。
+
+        未検証または途中の二局目を完了扱いする、あるいは確定した一局目まで失う誤りを
+        検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            checkpoint = output.with_name(output.name + ".checkpoint")
+            game_checkpoint_dir = checkpoint / "games"
+            original_load_game = comparison_result_io._load_game
+            loaded_game_ids = []
+            stderr = io.StringIO()
+
+            def interrupt_on_second_game(payload, scheduled_game, config, **kwargs):
+                loaded_game_ids.append(scheduled_game.game_id)
+                if scheduled_game.game_id == "game-000002":
+                    raise KeyboardInterrupt
+                return original_load_game(payload, scheduled_game, config, **kwargs)
+
+            with (
+                patch.object(
+                    comparison_result_io,
+                    "_load_game",
+                    side_effect=interrupt_on_second_game,
+                ),
+                redirect_stderr(stderr),
+            ):
+                status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+            self.assertEqual(status, 130)
+            self.assertIn("完了済み1局", stderr.getvalue())
+            self.assertIn("--resume", stderr.getvalue())
+            self.assertEqual(loaded_game_ids, ["game-000001", "game-000002"])
+            self.assertFalse(output.exists())
+            self.assertTrue((checkpoint / "manifest.json").is_file())
+            first_checkpoint = game_checkpoint_dir / "game-000001.json"
+            second_checkpoint = game_checkpoint_dir / "game-000002.json"
+            self.assertTrue(first_checkpoint.is_file())
+            self.assertFalse(second_checkpoint.exists())
+            stored = json.loads(first_checkpoint.read_bytes())
+            self.assertEqual(stored["game_id"], "game-000001")
+            self.assertEqual(
+                stored["record"]["input_sha256"],
+                hashlib.sha256(
+                    (input_dir / "game-000001.json").read_bytes()
+                ).hexdigest(),
+            )
+            unsigned = {key: value for key, value in stored.items() if key != "sha256"}
+            canonical = json.dumps(
+                unsigned,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+                allow_nan=False,
+            ).encode("utf-8")
+            self.assertEqual(stored["sha256"], hashlib.sha256(canonical).hexdigest())
+
+    def test_checkpoint_write_failure_returns_one_and_keeps_completed_games(self):
+        """checkpoint保存故障は1を返し、完成済み局だけを残す。"""
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            checkpoint = output.with_name(output.name + ".checkpoint")
+            original_write = comparison_result_io.comparison_io.atomic_write_json
+            stderr = io.StringIO()
+
+            def fail_second_game(path, payload):
+                if path.name == "game-000002.json":
+                    raise OSError("injected checkpoint write failure")
+                return original_write(path, payload)
+
+            with (
+                patch.object(
+                    comparison_result_io.comparison_io,
+                    "atomic_write_json",
+                    side_effect=fail_second_game,
+                ),
+                redirect_stderr(stderr),
+            ):
+                status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+            self.assertEqual(status, 1)
+            self.assertIn("checkpoint", stderr.getvalue().lower())
+            self.assertFalse(output.exists())
+            self.assertTrue((checkpoint / "manifest.json").is_file())
+            self.assertTrue((checkpoint / "games" / "game-000001.json").is_file())
+            self.assertFalse((checkpoint / "games" / "game-000002.json").exists())
+
+    def test_success_removes_checkpoint_after_output_write(self):
+        """完成分析JSONを書いた後にcheckpointを片付ける。"""
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            checkpoint = output.with_name(output.name + ".checkpoint")
+            checkpoint_at_write = []
+            original_write = comparison_result_io.write_new_json
+
+            def observe_write(path, payload):
+                saved_games = tuple((checkpoint / "games").glob("*.json"))
+                checkpoint_at_write.append(
+                    checkpoint.is_dir()
+                    and len(saved_games) == 2
+                    and (checkpoint / "manifest.json").is_file()
+                )
+                return original_write(path, payload)
+
+            with patch.object(
+                comparison_result_io, "write_new_json", side_effect=observe_write
+            ):
+                status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+            self.assertEqual(status, 0)
+            self.assertEqual(checkpoint_at_write, [True])
+            self.assertTrue(output.is_file())
+            self.assertFalse(checkpoint.exists())
+
+    def test_concurrent_analysis_is_rejected(self):
+        """同じ出力先の残存lockを拒否し、比較入力を読み込まない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            lock_path = output.with_name(output.name + ".lock")
+            lock_path.write_text("pid=another-process\n", encoding="ascii")
+            stderr = io.StringIO()
+
+            with (
+                patch.object(
+                    comparison_result_io,
+                    "_load_game",
+                    wraps=comparison_result_io._load_game,
+                ) as load_game,
+                redirect_stderr(stderr),
+            ):
+                status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+            self.assertEqual(status, 2)
+            self.assertIn("ロック", stderr.getvalue())
+            load_game.assert_not_called()
+            self.assertTrue(lock_path.is_file())
+            self.assertFalse(output.exists())
+
+    def test_analysis_summary_matches_handwritten_v1_v2_v3(self):
+        """summary v1・v2・v3を同じ局別件数・計時集計として分析する。
+
+        手書きの二局から独立に定めた成功手数・計時合計・平均・最大値を保ち、形式版に
+        よって値を落としたり誤変換したりする誤りを検出する。
+        """
+        expected_times = {
+            "random": {
+                "successful_moves": 0,
+                "total_ns": 0,
+                "average_ns": None,
+                "max_ns": None,
+            },
+            "material": {
+                "successful_moves": 2,
+                "total_ns": 302,
+                "average_ns": 151.0,
+                "max_ns": 201,
+            },
+            "two-ply-material": {
+                "successful_moves": 0,
+                "total_ns": 0,
+                "average_ns": None,
+                "max_ns": None,
+            },
+            "full-width-4": {
+                "successful_moves": 0,
+                "total_ns": 0,
+                "average_ns": None,
+                "max_ns": None,
+            },
+            "alpha-beta-4": {
+                "successful_moves": 0,
+                "total_ns": 0,
+                "average_ns": None,
+                "max_ns": None,
+            },
+            "material-rook-mobility": {
+                "successful_moves": 2,
+                "total_ns": 304,
+                "average_ns": 152.0,
+                "max_ns": 202,
+            },
+        }
+        for version in ("v1", "v2", "v3"):
+            with (
+                self.subTest(summary=version),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                input_dir = Path(directory) / "input"
+                input_dir.mkdir()
+                _write_handwritten_experiment(input_dir)
+                if version != "v1":
+                    _make_parallel_conditions(input_dir)
+                    summary_path = input_dir / "summary.json"
+                    summary = json.loads(summary_path.read_bytes())
+                    summary["format"] = f"kaname-shogi-comparison-summary-{version}"
+                    summary["in_flight_games"] = 0
+                    if version == "v3":
+                        summary["elapsed_lower_bound"] = True
+                    summary_path.write_text(
+                        json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
+                        encoding="utf-8",
+                    )
+                output = Path(directory) / "analysis.json"
+
+                status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+                self.assertEqual(status, 0)
+                payload = json.loads(output.read_bytes())
+                self.assertEqual(payload["counts"]["games"], 2)
+                self.assertEqual(payload["counts"]["results"]["ply_limit"], 2)
+                self.assertEqual(payload["move_time_by_policy"], expected_times)
+                self.assertIs(payload["elapsed_lower_bound"], version == "v3")
+
     def test_pilot_writes_one_overall_interval_and_keeps_inputs_unchanged(self):
         """pilotを正常保存し、判断を予備比較扱いにして原実験を保つ。
 
@@ -328,7 +554,7 @@ class AnalyzeComparisonCliTests(unittest.TestCase):
             output = Path(directory) / "interrupted.json"
             with patch.object(
                 comparison_result_io,
-                "load_completed_comparison",
+                "prepare_analysis_input",
                 side_effect=KeyboardInterrupt,
             ):
                 status = main(["--input-dir", str(input_dir), "--output", str(output)])

@@ -14,7 +14,12 @@ from fractions import Fraction
 from pathlib import Path
 
 from . import comparison_io
-from .analysis_resume import checkpoint_path_for_output
+from .analysis_resume import (
+    AnalysisCheckpointStore,
+    AnalysisCheckpointWriteError,
+    analysis_run_lock,
+    checkpoint_path_for_output,
+)
 from .comparison import (
     BatchStatus,
     ComparisonConfig,
@@ -176,6 +181,571 @@ class LoadedComparison:
         return self.config.seed_plan.purpose
 
 
+@dataclass(frozen=True)
+class AnalysisInput:
+    """局別解析に使う条件・summary・全局予定を保持する読取値。
+
+    引数:
+        input_dir: 固定名成果物を含む読取専用directory。
+        conditions: 形式検証済み比較条件JSON。
+        conditions_sha256: 読み込んだconditions JSON bytesのSHA-256。
+        summary: 形式検証済み実験summary JSON。
+        summary_sha256: 読み込んだsummary JSON bytesのSHA-256。
+        config: conditionsから復元した比較設定。
+        schedule: 条件とseed一覧から再生成した予定局。
+
+    戻り値:
+        `prepare_analysis_input`が局本文を再生する前に固定した分析入力。
+
+    副作用:
+        なし。含まれる辞書はread-onlyとして扱う。
+
+    前提条件:
+        個々の局のSHA-256はこの値の作成時には未計算で、局別読込時に取得する。
+    """
+
+    input_dir: Path
+    conditions: dict[str, object]
+    conditions_sha256: str
+    summary: dict[str, object]
+    summary_sha256: str
+    config: ComparisonConfig
+    schedule: tuple[ScheduledGame, ...]
+
+
+@dataclass(frozen=True)
+class AnalysisGameSummary:
+    """最終分析とsummary照合に必要な一局分の軽量値。
+
+    引数:
+        schedule: 検証対象だった局の予定値。
+        reason: 合法棋譜再生で確定した終局理由。
+        winner_side: 勝者側。引き分け・未決着ではNone。
+        winner_policy: 勝者方式。勝敗のない終局ではNone。
+        plies: 合法再生した着手数。
+        move_time_by_policy: 方式ごとの成功手数、計時合計ns、最大計時ns。
+
+    戻り値:
+        棋譜本文と手ごとの時刻列を保持せず、summaryと分析を再構成できる値。
+
+    副作用:
+        なし。
+
+    前提条件:
+        入力JSONは`_load_game`で予定・合法棋譜・終局・計時と照合済みである。
+    """
+
+    schedule: ScheduledGame
+    reason: GameEndReason
+    winner_side: Side | None
+    winner_policy: MoveSelectionPolicy | None
+    plies: int
+    move_time_by_policy: tuple[tuple[MoveSelectionPolicy, int, int, int | None], ...]
+
+
+@dataclass(frozen=True)
+class LoadedAnalysis:
+    """局単位checkpointから再構成した分析入力の読取値。
+
+    引数:
+        input: 検証済みconditions・summary・schedule。
+        games: schedule順の検証済み局summary。
+        summary: 局データから再集計し、入力summaryと一致した値。
+        pair_scores: 先後交換の二局を対にした候補方式得点。
+        artifact_hashes: 分析に採用した各入力ファイルの読込時SHA-256。
+        elapsed_ns: 比較実行summaryに記録された経過ns。
+
+    戻り値:
+        既存の分析payload生成器へ渡せる軽量な全局読取結果。
+
+    副作用:
+        なし。
+
+    前提条件:
+        全局summaryは現在の棋譜hashと照合済みで、入力summaryの完全再集計に一致する。
+    """
+
+    input: AnalysisInput
+    games: tuple[AnalysisGameSummary, ...]
+    summary: dict[str, object]
+    pair_scores: tuple[PairScore, ...]
+    artifact_hashes: tuple[tuple[str, str], ...]
+    elapsed_ns: int
+
+    @property
+    def input_dir(self) -> Path:
+        """比較入力directoryの絶対pathを返す読み取り値。"""
+        return self.input.input_dir
+
+    @property
+    def config(self) -> ComparisonConfig:
+        """比較設定を返す読み取り値。"""
+        return self.input.config
+
+    @property
+    def schedule(self) -> tuple[ScheduledGame, ...]:
+        """条件から再生成した全局予定を返す読み取り値。"""
+        return self.input.schedule
+
+    @property
+    def results(self) -> tuple[AnalysisGameSummary, ...]:
+        """集計用の軽量な局summary列を返す読み取り値。"""
+        return self.games
+
+    @property
+    def baseline(self) -> MoveSelectionPolicy:
+        """比較条件の基準方式を返す読み取り値。"""
+        return self.config.baseline
+
+    @property
+    def candidate(self) -> MoveSelectionPolicy:
+        """比較条件の候補方式を返す読み取り値。"""
+        return self.config.candidate
+
+    @property
+    def purpose(self) -> str:
+        """pilotまたはconfirmationの事前登録目的を返す読み取り値。"""
+        assert self.config.seed_plan is not None
+        return self.config.seed_plan.purpose
+
+
+def _prepare_analysis_conditions(
+    input_dir: Path,
+) -> tuple[
+    Path,
+    dict[str, object],
+    str,
+    ComparisonConfig,
+    tuple[ScheduledGame, ...],
+]:
+    """conditionsとscheduleを読み、予定局のファイル集合を照合する。"""
+    root = Path(input_dir)
+    if not root.is_dir():
+        raise ValueError("比較結果入力先はディレクトリで指定してください")
+    root = root.resolve()
+    conditions_raw = _read_artifact(root, "conditions.json")
+    conditions = decode_object(conditions_raw, context="比較条件")
+    config, schedule = _load_conditions(conditions, root)
+    conditions_sha256 = hashlib.sha256(conditions_raw).hexdigest()
+    expected_names = {f"{game.game_id}.json" for game in schedule}
+    actual_names = {path.name for path in root.glob("game-*.json")}
+    if actual_names != expected_names:
+        missing = sorted(expected_names - actual_names)
+        extra = sorted(actual_names - expected_names)
+        raise ValueError(
+            f"保存局の集合が予定と不一致です (不足={missing}, 余分={extra})"
+        )
+    return root, conditions, conditions_sha256, config, schedule
+
+
+def _validate_summary_header(
+    summary: dict[str, object], config: ComparisonConfig
+) -> tuple[str, int]:
+    """既存summary形式・worker条件・投入中局数・経過時間を検証する。"""
+    summary_format = summary.get("format")
+    if summary_format == _SUMMARY_FORMAT:
+        _require_exact_keys(summary, _SUMMARY_KEYS, "比較summary")
+    elif summary_format == _SUMMARY_V2_FORMAT:
+        _require_exact_keys(summary, _SUMMARY_V2_KEYS, "比較summary")
+        in_flight_games = summary["in_flight_games"]
+        if type(in_flight_games) is not int or in_flight_games < 0:
+            raise ValueError("summary投入中局数は0以上の整数で指定してください")
+        if in_flight_games != 0:
+            raise ValueError("投入中の局が残るsummaryは分析できません")
+    elif summary_format == _SUMMARY_V3_FORMAT:
+        _require_exact_keys(summary, _SUMMARY_V3_KEYS, "比較summary")
+        in_flight_games = summary["in_flight_games"]
+        if type(in_flight_games) is not int or in_flight_games != 0:
+            raise ValueError("再開summaryの投入中局数は0で指定してください")
+        if type(summary["elapsed_lower_bound"]) is not bool:
+            raise ValueError("再開summaryの経過時間下限フラグが不正です")
+    else:
+        raise ValueError("比較summary形式が対応していません")
+
+    expected_format = _SUMMARY_V2_FORMAT if config.workers > 1 else _SUMMARY_FORMAT
+    if summary_format not in {expected_format, _SUMMARY_V3_FORMAT}:
+        raise ValueError("比較条件とsummary形式の組み合わせが不正です")
+    elapsed_ns = summary["elapsed_ns"]
+    if type(elapsed_ns) is not int or elapsed_ns < 0:
+        raise ValueError("summary経過時間は0以上の有限整数で指定してください")
+    return summary_format, elapsed_ns
+
+
+def prepare_analysis_input(input_dir: Path) -> AnalysisInput:
+    """conditions・summary・予定を読み、分析開始前にファイル集合を検証する。
+
+    引数:
+        input_dir: conditions.json・全予定局・summary.jsonを含む比較結果directory。
+
+    戻り値:
+        入力JSONの読込時SHA-256、比較条件、全局scheduleを保持する値。
+
+    例外:
+        ValueError: format、hash、予定、summary形式、局ファイル集合が不正の場合。
+        OSError: 必要な入力JSONを読めない場合。
+
+    副作用:
+        固定名の比較入力JSONだけを読み、入力directoryを変更しない。
+
+    前提条件:
+        各局棋譜の合法再生は担当しない。局別に検証するload_analysis_comparisonが
+        `_load_game`を通し、条件・終局・計時・summaryを最終照合する。
+    """
+    root, conditions, conditions_sha256, config, schedule = (
+        _prepare_analysis_conditions(input_dir)
+    )
+    summary_raw = _read_artifact(root, "summary.json")
+    summary = decode_object(summary_raw, context="比較summary")
+    _validate_summary_header(summary, config)
+    return AnalysisInput(
+        input_dir=root,
+        conditions=conditions,
+        conditions_sha256=conditions_sha256,
+        summary=summary,
+        summary_sha256=hashlib.sha256(summary_raw).hexdigest(),
+        config=config,
+        schedule=schedule,
+    )
+
+
+def analysis_checkpoint_manifest(
+    analysis_input: AnalysisInput, *, source_root: Path
+) -> dict[str, object]:
+    """入力識別・schedule・分析器source hashからcheckpoint manifestを作る。
+
+    引数:
+        analysis_input: 条件・summary・scheduleを準備済みの値。
+        source_root: `kaname_shogi/` packageを含むrepository root。
+
+    戻り値:
+        入力directory、conditions/summary hashes、全局schedule、分析器source SHA-256。
+
+    副作用:
+        なし。入力directoryとpackage sourceを読む。
+
+    前提条件:
+        呼出側が同じmanifestを再開時にも生成し、一致を確認する。
+    """
+    return {
+        "input_dir": str(analysis_input.input_dir),
+        "conditions_sha256": analysis_input.conditions_sha256,
+        "summary_sha256": analysis_input.summary_sha256,
+        "schedule": [
+            comparison_io._scheduled_game_payload(game)
+            for game in analysis_input.schedule
+        ],
+        "source_sha256": comparison_io._source_sha256(
+            Path(source_root) / "kaname_shogi"
+        ),
+    }
+
+
+def _summary_policy_order(
+    config: ComparisonConfig,
+) -> tuple[MoveSelectionPolicy, ...]:
+    """比較summaryの既存順序で方式別計時keyを返す。"""
+    policies = tuple(
+        policy
+        for policy in MoveSelectionPolicy
+        if policy is not MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY
+    )
+    if MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY in {
+        config.baseline,
+        config.candidate,
+    }:
+        policies += (MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,)
+    return policies
+
+
+def _summarize_analysis_game(
+    result: GameResult, config: ComparisonConfig
+) -> AnalysisGameSummary:
+    """合法再生済みGameResultから集計用の軽量summaryへ変換する。"""
+    times: dict[MoveSelectionPolicy, list[int]] = {
+        policy: [] for policy in _summary_policy_order(config)
+    }
+    for timing in result.move_times_ns:
+        if timing.policy not in times:
+            raise ValueError("計時方式が比較条件の方式と一致しません")
+        times[timing.policy].append(timing.elapsed_ns)
+    return AnalysisGameSummary(
+        schedule=result.schedule,
+        reason=result.reason,
+        winner_side=result.winner_side,
+        winner_policy=result.winner_policy,
+        plies=result.plies,
+        move_time_by_policy=tuple(
+            (
+                policy,
+                len(policy_times),
+                sum(policy_times),
+                max(policy_times) if policy_times else None,
+            )
+            for policy, policy_times in times.items()
+        ),
+    )
+
+
+def _analysis_game_summary_payload(
+    game: AnalysisGameSummary,
+) -> dict[str, object]:
+    """AnalysisGameSummaryを局checkpointに保存するJSON値へ変換する。"""
+    return {
+        "reason": game.reason.value,
+        "winner_side": (
+            None if game.winner_side is None else _side_name(game.winner_side)
+        ),
+        "winner_policy": (
+            None
+            if game.winner_policy is None
+            else comparison_io._policy_name(game.winner_policy)
+        ),
+        "plies": game.plies,
+        "move_time_by_policy": [
+            {
+                "policy": comparison_io._policy_name(policy),
+                "successful_moves": count,
+                "total_ns": total_ns,
+                "max_ns": max_ns,
+            }
+            for policy, count, total_ns, max_ns in game.move_time_by_policy
+        ],
+    }
+
+
+def summary_payload_for_game_summaries(
+    config: ComparisonConfig,
+    games: Sequence[AnalysisGameSummary],
+    *,
+    elapsed_ns: int,
+    summary_format: str,
+    elapsed_lower_bound: bool,
+) -> dict[str, object]:
+    """軽量局summaryからsummary v1/v2/v3相当の記述集計を再構成する。
+
+    引数:
+        config: 全局予定・方式名を復元する比較設定。
+        games: schedule順の検証済み局summary。
+        elapsed_ns: 入力summaryに記録された経過ns。
+        summary_format: 入力summaryのv1/v2/v3識別子。v3は逐次でも下限flagを持つ。
+        elapsed_lower_bound: summary v3の経過時間下限flag。v1/v2ではFalseを渡す。
+
+    戻り値:
+        `comparison.summarize`が作るsummaryと同じキー・値構成。
+
+    例外:
+        ValueError: schedule、format、終局、勝者、手数、または方式別計時集計が不正な場合。
+
+    副作用:
+        なし。渡された値から新しい辞書を作る。
+
+    前提条件:
+        `games`の個々の値は局JSON検証済みであり、summary照合にだけ使用する。
+    """
+    schedule = make_schedule(config)
+    if tuple(game.schedule for game in games) != schedule:
+        raise ValueError("分析局summaryの予定または件数が一致しません")
+    if type(elapsed_ns) is not int or elapsed_ns < 0:
+        raise ValueError("summary経過時間は0以上の有限整数で指定してください")
+    expected_format = _SUMMARY_V2_FORMAT if config.workers > 1 else _SUMMARY_FORMAT
+    if summary_format not in {expected_format, _SUMMARY_V3_FORMAT}:
+        raise ValueError("比較条件とsummary形式の組み合わせが不正です")
+    if type(elapsed_lower_bound) is not bool:
+        raise ValueError("summaryの経過時間下限フラグが不正です")
+
+    reason_counts = {reason.value: 0 for reason in GameEndReason}
+    side_counts = {
+        Side.SENTE: {"games": 0, "wins": 0, "losses": 0, "no_winner": 0},
+        Side.GOTE: {"games": 0, "wins": 0, "losses": 0, "no_winner": 0},
+    }
+    position_counts = {
+        position.position_id: {
+            "started_games": 0,
+            "results": {reason.value: 0 for reason in GameEndReason},
+        }
+        for position in config.positions
+    }
+    perpetual_check_losses = {Side.SENTE: 0, Side.GOTE: 0}
+    policy_totals = {policy: [0, 0, None] for policy in _summary_policy_order(config)}
+    winning_reasons = {
+        GameEndReason.CHECKMATE,
+        GameEndReason.NO_LEGAL_MOVE,
+        GameEndReason.PERPETUAL_CHECK_LOSS,
+    }
+    for game in games:
+        if not isinstance(game.reason, GameEndReason):
+            raise ValueError("分析局summaryの終局理由が不正です")
+        if game.reason in winning_reasons:
+            if game.winner_side is None or game.winner_policy is None:
+                raise ValueError("勝敗がつく終局理由に勝者情報が必要です")
+        elif game.winner_side is not None or game.winner_policy is not None:
+            raise ValueError("未決着の終局理由に勝者情報を指定できません")
+        if type(game.plies) is not int or game.plies < 0:
+            raise ValueError("分析局summaryの手数が不正です")
+        reason_counts[game.reason.value] += 1
+        position = position_counts.get(game.schedule.position_id)
+        if position is None:
+            raise ValueError("分析局summaryに予定外局面があります")
+        position["started_games"] += 1
+        position["results"][game.reason.value] += 1
+        for side in Side:
+            counts = side_counts[side]
+            counts["games"] += 1
+            if game.winner_side is None:
+                counts["no_winner"] += 1
+            elif game.winner_side is side:
+                counts["wins"] += 1
+            else:
+                counts["losses"] += 1
+        if game.reason is GameEndReason.PERPETUAL_CHECK_LOSS:
+            assert game.winner_side is not None
+            loser = Side.GOTE if game.winner_side is Side.SENTE else Side.SENTE
+            perpetual_check_losses[loser] += 1
+
+        if tuple(item[0] for item in game.move_time_by_policy) != tuple(policy_totals):
+            raise ValueError("分析局summaryの計時方式が比較条件と一致しません")
+        for policy, count, total_ns, max_ns in game.move_time_by_policy:
+            if (
+                type(count) is not int
+                or count < 0
+                or type(total_ns) is not int
+                or total_ns < 0
+                or (max_ns is not None and (type(max_ns) is not int or max_ns < 0))
+                or (count == 0 and (total_ns != 0 or max_ns is not None))
+                or (count > 0 and (max_ns is None or max_ns > total_ns))
+            ):
+                raise ValueError("分析局summaryの計時集計が不正です")
+            aggregate = policy_totals[policy]
+            aggregate[0] += count
+            aggregate[1] += total_ns
+            if max_ns is not None:
+                aggregate[2] = max(max_ns, aggregate[2] or 0)
+
+    move_time_by_policy = {
+        comparison_io._policy_name(policy): {
+            "successful_moves": values[0],
+            "total_ns": values[1],
+            "average_ns": values[1] / values[0] if values[0] else None,
+            "max_ns": values[2],
+        }
+        for policy, values in policy_totals.items()
+    }
+    values: dict[str, object] = {
+        "status": "complete",
+        "planned_games": len(schedule),
+        "started_games": len(games),
+        "ended_games": len(games),
+        "unstarted_games": 0,
+        "completed_pairs": len(schedule) // 2,
+        "partial_pairs": 0,
+        "results": reason_counts,
+        "perpetual_check_losses": {
+            _side_name(side): count for side, count in perpetual_check_losses.items()
+        },
+        "by_position": position_counts,
+        "by_side": {_side_name(side): counts for side, counts in side_counts.items()},
+        "move_time_by_policy": move_time_by_policy,
+        "elapsed_ns": elapsed_ns,
+        "statistical_decision": None,
+    }
+    if config.workers > 1:
+        values["in_flight_games"] = 0
+    summary = comparison_io.summary_payload(values)
+    if summary_format == _SUMMARY_V3_FORMAT:
+        summary["format"] = _SUMMARY_V3_FORMAT
+        summary["elapsed_lower_bound"] = elapsed_lower_bound
+        if config.workers == 1:
+            summary["in_flight_games"] = 0
+    return summary
+
+
+def load_analysis_comparison(
+    analysis_input: AnalysisInput,
+    *,
+    checkpoint: AnalysisCheckpointStore,
+    source_root: Path,
+) -> LoadedAnalysis:
+    """予定順に局を完全検証し、完了した局summaryをcheckpointへ保存する。
+
+    引数:
+        analysis_input: `prepare_analysis_input`で読み込んだ条件・summary・schedule。
+        checkpoint: 対応manifestで作成済みの保存先。
+        source_root: 分析器source fingerprintの起点となるrepository root。
+
+    戻り値:
+        全局再生とsummary照合が成功した軽量な分析入力。
+
+    例外:
+        ValueError: manifest、局、summary、または条件が一致しない場合。
+        OSError: 入力局を読めない場合。
+        AnalysisCheckpointWriteError: 完了局のcheckpoint保存に失敗した場合。
+        KeyboardInterrupt: 局処理を中断した場合。直前までに保存した完了局は保持する。
+
+    副作用:
+        各局JSONを読み、合法再生後の局summaryと読込時SHA-256をcheckpointへ原子的に保存する。
+
+    前提条件:
+        checkpointは同一outputに対する排他lock中に作成され、ここでは初回実行の空storeを使う。
+        一局処理中に中断された局は保存しない。全局後に既存summaryとの完全一致を要求する。
+    """
+    expected_manifest = analysis_checkpoint_manifest(
+        analysis_input, source_root=source_root
+    )
+    if checkpoint.read_manifest() != expected_manifest:
+        raise ValueError("分析checkpoint manifestが現在の入力・sourceと一致しません")
+    results: list[AnalysisGameSummary] = []
+    hashes: list[tuple[str, str]] = [
+        ("conditions.json", analysis_input.conditions_sha256)
+    ]
+    for scheduled in analysis_input.schedule:
+        filename = f"{scheduled.game_id}.json"
+        raw = _read_artifact(analysis_input.input_dir, filename)
+        digest = hashlib.sha256(raw).hexdigest()
+        payload = decode_object(raw, context=f"{scheduled.game_id}局")
+        result = _load_game(
+            payload,
+            scheduled,
+            analysis_input.config,
+            conditions_sha256=analysis_input.conditions_sha256,
+        )
+        game = _summarize_analysis_game(result, analysis_input.config)
+        checkpoint.save_game(
+            scheduled.game_id,
+            {
+                "input_sha256": digest,
+                "summary": _analysis_game_summary_payload(game),
+            },
+        )
+        hashes.append((filename, digest))
+        results.append(game)
+
+    summary = analysis_input.summary
+    summary_format, elapsed_ns = _validate_summary_header(
+        summary, analysis_input.config
+    )
+    expected_summary = summary_payload_for_game_summaries(
+        analysis_input.config,
+        results,
+        elapsed_ns=elapsed_ns,
+        summary_format=summary_format,
+        elapsed_lower_bound=summary.get("elapsed_lower_bound", False),
+    )
+    if not _json_values_equal(summary, expected_summary):
+        raise ValueError("summaryが保存局の再集計または実行件数と一致しません")
+    hashes.append(("summary.json", analysis_input.summary_sha256))
+    pair_scores = _score_pairs(
+        analysis_input.schedule, results, analysis_input.config.candidate
+    )
+    return LoadedAnalysis(
+        input=analysis_input,
+        games=tuple(results),
+        summary=summary,
+        pair_scores=pair_scores,
+        artifact_hashes=tuple(hashes),
+        elapsed_ns=elapsed_ns,
+    )
+
+
 def load_completed_comparison(input_dir: Path) -> LoadedComparison:
     """完了比較一式を厳密検証し、候補方式視点の組得点へ変換する。
 
@@ -198,24 +768,10 @@ def load_completed_comparison(input_dir: Path) -> LoadedComparison:
         対応させる。v2 summaryは投入中0が必須。ファイル名は予定IDから構成し、JSONの任意
         パス参照を開かない。乱数や壁時計を再実行しない。
     """
-    root = Path(input_dir)
-    if not root.is_dir():
-        raise ValueError("比較結果入力先はディレクトリで指定してください")
-    root = root.resolve()
-    conditions_raw = _read_artifact(root, "conditions.json")
-    conditions = decode_object(conditions_raw, context="比較条件")
-    config, schedule = _load_conditions(conditions, root)
-    conditions_sha256 = hashlib.sha256(conditions_raw).hexdigest()
+    root, conditions, conditions_sha256, config, schedule = (
+        _prepare_analysis_conditions(input_dir)
+    )
     artifact_hashes: list[tuple[str, str]] = [("conditions.json", conditions_sha256)]
-
-    expected_names = {f"{game.game_id}.json" for game in schedule}
-    actual_names = {path.name for path in root.glob("game-*.json")}
-    if actual_names != expected_names:
-        missing = sorted(expected_names - actual_names)
-        extra = sorted(actual_names - expected_names)
-        raise ValueError(
-            f"保存局の集合が予定と不一致です (不足={missing}, 余分={extra})"
-        )
 
     results: list[GameResult] = []
     for game in schedule:
@@ -236,33 +792,7 @@ def load_completed_comparison(input_dir: Path) -> LoadedComparison:
     summary_raw = _read_artifact(root, "summary.json")
     artifact_hashes.append(("summary.json", hashlib.sha256(summary_raw).hexdigest()))
     summary = decode_object(summary_raw, context="比較summary")
-    summary_format = summary.get("format")
-    if summary_format == _SUMMARY_FORMAT:
-        _require_exact_keys(summary, _SUMMARY_KEYS, "比較summary")
-    elif summary_format == _SUMMARY_V2_FORMAT:
-        _require_exact_keys(summary, _SUMMARY_V2_KEYS, "比較summary")
-        in_flight_games = summary["in_flight_games"]
-        if type(in_flight_games) is not int or in_flight_games < 0:
-            raise ValueError("summary投入中局数は0以上の整数で指定してください")
-        if in_flight_games != 0:
-            raise ValueError("投入中の局が残るsummaryは分析できません")
-    elif summary_format == _SUMMARY_V3_FORMAT:
-        _require_exact_keys(summary, _SUMMARY_V3_KEYS, "比較summary")
-        in_flight_games = summary["in_flight_games"]
-        if type(in_flight_games) is not int or in_flight_games != 0:
-            raise ValueError("再開summaryの投入中局数は0で指定してください")
-        if type(summary["elapsed_lower_bound"]) is not bool:
-            raise ValueError("再開summaryの経過時間下限フラグが不正です")
-    else:
-        raise ValueError("比較summary形式が対応していません")
-    expected_summary_format = (
-        _SUMMARY_V2_FORMAT if config.workers > 1 else _SUMMARY_FORMAT
-    )
-    if summary_format not in {expected_summary_format, _SUMMARY_V3_FORMAT}:
-        raise ValueError("比較条件とsummary形式の組み合わせが不正です")
-    elapsed_ns = summary["elapsed_ns"]
-    if type(elapsed_ns) is not int or elapsed_ns < 0:
-        raise ValueError("summary経過時間は0以上の有限整数で指定してください")
+    summary_format, elapsed_ns = _validate_summary_header(summary, config)
     expected_summary = summary_payload_for_results(
         config, results, elapsed_ns=elapsed_ns
     )
@@ -305,7 +835,7 @@ def summary_payload_for_results(
 
 
 def analysis_payload(
-    loaded: LoadedComparison,
+    loaded: LoadedComparison | LoadedAnalysis,
     analysis: ScoreAnalysis,
     *,
     source_root: Path,
@@ -332,7 +862,7 @@ def analysis_payload(
         再開summary v3のelapsed_lower_boundを必須表示し、旧summaryではfalseを表示する。
         現在ソースの違いは記録するだけで、当時のソース識別と違っても拒否しない。
     """
-    if not isinstance(loaded, LoadedComparison) or not isinstance(
+    if not isinstance(loaded, (LoadedComparison, LoadedAnalysis)) or not isinstance(
         analysis, ScoreAnalysis
     ):
         raise ValueError("分析成果物には検証済み比較とScoreAnalysisが必要です")
@@ -820,7 +1350,7 @@ def _validate_and_replay(
 
 def _score_pairs(
     schedule: Sequence[ScheduledGame],
-    results: Sequence[GameResult],
+    results: Sequence[GameResult | AnalysisGameSummary],
     candidate: MoveSelectionPolicy,
 ) -> tuple[PairScore, ...]:
     """予定済み各組の二局を候補方式視点で一度だけ平均する。"""
@@ -845,7 +1375,9 @@ def _score_pairs(
     return tuple(scores)
 
 
-def _position_summaries(loaded: LoadedComparison) -> dict[str, object]:
+def _position_summaries(
+    loaded: LoadedComparison | LoadedAnalysis,
+) -> dict[str, object]:
     """局面別の結果件数と得点上下限平均を記述集計として返す。"""
     grouped: dict[str, list[PairScore]] = defaultdict(list)
     schedule_by_pair: dict[int, str] = {}
@@ -876,7 +1408,9 @@ def _position_summaries(loaded: LoadedComparison) -> dict[str, object]:
     }
 
 
-def _candidate_side_summaries(loaded: LoadedComparison) -> dict[str, object]:
+def _candidate_side_summaries(
+    loaded: LoadedComparison | LoadedAnalysis,
+) -> dict[str, object]:
     """候補方式が先手・後手を担当した局の結果件数と得点を記述集計する。"""
     summaries = {side: _empty_descriptive_counts() for side in Side}
     for result in loaded.results:
@@ -888,7 +1422,9 @@ def _candidate_side_summaries(loaded: LoadedComparison) -> dict[str, object]:
     }
 
 
-def _overall_counts(loaded: LoadedComparison) -> dict[str, object]:
+def _overall_counts(
+    loaded: LoadedComparison | LoadedAnalysis,
+) -> dict[str, object]:
     """全局の結果理由と候補方式視点の排他的結果件数を返す。"""
     counts = _empty_descriptive_counts()
     for result in loaded.results:
@@ -1057,22 +1593,24 @@ def _json_values_equal(left: object, right: object) -> bool:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """完了した独立抽出比較を分析し、分析JSONを新規保存するCLI入口。
+    """完了比較を分析し、新規保存と局単位checkpointを管理するCLI入口。
 
     引数:
         argv: `--input-dir`・`--output`と任意の`--resume`を含む引数列。Noneなら通常CLI引数。
 
     戻り値:
-        正常保存または判断不能/pilotは0、入力不正2、保存失敗1、中断130。
+        正常保存または判断不能/pilotは0、入力・状態不正2、保存失敗1、中断130。
 
     例外:
-        想定された入力・保存エラーとKeyboardInterruptは戻り値へ変換する。
+        想定された入力・checkpoint・保存エラーとKeyboardInterruptは戻り値へ変換する。
 
     副作用:
-        入力JSONを読み、指定先へ新規限定で分析JSONを保存し、日本語の要約を表示する。
+        比較入力JSONを読み、出力隣にロックと局単位checkpointを作り、指定先へ新規限定で
+        分析JSONを保存する。成功保存後にcheckpointを削除し、日本語の要約を表示する。
 
     前提条件:
-        既存の比較結果を再実行せず、一組単位で全体主判定を一回だけ計算する。
+        比較結果を再実行せず、一組単位で全体主判定を一回だけ計算する。同じoutputへの
+        並行実行を拒否し、中断した局は完了checkpointとして残さない。
     """
     parser = _ValueErrorArgumentParser(
         prog="analyze-comparison",
@@ -1087,45 +1625,82 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.print_usage()
         print(f"入力エラー: {error}", file=sys.stderr)
         return 2
+
+    source_root = Path(__file__).resolve().parent.parent
+    checkpoint_path = checkpoint_path_for_output(args.output)
     try:
         _validate_new_output_path(args.output)
-        checkpoint = checkpoint_path_for_output(args.output)
         if args.resume:
-            if checkpoint.is_symlink() or not checkpoint.is_dir():
+            if checkpoint_path.is_symlink() or not checkpoint_path.is_dir():
                 raise ValueError(
-                    f"再開用チェックポイントが見つかりません: {checkpoint}"
+                    f"再開用チェックポイントが見つかりません: {checkpoint_path}"
                 )
-        elif checkpoint.exists() or checkpoint.is_symlink():
+        elif checkpoint_path.exists() or checkpoint_path.is_symlink():
             raise ValueError(
-                f"既存の再開用チェックポイントがあります: {checkpoint}。"
+                f"既存の再開用チェックポイントがあります: {checkpoint_path}。"
                 "続行するには--resumeを指定してください"
             )
-        loaded = load_completed_comparison(args.input_dir)
-        analysis = analyze_scores(loaded.pair_scores, purpose=loaded.purpose)
-        payload = analysis_payload(
-            loaded,
-            analysis,
-            source_root=Path(__file__).resolve().parent.parent,
-        )
+
+        with analysis_run_lock(args.output):
+            analysis_input = prepare_analysis_input(args.input_dir)
+            manifest = analysis_checkpoint_manifest(
+                analysis_input, source_root=source_root
+            )
+            checkpoint = AnalysisCheckpointStore.create(checkpoint_path, manifest)
+            loaded = load_analysis_comparison(
+                analysis_input, checkpoint=checkpoint, source_root=source_root
+            )
+            analysis = analyze_scores(loaded.pair_scores, purpose=loaded.purpose)
+            payload = analysis_payload(loaded, analysis, source_root=source_root)
+            try:
+                write_new_json(args.output, payload)
+            except KeyboardInterrupt:
+                print(_analysis_interruption_message(checkpoint_path), file=sys.stderr)
+                return 130
+            except (OSError, TypeError, ValueError) as error:
+                print(f"分析結果を保存できません: {error}", file=sys.stderr)
+                return 1
+            try:
+                checkpoint.remove()
+            except (OSError, ValueError) as error:
+                print(
+                    f"分析結果は保存しましたがcheckpointを削除できません。"
+                    f"手動で確認してください: {checkpoint_path}: {error}",
+                    file=sys.stderr,
+                )
     except KeyboardInterrupt:
-        print("分析を中断しました。", file=sys.stderr)
+        print(_analysis_interruption_message(checkpoint_path), file=sys.stderr)
         return 130
+    except AnalysisCheckpointWriteError as error:
+        print(f"分析checkpointを保存できません: {error}", file=sys.stderr)
+        return 1
     except (OSError, ValueError) as error:
         print(f"入力エラー: {error}", file=sys.stderr)
         return 2
-    try:
-        write_new_json(args.output, payload)
-    except KeyboardInterrupt:
-        print("分析結果の保存を中断しました。", file=sys.stderr)
-        return 130
-    except (OSError, TypeError, ValueError) as error:
-        print(f"分析結果を保存できません: {error}", file=sys.stderr)
-        return 1
+
     print(f"分析完了: {len(loaded.results)}局、{len(loaded.pair_scores)}組")
     print(f"候補方式得点区間: [{analysis.lower:.3f}, {analysis.upper:.3f}]")
     print(f"判定: {_decision_ja(analysis.decision)}")
     print(f"分析結果: {args.output}")
     return 0
+
+
+def _analysis_interruption_message(checkpoint_path: Path) -> str:
+    """中断時の保存局数と、初回または再開用の案内を作る。"""
+    checkpoint = Path(checkpoint_path)
+    if checkpoint.is_symlink() or not checkpoint.is_dir():
+        return "分析を中断しました。checkpoint作成前です。初回の分析コマンドを再実行してください。"
+    games_dir = checkpoint / "games"
+    completed = 0
+    if not games_dir.is_symlink() and games_dir.is_dir():
+        completed = sum(
+            path.is_file() and not path.is_symlink()
+            for path in games_dir.glob("game-*.json")
+        )
+    return (
+        f"分析を中断しました。完了済み{completed}局のcheckpointを保持しました。"
+        "再開するには同じ--input-dirと--outputに--resumeを追加してください。"
+    )
 
 
 def _validate_new_output_path(path: Path) -> None:
