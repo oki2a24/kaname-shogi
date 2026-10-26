@@ -26,7 +26,11 @@ class AnalysisCheckpointStoreTests(unittest.TestCase):
 
     @staticmethod
     def _manifest():
-        return {"input_dir": "/fixture/input", "conditions_sha256": "a" * 64}
+        return {
+            "input_dir": "/fixture/input",
+            "conditions_sha256": "a" * 64,
+            "schedule": [{"game_id": "game-000001"}],
+        }
 
     @staticmethod
     def _game_payload():
@@ -69,6 +73,57 @@ class AnalysisCheckpointStoreTests(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 store.read_manifest()
+
+    def test_resume_rejects_manifest_mismatch(self):
+        """入力識別値が変わった状態を別の比較条件として再開しない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "analysis.json.checkpoint"
+            store = self._store_type().create(root, self._manifest())
+
+            with self.assertRaises(ValueError):
+                self._store_type().resume(
+                    root,
+                    {**self._manifest(), "conditions_sha256": "c" * 64},
+                )
+
+            self.assertEqual(store.read_manifest(), self._manifest())
+
+    def test_completed_game_ids_rejects_unexpected_entries(self):
+        """局checkpoint directoryの予定外ファイルを見逃さない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "analysis.json.checkpoint"
+            store = self._store_type().create(root, self._manifest())
+            store.save_game("game-000001", self._game_payload())
+            self.assertEqual(store.completed_game_ids(), frozenset({"game-000001"}))
+
+            (root / "games" / "game-not-a-number.json").write_text(
+                "{}", encoding="utf-8"
+            )
+            with self.assertRaises(ValueError):
+                store.completed_game_ids()
+
+    def test_completed_game_ids_rejects_unplanned_game_id(self):
+        """manifest予定にない局IDのcheckpointを再利用しない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "analysis.json.checkpoint"
+            store = self._store_type().create(root, self._manifest())
+            extra = root / "games" / "game-000002.json"
+            extra.write_text("{}", encoding="utf-8")
+
+            with self.assertRaises(ValueError):
+                store.completed_game_ids()
+
+    def test_completed_game_ids_rejects_symlinks(self):
+        """外部ファイルを指す局checkpoint symlinkを完了局として数えない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "analysis.json.checkpoint"
+            store = self._store_type().create(root, self._manifest())
+            target = Path(directory) / "outside.json"
+            target.write_text("{}", encoding="utf-8")
+            (root / "games" / "game-000001.json").symlink_to(target)
+
+            with self.assertRaises(ValueError):
+                store.completed_game_ids()
 
     def test_unknown_game_checkpoint_format_is_rejected(self):
         """未知checkpoint形式を既知形式として読み込まない。"""

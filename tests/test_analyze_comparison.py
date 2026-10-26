@@ -21,6 +21,23 @@ from tests.test_comparison_result_io import (
 
 
 class AnalyzeComparisonCliTests(unittest.TestCase):
+    def _interrupt_after_first_game(self, input_dir: Path, output: Path) -> Path:
+        """一局完了直後に中断し、作成済みcheckpoint pathを返す。"""
+        original_load_game = comparison_result_io._load_game
+
+        def interrupt_on_second_game(payload, scheduled_game, config, **kwargs):
+            if scheduled_game.game_id == "game-000002":
+                raise KeyboardInterrupt
+            return original_load_game(payload, scheduled_game, config, **kwargs)
+
+        with patch.object(
+            comparison_result_io, "_load_game", side_effect=interrupt_on_second_game
+        ):
+            self.assertEqual(
+                main(["--input-dir", str(input_dir), "--output", str(output)]), 130
+            )
+        return output.with_name(output.name + ".checkpoint")
+
     def test_resume_requires_existing_checkpoint(self):
         """再開指定には既存checkpointが必要で、分析出力を作らない。"""
         with tempfile.TemporaryDirectory() as directory:
@@ -123,6 +140,142 @@ class AnalyzeComparisonCliTests(unittest.TestCase):
                 allow_nan=False,
             ).encode("utf-8")
             self.assertEqual(stored["sha256"], hashlib.sha256(canonical).hexdigest())
+
+    def test_resume_reuses_completed_game_and_matches_fresh_analysis(self):
+        """再開では検証済み一局を再生せず、全分析値を初回実行と一致させる。
+
+        checkpoint局のhashを照合せず再利用する誤り、完了局を再生する誤り、または再構成した
+        得点・区間・集計が通常の全局読込と異なる誤りを検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            resumed_output = Path(directory) / "resumed.json"
+            fresh_output = Path(directory) / "fresh.json"
+            checkpoint = self._interrupt_after_first_game(input_dir, resumed_output)
+
+            with patch.object(
+                comparison_result_io,
+                "_load_game",
+                wraps=comparison_result_io._load_game,
+            ) as load_game:
+                resumed_status = main(
+                    [
+                        "--input-dir",
+                        str(input_dir),
+                        "--output",
+                        str(resumed_output),
+                        "--resume",
+                    ]
+                )
+
+            self.assertEqual(resumed_status, 0)
+            self.assertEqual(
+                [call.args[1].game_id for call in load_game.call_args_list],
+                ["game-000002"],
+            )
+            self.assertFalse(checkpoint.exists())
+            self.assertEqual(
+                main(["--input-dir", str(input_dir), "--output", str(fresh_output)]),
+                0,
+            )
+            resumed = json.loads(resumed_output.read_bytes())
+            fresh = json.loads(fresh_output.read_bytes())
+            self.assertEqual(resumed["inputs"], fresh["inputs"])
+            resumed.pop("analyzer")
+            fresh.pop("analyzer")
+            self.assertEqual(resumed, fresh)
+
+    def test_resume_rejects_changed_completed_game_hash(self):
+        """完了済み局の入力bytesが変われば同じ棋譜内容でも再開しない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            checkpoint = self._interrupt_after_first_game(input_dir, output)
+            game_path = input_dir / "game-000001.json"
+            game_path.write_bytes(game_path.read_bytes() + b"\n")
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                status = main(
+                    [
+                        "--input-dir",
+                        str(input_dir),
+                        "--output",
+                        str(output),
+                        "--resume",
+                    ]
+                )
+
+            self.assertEqual(status, 2)
+            self.assertIn("SHA-256", stderr.getvalue())
+            self.assertFalse(output.exists())
+            self.assertTrue(checkpoint.is_dir())
+
+    def test_resume_rejects_changed_conditions_or_summary(self):
+        """conditionsまたはsummaryのbytesが変われば既存checkpointと分ける。"""
+        for filename in ("conditions.json", "summary.json"):
+            with (
+                self.subTest(filename=filename),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                input_dir = Path(directory) / "input"
+                input_dir.mkdir()
+                _write_handwritten_experiment(input_dir)
+                output = Path(directory) / "analysis.json"
+                checkpoint = self._interrupt_after_first_game(input_dir, output)
+                input_path = input_dir / filename
+                input_path.write_bytes(input_path.read_bytes() + b"\n")
+                stderr = io.StringIO()
+
+                with redirect_stderr(stderr):
+                    status = main(
+                        [
+                            "--input-dir",
+                            str(input_dir),
+                            "--output",
+                            str(output),
+                            "--resume",
+                        ]
+                    )
+
+                self.assertEqual(status, 2)
+                self.assertIn("manifest", stderr.getvalue())
+                self.assertFalse(output.exists())
+                self.assertTrue(checkpoint.is_dir())
+
+    def test_resume_rejects_corrupt_game_checkpoint(self):
+        """checksumが壊れた完了局checkpointを再利用しない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            checkpoint = self._interrupt_after_first_game(input_dir, output)
+            game_checkpoint = checkpoint / "games" / "game-000001.json"
+            stored = json.loads(game_checkpoint.read_bytes())
+            stored["record"]["summary"]["plies"] = 999
+            game_checkpoint.write_text(json.dumps(stored), encoding="utf-8")
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                status = main(
+                    [
+                        "--input-dir",
+                        str(input_dir),
+                        "--output",
+                        str(output),
+                        "--resume",
+                    ]
+                )
+
+            self.assertEqual(status, 2)
+            self.assertIn("checksum", stderr.getvalue())
+            self.assertFalse(output.exists())
+            self.assertTrue(checkpoint.is_dir())
 
     def test_checkpoint_write_failure_returns_one_and_keeps_completed_games(self):
         """checkpoint保存故障は1を返し、完成済み局だけを残す。"""
@@ -279,6 +432,7 @@ class AnalyzeComparisonCliTests(unittest.TestCase):
                         encoding="utf-8",
                     )
                 output = Path(directory) / "analysis.json"
+                resumed_output = Path(directory) / "resumed-analysis.json"
 
                 status = main(["--input-dir", str(input_dir), "--output", str(output)])
 
@@ -288,6 +442,25 @@ class AnalyzeComparisonCliTests(unittest.TestCase):
                 self.assertEqual(payload["counts"]["results"]["ply_limit"], 2)
                 self.assertEqual(payload["move_time_by_policy"], expected_times)
                 self.assertIs(payload["elapsed_lower_bound"], version == "v3")
+
+                checkpoint = self._interrupt_after_first_game(input_dir, resumed_output)
+                resumed_status = main(
+                    [
+                        "--input-dir",
+                        str(input_dir),
+                        "--output",
+                        str(resumed_output),
+                        "--resume",
+                    ]
+                )
+                self.assertEqual(resumed_status, 0)
+                resumed_payload = json.loads(resumed_output.read_bytes())
+                self.assertEqual(resumed_payload["move_time_by_policy"], expected_times)
+                self.assertIs(resumed_payload["elapsed_lower_bound"], version == "v3")
+                payload.pop("analyzer")
+                resumed_payload.pop("analyzer")
+                self.assertEqual(resumed_payload, payload)
+                self.assertFalse(checkpoint.exists())
 
     def test_pilot_writes_one_overall_interval_and_keeps_inputs_unchanged(self):
         """pilotを正常保存し、判断を予備比較扱いにして原実験を保つ。

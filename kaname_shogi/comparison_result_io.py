@@ -513,6 +513,116 @@ def _analysis_game_summary_payload(
     }
 
 
+def _analysis_game_summary_from_payload(
+    payload: object,
+    scheduled: ScheduledGame,
+    config: ComparisonConfig,
+) -> AnalysisGameSummary:
+    """checkpointの局summaryを現在の予定・方式へ結び付けて復元する。"""
+    if type(payload) is not dict:
+        raise ValueError(
+            f"{scheduled.game_id}局checkpoint summaryがobjectではありません"
+        )
+    _require_exact_keys(
+        payload,
+        {"reason", "winner_side", "winner_policy", "plies", "move_time_by_policy"},
+        f"{scheduled.game_id}局checkpoint summary",
+    )
+    reason = _reason(payload["reason"])
+    if reason in {GameEndReason.INTERRUPTED, GameEndReason.ERROR}:
+        raise ValueError(f"{scheduled.game_id}局checkpointが未完了状態です")
+    winner_side = _optional_side(payload["winner_side"], "checkpoint勝者先後")
+    winner_policy = _optional_policy(payload["winner_policy"], "checkpoint勝者方式")
+    winning_reasons = {
+        GameEndReason.CHECKMATE,
+        GameEndReason.NO_LEGAL_MOVE,
+        GameEndReason.PERPETUAL_CHECK_LOSS,
+    }
+    if reason in winning_reasons:
+        if winner_side is None or winner_policy is None:
+            raise ValueError(f"{scheduled.game_id}局checkpointに勝者情報がありません")
+        expected_winner_policy = (
+            config.baseline
+            if winner_side is scheduled.baseline_side
+            else config.candidate
+        )
+        if winner_policy is not expected_winner_policy:
+            raise ValueError(f"{scheduled.game_id}局checkpointの勝者方式が不一致です")
+    elif winner_side is not None or winner_policy is not None:
+        raise ValueError(f"{scheduled.game_id}局checkpointの未決着結果に勝者があります")
+
+    plies = payload["plies"]
+    if type(plies) is not int or plies < 0 or plies > config.max_plies:
+        raise ValueError(f"{scheduled.game_id}局checkpointの手数が不正です")
+    if reason is GameEndReason.PLY_LIMIT and plies != config.max_plies:
+        raise ValueError(f"{scheduled.game_id}局checkpointの手数上限判定が不一致です")
+
+    rows = payload["move_time_by_policy"]
+    if type(rows) is not list:
+        raise ValueError(
+            f"{scheduled.game_id}局checkpointの計時集計が配列ではありません"
+        )
+    policies = _summary_policy_order(config)
+    if len(rows) != len(policies):
+        raise ValueError(f"{scheduled.game_id}局checkpointの計時方式数が不一致です")
+    move_time_by_policy: list[tuple[MoveSelectionPolicy, int, int, int | None]] = []
+    for index, row in enumerate(rows):
+        if type(row) is not dict:
+            raise ValueError(
+                f"{scheduled.game_id}局checkpointの計時行がobjectではありません"
+            )
+        _require_exact_keys(
+            row,
+            {"policy", "successful_moves", "total_ns", "max_ns"},
+            f"{scheduled.game_id}局checkpointの計時行",
+        )
+        policy = _policy(row["policy"], "checkpoint計時方式")
+        if policy is not policies[index]:
+            raise ValueError(f"{scheduled.game_id}局checkpointの計時方式順が不一致です")
+        count = row["successful_moves"]
+        total_ns = row["total_ns"]
+        max_ns = row["max_ns"]
+        if (
+            type(count) is not int
+            or count < 0
+            or type(total_ns) is not int
+            or total_ns < 0
+            or (max_ns is not None and (type(max_ns) is not int or max_ns < 0))
+            or (count == 0 and (total_ns != 0 or max_ns is not None))
+            or (count > 0 and (max_ns is None or max_ns > total_ns))
+        ):
+            raise ValueError(f"{scheduled.game_id}局checkpointの計時値が不正です")
+        move_time_by_policy.append((policy, count, total_ns, max_ns))
+
+    start_position = next(
+        position
+        for position in config.positions
+        if position.position_id == scheduled.position_id
+    )
+    first_side = parse_sfen(start_position.start_sfen).position.side_to_move
+    baseline_count = (
+        (plies + 1) // 2 if first_side is scheduled.baseline_side else plies // 2
+    )
+    expected_counts = {
+        config.baseline: baseline_count,
+        config.candidate: plies - baseline_count,
+    }
+    if any(
+        count != expected_counts.get(policy, 0)
+        for policy, count, _, _ in move_time_by_policy
+    ):
+        raise ValueError(f"{scheduled.game_id}局checkpointの成功手数が不一致です")
+
+    return AnalysisGameSummary(
+        schedule=scheduled,
+        reason=reason,
+        winner_side=winner_side,
+        winner_policy=winner_policy,
+        plies=plies,
+        move_time_by_policy=tuple(move_time_by_policy),
+    )
+
+
 def summary_payload_for_game_summaries(
     config: ComparisonConfig,
     games: Sequence[AnalysisGameSummary],
@@ -676,7 +786,7 @@ def load_analysis_comparison(
         全局再生とsummary照合が成功した軽量な分析入力。
 
     例外:
-        ValueError: manifest、局、summary、または条件が一致しない場合。
+        ValueError: manifest、予定、現在の入力hash、局summary、またはsummary再集計が不一致の場合。
         OSError: 入力局を読めない場合。
         AnalysisCheckpointWriteError: 完了局のcheckpoint保存に失敗した場合。
         KeyboardInterrupt: 局処理を中断した場合。直前までに保存した完了局は保持する。
@@ -685,14 +795,18 @@ def load_analysis_comparison(
         各局JSONを読み、合法再生後の局summaryと読込時SHA-256をcheckpointへ原子的に保存する。
 
     前提条件:
-        checkpointは同一outputに対する排他lock中に作成され、ここでは初回実行の空storeを使う。
+        checkpointは同一outputに対する排他lock中に作成または再開される。保存済み局は現在の
+        元JSON SHA-256が一致したときだけ要約を復元し、欠落局は局全体を検証してから保存する。
         一局処理中に中断された局は保存しない。全局後に既存summaryとの完全一致を要求する。
     """
     expected_manifest = analysis_checkpoint_manifest(
         analysis_input, source_root=source_root
     )
-    if checkpoint.read_manifest() != expected_manifest:
-        raise ValueError("分析checkpoint manifestが現在の入力・sourceと一致しません")
+    checkpoint = AnalysisCheckpointStore.resume(checkpoint.root, expected_manifest)
+    planned_ids = {game.game_id for game in analysis_input.schedule}
+    completed_ids = checkpoint.completed_game_ids()
+    if not completed_ids <= planned_ids:
+        raise ValueError("分析checkpointに予定外の局があります")
     results: list[AnalysisGameSummary] = []
     hashes: list[tuple[str, str]] = [
         ("conditions.json", analysis_input.conditions_sha256)
@@ -701,21 +815,33 @@ def load_analysis_comparison(
         filename = f"{scheduled.game_id}.json"
         raw = _read_artifact(analysis_input.input_dir, filename)
         digest = hashlib.sha256(raw).hexdigest()
-        payload = decode_object(raw, context=f"{scheduled.game_id}局")
-        result = _load_game(
-            payload,
-            scheduled,
-            analysis_input.config,
-            conditions_sha256=analysis_input.conditions_sha256,
-        )
-        game = _summarize_analysis_game(result, analysis_input.config)
-        checkpoint.save_game(
-            scheduled.game_id,
-            {
-                "input_sha256": digest,
-                "summary": _analysis_game_summary_payload(game),
-            },
-        )
+        if scheduled.game_id in completed_ids:
+            record = checkpoint.load_game(scheduled.game_id)
+            if record is None:
+                raise ValueError(f"{scheduled.game_id}局checkpointが列挙後に消えました")
+            if record["input_sha256"] != digest:
+                raise ValueError(
+                    f"{scheduled.game_id}局checkpointと現在の入力SHA-256が一致しません"
+                )
+            game = _analysis_game_summary_from_payload(
+                record["summary"], scheduled, analysis_input.config
+            )
+        else:
+            payload = decode_object(raw, context=f"{scheduled.game_id}局")
+            result = _load_game(
+                payload,
+                scheduled,
+                analysis_input.config,
+                conditions_sha256=analysis_input.conditions_sha256,
+            )
+            game = _summarize_analysis_game(result, analysis_input.config)
+            checkpoint.save_game(
+                scheduled.game_id,
+                {
+                    "input_sha256": digest,
+                    "summary": _analysis_game_summary_payload(game),
+                },
+            )
         hashes.append((filename, digest))
         results.append(game)
 
@@ -1646,7 +1772,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             manifest = analysis_checkpoint_manifest(
                 analysis_input, source_root=source_root
             )
-            checkpoint = AnalysisCheckpointStore.create(checkpoint_path, manifest)
+            checkpoint = (
+                AnalysisCheckpointStore.resume(checkpoint_path, manifest)
+                if args.resume
+                else AnalysisCheckpointStore.create(checkpoint_path, manifest)
+            )
             loaded = load_analysis_comparison(
                 analysis_input, checkpoint=checkpoint, source_root=source_root
             )

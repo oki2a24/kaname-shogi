@@ -253,6 +253,41 @@ class AnalysisCheckpointStore:
             ) from error
         return cls(destination)
 
+    @classmethod
+    def resume(
+        cls, root: Path, expected_manifest: Mapping[str, object]
+    ) -> AnalysisCheckpointStore:
+        """既存checkpointを開き、現在の入力識別manifestと一致するか確認する。
+
+        引数:
+            root: 既存の分析checkpoint directory。
+            expected_manifest: 現在のconditions・summary・schedule・sourceから作ったmanifest。
+
+        戻り値:
+            保存manifestと現在の期待値が一致したcheckpoint store。
+
+        例外:
+            ValueError: manifestが壊れている、入力識別が異なる、またはpathが通常directoryでない場合。
+            OSError: manifestを読み込めない場合。
+
+        副作用:
+            manifest fileだけを読み、checkpointを変更しない。
+
+        前提条件:
+            呼出側は同じ分析outputを指す排他lockを保持し、既存完成outputを検査している。
+        """
+        if not isinstance(expected_manifest, Mapping):
+            raise ValueError(
+                "再開時の分析checkpoint manifestはMappingで指定してください"
+            )
+        store = cls(Path(root))
+        actual = store.read_manifest()
+        if _checksum(actual) != _checksum(expected_manifest):
+            raise ValueError(
+                "分析checkpoint manifestが現在の入力・sourceと一致しません"
+            )
+        return store
+
     def save_game(self, game_id: str, payload: Mapping[str, object]) -> None:
         """完全検証済み一局の小さな集計を原子的JSONへ保存する。
 
@@ -343,6 +378,58 @@ class AnalysisCheckpointStore:
             raise ValueError(f"分析局checkpoint summary形式が不正です: {game_id}")
         self._validate_checksum(value)
         return record
+
+    def completed_game_ids(self) -> frozenset[str]:
+        """検証用形式を満たす予定内の保存済み局IDを返す。
+
+        戻り値:
+            manifest.scheduleに含まれ、局JSONとして保存済みの一意なgame ID集合。
+
+        例外:
+            ValueError: schedule欠落・重複、予定外ファイル・ID、symlink、directoryなどがある場合。
+            OSError: games directoryを列挙できない場合。
+
+        副作用:
+            manifestとgames directoryのentryを読み取る。局JSON本文は読み込まない。
+
+        前提条件:
+            個々の局JSON形式・checksum・現在の入力hashは、各IDを`load_game`した後に照合する。
+            scheduleにないIDは使わず、予定上の欠落局は未完了として許可する。
+        """
+        manifest = self._read_manifest()
+        schedule = manifest.get("schedule")
+        if type(schedule) is not list:
+            raise ValueError("分析checkpoint manifestに局scheduleがありません")
+        expected_ids: set[str] = set()
+        for item in schedule:
+            if type(item) is not dict or "game_id" not in item:
+                raise ValueError("分析checkpoint manifestの局scheduleが不正です")
+            game_id = item["game_id"]
+            _validate_game_id(game_id)
+            if game_id in expected_ids:
+                raise ValueError(
+                    f"分析checkpoint scheduleの局IDが重複しています: {game_id}"
+                )
+            expected_ids.add(game_id)
+
+        self._validate_store()
+        games_directory = self.root / "games"
+        completed: set[str] = set()
+        for path in games_directory.iterdir():
+            if path.is_symlink() or not path.is_file():
+                raise ValueError(
+                    f"分析局checkpointは通常fileではありません: {path.name}"
+                )
+            match = re.fullmatch(r"(game-[0-9]{6,})\.json", path.name)
+            if match is None:
+                raise ValueError(f"分析局checkpointのファイル名が不正です: {path.name}")
+            game_id = match.group(1)
+            if game_id not in expected_ids:
+                raise ValueError(f"分析checkpointに予定外の局があります: {game_id}")
+            if game_id in completed:
+                raise ValueError(f"分析checkpointの局IDが重複しています: {game_id}")
+            completed.add(game_id)
+        return frozenset(completed)
 
     def remove(self) -> None:
         """manifestを検証してcheckpoint directoryを削除する。
