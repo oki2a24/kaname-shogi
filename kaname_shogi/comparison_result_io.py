@@ -14,6 +14,7 @@ from fractions import Fraction
 from pathlib import Path
 
 from . import comparison_io
+from .analysis_resume import checkpoint_path_for_output
 from .comparison import (
     BatchStatus,
     ComparisonConfig,
@@ -1059,7 +1060,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     """完了した独立抽出比較を分析し、分析JSONを新規保存するCLI入口。
 
     引数:
-        argv: `--input-dir`と`--output`を含む引数列。Noneなら通常CLI引数。
+        argv: `--input-dir`・`--output`と任意の`--resume`を含む引数列。Noneなら通常CLI引数。
 
     戻り値:
         正常保存または判断不能/pilotは0、入力不正2、保存失敗1、中断130。
@@ -1079,6 +1080,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--input-dir", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--resume", action="store_true")
     try:
         args = parser.parse_args(argv)
     except ValueError as error:
@@ -1087,6 +1089,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
     try:
         _validate_new_output_path(args.output)
+        checkpoint = checkpoint_path_for_output(args.output)
+        if args.resume:
+            if checkpoint.is_symlink() or not checkpoint.is_dir():
+                raise ValueError(
+                    f"再開用チェックポイントが見つかりません: {checkpoint}"
+                )
+        elif checkpoint.exists() or checkpoint.is_symlink():
+            raise ValueError(
+                f"既存の再開用チェックポイントがあります: {checkpoint}。"
+                "続行するには--resumeを指定してください"
+            )
         loaded = load_completed_comparison(args.input_dir)
         analysis = analyze_scores(loaded.pair_scores, purpose=loaded.purpose)
         payload = analysis_payload(

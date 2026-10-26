@@ -21,6 +21,48 @@ from tests.test_comparison_result_io import (
 
 
 class AnalyzeComparisonCliTests(unittest.TestCase):
+    def test_resume_requires_existing_checkpoint(self):
+        """再開指定には既存checkpointが必要で、分析出力を作らない。"""
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "empty-input"
+            input_dir.mkdir()
+            output = Path(directory) / "analysis.json"
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                status = main(
+                    [
+                        "--input-dir",
+                        str(input_dir),
+                        "--output",
+                        str(output),
+                        "--resume",
+                    ]
+                )
+
+            self.assertEqual(status, 2)
+            self.assertIn("再開用チェックポイントが見つかりません", stderr.getvalue())
+            self.assertFalse(output.exists())
+
+    def test_new_run_rejects_existing_checkpoint(self):
+        """通常起動は既存checkpointを無視せず進捗を保護する。"""
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            checkpoint = output.with_name(output.name + ".checkpoint")
+            checkpoint.mkdir()
+            stderr = io.StringIO()
+
+            with redirect_stderr(stderr):
+                status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+            self.assertEqual(status, 2)
+            self.assertIn("既存の再開用チェックポイント", stderr.getvalue())
+            self.assertTrue(checkpoint.is_dir())
+            self.assertFalse(output.exists())
+
     def test_pilot_writes_one_overall_interval_and_keeps_inputs_unchanged(self):
         """pilotを正常保存し、判断を予備比較扱いにして原実験を保つ。
 
