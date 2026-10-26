@@ -211,7 +211,7 @@
 
   実行：`.venv/bin/python -m unittest tests.test_analysis_resume tests.test_analyze_comparison tests.test_comparison_result_io -v`。続けて `.venv/bin/python scripts/run_tests_parallel.py`、`.venv/bin/ruff format .`、`.venv/bin/ruff format --check .`、`.venv/bin/ruff check .`、`git diff --check`、変更と文書リンクの確認を行う。importを追加・変更した場合は先に `.venv/bin/ruff check --select I --fix .` を実行し、差分を確認する。テスト全体はすべて成功し、Ruff診断なし、リンク欠落なしを完了条件とする。
 
-- [ ] **ステップ9：最終レビュー状態・作業状態を記録しコミットする**
+- [x] **ステップ9：最終レビュー状態・作業状態を記録しコミットする**
 
   worktree上の `git status --short --branch` と差分を確認し、この機能のファイルだけをステージ・コミットする。既存の比較結果、他worktree、元checkoutの未コミット内容を含めない。mainまたは元checkoutへ統合せず、コミットSHA・worktree path・検証結果を本人へ示して別途承認を待つ。
 
@@ -230,3 +230,4 @@
 - 独立レビュー最終状態はCritical 0・Important 0。外部プロセスがfstat前のlock pathを差し替える狭い競合は保証対象外としてコードdocstring・学習記録に明記した。
 - 最終検証は関連62件、全体894件/58 modules、Ruff format/check成功、6文書の相対リンク欠落0、`git diff --check` 成功。実データ4,080局は分析していない。
 - 作業場所は `/Users/oki2a24/.codex/worktrees/c1-analysis-resume/kaname-shogi`、branch `codex/c1-analysis-resume`。main・元checkoutには未統合。
+- 機能・利用資料のコミットは `0fcb157` (`feat: 分析CLIの局単位再開を完成`)。task-doneの関連テスト再実行も62件成功した。main統合は別承認を待つ。

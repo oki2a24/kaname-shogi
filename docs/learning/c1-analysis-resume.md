@@ -29,10 +29,12 @@ C1確認比較の分析CLIは4,080局の棋譜を全件検証するため長時�
 - 最終JSON保存後のcheckpoint削除中断は、完成JSONがあるのに終了コード130と `--resume` 案内を返していた。
 - lock cleanup時の非EBADF close失敗を黙って無視していた。追加テストではstderr診断がないことで失敗した。
 - source fingerprint変更の専用テストは、追加前にstatus 0でoutputを作り、期待status 2に対してRedだった。
+- cache分離テストは浅いcacheで元schedule変更を反映してしまい、完了局を予定外として誤拒否するRedだった。deepcopyでcacheと入力・公開戻り値を分離してGreenになった。
+- `mkdir()` がrootを作った直後に割り込みを注入すると空rootが残るRedだった。例外時に作成先directoryを掃除するようにしGreenになった。
 
 最終化前の4つの代表変異は隔離した `/tmp` コピーで実施した。局入力SHA比較を無効化すると変更済み完了局を拒否するassertionが失敗し、summary比較を無効化するとsummary mismatch拒否が失敗した。局検証前に2局目のcheckpointを保存すると割込みテストが完了2局と誤認して失敗し、cached局も再生する変異では再利用テストが重複checkpointを作るため失敗した。各変異は作業worktreeへ残していない。
 
-2026-10-26の最終コード変更後の検証では、`.venv/bin/python -m unittest tests.test_analysis_resume tests.test_analyze_comparison tests.test_comparison_result_io -v` が62件で成功し、`.venv/bin/python scripts/run_tests_parallel.py` が58モジュール894件で成功した（27.163秒）。Ruffのimport検査、format check、全体checkも診断なし。format書込みは対象ファイル一件で権限エラーになったため、Ruffの差分を手動反映し、最終 `format --check` で108ファイル整形済みを確認した。文書リンクは6文書で相対リンク欠落0。最終 `git diff --check` をコミット前に再確認する。CI・実データ分析は起動していない。
+2026-10-26の最終コード変更後の検証では、`.venv/bin/python -m unittest tests.test_analysis_resume tests.test_analyze_comparison tests.test_comparison_result_io -v` が62件で成功し、`.venv/bin/python scripts/run_tests_parallel.py` が58モジュール894件で成功した（27.163秒）。Ruffのimport検査、format check、全体checkも診断なし。format書込みは対象ファイル一件で権限エラーになったため、Ruffの差分を手動反映し、最終 `format --check` で108ファイル整形済みを確認した。文書リンクは6文書で相対リンク欠落0。`git diff --check` も成功した。変更は2026-10-26に `0fcb157` (`feat: 分析CLIの局単位再開を完成`) として作業branchへコミットし、hookのformat/checkも成功した。CI・実データ分析は起動していない。
 
 ## 独立レビュー
 
@@ -47,4 +49,4 @@ C1確認比較の分析CLIは4,080局の棋譜を全件検証するため長時�
 
 ## Git状態・次の段階
 
-実装計画のTask 1〜3は `2618104`, `96f1f87`, `4a63943` として既にworktree branchへコミット済み。Task 4の最終レビュー、利用資料、検証、差分確認を済ませて機能ファイルだけを同じbranchへコミットする。mainまたは元checkoutへの取り込みは別承認を待つ。
+実装計画のTask 1〜3は `2618104`, `96f1f87`, `4a63943`、Task 4の機能・利用資料・設計・学習記録は `0fcb157` として `/Users/oki2a24/.codex/worktrees/c1-analysis-resume/kaname-shogi` の `codex/c1-analysis-resume` にコミット済み。mainまたは元checkoutへの取り込みは別承認を待つ。
