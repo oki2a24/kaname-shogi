@@ -12,7 +12,7 @@ from contextlib import redirect_stderr
 from pathlib import Path
 from unittest.mock import patch
 
-from kaname_shogi import comparison_result_io
+from kaname_shogi import analysis_resume, comparison_result_io
 from kaname_shogi.analyze_comparison import main
 from tests.test_comparison_result_io import (
     _make_parallel_conditions,
@@ -439,6 +439,111 @@ class AnalyzeComparisonCliTests(unittest.TestCase):
             self.assertTrue(output.is_file())
             self.assertIn("分析結果は保存済み", stderr.getvalue())
             self.assertNotIn("--resume", stderr.getvalue())
+
+    def test_interruption_after_final_output_creation_keeps_successful_output(self):
+        """最終JSON作成直後の割込みを、完成結果の中断として扱わない。
+
+        write_new_jsonの完了後、呼出側へ戻る境界でKeyboardInterruptが発生すると、完成JSONが
+        あるのに130を返して--resumeを案内する誤りを検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            checkpoint = output.with_name(output.name + ".checkpoint")
+            original_write = comparison_result_io.write_new_json
+            stderr = io.StringIO()
+
+            def interrupt_after_write(path, payload):
+                original_write(path, payload)
+                raise KeyboardInterrupt
+
+            with (
+                patch.object(
+                    comparison_result_io,
+                    "write_new_json",
+                    side_effect=interrupt_after_write,
+                ),
+                redirect_stderr(stderr),
+            ):
+                status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+            self.assertEqual(status, 0)
+            self.assertTrue(output.is_file())
+            self.assertFalse(checkpoint.exists())
+            self.assertIn("分析結果は保存済み", stderr.getvalue())
+            self.assertNotIn("--resume", stderr.getvalue())
+
+    def test_interruption_while_releasing_lock_keeps_successful_output(self):
+        """最終JSON後のlock解除中断を失敗扱いしない。
+
+        正常保存・checkpoint削除済みでもlock解除のKeyboardInterruptを外へ漏らし、
+        完成済み出力を再開不能な中断として案内する誤りを検出する。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            checkpoint = output.with_name(output.name + ".checkpoint")
+            lock_path = analysis_resume.analysis_lock_path_for_output(output)
+            stderr = io.StringIO()
+
+            with (
+                patch.object(
+                    analysis_resume,
+                    "_remove_owned_lock",
+                    side_effect=KeyboardInterrupt,
+                ),
+                redirect_stderr(stderr),
+            ):
+                status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+            self.assertEqual(status, 0)
+            self.assertTrue(output.is_file())
+            self.assertFalse(checkpoint.exists())
+            self.assertTrue(lock_path.is_file())
+            self.assertIn("lock解除が中断", stderr.getvalue())
+            self.assertNotIn("--resume", stderr.getvalue())
+
+    def test_interruption_rejects_type_mismatched_final_output(self):
+        """bool値と整数値が違う最終JSONを保存済みとして扱わない。
+
+        Pythonで等値となるFalseと0をJSON内容照合で区別しない誤りを検出し、破損出力を
+        完成結果と誤認してcheckpointを削除することを防ぐ。
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            input_dir = Path(directory) / "input"
+            input_dir.mkdir()
+            _write_handwritten_experiment(input_dir)
+            output = Path(directory) / "analysis.json"
+            checkpoint = output.with_name(output.name + ".checkpoint")
+            original_write = comparison_result_io.write_new_json
+            stderr = io.StringIO()
+
+            def change_boolean_to_integer_then_interrupt(path, payload):
+                original_write(path, payload)
+                saved_payload = json.loads(path.read_bytes())
+                self.assertIs(saved_payload["elapsed_lower_bound"], False)
+                saved_payload["elapsed_lower_bound"] = 0
+                path.write_text(json.dumps(saved_payload), encoding="utf-8")
+                raise KeyboardInterrupt
+
+            with (
+                patch.object(
+                    comparison_result_io,
+                    "write_new_json",
+                    side_effect=change_boolean_to_integer_then_interrupt,
+                ),
+                redirect_stderr(stderr),
+            ):
+                status = main(["--input-dir", str(input_dir), "--output", str(output)])
+
+            self.assertEqual(status, 130)
+            self.assertTrue(output.is_file())
+            self.assertTrue(checkpoint.is_dir())
+            self.assertIn("--resume", stderr.getvalue())
 
     def test_checkpoint_write_failure_returns_one_and_keeps_completed_games(self):
         """checkpoint保存故障は1を返し、完成済み局だけを残す。"""

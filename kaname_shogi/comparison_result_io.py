@@ -1754,6 +1754,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     source_root = Path(__file__).resolve().parent.parent
     checkpoint_path = checkpoint_path_for_output(args.output)
+    payload: dict[str, object] | None = None
     try:
         _validate_new_output_path(args.output)
         if args.resume:
@@ -1797,8 +1798,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             try:
                 write_new_json(args.output, payload)
             except KeyboardInterrupt:
-                print(_analysis_interruption_message(checkpoint_path), file=sys.stderr)
-                return 130
+                if _analysis_output_matches(args.output, payload):
+                    print(
+                        "分析結果は保存済みです。最終JSON作成直後の割込みを"
+                        "完了扱いにしてcheckpointを片付けます。",
+                        file=sys.stderr,
+                    )
+                else:
+                    print(
+                        _analysis_interruption_message(checkpoint_path),
+                        file=sys.stderr,
+                    )
+                    return 130
             except (OSError, TypeError, ValueError) as error:
                 print(f"分析結果を保存できません: {error}", file=sys.stderr)
                 return 1
@@ -1817,6 +1828,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                     file=sys.stderr,
                 )
     except KeyboardInterrupt:
+        if payload is not None and _analysis_output_matches(args.output, payload):
+            print(
+                "分析結果は保存済みです。後処理が中断されました。"
+                f"checkpointが残っている場合は確認してください: {checkpoint_path}",
+                file=sys.stderr,
+            )
+            print(f"分析結果: {args.output}")
+            return 0
         print(_analysis_interruption_message(checkpoint_path), file=sys.stderr)
         return 130
     except AnalysisCheckpointWriteError as error:
@@ -1849,6 +1868,21 @@ def _analysis_interruption_message(checkpoint_path: Path) -> str:
         f"分析を中断しました。完了済み{completed}局のcheckpointを保持しました。"
         "再開するには同じ--input-dirと--outputに--resumeを追加してください。"
     )
+
+
+def _analysis_output_matches(path: Path, payload: Mapping[str, object]) -> bool:
+    """割込み時に完成JSONが保存済みかを、出力内容で確かめる。"""
+    output = Path(path)
+    if output.is_symlink():
+        return False
+    try:
+        return _json_values_equal(
+            decode_object(output.read_bytes(), context="分析出力"), dict(payload)
+        )
+    except OSError:
+        return False
+    except ValueError:
+        return False
 
 
 def _validate_new_output_path(path: Path) -> None:

@@ -85,7 +85,8 @@ def analysis_run_lock(output: Path) -> Iterator[None]:
 
     副作用:
         排他的作成でPIDとnonceを書いたlockを作り、正常なcontext終了時に自分が作った
-        同一lockだけを削除する。残存lockを自動で解除しない。
+        同一lockだけを削除する。解除中にKeyboardInterruptが起きた場合は診断を出して
+        その割込みを抑止し、lockが残れば人にPID確認を求める。残存lockを自動で解除しない。
 
     前提条件:
         呼出側は、処理を始める前に同じoutputを新規保存可能か検証する。
@@ -147,6 +148,12 @@ def analysis_run_lock(output: Path) -> Iterator[None]:
     finally:
         try:
             _remove_owned_lock(lock_path, token, created_stat, require_token=True)
+        except KeyboardInterrupt:
+            print(
+                "分析lock解除が中断されました。lockが残っている場合は、"
+                f"PIDを確認してから手動で解除してください: {lock_path}",
+                file=sys.stderr,
+            )
         except OSError as error:
             print(
                 f"分析ロックを解除できません。PIDを確認してから手動で削除してください: "

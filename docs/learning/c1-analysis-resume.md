@@ -50,3 +50,11 @@ C1確認比較の分析CLIは4,080局の棋譜を全件検証するため長時�
 ## Git状態・次の段階
 
 実装計画のTask 1〜3は `2618104`, `96f1f87`, `4a63943`、Task 4の機能・利用資料・設計・学習記録は `0fcb157` として `/Users/oki2a24/.codex/worktrees/c1-analysis-resume/kaname-shogi` の `codex/c1-analysis-resume` にコミット済み。mainまたは元checkoutへの取り込みは別承認を待つ。
+
+## main起点の候補での再検証（2026-10-27）
+
+現在のmain `ba03ee9` には分析reader短時間化・比較CLIの合法手判定早期終了が統合済みだが、分析CLI再開機能は含まれていなかった。再開機能の5コミットだけをmain起点branch `codex/c1-analysis-resume-integration`（`/Users/oki2a24/.codex/worktrees/c1-analysis-speedup/kaname-shogi`）へ適用し、既存reader短縮と一緒に検証している。元checkout `/Users/oki2a24/kaname-shogi` の未コミット記録・実験データは操作していない。
+
+統合候補レビューで、最終JSONの保存直後やlock解除中の割込みが完成結果を終了コード130として扱い、再実行不能にする可能性が指摘された。出力JSONが今回のpayloadと一致する場合は完成扱いにしてcheckpoint後処理へ進め、lock解除の割込みは診断して終了状態を変えないようにした。追加TDDでは「writerの完全保存直後に割込み」と「lock解除中の割込み」が変更前に終了コード130でRed、修正後Green。再レビューで指摘されたbool/整数のJSON値同一視も、`False` と `0` の変異でRedを確認し、既存の型厳密比較 `_json_values_equal` を使う修正でGreenにした。レビューMinorの索引漏れは `docs/README.md` に設計・計画・学習記録の行を追加して解消した。
+
+main起点候補の最終コード変更後、関連 `.venv/bin/python -m unittest -q tests.test_analysis_resume tests.test_analyze_comparison tests.test_comparison_result_io` は65件で成功し、全体 `python3 scripts/run_tests_parallel.py` は58モジュール898件・22.218秒で成功した。Ruffのimport整理・整形・全体checkと `git diff --check` も成功。README・索引・設計・計画・知識・学習記録の6文書でローカルリンク692件、欠落0件を確認し、索引からの再開仕様見出しリンクも存在する。最終独立再レビューはCritical 0、Important 0、Minor 2。1件（レビュー・リンク確認未実施という一時的な記録）はこの追記で解消し、もう1件（部分JSONの書込と削除がともに失敗するI/O障害後は、残存出力を人が確認して処置する）は既存の新規限定保存方針に沿う未検証限界として保持する。実端末Ctrl-C・プロセス強制終了・記憶媒体故障は未検証。4,080局の実分析や比較は起動していない。C1強さ判定「判断不能」と、分析CLI再開機能のmain統合状態は別事項である。
