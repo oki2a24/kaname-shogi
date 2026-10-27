@@ -50,10 +50,10 @@ git-dirは元リポジトリの.git/worktrees/kaname-shogi4、common-dirは.git�
 - [x] 本人の本計画全体への承認と実行方式を記録する。2026-10-28、本人「承認する」。
 - [x] A2の最後の理解確認と回答・補足を記録する。2026-10-28、本人は今回の指標と合法な逃げ先の違いを回答した。
 - [x] B2への移行と新セッションへの引き継ぎを本人が選ぶ。2026-10-28、確認へ「yes」と回答。
-- [ ] 新セッションで本人の再開指示を受けて現在状態を照合する。同セッション継続を本人が明示した場合はその希望に従う。
-- [ ] 指定作業先でgit status --short --branch、git log -3 --oneline --decorate、git branch --show-currentを実行し、無関係な変更があれば保持する。
-- [ ] .venv/bin/python3 --version、.venv/bin/ruff --versionとrequirements-dev.txt、git config --local --get core.hooksPathを照合する。不足時はREADMEの手順に従い、グローバル設定を変えない。
-- [ ] 計画承認後・製品変更前に、PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.pyでベースラインを確認する。失敗があれば新規変更と区別し、先に切り分ける。計画作成中の今回は未実行。
+- [x] 新セッションで本人の再開指示を受けて現在状態を照合する。同セッション継続を本人が明示した場合はその希望に従う。
+- [x] 指定作業先でgit status --short --branch、git log -3 --oneline --decorate、git branch --show-currentを実行し、無関係な変更があれば保持する。
+- [x] .venv/bin/python3 --version、.venv/bin/ruff --versionとrequirements-dev.txt、git config --local --get core.hooksPathを照合する。不足時はREADMEの手順に従い、グローバル設定を変えない。
+- [x] 計画承認後・製品変更前に、PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.pyでベースラインを確認する。失敗があれば新規変更と区別し、先に切り分ける。計画作成中の今回は未実行。
 - [ ] 各タスクで、下記のケースを振る舞い単位に追加してRed→最小実装→Greenと進める。一括実装後にRedを捏造しない。スタブで既に満たす境界は初回Greenとして区別する。
 - [ ] 各タスクのRefactor要否を確認し、独立レビューの重大度・対応・検証範囲を学習記録へ残す。
 - [ ] Pythonのimport追加・変更後は .venv/bin/ruff check --select I --fix .、.venv/bin/ruff format .、.venv/bin/ruff check .、git diff --check、変更に見合うテストの順に進める。
@@ -132,7 +132,7 @@ movegenから新評価をimportしない。新規__init__公開や既存方式�
 どちらも両側に正確に一枚ずつの玉が必要で、欠落・複数玉はValueError。メッセージは「先手・後手の玉はそれぞれ1枚必要です」。
 公開二操作から同じ玉検査と近傍集計を再利用し、SをD(Q)-D(P)として計算する。
 
-- [ ] **1. テストを振る舞い単位に追加する。** 固定配置は設計の表の通り、記載以外空・持ち駒なし。D/Sの期待値を製品照会で生成しない。
+- [x] **1. テストを振る舞い単位に追加する。** 固定配置は設計の表の通り、記載以外空・持ち駒なし。D/Sの期待値を製品照会で生成しない。
 
 | テスト名 | 固定値・検出対象 |
 | --- | --- |
@@ -148,10 +148,10 @@ movegenから新評価をimportしない。新規__init__公開や既存方式�
 | test_requires_exactly_one_king_per_side | 玉を両方除く、片側を除く、各側を一枚ずつ増やすケースを両公開操作でValueErrorへ照合。玉なしを0にしない |
 | test_preserves_full_position | 盤面81マス、手番、先後の持ち駒の各枚数を保存し、D/Sを反復しても同一 |
 
-- [ ] **2. Red確認。** PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_king_safety.py -v。0スタブ等ではA・非零差・前提違反のassert失敗を確認。B=0等の初回Greenは区別する。
-- [ ] **3. 最小実装。** 両玉を一回の走査で検査できる内部処理を共有し、盤内の隣接マスだけへ公開利き照会を行う。合法手生成・試し指し・盤端補正を呼ばない。
-- [ ] **4. Green・Refactor・独立レビュー。** 専用とtest_square_attacks.pyを実行し、依存の再利用、両側非零不等での符号検出、局面不変を確認。
-- [ ] **5. 共通品質検査と学習記録更新後、当該ファイルをコミット。** 例: feat: 玉周辺の危険マス数と安全度差を追加。
+- [x] **2. Red確認。** PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_king_safety.py -v。0スタブ等ではA・非零差・前提違反のassert失敗を確認。B=0等の初回Greenは区別する。
+- [x] **3. 最小実装。** 両玉を一回の走査で検査できる内部処理を共有し、盤内の隣接マスだけへ公開利き照会を行う。合法手生成・試し指し・盤端補正を呼ばない。
+- [x] **4. Green・Refactor・独立レビュー。** 専用とtest_square_attacks.pyを実行し、依存の再利用、両側非零不等での符号検出、局面不変を確認。
+- [x] **5. 共通品質検査と学習記録更新後、当該ファイルをコミット。** 例: feat: 玉周辺の危険マス数と安全度差を追加。
 
 **GREEN条件:** D/Sの固定値、視点・先後反転・手番非依存、玉前提と読み取り契約が成功し、独立レビューのCritical/Importantが0。
 
