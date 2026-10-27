@@ -164,7 +164,7 @@ evaluate_material_king_safety(position: Position, perspective: Side, *, weights:
 _DEFAULT_KING_SAFETY_WEIGHTSはモジュール定数に一度だけ生成した設定。既定引数内で生成せずRuff B008を避ける。
 materialは正整数、safetyは0以上の整数で、bool・float・範囲違反はValueError。エラー文言は項目と許容範囲を日本語で示す。
 
-- [ ] **1. 設定・合成のテストを振る舞い単位に追加する。**
+- [x] **1. 設定・合成のテストを振る舞い単位に追加する。**
 
 | テスト名 | 独立期待値・assert |
 | --- | --- |
@@ -195,10 +195,10 @@ self.assertEqual(
 )
 ```
 
-- [ ] **2. Red確認。** PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_material_king_safety.py -v。最小宣言後の点数・範囲・不変性のassert失敗を確認する。
-- [ ] **3. 最小実装。** 既存MとTask 2のSを呼び、名前付き重みで合成する。safety=0でもSを呼び前提を検査する。詰み・探索・乱数や飛車可動性を持ち込まない。
-- [ ] **4. Green・Refactor・独立レビュー。** 専用に加えtest_king_safety.py・test_evaluation.py・test_material_rook_mobility.pyを実行。既存M・可動性設定と新規設定の独立を確認。
-- [ ] **5. 共通品質検査と学習記録更新後、当該ファイルをコミット。** 例: feat: 駒得と玉周辺安全度の合成評価を追加。
+- [x] **2. Red確認。** PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_material_king_safety.py -v。最小宣言後の点数・範囲・不変性のassert失敗を確認する。
+- [x] **3. 最小実装。** 既存MとTask 2のSを呼び、名前付き重みで合成する。safety=0でもSを呼び前提を検査する。詰み・探索・乱数や飛車可動性を持ち込まない。
+- [x] **4. Green・Refactor・独立レビュー。** 専用に加えtest_king_safety.py・test_evaluation.py・test_material_rook_mobility.pyを実行。既存M・可動性設定と新規設定の独立を確認。
+- [x] **5. 共通品質検査と学習記録更新後、当該ファイルをコミット。** 例: feat: 駒得と玉周辺安全度の合成評価を追加。
 
 **GREEN条件:** 固定点数、設定の境界・不変性、0倍時の玉前提、成り/取り/打ち後が成功し、独立レビューのCritical/Importantが0。
 
