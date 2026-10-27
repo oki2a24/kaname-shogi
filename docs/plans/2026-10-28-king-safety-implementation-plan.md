@@ -8,7 +8,7 @@
 
 **技術スタック:** 現行Python 3.14以上、標準unittest、固定Ruff 0.16.10。新規依存なし。計画作成時の指定作業ツリーはPython 3.15.2、Ruff 0.16.10、ローカルcore.hooksPath=.githooksを確認した。
 
-**仕様:** [本人承認済み設計](2026-10-28-king-safety-design.md)、[学習・回答・承認記録](../learning/king-safety-design.md)。2026-10-28、本人は設計全体へ「承認する」と回答した。同日、本人は実装計画全体と推薦したネイティブ方式にも「承認する」と回答した。A2の最後の理解確認と回答記録まで完了した。全タスク未着手で、B2への移行・新セッション再開指示を待つ。
+**仕様:** [本人承認済み設計](2026-10-28-king-safety-design.md)、[学習・回答・承認記録](../learning/king-safety-design.md)。2026-10-28、本人は設計全体へ「承認する」と回答した。同日、本人は実装計画全体と推薦したネイティブ方式にも「承認する」と回答した。A2の最後の理解確認と回答記録まで完了した。本人はB2への移行を選定した。全タスク未着手で、[B2引き継ぎ](../handover-b2-king-safety-implementation.md)の再開入力を新セッションで受けるのを待つ。
 
 ## グローバル制約
 
@@ -49,7 +49,8 @@ git-dirは元リポジトリの.git/worktrees/kaname-shogi4、common-dirは.git�
 
 - [x] 本人の本計画全体への承認と実行方式を記録する。2026-10-28、本人「承認する」。
 - [x] A2の最後の理解確認と回答・補足を記録する。2026-10-28、本人は今回の指標と合法な逃げ先の違いを回答した。
-- [ ] B2への移行を本人が選ぶまで、計画承認だけで次テーマを開始しない。原則は新セッション用の引き継ぎを作り、本人が入力した再開指示を待つ。同セッション継続を本人が明示した場合はその希望に従う。
+- [x] B2への移行と新セッションへの引き継ぎを本人が選ぶ。2026-10-28、確認へ「yes」と回答。
+- [ ] 新セッションで本人の再開指示を受けて現在状態を照合する。同セッション継続を本人が明示した場合はその希望に従う。
 - [ ] 指定作業先でgit status --short --branch、git log -3 --oneline --decorate、git branch --show-currentを実行し、無関係な変更があれば保持する。
 - [ ] .venv/bin/python3 --version、.venv/bin/ruff --versionとrequirements-dev.txt、git config --local --get core.hooksPathを照合する。不足時はREADMEの手順に従い、グローバル設定を変えない。
 - [ ] 計画承認後・製品変更前に、PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.pyでベースラインを確認する。失敗があれば新規変更と区別し、先に切り分ける。計画作成中の今回は未実行。
