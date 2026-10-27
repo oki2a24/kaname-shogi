@@ -8,7 +8,7 @@
 
 **技術スタック:** 現行Python 3.14以上、標準unittest、固定Ruff 0.16.10。新規依存なし。計画作成時の指定作業ツリーはPython 3.15.2、Ruff 0.16.10、ローカルcore.hooksPath=.githooksを確認した。
 
-**仕様:** [本人承認済み設計](2026-10-28-king-safety-design.md)、[学習・回答・承認記録](../learning/king-safety-design.md)。2026-10-28、本人は設計全体へ「承認する」と回答した。同日、本人は実装計画全体と推薦したネイティブ方式にも「承認する」と回答した。A2の最後の理解確認と回答記録まで完了した。本人はB2への移行を選定した。全タスク未着手で、[B2引き継ぎ](../handover-b2-king-safety-implementation.md)の再開入力を新セッションで受けるのを待つ。
+**仕様:** [本人承認済み設計](2026-10-28-king-safety-design.md)、[学習・回答・承認記録](../learning/king-safety-design.md)。2026-10-28、本人は設計全体へ「承認する」と回答した。同日、本人は実装計画全体と推薦したネイティブ方式にも「承認する」と回答した。A2の最後の理解確認と回答記録まで完了した。本人はB2への移行を選定した。計画承認・引き継ぎ作成時点では全タスク未着手で、[B2引き継ぎ](../handover-b2-king-safety-implementation.md)の再開入力を待っていた。これは当時の状態記録であり、現在の実施状況は各Taskの記録と現在地を参照する。
 
 ## グローバル制約
 
@@ -54,10 +54,10 @@ git-dirは元リポジトリの.git/worktrees/kaname-shogi4、common-dirは.git�
 - [x] 指定作業先でgit status --short --branch、git log -3 --oneline --decorate、git branch --show-currentを実行し、無関係な変更があれば保持する。
 - [x] .venv/bin/python3 --version、.venv/bin/ruff --versionとrequirements-dev.txt、git config --local --get core.hooksPathを照合する。不足時はREADMEの手順に従い、グローバル設定を変えない。
 - [x] 計画承認後・製品変更前に、PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.pyでベースラインを確認する。失敗があれば新規変更と区別し、先に切り分ける。計画作成中の今回は未実行。
-- [ ] 各タスクで、下記のケースを振る舞い単位に追加してRed→最小実装→Greenと進める。一括実装後にRedを捏造しない。スタブで既に満たす境界は初回Greenとして区別する。
-- [ ] 各タスクのRefactor要否を確認し、独立レビューの重大度・対応・検証範囲を学習記録へ残す。
-- [ ] Pythonのimport追加・変更後は .venv/bin/ruff check --select I --fix .、.venv/bin/ruff format .、.venv/bin/ruff check .、git diff --check、変更に見合うテストの順に進める。
-- [ ] 当該タスクのファイルと記録のみ明示的にステージし、git diff --cached --checkと内容確認後、通常のgit commitを行う。記録に実施済みの手順だけを書く。
+- [x] 各タスクで、下記のケースを振る舞い単位に追加してRed→最小実装→Greenと進める。一括実装後にRedを捏造しない。スタブで既に満たす境界は初回Greenとして区別する。
+- [x] 各タスクのRefactor要否を確認し、独立レビューの重大度・対応・検証範囲を学習記録へ残す。
+- [x] Pythonのimport追加・変更後は .venv/bin/ruff check --select I --fix .、.venv/bin/ruff format .、.venv/bin/ruff check .、git diff --check、変更に見合うテストの順に進める。
+- [x] 当該タスクのファイルと記録のみ明示的にステージし、git diff --cached --checkと内容確認後、通常のgit commitを行った。Task 1〜3はそれぞれの実装コミット、Task 4は実装・最終記録を含む通常コミットである。
 
 unittestの専用実行は下記のdiscoverコマンドを使う。終了コード0かつOKが成功条件で、指定ファイルが実際に発見され、0件でないことも確認する。
 専用・関連・全体の範囲を区別し、全体をskip・filterして短縮しない。
@@ -208,7 +208,7 @@ self.assertEqual(
 **消費:** Task 3のevaluate_material_king_safety、既存choose_one_ply_move(position, moves, rng, *, evaluate)、position_after_move、合法手・詰み操作。
 **生産:** 新評価を注入した一手選択の接続検証と、確定契約・検出範囲・未検証の記録。新しい選択器や公開方針は作らない。
 
-- [ ] **1. 新評価の接続ケースを作る。** selector本体は既存であり、この段階で最初から成功するケースは既存部品との初回Greenと記録する。Redを作る目的で既存本体を壊さない。Task 1～3で新機能のRedを担当し、下記は注入の実局面検証と代表変異で検出力を確認する。
+- [x] **1. 新評価の接続ケースを作る。** selector本体は既存であり、この段階で最初から成功するケースは既存部品との初回Greenと記録する。Redを作る目的で既存本体を壊さない。Task 1～3で新機能のRedを担当し、下記は注入の実局面検証と代表変異で検出力を確認する。
 
 | テスト名 | ケースとアサーション |
 | --- | --- |
@@ -221,8 +221,8 @@ self.assertEqual(
 空候補・最高同点一回抽選・負数・非詰み手なし・評価例外・不正手の伝達は既存test_one_ply_selection.pyの対応テストで補完する。
 全共通テストを新ファイルへ複写せず、新評価の実局面接続と異種枝を固有に確かめる。
 
-- [ ] **2. 接続GreenとRefactor・独立レビュー。** PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_king_safety_selection.py -v と、-p test_one_ply_selection.pyを実行。新評価の注入だけで必要な選択が得られるか点検する。
-- [ ] **3. 代表誤りを隔離コピーで確認。** 下表の一つずつを新鮮な一時コピーへ入れ、対応するテストの意図したassertion failureを確認する。コピーしたソースを本当にimportしているか__file__で確かめ、元の作業ツリーを変異させない。変異ごとに復元・成功を確認し、隔離コピーを片付ける。
+- [x] **2. 接続GreenとRefactor・独立レビュー。** PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_king_safety_selection.py -v と、-p test_one_ply_selection.pyを実行。新評価の注入だけで必要な選択が得られるか点検する。
+- [x] **3. 代表誤りを隔離コピーで確認。** 下表の一つずつを新鮮な一時コピーへ入れ、対応するテストの意図したassertion failureを確認する。コピーしたソースを本当にimportしているか__file__で確かめ、元の作業ツリーを変異させない。変異ごとに復元・成功を確認し、隔離コピーを片付ける。
 
 | 代表誤り | 必ず失敗を確認する対象 |
 | --- | --- |
@@ -237,8 +237,8 @@ self.assertEqual(
 ImportError・構文エラーや別の原因だけの失敗は検出成功へ数えない。
 既存検査だけが検出する誤りと、新規専用検査が単独で検出する誤りを区別する。
 
-- [ ] **4. 品質・全体回帰・最終ブランチレビュー。** import整理→全体format→全体Ruff→git diff --checkの後、PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.pyを実行し、発見された全モジュールの件数・成功・実時間を記録。過去の898件成功を今回の実測としない。fc32080bからの製品差分・設計・計画・文書を独立レビューし、各Taskの指摘と最終Critical/Importantを解消する。修正後は影響に見合う再検証・再レビューを行う。
-- [ ] **5. 確定知識・学習記録・現在地を更新してコミット。** D/S/E、利きと移動先の違い、両玉・設定前提、詰み優先、一手選択の注入例、対象外を知識メモへ記録。各検証のコマンド・結果・初回Green/Red・Refactor要否・代表誤り検出・レビュー対応・未検証を学習記録へ残す。文書リンクと差分を確認し、Task 4のファイルと記録だけを通常コミットする。
+- [x] **4. 品質・全体回帰・最終ブランチレビュー。** import整理→全体format→全体Ruff→git diff --check、全体回帰928テスト・62モジュール・24.955秒を記録した。fc32080bからの製品差分・設計・計画・文書を独立レビュー。初回はCritical 0 / Important 0 / Minor 1で、Task 4混合枝の合法手前提assertを追加し、専用4件・既存選択器10件とRuffを再確認した。独立再レビューはCritical 0 / Important 0 / Minor 0。
+- [x] **5. 確定知識・学習記録・現在地を更新してコミット。** D/S/E、利きと移動先の違い、両玉・設定前提、詰み優先、一手選択の注入例、対象外を知識メモへ記録した。各検証のコマンド・結果・初回Green/Red・Refactor要否・代表誤り検出・レビュー対応・未検証を学習記録へ残した。変更した文書のローカル相対リンク829件と差分を確認し、Task 4のファイルと記録を明示ステージして通常コミットした。
 
 **GREEN条件:** 新評価の選択接続、代表誤りの意図した失敗と復元後成功、品質検査、全体回帰、独立最終レビューと記録がそろい、未解決Critical/Importantが0。
 

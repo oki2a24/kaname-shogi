@@ -6,11 +6,9 @@
 
 C1に付随して着手した比較CLI局単位再開、分析CLI短時間化、比較CLI局内高速化、分析CLI局単位再開はすべてローカルmainへ統合済み（`9e959b2`、`ca94847`、`441345e`）。分析CLI再開後の統合先全体テストは898件・58モジュールで成功した。mainへの統合後もpushしていない。長時間の比較・分析CLIは本人が端末で実行し、アシスタントは起動・監視しない。詳細と測定限界は[C1比較と局単位再開](learning/c1-rook-mobility-evaluation.md)、[分析CLI短時間化](learning/c1-analysis-performance-investigation.md)、[比較CLI局内高速化](learning/c1-comparison-game-internal-speedup.md)、[分析CLI局単位再開](learning/c1-analysis-resume.md)を参照する。
 
-A2「玉の安全度の小さな指標を学び設計する」は、候補選定・個別合意・独立設計確認（Critical 0 / Important 0 / Minor 0）・設計全体と実装計画/実行方式の承認・最後の理解確認と回答記録まで完了した。[学習記録](learning/king-safety-design.md)、[承認済み設計](plans/2026-10-28-king-safety-design.md)、[承認済み実装計画](plans/2026-10-28-king-safety-implementation-plan.md)を参照する。
+A2「玉の安全度の小さな指標を学び設計する」は、候補選定・個別合意・独立設計確認・設計全体と実装計画/実行方式の承認・最後の理解確認と回答記録まで完了した。続くB2「玉周辺安全度の実装」は、承認済み4Taskの実装、各段階の検証とTask別レビュー、確定知識・学習記録の更新を作業ブランチで完了した。専用・関連テスト、代表変異、全体928テスト・62モジュール（24.955秒）、Ruffと差分検査が成功した。最終ブランチレビューはCritical 0 / Important 0 / Minor 0。初回Minorを受けて混合枝候補の合法性assertを補い、Task4専用4件と既存選択器10件を再実行した。詳細は[学習記録](learning/king-safety-design.md)、[確定知識](knowledge/king-safety-evaluation.md)、[承認済み設計](plans/2026-10-28-king-safety-design.md)、[実装計画と実績](plans/2026-10-28-king-safety-implementation-plan.md)を参照する。
 
-本人は次テーマB2「玉周辺安全度の実装」と新セッションへの引き継ぎを「yes」で選定した。現在は[B2引き継ぎの再開用プロンプト](handover-b2-king-safety-implementation.md#再開用プロンプト)を本人が新セッションへ入力するのを待つ。計画・ネイティブ実行方式は承認済みで、再承認を求めない。Task 1～4は未着手で、新セッションでは現状照合・環境確認・製品変更前の全体ベースラインから始める。実装計画の承認をmain統合やC2接続・比較の承認と扱わない。未完了の主線目標はB2実装とその後のC2である。
-
-作業先は /Users/oki2a24/.codex/worktrees/c1-analysis-speedup/kaname-shogi、記録用ブランチはcodex/a2-king-safety-design、開始HEADは82d2f8d。A2の文書は同ブランチで記録し、mainへ未統合。元の `/Users/oki2a24/kaname-shogi` は `codex/c1-analysis-performance-investigation` 上の未コミット文書・比較データを保持しているため、作業先と混同せず現状を保つ。通常CLIのSFEN入出力と飛車可動性バージョン2は、別の将来候補として保留中である。
+作業先は `/Users/oki2a24/.codex/worktrees/c1-analysis-speedup/kaname-shogi`、作業ブランチは `codex/a2-king-safety-design`。main統合・pushは未実施で、どちらも別途承認が必要である。最終レビュー済みの作業ブランチを提示し、main統合への別途承認を待つ段階。元の `/Users/oki2a24/kaname-shogi` は本人の未コミット文書・比較データを保持するため操作していない。通常CLIのSFEN入出力、飛車可動性バージョン2、C2接続・比較・長時間実験は今回の範囲に含めず保留する。統合承認後は取り込み先の現状を照合し、統合後の検証を行う。その後、最後の理解確認を一問だけ提示して回答を待ち、回答記録後に主線候補を示す。未完了の主線帰還目標はC2である。
 
 ## C1開始前の状態（履歴）
 

@@ -362,6 +362,62 @@ is_square_attackedとtests/test_square_attacks.py。玉なし盤でも使え、�
 Task 1の全14駒種・遮蔽テストと合わせた有限の代表例で、全局面の証明、棋力、実時間性能は対象外である。
 合成評価と既存一手選択への接続はTask 3・4で確認する。
 
+## 2026-10-28：B2 Task 4「既存一手選択への注入・全体検証」の実装記録
+
+承認済みTask 4として `tests/test_king_safety_selection.py` を追加した。選択器本体は既存の `choose_one_ply_move` を使い、
+Task 3の評価操作を注入する。製品コードの選択方式・CLI・USIには変更を加えていない。
+
+### 初回Green・検出力・レビュー
+
+- 新しい接続テスト4件は、作成直後に既存選択器とTask 1～3の部品で成功した。計画どおり初回Greenと記録し、
+  Redを作るため既存選択器を故意に壊していない。製品の新しい振る舞いはTask 1～3でassert由来のRedを確認済み。
+- 先手・後手それぞれで危険な玉移動と安全な玉移動を両順の候補タプルで比較し、
+  注入評価-11/-10から安全側を選ぶ。駒得のみの評価では両手を同点タプルのまま一度抽選へ渡す。
+- 一手詰み・通常手は両側・両候補順で確認し、通常手の評価に10の30乗を加えても詰みが優先され、
+  詰み枝が評価器へ渡らない。最初の独立TaskレビューはCritical 0 / Important 0 / Minor 1で、
+  これらの詰み・通常候補が合法手であるassertがない点を指摘された。`legal_moves` への包含assertを両候補に加え、
+  専用4件と既存 `test_one_ply_selection.py` 10件を再実行した。独立再レビューはCritical 0 / Important 0 / Minor 0。
+- Task 3共通局面の成り・竜取り・歩打ちは108/320/-2で、選択器は捕獲手を選ぶ。
+  評価器が保持した枝のうち捕獲枝の盤と先後双方の持ち駒を後から変更しても、他枝と元局面は変化しない。
+  候補タプルを逆順にしても同じ手を選ぶ。
+
+### 代表変異・全体検証
+
+- 承認済み計画の7代表誤りを、それぞれ新しい `/private/tmp/king-safety-task4-mut/` 配下のコピーで検査した。
+  各テスト前に対象モジュールの `__file__` がそのコピー内であることを確かめ、変異後にassert失敗、
+  元ファイル復元後にGreenを確認してからコピーを削除した。元の作業ツリーは変異していない。
+- 対応結果：味方占有補正省略は `test_counts_friendly_occupied_target` のFalse期待で失敗。
+  攻撃者以外の遮蔽物を除去する変異は `test_stops_at_first_blocker_in_every_sliding_direction` の遮蔽先False期待で失敗。
+  元盤を直接変更する変異は `test_preserves_board_on_success_and_failure` の盤面列比較で失敗。
+  各危険マスを二度加算する変異は `test_counts_distinct_attacked_squares` で4対2となり失敗。
+  安全度差の引き算を逆にする変異、および相手側危険数を無視する変異は、別々に
+  `test_subtracts_two_nonzero_unequal_dangers` で1対-1、-2対-1となり失敗。
+  既定駒得係数を10から1にする変異は `test_combines_material_and_safety` で-10対-82となり失敗した。
+- この変異表の最初の3件はTask 1、次の3件はTask 2、最後はTask 3の専用テストで検出した。
+  Task 4固有テストは評価注入、両視点・候補順、詰み優先、異種枝の接続を新たに確認する。
+  最初に作った遮蔽物変異は占有補正分岐内だけを変更して検査対象へ到達しなかったため破棄し、
+  空きtargetにも適用される変異を新鮮なコピーで作って再確認した。
+- Refactorは不要と判断した。選択器本体は既存のまま、テスト側は固定局面・先後反転・局面スナップショットと
+  呼出可能な評価記録オブジェクトにまとめている。
+- Task別独立レビューはすべて最終的にCritical 0 / Important 0 / Minor 0。
+- Ruff import整理とcheckが成功し、全体formatは114ファイル変更なし、`git diff --check` が成功した。
+  製品変更後の全体回帰 `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py` は
+  928テスト・62モジュールを24.955秒で実行し、成功した。製品変更前の898件・58モジュール・23.636秒とは別の実測である。
+
+### 最終ブランチレビュー
+
+- `fc32080b` からの7コミットとTask 4・知識・学習・計画・現在地のステージ済み差分を独立レビューした。
+  初回はCritical 0 / Important 0 / Minor 1。`test_preserves_mixed_move_branches` 内で成り・捕獲・打ち候補が合法手である前提を直接確認していない指摘だった。
+- 三候補それぞれが `legal_moves(position)` に含まれるassertを追加した。Task 4専用4件と既存 `test_one_ply_selection.py` 10件を再実行して成功し、全体Ruff format/checkと `git diff --cached --check` も成功した。
+- 更新差分の独立再レビューはCritical 0 / Important 0 / Minor 0。製品コードに修正はなく、前提を明確にするテストassertのみ追加した。
+- 変更した8文書のローカル相対リンク829件はすべて参照先が存在することを確認した。
+
+### 範囲と未検証事項
+
+Task 4は通常の新評価注入を検査し、選択器本体、CLI、USI、比較CLIの選択方針は変更しない。
+新評価の棋力、重みの妥当性、実時間性能、全局面網羅、C2の接続・比較は未検証である。
+main統合とpushは行っておらず、本人の別途承認待ち。最後の理解確認は統合先検証後に一問だけ行う。
+
 ## 2026-10-28：B2 Task 3「不変の重みと駒得との合成」の実装記録
 
 承認済みTask 3として `kaname_shogi/material_king_safety.py` と専用テストを追加した。
