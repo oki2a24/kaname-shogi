@@ -30,6 +30,6 @@ selected = choose_one_ply_move(
 - この指標は盤上の現在の利きを使う小さな静的指標で、勝敗・王手回避・合法な玉の逃げ先を保証しない。
 - 重みの棋力上の妥当性、実時間性能、対局比較の結果は示していない。
 - 通常対局CLI、USI、比較CLIへの公開、通常CLIのSFEN入出力、飛車可動性バージョン2、C2接続・実験は含めない。
-- 本実装は `codex/a2-king-safety-design` 作業ブランチ上にあり、mainへ未統合。統合・pushは別途承認が必要。
+- 本評価は既存一手選択へ注入する部品として実装し、CLI/USI・比較CLIへ公開する方針や既存選択器本体は変更しない。
 
 設計は[承認済み仕様](../plans/2026-10-28-king-safety-design.md)、実装手順と検証は[承認済み計画](../plans/2026-10-28-king-safety-implementation-plan.md)と[学習記録](../learning/king-safety-design.md)を参照する。

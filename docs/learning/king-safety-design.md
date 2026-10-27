@@ -416,7 +416,16 @@ Task 3の評価操作を注入する。製品コードの選択方式・CLI・US
 
 Task 4は通常の新評価注入を検査し、選択器本体、CLI、USI、比較CLIの選択方針は変更しない。
 新評価の棋力、重みの妥当性、実時間性能、全局面網羅、C2の接続・比較は未検証である。
-main統合とpushは行っておらず、本人の別途承認待ち。最後の理解確認は統合先検証後に一問だけ行う。
+最後の理解確認は統合先検証後に一問だけ提示し、現在は本人の回答待ちである。
+
+## 2026-10-28：B2のmain統合・push・統合先検証
+
+- 本人からmain統合とpushの両方について明示承認を受けた。ローカルmain `82d2f8d2` はB2ブランチの祖先で、B2ブランチはmainから9コミット先だったため、fast-forwardで統合した。
+- 元の `/Users/oki2a24/kaname-shogi` には未コミットの文書・比較データが残り、ブランチ `codex/c1-analysis-performance-investigation` で作業中だった。clean/reset/checkout/switchやファイル変更を行わず維持した。main統合と検証には `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi` を使った。
+- 統合worktreeには `.venv` がなく、初回全体テストは `test_usi_engine_launcher` だけが失敗した。単独実行では8件中3件が起動スクリプトの「開発環境のPythonがありません」で停止し、USIエンジン処理へ到達していないことを確認した。READMEのsetup_dev.pyは通常clone向けで、別worktreeを明示的に対象外としていた。
+- 原因確認後、作業ブランチにあるPython 3.15.2 / Ruff 0.16.10環境への一時 `.venv` リンクを統合worktree内に作成し、`test_usi_engine_launcher.py` 8件が成功した。その状態で全体テスト928件・62モジュールが25.003秒で成功。Ruff `format --check` は114ファイル変更なし、`ruff check` と `git diff --check` も成功した。テスト後は一時リンクを削除し、作業ブランチ側の仮想環境には変更を加えていない。
+- `git merge --ff-only codex/a2-king-safety-design` によりmainを `a75a0466` へ進め、`git push origin main` でorigin/mainを `0d8be5b7` から `a75a0466` へ更新した。pushした範囲は、すでにローカルmainにあった未pushの18コミットとB2ブランチの9コミットを含む27コミットだった。
+- 統合後の最後の理解確認を一問提示し、現在は回答待ち。回答・補足の記録後に主線の次候補を示す。C2「安全度を接続して比較評価する」は未完了の帰還目標として保持する。
 
 ## 2026-10-28：B2 Task 3「不変の重みと駒得との合成」の実装記録
 
