@@ -254,7 +254,7 @@ C2の実験・統計条件や長時間CLIは別途設計・本人実行とする
 
 ### 実績（2026-10-28）
 
-本人の別途承認後、`/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi` で `main` を `a75a0466` へfast-forward統合し、origin/mainへpushした。元の `/Users/oki2a24/kaname-shogi` は未コミット文書・比較データを保護するため変更していない。統合先では全体テスト928件・62モジュール（25.003秒）、Ruff format/check、`git diff --check` が成功した。worktreeに `.venv` がなかったため、起動テストを初回単独再現し、同一マシンの既存環境への一時リンクを使って統合先検証を完了している。経緯は[学習記録](../learning/king-safety-design.md)を参照する。最後の理解確認は一問提示し、本人回答を待つ。
+本人の別途承認後、`/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi` で `main` を `a75a0466` へfast-forward統合し、origin/mainへpushした。元の `/Users/oki2a24/kaname-shogi` は未コミット文書・比較データを保護するため変更していない。統合先では全体テスト928件・62モジュール（25.003秒）、Ruff format/check、`git diff --check` が成功した。worktreeに `.venv` がなかったため、起動テストを初回単独再現し、同一マシンの既存環境への一時リンクを使って統合先検証を完了している。最後の理解確認では本人が `S=-2` の正しい下限を回答し、アシスタント補足とともに学習記録へ保存した。詳細は[学習記録](../learning/king-safety-design.md)を参照する。
 
 ## 計画作成時の点検
 

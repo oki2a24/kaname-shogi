@@ -8,7 +8,7 @@ C1に付随して着手した比較CLI局単位再開、分析CLI短時間化、
 
 A2「玉の安全度の小さな指標を学び設計する」は、候補選定・個別合意・独立設計確認・設計全体と実装計画/実行方式の承認・最後の理解確認と回答記録まで完了した。続くB2「玉周辺安全度の実装」は、承認済み4Taskの実装、検証、Task別と最終の独立レビューを終え、2026-10-28にmainへ統合してpushした。統合先では全928テスト・62モジュールが25.003秒で成功し、Ruff整形確認・lint・差分検査も成功した。統合前の初回実行は統合用worktreeに `.venv` がなくUSI起動テスト3件が失敗したが、既存環境への一時リンクで8件を再確認してから全体テストを通した。詳細は[学習記録](learning/king-safety-design.md)、[確定知識](knowledge/king-safety-evaluation.md)、[承認済み設計](plans/2026-10-28-king-safety-design.md)、[実装計画と実績](plans/2026-10-28-king-safety-implementation-plan.md)を参照する。
 
-作業ブランチ `codex/a2-king-safety-design` のB2実装は `a75a0466` としてmainへfast-forward統合され、origin/mainへpush済み。統合・検証用main checkoutは `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`。元の `/Users/oki2a24/kaname-shogi` は未コミット文書・比較データを保持しており、clean/reset/切替を行わず未変更のまま保護した。通常CLIのSFEN入出力、飛車可動性バージョン2、C2接続・比較・長時間実験は今回の範囲に含めず保留する。現在はB2の最後の理解確認への回答待ちで、回答と補足を学習記録へ保存してから主線候補を示す。未完了の主線帰還目標はC2である。
+作業ブランチ `codex/a2-king-safety-design` のB2実装は `a75a0466` としてmainへfast-forward統合され、origin/mainへpush済み。統合・検証用main checkoutは `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`。元の `/Users/oki2a24/kaname-shogi` は未コミット文書・比較データを保持しており、clean/reset/切替を行わず未変更のまま保護した。最後の理解確認は本人回答とアシスタント補足を[学習記録](learning/king-safety-design.md)へ保存して完了した。現在は次テーマ選択待ちで、候補は[次テーマ候補](next-topics.md)を参照する。通常CLIのSFEN入出力と飛車可動性バージョン2は保留し、未完了の主線帰還目標C2を保持する。
 
 ## C1開始前の状態（履歴）
 
