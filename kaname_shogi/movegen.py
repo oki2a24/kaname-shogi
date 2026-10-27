@@ -105,6 +105,44 @@ def _move_candidates_for_piece(board: Board, source: Square) -> list[Square]:
     return candidate_functions[piece.piece_type](board, source)
 
 
+def is_square_attacked(board: Board, target: Square, attacking_side: Side) -> bool:
+    """指定側の盤上駒がtargetへ利いているかを返す読み取り操作。
+
+    引数:
+        board: 利きを調べる盤面。玉の有無は問わない。
+        target: 利きの有無を調べる筋・段のマス。
+        attacking_side: 利きを調べる駒の所有者。
+
+    戻り値:
+        attacking_sideの盤上駒の既存候補にtargetが含まれる場合はTrue。
+        玉・手番・持ち駒・合法性は判定に必要としない。
+
+    副作用:
+        元の盤面を変更しない。候補生成中の例外はそのまま呼び出し側へ伝える。
+
+    targetがattacking_sideの駒で占有されている場合だけ盤を複製し、そのマスだけを
+    空にして候補を調べる。移動候補生成は味方駒のマスを除外するためである。
+    相手駒が占めるtargetは既存候補に含まれる。別の駒による遮蔽はそのまま残し、
+    空にしたtarget上の駒自身を攻撃元として数えない。駒種別ごとの移動規則を
+    再実装せず既存候補へ委譲することで、利きの形状と長距離の停止条件を共有する。
+    """
+    query_board = board
+    target_piece = board.piece_at(target)
+    if target_piece is not None and target_piece.side == attacking_side:
+        query_board = board.copy()
+        query_board.set_piece(target, None)
+
+    for file in range(1, 10):
+        for rank in range(1, 10):
+            source = Square(file, rank)
+            piece = query_board.piece_at(source)
+            if piece is None or piece.side != attacking_side:
+                continue
+            if target in _move_candidates_for_piece(query_board, source):
+                return True
+    return False
+
+
 def _opponent_side(side: Side) -> Side:
     """sideと反対の先後を返す非公開の値操作。"""
     return Side.GOTE if side == Side.SENTE else Side.SENTE

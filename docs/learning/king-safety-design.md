@@ -292,3 +292,40 @@ Python 3.15.2、Ruff 0.16.10、ローカルhooksPath=.githooksを今回も確認
 このセッションでは製品コード・テストを変更・実行していない。
 記録内容を確認して作業ブランチへコミットし、再開用プロンプトを本人へ提示する。
 本人が新セッションへ入力するまでB2の学習・設計変更・実装を開始しない。
+
+## 2026-10-28：B2 Task 1「占有マスを含む公開利き照会」の実装記録
+
+承認済みのTask 1を、/Users/oki2a24/.codex/worktrees/c1-analysis-speedup/kaname-shogi の
+codex/a2-king-safety-design上で実施した。変更はkaname_shogi/movegen.pyの公開
+is_square_attackedとtests/test_square_attacks.py。玉なし盤でも使え、指定側の盤上駒だけを調べ、
+合法性・手番・持ち駒には依存しない。味方駒がtargetを占める場合だけ複製盤上でそのマスを空け、
+他の遮蔽と元盤を保つ。既存候補生成へ委譲し、target上の駒自身を数えない。
+
+### TDD・検証・レビューの実績
+
+- 製品変更前の全体ベースラインは、Python 3.15.2、Ruff 0.16.10（requirements-dev.txtと一致）、
+  core.hooksPath=.githooksの環境で PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py
+  を実行し、898テスト・58モジュール、23.636秒で成功した。
+- 未実装時は関数未定義によるImportError/AttributeErrorをRedとせず、テスト側の呼び出し補助を通して
+  assertまで進めた。初回7テストは155件のAssertionError（利くべきマスでFalse）で失敗した。
+- is_square_attackedを最小実装した後、当初の新規7テストが成功し、関連する既存test_movegen.py 186件も成功した。
+  Refactorは不要と判断した。既存候補を再利用し、target補正は一箇所で読みやすくまとまっていた。
+- 最初の独立レビューはCritical 0 / Important 1 / Minor 0。実装の所属判定自体は正しかったが、
+  反対側の駒だけが利くマスをFalseとするテストがなく、所属フィルターを除いた変異を既存193テストが
+  見逃すことが確認された。
+- 指摘に対応して test_ignores_attacks_from_the_other_side を追加し、先後を反転した2ケースで
+  反対側だけの歩の利きをFalseと照合した。実装ソースとテストを隔離コピーへ複製し、所属条件を除いた変異を
+  そのコピーからimportして実行した。2ケースとも意図した AssertionError: True is not false で失敗し、
+  movegen.__file__ が一時コピー配下であることを確認した。元の作業ツリーは変更していない。
+- 修正後は専用8テストと既存test_movegen.py 186件が成功した。独立再レビューはCritical 0 /
+  Important 0 / Minor 0で、Task 1の技術的な受け入れ可と結論した。
+- Ruffのimport整理・全体format・全体checkが成功し、format後は109ファイルが変更なしだった。
+  git diff --checkも成功した。
+
+### 検出範囲と限界
+
+専用テストは全14駒種・先後の手書き到達集合を盤内81マスで照合し、味方・相手占有target、
+自己マス・空盤、長距離の最初の遮蔽、桂の飛び越し、指定側以外の除外、正常・例外終了時の盤面不変を確認する。
+期待値は製品候補生成から作っていない。既存186件は駒種別候補の方向・盤端・占有などを補う。
+これは有限の代表例による範囲内の検査で、全配置の証明ではない。玉周辺への集計、ピンや現在の玉による遮蔽の
+安全度例、合成評価、一手選択への接続はTask 2以降で確認する。性能・棋力は未検証。

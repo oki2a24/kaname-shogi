@@ -89,7 +89,7 @@ movegenから新評価をimportしない。新規__init__公開や既存方式�
 対象マスへ指定側の盤上駒から一つでも利きがあればTrue。玉なし盤でも使え、手番・持ち駒・合法性を調べない。
 有効なBoard・Square・Sideを引数の前提とし、無関係な入力型の汎用検証を追加しない。
 
-- [ ] **1. 独立フィクスチャと失敗するテストを作る。** 最小宣言を置く場合はFalseスタブ等にとどめ、正の到達ケースのassertTrue失敗をRedとして確認する。
+- [x] **1. 独立フィクスチャと失敗するテストを作る。** 最小宣言を置く場合はFalseスタブ等にとどめ、正の到達ケースのassertTrue失敗をRedとして確認する。
 
 | テスト名 | 固定入力・アサーション |
 | --- | --- |
@@ -117,10 +117,10 @@ movegenから新評価をimportしない。新規__init__公開や既存方式�
 | 馬 | 角の集合＋(±1,0),(0,±1) |
 | 竜 | 飛車の集合＋(±1,±1) |
 
-- [ ] **2. Red確認。** 実行: PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_square_attacks.py -v。意図した到達値のassert失敗を記録する。
-- [ ] **3. 最小実装。** targetをattacking_sideの駒が占有するときだけBoard.copyで複製し、そのtargetだけを空にする。照会盤の指定側の各駒の既存候補にtargetがあるか調べる。targetにいた駒自身を攻撃元に含めず、別の遮蔽は残す。
-- [ ] **4. Green・Refactor・独立レビュー。** 専用実行成功後、同じdiscoverで-p test_movegen.pyを関連検査として実行。候補生成の全14駒種の方向等は既存検査が補完するが、味方占有target・自己攻撃除外・複製補正は今回固有と確認。
-- [ ] **5. 共通品質検査と記録後、当該ファイルをコミット。** 例: feat: 占有マスを含む利き照会を追加。
+- [x] **2. Red確認。** 実行: PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_square_attacks.py -v。意図した到達値のassert失敗を記録する。
+- [x] **3. 最小実装。** targetをattacking_sideの駒が占有するときだけBoard.copyで複製し、そのtargetだけを空にする。照会盤の指定側の各駒の既存候補にtargetがあるか調べる。targetにいた駒自身を攻撃元に含めず、別の遮蔽は残す。
+- [x] **4. Green・Refactor・独立レビュー。** 専用実行成功後、同じdiscoverで-p test_movegen.pyを関連検査として実行。候補生成の全14駒種の方向等は既存検査が補完するが、味方占有target・自己攻撃除外・複製補正は今回固有と確認。
+- [x] **5. 共通品質検査と記録後、当該ファイルをコミット。** 例: feat: 占有マスを含む利き照会を追加。
 
 **GREEN条件:** 全14駒種の固定到達集合、占有・遮蔽、不変性、既存movegenの関連検査が成功し、独立レビューのCritical/Importantが0。
 
