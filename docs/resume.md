@@ -2,13 +2,11 @@
 
 ## 現在地（2026-10-28）
 
-主線「駒得以外の局面評価を一項目ずつ育てる」は、A1/B1の飛車可動性を実装・統合した後、C1の比較まで完了した。C1初回確認比較と独立追試はそれぞれ4,080局・2,040組で、95%得点区間はいずれも50%を含んだ。本人はC1を「判断不能」で一旦区切り、二つの比較は合算せず、追加比較も現在予定していない。これはB1が改善しなかったという証明ではない。[C1学習記録](learning/c1-rook-mobility-evaluation.md)と[追試設計](plans/2026-10-26-c1-rook-mobility-follow-up-comparison-design.md)を参照する。
+主線「駒得以外の局面評価を一項目ずつ育てる」は、A1/B1（飛車可動性）とC1（比較結果は判断不能で一旦区切り）、A2/B2（玉周辺安全度）まで完了した。本人は2026-10-28に次の主線目標C2「安全度を接続して比較評価する」を選んだ。C2の学習・調査・設計・実装はまだ始めておらず、この再開案内と[C2引き継ぎ](handover-c2-king-safety-evaluation.md)を準備した段階である。選定は具体設計・実装・比較実験の承認ではない。
 
-C1に付随して着手した比較CLI局単位再開、分析CLI短時間化、比較CLI局内高速化、分析CLI局単位再開はすべてローカルmainへ統合済み（`9e959b2`、`ca94847`、`441345e`）。分析CLI再開後の統合先全体テストは898件・58モジュールで成功した。mainへの統合後もpushしていない。長時間の比較・分析CLIは本人が端末で実行し、アシスタントは起動・監視しない。詳細と測定限界は[C1比較と局単位再開](learning/c1-rook-mobility-evaluation.md)、[分析CLI短時間化](learning/c1-analysis-performance-investigation.md)、[比較CLI局内高速化](learning/c1-comparison-game-internal-speedup.md)、[分析CLI局単位再開](learning/c1-analysis-resume.md)を参照する。
+B2は承認済み4Taskの実装、検証、Task別・最終独立レビューを終え、2026-10-28にmainへ統合してorigin/mainへpush済み。統合先では全928テスト・62モジュールが25.003秒で成功し、Ruff整形確認・lint・差分検査も成功した。統合前の初回実行は統合用worktreeに `.venv` がなくUSI起動テスト3件が失敗したが、既存環境への一時リンクで8件を再確認してから全体テストを通した。詳細は[B2学習記録](learning/king-safety-design.md)、[確定知識](knowledge/king-safety-evaluation.md)、[承認済み設計](plans/2026-10-28-king-safety-design.md)、[実装計画と実績](plans/2026-10-28-king-safety-implementation-plan.md)を参照する。
 
-A2「玉の安全度の小さな指標を学び設計する」は、候補選定・個別合意・独立設計確認・設計全体と実装計画/実行方式の承認・最後の理解確認と回答記録まで完了した。続くB2「玉周辺安全度の実装」は、承認済み4Taskの実装、検証、Task別と最終の独立レビューを終え、2026-10-28にmainへ統合してpushした。統合先では全928テスト・62モジュールが25.003秒で成功し、Ruff整形確認・lint・差分検査も成功した。統合前の初回実行は統合用worktreeに `.venv` がなくUSI起動テスト3件が失敗したが、既存環境への一時リンクで8件を再確認してから全体テストを通した。詳細は[学習記録](learning/king-safety-design.md)、[確定知識](knowledge/king-safety-evaluation.md)、[承認済み設計](plans/2026-10-28-king-safety-design.md)、[実装計画と実績](plans/2026-10-28-king-safety-implementation-plan.md)を参照する。
-
-作業ブランチ `codex/a2-king-safety-design` のB2実装は `a75a0466` としてmainへfast-forward統合され、origin/mainへpush済み。統合・検証用main checkoutは `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`。元の `/Users/oki2a24/kaname-shogi` は未コミット文書・比較データを保持しており、clean/reset/切替を行わず未変更のまま保護した。最後の理解確認は本人回答とアシスタント補足を[学習記録](learning/king-safety-design.md)へ保存して完了した。現在は次テーマ選択待ちで、候補は[次テーマ候補](next-topics.md)を参照する。通常CLIのSFEN入出力と飛車可動性バージョン2は保留し、未完了の主線帰還目標C2を保持する。
+準備開始時の統合・検証用main checkoutは `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、`main`、`origin/main` と同期した `452ab55a` でcleanだった。元の `/Users/oki2a24/kaname-shogi` は未コミット文書・比較データを保持するため、clean/reset/切替を行わず保護している。B2後の本人回答「少なくとも先手玉の周囲に後手の利きが２つ以上ある状態」と、`S=-2` が表す差ちょうど2の補足は[学習記録](learning/king-safety-design.md)に記録済み。通常CLIのSFEN入出力と飛車可動性バージョン2は保留し、C2へ自動追加しない。
 
 ## C1開始前の状態（履歴）
 
