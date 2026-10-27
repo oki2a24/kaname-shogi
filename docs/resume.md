@@ -1,14 +1,14 @@
 # 学習・開発の再開案内
 
-## 現在地（2026-10-27）
+## 現在地（2026-10-28）
 
 主線「駒得以外の局面評価を一項目ずつ育てる」は、A1/B1の飛車可動性を実装・統合した後、C1の比較まで完了した。C1初回確認比較と独立追試はそれぞれ4,080局・2,040組で、95%得点区間はいずれも50%を含んだ。本人はC1を「判断不能」で一旦区切り、二つの比較は合算せず、追加比較も現在予定していない。これはB1が改善しなかったという証明ではない。[C1学習記録](learning/c1-rook-mobility-evaluation.md)と[追試設計](plans/2026-10-26-c1-rook-mobility-follow-up-comparison-design.md)を参照する。
 
 C1に付随して着手した比較CLI局単位再開、分析CLI短時間化、比較CLI局内高速化、分析CLI局単位再開はすべてローカルmainへ統合済み（`9e959b2`、`ca94847`、`441345e`）。分析CLI再開後の統合先全体テストは898件・58モジュールで成功した。mainへの統合後もpushしていない。長時間の比較・分析CLIは本人が端末で実行し、アシスタントは起動・監視しない。詳細と測定限界は[C1比較と局単位再開](learning/c1-rook-mobility-evaluation.md)、[分析CLI短時間化](learning/c1-analysis-performance-investigation.md)、[比較CLI局内高速化](learning/c1-comparison-game-internal-speedup.md)、[分析CLI局単位再開](learning/c1-analysis-resume.md)を参照する。
 
-本人は主線へ戻ることを選び、次テーマA2「次の駒得以外の評価項目を一つ選ぶ」を選定した。A2では候補の学習と選定から始める。具体的な評価項目、改善仮説、局面、尺度、設計は未決定であり、選定は設計・実装の承認ではない。次のセッションは[A2引き継ぎ](handover-a2-non-material-position-evaluation.md)から始める。
+本人はA2の項目として「玉の安全度を一つの小さな指標に絞って学ぶ」を選び、同じセッションで継続している。玉の隣接盤内マスへの現在の相手の利きを重複せず数える案を学び、駒の有無によらない対象、全14駒種、最初の遮蔽マスまでの利き、ピンの包含、持ち駒の将来攻撃の除外、駒得＋安全度差の仮重み10対1、玉欠落時のエラーを個別に了承した。本人回答・補足・手計算例・未決事項は[A2学習記録](learning/king-safety-design.md)を参照する。その後、盤端補正なし・一手詰み優先も個別了承し、[未承認の設計案](plans/2026-10-28-king-safety-design.md)を作成した。独立設計確認はCritical 0 / Important 0 / Minor 0。次は設計全体への本人の明示承認を待ち、承認後に実装計画を作成・提示する。設計全体・実装計画は未承認で、TDD・コード・テスト変更・実装は未着手。開始時の背景は[A2引き継ぎ](handover-a2-non-material-position-evaluation.md)に保存している。
 
-作業先はローカル`main`の `/Users/oki2a24/.codex/worktrees/c1-analysis-speedup/kaname-shogi`。元の `/Users/oki2a24/kaname-shogi` は `codex/c1-analysis-performance-investigation` 上の未コミット文書・比較データを保持しているため、作業先と混同せず現状を保つ。通常CLIのSFEN入出力と飛車可動性バージョン2は、別の将来候補として保留中である。
+作業先は /Users/oki2a24/.codex/worktrees/c1-analysis-speedup/kaname-shogi、記録用ブランチはcodex/a2-king-safety-design、開始HEADは82d2f8d。A2の文書は同ブランチで記録し、mainへ未統合。元の `/Users/oki2a24/kaname-shogi` は `codex/c1-analysis-performance-investigation` 上の未コミット文書・比較データを保持しているため、作業先と混同せず現状を保つ。通常CLIのSFEN入出力と飛車可動性バージョン2は、別の将来候補として保留中である。
 
 ## C1開始前の状態（履歴）
 
