@@ -1,0 +1,227 @@
+{
+  "format": "kaname-shogi-comparison-conditions-v2",
+  "baseline": "material-king-safety-material-only",
+  "candidate": "material-king-safety",
+  "positions_file": "data/comparison/c2-king-safety-positions-v1.json",
+  "positions_sha256": "4ca02c526813719a33c16f42dd88270e439089bf47f5311f0bb23b504c746064",
+  "positions": [
+    {
+      "id": "initial",
+      "setup_moves": [],
+      "rationale": "平手初期局面。双方の玉周辺への相手の利きはない。",
+      "start_sfen": "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+      "initial_move_number": 1
+    },
+    {
+      "id": "bishop-line-danger",
+      "setup_moves": [
+        "7g7f",
+        "3c3d",
+        "5i6h",
+        "5a6b",
+        "6h7h"
+      ],
+      "rationale": "後手角が先手玉の隣の７七と８八へ利く、後手番の序盤。",
+      "start_sfen": "lnsg1gsnl/1r1k3b1/pppppp1pp/6p2/9/2P6/PP1PPPPPP/1BK4R1/LNSG1GSNL w - 6",
+      "initial_move_number": 6
+    },
+    {
+      "id": "bishop-exchange-development",
+      "setup_moves": [
+        "7g7f",
+        "3c3d",
+        "8h2b+",
+        "3a2b",
+        "5i6h",
+        "5a6b",
+        "6h7h",
+        "6b7b",
+        "2g2f",
+        "8c8d",
+        "2f2e",
+        "8d8e",
+        "7i6h",
+        "7a6b",
+        "4i5h",
+        "4a5b",
+        "3g3f",
+        "7c7d",
+        "6g6f",
+        "7d7e"
+      ],
+      "rationale": "角を交換して双方が玉を移し駒組みを進めた局面。両玉周辺の危険マス数は0。",
+      "start_sfen": "ln1g3nl/1rksg2s1/p2ppp1pp/6p2/1pp4P1/2PP2P2/PP2PP2P/2KSG2R1/LN1G2SNL b Bb 21",
+      "initial_move_number": 21
+    },
+    {
+      "id": "pawn-pressure",
+      "setup_moves": [
+        "7g7f",
+        "3c3d",
+        "8h2b+",
+        "3a2b",
+        "5i6h",
+        "5a6b",
+        "6h7h",
+        "6b7b",
+        "2g2f",
+        "8c8d",
+        "2f2e",
+        "8d8e",
+        "7i6h",
+        "7a6b",
+        "4i5h",
+        "4a5b",
+        "3g3f",
+        "7c7d",
+        "6g6f",
+        "7d7e",
+        "2e2d",
+        "2c2d",
+        "2h2d",
+        "8e8f",
+        "8g8f",
+        "8b8f",
+        "2d2h",
+        "8f8b",
+        "P*2c",
+        "P*8g"
+      ],
+      "rationale": "双方の飛車先で歩を交換した後、後手の８七歩と８二飛が先手玉周辺へ利く局面。",
+      "start_sfen": "ln1g3nl/1rksg2s1/p2ppp1Pp/6p2/2p6/2PP2P2/Pp2PP2P/2KSG2R1/LN1G2SNL b BPbp 31",
+      "initial_move_number": 31
+    }
+  ],
+  "pairs_per_position": 1,
+  "seed": null,
+  "max_plies": 128,
+  "schedule": [
+    {
+      "game_id": "game-000001",
+      "position_id": "initial",
+      "pair_number": 0,
+      "game_number_in_pair": 1,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 112615973948282238979827172709004251014,
+      "candidate_seed": 266515251897649205187580481101093038935
+    },
+    {
+      "game_id": "game-000002",
+      "position_id": "initial",
+      "pair_number": 0,
+      "game_number_in_pair": 2,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 112615973948282238979827172709004251014,
+      "candidate_seed": 266515251897649205187580481101093038935
+    },
+    {
+      "game_id": "game-000003",
+      "position_id": "bishop-line-danger",
+      "pair_number": 1,
+      "game_number_in_pair": 1,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 250725512643398469028118404219985315784,
+      "candidate_seed": 76697552306769926272232957744621422226
+    },
+    {
+      "game_id": "game-000004",
+      "position_id": "bishop-line-danger",
+      "pair_number": 1,
+      "game_number_in_pair": 2,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 250725512643398469028118404219985315784,
+      "candidate_seed": 76697552306769926272232957744621422226
+    },
+    {
+      "game_id": "game-000005",
+      "position_id": "bishop-exchange-development",
+      "pair_number": 2,
+      "game_number_in_pair": 1,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 161534724893483121034333758288871117583,
+      "candidate_seed": 79126985435426623227126522897010002621
+    },
+    {
+      "game_id": "game-000006",
+      "position_id": "bishop-exchange-development",
+      "pair_number": 2,
+      "game_number_in_pair": 2,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 161534724893483121034333758288871117583,
+      "candidate_seed": 79126985435426623227126522897010002621
+    },
+    {
+      "game_id": "game-000007",
+      "position_id": "pawn-pressure",
+      "pair_number": 3,
+      "game_number_in_pair": 1,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 275758552306402427127693602902371949893,
+      "candidate_seed": 329887277583937393743719096392216408286
+    },
+    {
+      "game_id": "game-000008",
+      "position_id": "pawn-pressure",
+      "pair_number": 3,
+      "game_number_in_pair": 2,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 275758552306402427127693602902371949893,
+      "candidate_seed": 329887277583937393743719096392216408286
+    }
+  ],
+  "timing": {
+    "source": "time.monotonic_ns",
+    "start": "immediately_before_legal_moves",
+    "end": "immediately_after_choose_move_returns",
+    "unit": "nanoseconds"
+  },
+  "clock": null,
+  "repetition": {
+    "ordinary_fourth_occurrence": "continue",
+    "ordinary_fifth_occurrence": "terminal",
+    "ordinary_rematch": false,
+    "perpetual_check_loss": "opposite_side_wins",
+    "double_perpetual_check": "unresolved_no_winner"
+  },
+  "git": {
+    "head": "25d537f124ddb6fac291d9c5072d543fa5af4fe5",
+    "dirty": true,
+    "diagnostic": null
+  },
+  "runtime": {
+    "python_version": "3.15.2",
+    "python_implementation": "CPython",
+    "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "processor": "arm"
+  },
+  "source_sha256": "f840a3a7bd2b04e9fbf3829cb4cc4447578da085730c6ec32f7ebc21a080204f",
+  "positions_json": "{\n  \"format\": \"kaname-shogi-comparison-positions-v1\",\n  \"id\": \"c2-king-safety-v1\",\n  \"positions\": [\n    {\n      \"id\": \"initial\",\n      \"setup_moves\": [],\n      \"rationale\": \"平手初期局面。双方の玉周辺への相手の利きはない。\"\n    },\n    {\n      \"id\": \"bishop-line-danger\",\n      \"setup_moves\": [\"7g7f\", \"3c3d\", \"5i6h\", \"5a6b\", \"6h7h\"],\n      \"rationale\": \"後手角が先手玉の隣の７七と８八へ利く、後手番の序盤。\"\n    },\n    {\n      \"id\": \"bishop-exchange-development\",\n      \"setup_moves\": [\n        \"7g7f\", \"3c3d\", \"8h2b+\", \"3a2b\", \"5i6h\", \"5a6b\", \"6h7h\", \"6b7b\",\n        \"2g2f\", \"8c8d\", \"2f2e\", \"8d8e\", \"7i6h\", \"7a6b\", \"4i5h\", \"4a5b\",\n        \"3g3f\", \"7c7d\", \"6g6f\", \"7d7e\"\n      ],\n      \"rationale\": \"角を交換して双方が玉を移し駒組みを進めた局面。両玉周辺の危険マス数は0。\"\n    },\n    {\n      \"id\": \"pawn-pressure\",\n      \"setup_moves\": [\n        \"7g7f\", \"3c3d\", \"8h2b+\", \"3a2b\", \"5i6h\", \"5a6b\", \"6h7h\", \"6b7b\",\n        \"2g2f\", \"8c8d\", \"2f2e\", \"8d8e\", \"7i6h\", \"7a6b\", \"4i5h\", \"4a5b\",\n        \"3g3f\", \"7c7d\", \"6g6f\", \"7d7e\", \"2e2d\", \"2c2d\", \"2h2d\", \"8e8f\",\n        \"8g8f\", \"8b8f\", \"2d2h\", \"8f8b\", \"P*2c\", \"P*8g\"\n      ],\n      \"rationale\": \"双方の飛車先で歩を交換した後、後手の８七歩と８二飛が先手玉周辺へ利く局面。\"\n    }\n  ]\n}\n",
+  "randomization": {
+    "purpose": "pilot",
+    "source": "os",
+    "bits": 128,
+    "seed_list_sha256": "510ecd2e730b5e4d356c0cb85570f93fd9e4914833604f28d3cd2d1454b8e316",
+    "seed_list_json": "{\n  \"format\": \"kaname-shogi-comparison-seeds-v1\",\n  \"purpose\": \"pilot\",\n  \"positions_sha256\": \"4ca02c526813719a33c16f42dd88270e439089bf47f5311f0bb23b504c746064\",\n  \"position_ids\": [\n    \"initial\",\n    \"bishop-line-danger\",\n    \"bishop-exchange-development\",\n    \"pawn-pressure\"\n  ],\n  \"pairs_per_position\": 1,\n  \"source\": \"os\",\n  \"bits\": 128,\n  \"pairs\": [\n    {\n      \"position_id\": \"initial\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 112615973948282238979827172709004251014,\n      \"candidate_seed\": 266515251897649205187580481101093038935\n    },\n    {\n      \"position_id\": \"bishop-line-danger\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 250725512643398469028118404219985315784,\n      \"candidate_seed\": 76697552306769926272232957744621422226\n    },\n    {\n      \"position_id\": \"bishop-exchange-development\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 161534724893483121034333758288871117583,\n      \"candidate_seed\": 79126985435426623227126522897010002621\n    },\n    {\n      \"position_id\": \"pawn-pressure\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 275758552306402427127693602902371949893,\n      \"candidate_seed\": 329887277583937393743719096392216408286\n    }\n  ]\n}\n"
+  },
+  "policy_parameters": {
+    "baseline": {
+      "material": 10,
+      "safety": 0,
+      "mate_priority": true
+    },
+    "candidate": {
+      "material": 10,
+      "safety": 1,
+      "mate_priority": true
+    }
+  }
+}

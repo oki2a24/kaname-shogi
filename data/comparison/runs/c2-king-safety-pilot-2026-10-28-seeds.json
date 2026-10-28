@@ -1,0 +1,40 @@
+{
+  "format": "kaname-shogi-comparison-seeds-v1",
+  "purpose": "pilot",
+  "positions_sha256": "4ca02c526813719a33c16f42dd88270e439089bf47f5311f0bb23b504c746064",
+  "position_ids": [
+    "initial",
+    "bishop-line-danger",
+    "bishop-exchange-development",
+    "pawn-pressure"
+  ],
+  "pairs_per_position": 1,
+  "source": "os",
+  "bits": 128,
+  "pairs": [
+    {
+      "position_id": "initial",
+      "repetition_index": 0,
+      "baseline_seed": 112615973948282238979827172709004251014,
+      "candidate_seed": 266515251897649205187580481101093038935
+    },
+    {
+      "position_id": "bishop-line-danger",
+      "repetition_index": 0,
+      "baseline_seed": 250725512643398469028118404219985315784,
+      "candidate_seed": 76697552306769926272232957744621422226
+    },
+    {
+      "position_id": "bishop-exchange-development",
+      "repetition_index": 0,
+      "baseline_seed": 161534724893483121034333758288871117583,
+      "candidate_seed": 79126985435426623227126522897010002621
+    },
+    {
+      "position_id": "pawn-pressure",
+      "repetition_index": 0,
+      "baseline_seed": 275758552306402427127693602902371949893,
+      "candidate_seed": 329887277583937393743719096392216408286
+    }
+  ]
+}
