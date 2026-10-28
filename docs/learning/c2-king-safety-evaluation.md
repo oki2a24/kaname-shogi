@@ -115,3 +115,17 @@ Task 4独立レビューは初回Critical 0 / Important 0 / Minor 1。READMEのC
 参考として、macOS 27.0.1 arm64・Python 3.15.2で4開始局面それぞれについて両方式の一手を1回ずつ、合法手生成から選択完了まで計時した。初期局面は対照0.0378秒・候補0.0362秒、角道局面0.0609秒・0.0609秒、角交換後0.1276秒・0.1261秒、歩打ち後0.1382秒・0.1380秒だった。これは8手だけの局面固定の測定で対局実験ではない。単純平均約0.0907秒に最大1024手を掛けると約93秒だが、進行による合法手・駒配置の変化、ファイル操作や終局で時間は変わるため実行時間の予測・上限保証にはならない。
 
 比較には新規のC2用乱数種一覧と新規出力先を使う。実行条件は本人の確認待ちで、長時間の比較・分析CLIは本人が端末で実行する。提案は実験の開始承認、main統合、pushの承認ではない。
+
+## C2予備比較の承認と実行条件
+
+2026-10-28、本人は4局面×1組、各局128手上限、worker 1、purpose pilotの案に「yes. また、あなたが実行してください」と回答した。今回の予備比較と分析はアシスタントが実行する。確認比較、main統合、pushの承認ではない。
+
+作業場所は /Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi、作業ブランチ codex/c2-king-safety-evaluation。承認時HEAD c10887fb、追跡・未追跡の変更なし。次の3出力先は実行前に存在しないことを確認した。
+
+```sh
+python3 -m kaname_shogi.prepare_comparison_seeds --positions data/comparison/c2-king-safety-positions-v1.json --pairs-per-position 1 --purpose pilot --output data/comparison/runs/c2-king-safety-pilot-2026-10-28-seeds.json
+python3 -m kaname_shogi.compare_games --baseline material-king-safety-material-only --candidate material-king-safety --positions data/comparison/c2-king-safety-positions-v1.json --pairs-per-position 1 --seed-list data/comparison/runs/c2-king-safety-pilot-2026-10-28-seeds.json --max-plies 128 --workers 1 --output-dir data/comparison/runs/c2-king-safety-pilot-2026-10-28
+python3 -m kaname_shogi.analyze_comparison --input-dir data/comparison/runs/c2-king-safety-pilot-2026-10-28 --output data/comparison/runs/c2-king-safety-pilot-2026-10-28-analysis.json
+```
+
+実行前の記録であり、結果・所要時間・採否はまだ分からない。既存方式の速度との比較には使えず、強さの判定には使わない。
