@@ -454,11 +454,13 @@ def _summary_policy_order(
             MoveSelectionPolicy.MATERIAL_KING_SAFETY,
         )
     )
-    if MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY in {
-        config.baseline,
-        config.candidate,
-    }:
-        policies += (MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,)
+    for policy in (
+        MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,
+        MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY,
+        MoveSelectionPolicy.MATERIAL_KING_SAFETY,
+    ):
+        if policy in {config.baseline, config.candidate}:
+            policies += (policy,)
     return policies
 
 

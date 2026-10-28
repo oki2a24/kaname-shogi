@@ -35,7 +35,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-現在の主線C2は、本人が2026-10-28に選んだ「安全度を接続して比較評価する」。B2・C1資料と現行コードの調査を終え、[学習記録](learning/c2-king-safety-evaluation.md)、[設計案](plans/2026-10-28-c2-king-safety-evaluation-design.md)、[実装計画案](plans/2026-10-28-c2-king-safety-evaluation-implementation-plan.md)を作成した。比較CLI限定の設計・実装計画は本人の「yes」で承認済み。Task 1・2の一手選択接続と比較条件指定を検証・独立レビューし、Task 3以降は未着手。現在地は[再開案内](resume.md)、主線との関係・保留事項は[次テーマ候補](next-topics.md)と[ロードマップ](roadmap-non-material-position-evaluation.md)、開始時点の背景は[C2引き継ぎ](handover-c2-king-safety-evaluation.md)を参照する。
+現在の主線C2は、本人が2026-10-28に選んだ「安全度を接続して比較評価する」。B2・C1資料と現行コードの調査を終え、[学習記録](learning/c2-king-safety-evaluation.md)、[設計案](plans/2026-10-28-c2-king-safety-evaluation-design.md)、[実装計画案](plans/2026-10-28-c2-king-safety-evaluation-implementation-plan.md)を作成した。比較CLI限定の設計・実装計画は本人の「yes」で承認済み。Task 1〜3の一手選択・比較条件・結果の保存と再開を検証・独立レビューし、Task 4は未着手。現在地は[再開案内](resume.md)、主線との関係・保留事項は[次テーマ候補](next-topics.md)と[ロードマップ](roadmap-non-material-position-evaluation.md)、開始時点の背景は[C2引き継ぎ](handover-c2-king-safety-evaluation.md)を参照する。
 
 A1/B1の飛車可動性の実装・main統合・検証・理解確認は完了した。C1の初回確認比較と独立追試はともに95%区間が50%を含み、B1全体の改善・悪化は判断不能。本人はこの結論でC1を一旦区切った。結果は[C1学習記録](learning/c1-rook-mobility-evaluation.md)を参照する。
 

@@ -2,7 +2,7 @@
 
 ## 現在地（2026-10-28）
 
-主線「駒得以外の局面評価を一項目ずつ育てる」は、A1/B1（飛車可動性）とC1（比較結果は判断不能で一旦区切り）、A2/B2（玉周辺安全度）まで完了した。本人は2026-10-28に次の主線目標C2「安全度を接続して比較評価する」を選んだ。このセッションでB2の知識・承認済み設計・実装計画、C1の接続・比較記録、現行コードを調査し、[C2学習記録](learning/c2-king-safety-evaluation.md)、[設計案](plans/2026-10-28-c2-king-safety-evaluation-design.md)、[実装計画案](plans/2026-10-28-c2-king-safety-evaluation-implementation-plan.md)を作成した。比較CLI限定の設計全体と実装計画は本人の「yes」で承認済み。Task 1の一手選択接続とTask 2の比較条件指定を検証・独立レビューし、Task 3以降は未着手。テーマ選定や文書作成は実装・比較実験の承認ではない。
+主線「駒得以外の局面評価を一項目ずつ育てる」は、A1/B1（飛車可動性）とC1（比較結果は判断不能で一旦区切り）、A2/B2（玉周辺安全度）まで完了した。本人は2026-10-28に次の主線目標C2「安全度を接続して比較評価する」を選んだ。このセッションでB2の知識・承認済み設計・実装計画、C1の接続・比較記録、現行コードを調査し、[C2学習記録](learning/c2-king-safety-evaluation.md)、[設計案](plans/2026-10-28-c2-king-safety-evaluation-design.md)、[実装計画案](plans/2026-10-28-c2-king-safety-evaluation-implementation-plan.md)を作成した。比較CLI限定の設計全体と実装計画は本人の「yes」で承認済み。Task 1〜3の一手選択・比較条件・結果の保存と再開を検証・独立レビューし、Task 4は未着手。テーマ選定や文書作成は実装・比較実験の承認ではない。
 
 B2は承認済み4Taskの実装、検証、Task別・最終独立レビューを終え、2026-10-28にmainへ統合してorigin/mainへpush済み。統合先では全928テスト・62モジュールが25.003秒で成功し、Ruff整形確認・lint・差分検査も成功した。統合前の初回実行は統合用worktreeに `.venv` がなくUSI起動テスト3件が失敗したが、既存環境への一時リンクで8件を再確認してから全体テストを通した。詳細は[B2学習記録](learning/king-safety-design.md)、[確定知識](knowledge/king-safety-evaluation.md)、[承認済み設計](plans/2026-10-28-king-safety-design.md)、[実装計画と実績](plans/2026-10-28-king-safety-implementation-plan.md)を参照する。
 
