@@ -47,6 +47,8 @@ _POLICIES = {
     "random": movegen.MoveSelectionPolicy.RANDOM,
     "material": movegen.MoveSelectionPolicy.MATERIAL,
     "material-rook-mobility": movegen.MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,
+    "material-king-safety-material-only": movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY,
+    "material-king-safety": movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY,
     "two-ply-material": movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
     "full-width-4": movegen.MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
     "alpha-beta-4": movegen.MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
@@ -384,7 +386,8 @@ def conditions_payload(
         `kaname_shogi` パッケージがある。ソース指紋は未追跡を含む全 `.py` を
         POSIX相対パス順にし、4バイトのパス長・パス・8バイトの内容長・内容を連結する。
         Git情報が取れない場合はnull値と診断を記録し、実験条件の他部分は残す。
-        v2では検証済み一覧と方式の実効評価重みも保存する。
+        v2では検証済み一覧と方式の実効評価重みも保存する。主乱数種を使う
+        条件でも玉周辺安全度方式を含む場合は両方式の重みを記録する。
     """
     if tuple(schedule) != make_schedule(config):
         raise ValueError("条件JSONの予定が比較条件から生成した予定と一致しません")
@@ -436,6 +439,14 @@ def conditions_payload(
     if config.seed_plan is None:
         if config.seed is None:
             raise ValueError("条件JSONには主乱数種または乱数種一覧が必要です")
+        if {
+            movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY,
+            movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY,
+        } & {config.baseline, config.candidate}:
+            payload["policy_parameters"] = {
+                "baseline": _policy_parameters(config.baseline),
+                "candidate": _policy_parameters(config.candidate),
+            }
         return _with_execution_metadata(payload, config.workers)
 
     if config.seed is not None or config.seed_list_json is None:
@@ -483,6 +494,10 @@ def _policy_parameters(policy: movegen.MoveSelectionPolicy) -> dict[str, object]
     """方式の実効評価値をconditions v2用の値として返す。"""
     if policy is movegen.MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY:
         return {"material": 10, "mobility": 1, "mate_priority": True}
+    if policy is movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY:
+        return {"material": 10, "safety": 0, "mate_priority": True}
+    if policy is movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY:
+        return {"material": 10, "safety": 1, "mate_priority": True}
     return {}
 
 

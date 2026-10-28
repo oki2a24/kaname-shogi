@@ -701,6 +701,8 @@ _POLICY_NAMES = {
     MoveSelectionPolicy.RANDOM: "random",
     MoveSelectionPolicy.MATERIAL: "material",
     MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY: "material-rook-mobility",
+    MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY: "material-king-safety-material-only",
+    MoveSelectionPolicy.MATERIAL_KING_SAFETY: "material-king-safety",
     MoveSelectionPolicy.TWO_PLY_MATERIAL: "two-ply-material",
     MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH: "full-width-4",
     MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA: "alpha-beta-4",
