@@ -447,7 +447,12 @@ def _summary_policy_order(
     policies = tuple(
         policy
         for policy in MoveSelectionPolicy
-        if policy is not MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY
+        if policy
+        not in (
+            MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,
+            MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY,
+            MoveSelectionPolicy.MATERIAL_KING_SAFETY,
+        )
     )
     if MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY in {
         config.baseline,

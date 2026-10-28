@@ -19,6 +19,7 @@ import random
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum, auto
+from functools import partial
 
 from .evaluation import material_balance as _material_balance
 from .model import BasicPieceType, Board, Piece, PieceType, Position, Side, Square
@@ -27,7 +28,7 @@ from .search_control import SearchControl, SearchSignal
 
 
 class MoveSelectionPolicy(Enum):
-    """対局で使う六つの一手選択方式を表す値。強さの保証は表さない。"""
+    """対局・比較で使う選択方式を表す値。強さの保証は表さない。"""
 
     RANDOM = auto()
     MATERIAL = auto()
@@ -35,6 +36,8 @@ class MoveSelectionPolicy(Enum):
     FOUR_PLY_FULL_WIDTH = auto()
     FOUR_PLY_ALPHA_BETA = auto()
     MATERIAL_ROOK_MOBILITY = auto()
+    MATERIAL_KING_SAFETY_MATERIAL_ONLY = auto()
+    MATERIAL_KING_SAFETY = auto()
 
 
 _DROP_PIECE_TYPES = (
@@ -632,13 +635,15 @@ def choose_move(
         position: 合法手の元になった局面。候補評価では変更しない。
         moves: その局面の合法手を表す変更不可タプル。
         policy: 一様ランダム・一手駒得・二手先読み（駒得）・駒得と飛車可動性の
-            一手評価のいずれか。
+            一手評価、比較用の駒得・玉周辺安全度の一手評価のいずれか。
         rng: 乱数選択を呼び出し側で再現可能にする生成器。
 
     戻り値:
         空のmovesならNone。RANDOMなら既存選択器の一手、MATERIALなら元の手番から
         見た一手後の駒得差が最大の手。MATERIAL_ROOK_MOBILITYなら一手後の駒得と
         飛車可動性の合成値を開始側視点で評価し、一手詰みを優先する。
+        比較用の玉周辺安全度二方式は駒得重み10、安全度重み0または1で評価し、
+        同じ一手詰み優先の選択器を使う。
         TWO_PLY_MATERIALなら相手の全応手後の最悪評価が最大の手。同点最高候補だけから
         一様に抽選する。
 
@@ -670,6 +675,26 @@ def choose_move(
             moves,
             rng,
             evaluate=evaluate_material_rook_mobility,
+        )
+    if policy in (
+        MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY,
+        MoveSelectionPolicy.MATERIAL_KING_SAFETY,
+    ):
+        from .material_king_safety import (
+            KingSafetyWeights,
+            evaluate_material_king_safety,
+        )
+        from .one_ply_selection import choose_one_ply_move
+
+        safety_weight = (
+            0 if policy == MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY else 1
+        )
+        weights = KingSafetyWeights(material=10, safety=safety_weight)
+        return choose_one_ply_move(
+            position,
+            moves,
+            rng,
+            evaluate=partial(evaluate_material_king_safety, weights=weights),
         )
     if policy != MoveSelectionPolicy.MATERIAL:
         raise ValueError("未知の一手選択方針です")

@@ -17,6 +17,8 @@ _LEGACY_POLICIES = (
 _ONE_PLY_POLICIES = (
     *_LEGACY_POLICIES,
     movegen.MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,
+    movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY,
+    movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY,
 )
 _FULL_WIDTH_POLICY = movegen.MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH
 _ALPHA_BETA_POLICY = movegen.MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA
@@ -40,10 +42,10 @@ def choose_move(
     """選択方式に応じて、現在局面からコンピュータの一手を返す。
 
     引数: positionは開始局面、movesは同局面の全合法手、policyは既存三方式・
-    駒得と飛車可動性の一手方式・四手探索方式のいずれか、rngは一手方式の抽選に
+    駒得と飛車可動性・玉周辺安全度の一手方式・四手探索方式のいずれか、rngは一手方式の抽選に
     使う生成器。
     戻り値: 選択した合法手。合法手なしならNone。
-    副作用: 旧三方式と駒得・飛車可動性方式はmovegen.choose_moveと同じ副作用を持つ。新二方式は
+    副作用: 一手方式はmovegen.choose_moveと同じ副作用を持つ。四手探索方式は
     開始側を視点とする探索を行い、rng・position・movesを変更しない。
     前提・設計理由: movesはCLIが従来どおり生成した全合法手。新方式の探索は
     独立した将棋操作セットから深さ1→4で開始するため、根候補の再生成を許容する。
