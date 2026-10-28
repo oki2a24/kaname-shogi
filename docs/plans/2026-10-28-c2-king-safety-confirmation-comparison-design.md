@@ -2,7 +2,7 @@
 
 ## 文書状態
 
-2026-10-28、二つの予備比較の結果を受けた確認比較の設計。本人は「C1の統計目標を再採用」する案を良いと思うと述べ、推薦を尋ねた。アシスタントも同案を推薦し、本人は設計案全体に「yes」と回答して承認した。条件・標本数・実行手順は確定済み。confirmation種一覧の生成・比較・分析は未実施で、承認した手順に従い本人の端末で実行する。
+2026-10-28、二つの予備比較の結果を受けた確認比較の設計。本人は「C1の統計目標を再採用」する案を良いと思うと述べ、推薦を尋ねた。アシスタントも同案を推薦し、本人は設計案全体に「yes」と回答して承認した。その後、本人の指示で実行条件をworker 1からworker 4へ変更した。confirmation種一覧は本人が生成済み。worker 1の比較は16:19に開始したと報告され、本人は中断してworker 4版を優先すると指示した。worker 1プロセスの停止は未確認であり、出力は保持して触れない。worker 4版は同じ種一覧を使い、新しい出力先へ実行する。
 
 ## 目的と判定対象
 
@@ -20,9 +20,9 @@ B2の玉周辺安全度を含む一手選択が、対照と比べてC2で定め�
 | 一組 | 各局面からbaseline先手/candidate後手と、baseline後手/candidate先手の二局 |
 | 標本単位 | 先後交換二局からなる組。組内二局の独立性は仮定しない |
 | 組数 | 2,036組、各局面509組。計4,072局 |
-| 乱数 | 実行直前にOS乱数源から新規に事前抽出する purpose=confirmation の種一覧。二つのpilotのseed一覧は使わず、結果も加算しない |
+| 乱数 | 本人が生成済みの purpose=confirmation 種一覧（SHA-256 52d6557657893202bac46be125b28e9044fbe32917e5afb9137bbcebcde35284）。二つのpilotとは別の種。worker 1中断後のworker 4実行で同じ一覧を使い、独立標本として二重計上しない |
 | 手数上限 | 各局256手。上限変更・未決着後の自動再戦はしない |
-| worker | 1。pilotの実測を時間見積もりへ使うため条件を合わせる |
+| worker | 4。本人の希望により変更。C2の4-worker所要時間は未計測 |
 | 主比較 | 確認比較一回、主要評価量一つ。位置別得点は記述値に限定し、別々の効果判定をしない |
 
 ## 組数の根拠と時間見積もり
@@ -33,29 +33,33 @@ n > (sqrt(ln(40)) + sqrt(ln(5)))² / (2 × 0.05²) = 2034.3037103489096
 
 したがって最低基準は2,035組。四局面へ等数配分するため4の倍数に切り上げ、2,036組（各509組）とする。理論上の95% Hoeffding半径は、全組が決着した場合に約0.0301である。これは十分条件であり、必要最小組数ではない。組間独立性が崩れる場合や、未決着による得点上下限の幅が残る場合には、55%での検出力80%を保証しない。未決着局は分析CLI既定の候補視点 [0, 1] の範囲に残し、削除・再戦・都合のよい一方への確定を行わない。
 
-256手pilotは4組・8局で79.203秒だった。単純比例では2,036組のworker 1実行に約40,314秒、約11時間12分かかる見積もりとなる。4組のpilotだけから計算した参考値で、実時間の保証ではない。CPU負荷・棋譜の長さ・局面ごとの探索時間で大きく変わり得る。長時間実行を受け入れられるかを、実行前に確認する。
+256手pilotはworker 1で4組・8局を79.203秒で完了した。先の約11時間12分という参考値はworker 1向けであり、worker 4へ変更した現条件の時間見積もりとして使わない。C2で4 workerを測っていないため、実時間やworker数に比例した短縮は予測しない。CPU負荷・棋譜の長さ・局面ごとの探索時間で所要時間は変わる。
 
-## 実行手順（本人の端末で実行）
+## 実行手順（worker 4版、本人の端末で実行）
 
-実行者は本人とし、対象は /Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi。保護対象の /Users/oki2a24/kaname-shogi は使用しない。下記は本人が設計を承認した後に端末で実行する案である。実行前に既存の出力先がないことを確認する。
+対象は /Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi。保護対象の /Users/oki2a24/kaname-shogi は使用しない。
+
+本人はすでに次のconfirmation種一覧を生成した。purpose=confirmation、4局面×509組、計2,036組。SHA-256は52d6557657893202bac46be125b28e9044fbe32917e5afb9137bbcebcde35284。再生成せず、worker 4版でもこの同じ一覧を使う。
+
+worker 1版の出力先 data/comparison/runs/c2-king-safety-confirmation-2026-10-28/ は現在存在する。本人がそのプロセスを停止すると報告したが、停止完了は未確認。プロセスが止まるまでworker 4版を起動しない。worker 1版の出力・部分棋譜は削除・上書き・resumeせず、そのまま保持する。worker 4版は別の新規出力先 data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4/ を使う。この出力先と分析ファイル data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4-analysis.json は2026-10-28の準備時点で未使用だったため、実行直前にも再確認する。
+
+現在、種一覧とworker 1版出力は未追跡ファイルとして存在する。何もcommitせずにworker 4版を始める場合、conditionsのGit dirty記録はtrueになる見込みである。これは実行時の未追跡成果物を示す値で、比較ソース指紋とは区別し、記録時に理由を書く。
+
+worker 1のプロセス停止と、新出力先が未使用であることを確認した後、比較する。
 
 ~~~sh
 cd /Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi || exit
 
-PYTHONDONTWRITEBYTECODE=1 python3 -m kaname_shogi.prepare_comparison_seeds   --positions data/comparison/c2-king-safety-positions-v1.json   --pairs-per-position 509   --purpose confirmation   --output data/comparison/runs/c2-king-safety-confirmation-2026-10-28-seeds.json
+PYTHONDONTWRITEBYTECODE=1 python3 -m kaname_shogi.compare_games   --baseline material-king-safety-material-only   --candidate material-king-safety   --positions data/comparison/c2-king-safety-positions-v1.json   --pairs-per-position 509   --seed-list data/comparison/runs/c2-king-safety-confirmation-2026-10-28-seeds.json   --max-plies 256   --workers 4   --output-dir data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4
 ~~~
 
-種一覧生成の終了コードが0であり、記録された目的・局面ハッシュ・四局面・509組/局面が合っていることを確認してから比較する。種一覧が未追跡のまま比較を始めた場合はconditionsのdirty記録がtrueになるため、原因を実行記録に明記する。これは比較ソース指紋の一致とは区別する。
+完了後、worker 4版の保存結果を分析する。
 
 ~~~sh
-PYTHONDONTWRITEBYTECODE=1 python3 -m kaname_shogi.compare_games   --baseline material-king-safety-material-only   --candidate material-king-safety   --positions data/comparison/c2-king-safety-positions-v1.json   --pairs-per-position 509   --seed-list data/comparison/runs/c2-king-safety-confirmation-2026-10-28-seeds.json   --max-plies 256   --workers 1   --output-dir data/comparison/runs/c2-king-safety-confirmation-2026-10-28
+PYTHONDONTWRITEBYTECODE=1 python3 -m kaname_shogi.analyze_comparison   --input-dir data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4   --output data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4-analysis.json
 ~~~
 
-比較完了後、保存済みの結果だけを分析する。
-
-~~~sh
-PYTHONDONTWRITEBYTECODE=1 python3 -m kaname_shogi.analyze_comparison   --input-dir data/comparison/runs/c2-king-safety-confirmation-2026-10-28   --output data/comparison/runs/c2-king-safety-confirmation-2026-10-28-analysis.json
-~~~
+worker 4版を中断した場合の再開は、同じseed、worker数、条件、出力先の --resume を使う。worker 1版へresumeしたり、worker 1/4の結果を結合したりしない。
 
 ## 確認と結果の扱い
 
@@ -71,6 +75,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m kaname_shogi.analyze_comparison   --input-d
 
 ## 承認欄
 
-- 統計方針（55%・95%・検出力80%）、4局面均等2,036組、256手上限、worker 1、本人端末で実行する手順：本人の「yes」により2026-10-28承認済み。
-- confirmation種一覧生成・比較・分析：本人端末での実行待ち。
+- 統計方針（55%・95%・検出力80%）、4局面均等2,036組、256手上限、本人端末での実行：本人の「yes」により2026-10-28承認済み。
+- worker数：当初worker 1で設計承認済み。その後本人がworker 4を優先すると指示し、同じconfirmation種で新しい出力先を使う変更を了承。worker 1の停止完了は未確認。
+- worker 4版の比較・分析：本人端末での実行待ち。4 workerの所要時間は未計測。
 - main統合・push：別途承認。
