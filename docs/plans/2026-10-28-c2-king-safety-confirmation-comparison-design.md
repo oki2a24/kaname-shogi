@@ -2,7 +2,7 @@
 
 ## 文書状態
 
-2026-10-28、二つの予備比較の結果を受けた確認比較の設計。本人は「C1の統計目標を再採用」する案を良いと思うと述べ、推薦を尋ねた。アシスタントも同案を推薦し、本人は設計案全体に「yes」と回答して承認した。その後、本人の指示で実行条件をworker 1からworker 4へ変更した。confirmation種一覧は本人が生成済み。worker 1の比較は16:19に開始したと報告され、本人は中断してworker 4版を優先すると指示した。worker 1プロセスの停止は未確認であり、出力は保持して触れない。worker 4版は同じ種一覧を使い、新しい出力先へ実行する。
+2026-10-28、二つの予備比較の結果を受けた確認比較の設計。本人は「C1の統計目標を再採用」する案を良いと思うと述べ、推薦を尋ねた。アシスタントも同案を推薦し、本人は設計案全体に「yes」と回答して承認した。その後、本人の希望で実行条件をworker 1からworker 4へ変更した。本人はconfirmation種一覧を生成済み。worker 1比較は16:19に開始し、本人がCtrl-Cで中断した。worker 1の部分出力は保持する。worker 4比較は同じ種一覧と新しい出力先で16:31に開始し、本人報告と保存summaryで21:40に完了を確認した。4,072局・2,036組の統計分析は未実施で、本人端末で実行待ち。
 
 ## 目的と判定対象
 
@@ -22,7 +22,7 @@ B2の玉周辺安全度を含む一手選択が、対照と比べてC2で定め�
 | 組数 | 2,036組、各局面509組。計4,072局 |
 | 乱数 | 本人が生成済みの purpose=confirmation 種一覧（SHA-256 52d6557657893202bac46be125b28e9044fbe32917e5afb9137bbcebcde35284）。二つのpilotとは別の種。worker 1中断後のworker 4実行で同じ一覧を使い、独立標本として二重計上しない |
 | 手数上限 | 各局256手。上限変更・未決着後の自動再戦はしない |
-| worker | 4。本人の希望により変更。C2の4-worker所要時間は未計測 |
+| worker | 4。本人の希望により変更。確認比較の実測所要時間は約5時間09分。この一回の実績であり一般的な所要時間を保証しない |
 | 主比較 | 確認比較一回、主要評価量一つ。位置別得点は記述値に限定し、別々の効果判定をしない |
 
 ## 組数の根拠と時間見積もり
@@ -33,7 +33,7 @@ n > (sqrt(ln(40)) + sqrt(ln(5)))² / (2 × 0.05²) = 2034.3037103489096
 
 したがって最低基準は2,035組。四局面へ等数配分するため4の倍数に切り上げ、2,036組（各509組）とする。理論上の95% Hoeffding半径は、全組が決着した場合に約0.0301である。これは十分条件であり、必要最小組数ではない。組間独立性が崩れる場合や、未決着による得点上下限の幅が残る場合には、55%での検出力80%を保証しない。未決着局は分析CLI既定の候補視点 [0, 1] の範囲に残し、削除・再戦・都合のよい一方への確定を行わない。
 
-256手pilotはworker 1で4組・8局を79.203秒で完了した。先の約11時間12分という参考値はworker 1向けであり、worker 4へ変更した現条件の時間見積もりとして使わない。C2で4 workerを測っていないため、実時間やworker数に比例した短縮は予測しない。CPU負荷・棋譜の長さ・局面ごとの探索時間で所要時間は変わる。
+256手pilotはworker 1で4組・8局を79.203秒で完了した。そこから算出した約11時間12分はworker 1向けの事前参考値であり、worker 4の実績とは異なる。今回の確認比較はworker 4で約5時間09分だった。実行時間はCPU負荷・棋譜の長さ・局面ごとの探索時間で変わるため、この一回の実績から他の比較の所要時間を保証しない。
 
 ## 実行手順（worker 4版、本人の端末で実行）
 
@@ -41,17 +41,19 @@ n > (sqrt(ln(40)) + sqrt(ln(5)))² / (2 × 0.05²) = 2034.3037103489096
 
 本人はすでに次のconfirmation種一覧を生成した。purpose=confirmation、4局面×509組、計2,036組。SHA-256は52d6557657893202bac46be125b28e9044fbe32917e5afb9137bbcebcde35284。再生成せず、worker 4版でもこの同じ一覧を使う。
 
-worker 1版の出力先 data/comparison/runs/c2-king-safety-confirmation-2026-10-28/ は現在存在する。本人がそのプロセスを停止すると報告したが、停止完了は未確認。プロセスが止まるまでworker 4版を起動しない。worker 1版の出力・部分棋譜は削除・上書き・resumeせず、そのまま保持する。worker 4版は別の新規出力先 data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4/ を使う。この出力先と分析ファイル data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4-analysis.json は2026-10-28の準備時点で未使用だったため、実行直前にも再確認する。
+worker 1版の出力先 data/comparison/runs/c2-king-safety-confirmation-2026-10-28/ は本人がCtrl-Cで中断した部分結果を含み、保持している。worker 4版は別の新規出力先 data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4/ へ実行済みである。分析ファイル data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4-analysis.json は確認時点で未作成。
 
-現在、種一覧とworker 1版出力は未追跡ファイルとして存在する。何もcommitせずにworker 4版を始める場合、conditionsのGit dirty記録はtrueになる見込みである。これは実行時の未追跡成果物を示す値で、比較ソース指紋とは区別し、記録時に理由を書く。
+worker 4版conditions.jsonにはGit HEAD=db921cbc83f79b46dc27345664b47c9720c03542、dirty=trueが記録された。実行時に種一覧とworker 1部分出力が未追跡だったためで、製品コードの変更を示さない。比較ソース指紋f840a3a7bd2b04e9fbf3829cb4cc4447578da085730c6ec32f7ebc21a080204fは保存値である。
 
-worker 1のプロセス停止と、新出力先が未使用であることを確認した後、比較する。
+本人がworker 1をCtrl-Cで中断し、新出力先が未使用であることを確認した後、本人は16:31にworker 4比較を開始した。
 
 ~~~sh
 cd /Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi || exit
 
 PYTHONDONTWRITEBYTECODE=1 python3 -m kaname_shogi.compare_games   --baseline material-king-safety-material-only   --candidate material-king-safety   --positions data/comparison/c2-king-safety-positions-v1.json   --pairs-per-position 509   --seed-list data/comparison/runs/c2-king-safety-confirmation-2026-10-28-seeds.json   --max-plies 256   --workers 4   --output-dir data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4
 ~~~
+
+本人は21:40に比較完了を報告した。保存conditionsはworker 4・509組/局面を記録し、summaryはstatus=complete、4,072/4,072局、2,036完了組、手数上限71局、詰み3,966局、合法手なし35局、エラー・中断0局を示す。4,072局の結果ファイルは連番で揃っている。比較CLIの経過時間は約5時間09分。候補方式の統計的な強さ判定はまだ行っていない。
 
 完了後、worker 4版の保存結果を分析する。
 
@@ -76,6 +78,7 @@ worker 4版を中断した場合の再開は、同じseed、worker数、条件�
 ## 承認欄
 
 - 統計方針（55%・95%・検出力80%）、4局面均等2,036組、256手上限、本人端末での実行：本人の「yes」により2026-10-28承認済み。
-- worker数：当初worker 1で設計承認済み。その後本人がworker 4を優先すると指示し、同じconfirmation種で新しい出力先を使う変更を了承。worker 1の停止完了は未確認。
-- worker 4版の比較・分析：本人端末での実行待ち。4 workerの所要時間は未計測。
+- worker数：当初worker 1で設計承認済み。その後本人がworker 4を優先すると指示し、同じconfirmation種で新しい出力先を使う変更を了承。worker 1は本人がCtrl-Cで中断済み。
+- worker 4版の比較：本人端末で16:31に開始、21:40に完了。保存summary・4,072局ファイルの存在を確認済み。所要時間は約5時間09分。
+- worker 4版の統計分析：本人端末での実行待ち。強さ判定は未実施。
 - main統合・push：別途承認。
