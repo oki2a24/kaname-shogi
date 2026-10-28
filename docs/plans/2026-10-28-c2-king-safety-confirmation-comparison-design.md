@@ -2,7 +2,7 @@
 
 ## 文書状態
 
-2026-10-28、二つの予備比較の結果を受けた確認比較の設計。本人は「C1の統計目標を再採用」する案を良いと思うと述べ、推薦を尋ねた。アシスタントも同案を推薦し、本人は設計案全体に「yes」と回答して承認した。その後、本人の希望で実行条件をworker 1からworker 4へ変更した。本人はconfirmation種一覧を生成済み。worker 1比較は16:19に開始し、本人がCtrl-Cで中断した。worker 1の部分出力は保持する。worker 4比較は同じ種一覧と新しい出力先で16:31に開始し、本人報告と保存summaryで21:40に完了を確認した。4,072局・2,036組の統計分析は未実施で、本人端末で実行待ち。
+2026-10-28、二つの予備比較の結果を受けた確認比較の設計。本人は「C1の統計目標を再採用」する案を良いと思うと述べ、推薦を尋ねた。アシスタントも同案を推薦し、本人は設計案全体に「yes」と回答して承認した。その後、本人の希望で実行条件をworker 1からworker 4へ変更した。本人はconfirmation種一覧を生成済み。worker 1比較は16:19に開始し、本人がCtrl-Cで中断した。worker 1の部分出力は保持する。worker 4比較は同じ種一覧と新しい出力先で16:31に開始し、21:40に完了した。統計分析CLIは本人が21:58に開始し、その後完了を報告した。分析結果は95%区間[0.227,0.305]で「悪化を支持」。保存結果と入力ハッシュを検証済み。
 
 ## 目的と判定対象
 
@@ -53,13 +53,19 @@ cd /Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi || exit
 PYTHONDONTWRITEBYTECODE=1 python3 -m kaname_shogi.compare_games   --baseline material-king-safety-material-only   --candidate material-king-safety   --positions data/comparison/c2-king-safety-positions-v1.json   --pairs-per-position 509   --seed-list data/comparison/runs/c2-king-safety-confirmation-2026-10-28-seeds.json   --max-plies 256   --workers 4   --output-dir data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4
 ~~~
 
-本人は21:40に比較完了を報告した。保存conditionsはworker 4・509組/局面を記録し、summaryはstatus=complete、4,072/4,072局、2,036完了組、手数上限71局、詰み3,966局、合法手なし35局、エラー・中断0局を示す。4,072局の結果ファイルは連番で揃っている。比較CLIの経過時間は約5時間09分。候補方式の統計的な強さ判定はまだ行っていない。
+本人は21:40に比較完了を報告した。保存conditionsはworker 4・509組/局面を記録し、summaryはstatus=complete、4,072/4,072局、2,036完了組、手数上限71局、詰み3,966局、合法手なし35局、エラー・中断0局を示す。4,072局の結果ファイルは連番で揃っている。比較CLIの経過時間は約5時間09分。
 
-完了後、worker 4版の保存結果を分析する。
+本人は21:58にworker 4版を分析し、比較CLIは統計的な悪化を支持すると報告した。保存分析結果と入力ハッシュを検証した。
 
 ~~~sh
 PYTHONDONTWRITEBYTECODE=1 python3 -m kaname_shogi.analyze_comparison   --input-dir data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4   --output data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4-analysis.json
 ~~~
+
+分析は4,072局・2,036組、95% Hoeffding paired boundsで完了した。候補得点区間は[0.227268991363, 0.304901932016]、半径0.030098395670、判定は「悪化を支持」。候補勝ち1,048、候補負け2,953、手数上限71局を記録する。95%区間の上端が互角境界0.5を下回るため、事前の判定規則に従う。未決着71局は得点範囲[0,1]の上下限へ含まれている。
+
+4局面別の平均得点上下限は記述値として保存されている（初期局面[0.184,0.204]、角筋危険[0.155,0.172]、角交換後の展開[0.249,0.262]、歩の圧力[0.442,0.461]）。局面別の独立した有意差判定は行わず、主結論は等重みの全体評価一つに限定する。
+
+分析JSONが参照したconditionsと4,072局のSHA-256は保存ファイルと一致し、confirmation種一覧のSHA-256もconditionsの値と一致した。比較・分析ソース指紋は同じ。未決着局が残るため、計画上の検出力80%保証が成立したとは扱わない。今回の結論範囲は登録した4局面、比較した二方式、最大256手の固定深さ・時計制御なしに限る。通常対局全般、別の重み・探索深さや通常CLI/USIへの効果は示さない。
 
 worker 4版を中断した場合の再開は、同じseed、worker数、条件、出力先の --resume を使う。worker 1版へresumeしたり、worker 1/4の結果を結合したりしない。
 
@@ -80,5 +86,5 @@ worker 4版を中断した場合の再開は、同じseed、worker数、条件�
 - 統計方針（55%・95%・検出力80%）、4局面均等2,036組、256手上限、本人端末での実行：本人の「yes」により2026-10-28承認済み。
 - worker数：当初worker 1で設計承認済み。その後本人がworker 4を優先すると指示し、同じconfirmation種で新しい出力先を使う変更を了承。worker 1は本人がCtrl-Cで中断済み。
 - worker 4版の比較：本人端末で16:31に開始、21:40に完了。保存summary・4,072局ファイルの存在を確認済み。所要時間は約5時間09分。
-- worker 4版の統計分析：本人端末での実行待ち。強さ判定は未実施。
+- worker 4版の統計分析：本人が21:58に端末で実行開始、その後完了を報告。保存分析ファイルの更新時刻は22:01:13。95%区間[0.227, 0.305]で「悪化を支持」。対象は登録4局面の平均であり、通常対局全般へ一般化しない。
 - main統合・push：別途承認。
