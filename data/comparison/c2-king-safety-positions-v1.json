@@ -1,0 +1,35 @@
+{
+  "format": "kaname-shogi-comparison-positions-v1",
+  "id": "c2-king-safety-v1",
+  "positions": [
+    {
+      "id": "initial",
+      "setup_moves": [],
+      "rationale": "平手初期局面。双方の玉周辺への相手の利きはない。"
+    },
+    {
+      "id": "bishop-line-danger",
+      "setup_moves": ["7g7f", "3c3d", "5i6h", "5a6b", "6h7h"],
+      "rationale": "後手角が先手玉の隣の７七と８八へ利く、後手番の序盤。"
+    },
+    {
+      "id": "bishop-exchange-development",
+      "setup_moves": [
+        "7g7f", "3c3d", "8h2b+", "3a2b", "5i6h", "5a6b", "6h7h", "6b7b",
+        "2g2f", "8c8d", "2f2e", "8d8e", "7i6h", "7a6b", "4i5h", "4a5b",
+        "3g3f", "7c7d", "6g6f", "7d7e"
+      ],
+      "rationale": "角を交換して双方が玉を移し駒組みを進めた局面。両玉周辺の危険マス数は0。"
+    },
+    {
+      "id": "pawn-pressure",
+      "setup_moves": [
+        "7g7f", "3c3d", "8h2b+", "3a2b", "5i6h", "5a6b", "6h7h", "6b7b",
+        "2g2f", "8c8d", "2f2e", "8d8e", "7i6h", "7a6b", "4i5h", "4a5b",
+        "3g3f", "7c7d", "6g6f", "7d7e", "2e2d", "2c2d", "2h2d", "8e8f",
+        "8g8f", "8b8f", "2d2h", "8f8b", "P*2c", "P*8g"
+      ],
+      "rationale": "双方の飛車先で歩を交換した後、後手の８七歩と８二飛が先手玉周辺へ利く局面。"
+    }
+  ]
+}

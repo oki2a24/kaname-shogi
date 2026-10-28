@@ -69,7 +69,7 @@
 
 ## 対局方式の比較とC1分析
 
-`python -m kaname_shogi.compare_games` は開発用の一手選択方式を指定局面群で比較する。現在の方式名は `random`、`material`、`material-rook-mobility`、`two-ply-material`、`full-width-4`、`alpha-beta-4`。`material-rook-mobility` はB1全体（駒得と未成飛車の移動先候補数の合成、および一手詰み優先）を比較CLIの選択経路へ接続する。通常CLI・USIの選択肢には加えていない。
+`python -m kaname_shogi.compare_games` は開発用の一手選択方式を指定局面群で比較する。方式名は `random`、`material`、`material-rook-mobility`、`material-king-safety-material-only`、`material-king-safety`、`two-ply-material`、`full-width-4`、`alpha-beta-4`。飛車可動性と玉周辺安全度の比較方式は通常CLI・USIの選択肢には加えていない。C2の二方式は同じ一手選択・詰み優先を使い、安全度重みだけを0と1にする。詳細は[玉周辺安全度メモ](king-safety-evaluation.md)を参照する。
 
 ### 乱数種一覧と実行
 
