@@ -2,11 +2,11 @@
 
 ## 現在地（2026-10-29）
 
-主線「駒得以外の局面評価を一項目ずつ育てる」は、A1/B1（飛車可動性）、C1（比較結果は判断不能で一旦区切り）、A2/B2（玉周辺安全度）、C2（安全度を比較CLIへ接続して比較評価）まで完了した。本人は2026-10-29に次テーマ候補1「次の評価項目を一つ選ぶ（主線）」を選定した。選定したのは次項目を選ぶ段階であり、実際の評価項目・改善仮説・設計・実装は未決定・未承認。[C2学習記録](learning/c2-king-safety-evaluation.md)、[設計案](plans/2026-10-28-c2-king-safety-evaluation-design.md)、[実装計画](plans/2026-10-28-c2-king-safety-evaluation-implementation-plan.md)、[確認比較設計](plans/2026-10-28-c2-king-safety-confirmation-comparison-design.md)を参照する。
+主線「駒得以外の局面評価を一項目ずつ育てる」は、A1/B1（飛車可動性）、C1（比較結果は判断不能で一旦区切り）、A2/B2（玉周辺安全度）、C2（安全度を比較CLIへ接続して比較評価）まで完了した。次の項目として、本人は2026-10-29に「相手の利きがあり、味方の支えがない駒を評価する」という駒の連携の入口を選定した。選定理由は本人に尋ねていない。具体的な対象駒、攻撃・支えの定義、数え方、重み、改善仮説、設計、実装計画は未決定・未承認で、A3という番号も予約していない。推薦時に示した「玉以外から扱う」案も、個別の確定仕様として扱わない。[次項目の引き継ぎ](handover-undefended-piece-coordination-evaluation.md)を参照する。
 
 4局面を各509組で比較した確認分析は、95%得点区間[0.227, 0.305]で「悪化を支持」。結論は登録4局面の条件に限られ、通常CLI・USI、別局面、別探索条件へ一般化しない。通常CLIのSFEN入出力、飛車可動性バージョン2、二手・四手への適用は保留し、C2へ追加していない。128手と256手のpilotは同一標本の再観察であり、confirmation結果と合算していない。長時間の比較・分析CLIは本人端末で実行済み。
 
-本人承認を受け、2026-10-29に作業worktree `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi` で `codex/c2-king-safety-evaluation` をローカル `main` へfast-forwardした。統合コミットは `6ddeae78`。統合先で全943テスト・67モジュール、Ruff整形確認119ファイル、Ruff check、`git diff --check` が成功した。`origin/main` へのpushはしていない。最後の理解確認に本人回答があり、範囲を4局面・今回の探索条件に限る補足とともに[C2学習記録](learning/c2-king-safety-evaluation.md)へ記録した。本人は次の評価項目を選ぶテーマを選定済み。新セッション開始時は[次項目選定の引き継ぎ](handover-next-evaluation-item-selection.md)を開き、本人が実際の評価項目を選ぶまで学習・設計を進める。
+本人承認を受け、2026-10-29に作業worktree `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi` で `codex/c2-king-safety-evaluation` をローカル `main` へfast-forwardした。統合コミットは `6ddeae78`。統合先で全943テスト・67モジュール、Ruff整形確認119ファイル、Ruff check、`git diff --check` が成功した。`origin/main` へのpushはしていない。最後の理解確認に本人回答があり、範囲を4局面・今回の探索条件に限る補足とともに[C2学習記録](learning/c2-king-safety-evaluation.md)へ記録した。新セッション開始時は[次項目の引き継ぎ](handover-undefended-piece-coordination-evaluation.md)を開き、選定済みの概念と未決の定義を照合して学習・設計を始める。
 
 現在の作業worktreeは上記パスの `main`。本人端末で作成したconfirmation種一覧、worker 1の中断出力、worker 4の4,074ファイル、分析結果は未追跡のまま保持している。元の `/Users/oki2a24/kaname-shogi` は `codex/c1-analysis-performance-investigation`（HEAD `14e7210b`）のままで、未コミット文書・比較データを保持しているため、作業ファイルのclean/reset/切替やC2のcheckoutは行っていない。mainのローカル統合と元checkoutの作業treeへの反映は別の状態として扱う。
 

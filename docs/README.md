@@ -35,7 +35,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-現在の主線テーマは、本人が2026-10-29に選んだ「次の評価項目を一つ選ぶ」である。実際に扱う評価項目と改善仮説は未選定で、設計・実装は未承認。[次項目選定の引き継ぎ](handover-next-evaluation-item-selection.md)に再開プロンプトを保存した。C2の学習・比較・統計分析は完了し、登録4局面の条件下で候補方式の悪化を支持した。C2の[学習記録](learning/c2-king-safety-evaluation.md)、[設計案](plans/2026-10-28-c2-king-safety-evaluation-design.md)、[実装計画](plans/2026-10-28-c2-king-safety-evaluation-implementation-plan.md)、[確認比較設計](plans/2026-10-28-c2-king-safety-confirmation-comparison-design.md)に詳細がある。C2はローカルmainへ統合済みだがpushしていない。現在地・保持データ・物理状態は[再開案内](resume.md)、主線・候補・保留は[次テーマ候補](next-topics.md)と[ロードマップ](roadmap-non-material-position-evaluation.md)を参照する。
+現在の主線テーマは、本人が選んだ「相手の利きがあり、味方の支えがない駒を評価する」という駒の連携の入口である。対象駒や数え方などの具体定義・改善仮説・設計・実装計画は未決定・未承認。[次項目の引き継ぎ](handover-undefended-piece-coordination-evaluation.md)に再開プロンプトを保存した。C2の学習・比較・統計分析は完了し、登録4局面の条件下で候補方式の悪化を支持した。C2の[学習記録](learning/c2-king-safety-evaluation.md)、[設計案](plans/2026-10-28-c2-king-safety-evaluation-design.md)、[実装計画](plans/2026-10-28-c2-king-safety-evaluation-implementation-plan.md)、[確認比較設計](plans/2026-10-28-c2-king-safety-confirmation-comparison-design.md)に詳細がある。C2はローカルmainへ統合済みだがpushしていない。現在地・保持データ・物理状態は[再開案内](resume.md)、主線・候補・保留は[次テーマ候補](next-topics.md)と[ロードマップ](roadmap-non-material-position-evaluation.md)を参照する。
 
 A1/B1の飛車可動性の実装・main統合・検証・理解確認は完了した。C1の初回確認比較と独立追試はともに95%区間が50%を含み、B1全体の改善・悪化は判断不能。本人はこの結論でC1を一旦区切った。結果は[C1学習記録](learning/c1-rook-mobility-evaluation.md)を参照する。
 
