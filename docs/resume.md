@@ -2,17 +2,21 @@
 
 ## 現在地（2026-10-29）
 
-主線「駒得以外の局面評価を一項目ずつ育てる」は、A1/B1（飛車可動性）、C1（比較結果は判断不能で一旦区切り）、A2/B2（玉周辺安全度）まで完了し、本人がC2「安全度を接続して比較評価する」を選んだ。C2は比較CLIだけを対象に、学習・設計・実装・確認比較・統計分析まで完了した。[C2学習記録](learning/c2-king-safety-evaluation.md)、[設計案](plans/2026-10-28-c2-king-safety-evaluation-design.md)、[実装計画](plans/2026-10-28-c2-king-safety-evaluation-implementation-plan.md)、[確認比較設計](plans/2026-10-28-c2-king-safety-confirmation-comparison-design.md)を参照する。
+主線「駒得以外の局面評価を一項目ずつ育てる」は、A1/B1（飛車可動性）、C1（比較結果は判断不能で一旦区切り）、A2/B2（玉周辺安全度）、C2（安全度を比較CLIへ接続して比較評価）まで完了した。本人は2026-10-29に次テーマ候補1「次の評価項目を一つ選ぶ（主線）」を選定した。選定したのは次項目を選ぶ段階であり、実際の評価項目・改善仮説・設計・実装は未決定・未承認。[C2学習記録](learning/c2-king-safety-evaluation.md)、[設計案](plans/2026-10-28-c2-king-safety-evaluation-design.md)、[実装計画](plans/2026-10-28-c2-king-safety-evaluation-implementation-plan.md)、[確認比較設計](plans/2026-10-28-c2-king-safety-confirmation-comparison-design.md)を参照する。
 
 4局面を各509組で比較した確認分析は、95%得点区間[0.227, 0.305]で「悪化を支持」。結論は登録4局面の条件に限られ、通常CLI・USI、別局面、別探索条件へ一般化しない。通常CLIのSFEN入出力、飛車可動性バージョン2、二手・四手への適用は保留し、C2へ追加していない。128手と256手のpilotは同一標本の再観察であり、confirmation結果と合算していない。長時間の比較・分析CLIは本人端末で実行済み。
 
-本人承認を受け、2026-10-29に作業worktree `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi` で `codex/c2-king-safety-evaluation` をローカル `main` へfast-forwardした。統合コミットは `6ddeae78`。統合先で全943テスト・67モジュール、Ruff整形確認119ファイル、Ruff check、`git diff --check` が成功した。`origin/main` へのpushはしていない。最後の理解確認に本人回答があり、範囲を4局面・今回の探索条件に限る補足とともに[C2学習記録](learning/c2-king-safety-evaluation.md)へ記録した。次の候補を提示する前に、ロードマップ・README・方針を確認する。
+本人承認を受け、2026-10-29に作業worktree `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi` で `codex/c2-king-safety-evaluation` をローカル `main` へfast-forwardした。統合コミットは `6ddeae78`。統合先で全943テスト・67モジュール、Ruff整形確認119ファイル、Ruff check、`git diff --check` が成功した。`origin/main` へのpushはしていない。最後の理解確認に本人回答があり、範囲を4局面・今回の探索条件に限る補足とともに[C2学習記録](learning/c2-king-safety-evaluation.md)へ記録した。本人は次の評価項目を選ぶテーマを選定済み。新セッション開始時は[次項目選定の引き継ぎ](handover-next-evaluation-item-selection.md)を開き、本人が実際の評価項目を選ぶまで学習・設計を進める。
 
 現在の作業worktreeは上記パスの `main`。本人端末で作成したconfirmation種一覧、worker 1の中断出力、worker 4の4,074ファイル、分析結果は未追跡のまま保持している。元の `/Users/oki2a24/kaname-shogi` は `codex/c1-analysis-performance-investigation`（HEAD `14e7210b`）のままで、未コミット文書・比較データを保持しているため、作業ファイルのclean/reset/切替やC2のcheckoutは行っていない。mainのローカル統合と元checkoutの作業treeへの反映は別の状態として扱う。
 
+### B2統合時点の実績（履歴・2026-10-28）
+
 B2は承認済み4Taskの実装、検証、Task別・最終独立レビューを終え、2026-10-28にmainへ統合してorigin/mainへpush済み。統合先では全928テスト・62モジュールが25.003秒で成功し、Ruff整形確認・lint・差分検査も成功した。統合前の初回実行は統合用worktreeに `.venv` がなくUSI起動テスト3件が失敗したが、既存環境への一時リンクで8件を再確認してから全体テストを通した。詳細は[B2学習記録](learning/king-safety-design.md)、[確定知識](knowledge/king-safety-evaluation.md)、[承認済み設計](plans/2026-10-28-king-safety-design.md)、[実装計画と実績](plans/2026-10-28-king-safety-implementation-plan.md)を参照する。
 
-対象checkoutは /Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi。開始時は main と origin/main が同期した cdd46519 でcleanだった。現在は codex/c2-king-safety-evaluation 上にTask 1〜4の実装・検証・レビュー結果を記録している。最終全体テストは943件・67モジュールが25.382秒で成功した。別worktreeではREADMEのセットアップスクリプトが対象外として停止したため、専用仮想環境を作り固定版Ruff 0.16.10とhook .githooksを確認した。製品変更前baselineは928件・62モジュールが23.349秒で成功した。元の /Users/oki2a24/kaname-shogi は未コミット文書・比較データを保持するため、clean/reset/切替を行わず保護している。B2後の本人回答「少なくとも先手玉の周囲に後手の利きが２つ以上ある状態」と、S=-2が表す差ちょうど2の補足は[学習記録](learning/king-safety-design.md)に記録済み。通常CLIのSFEN入出力と飛車可動性バージョン2は保留し、C2へ自動追加しない。
+### C2作業時点の環境・Git状態（履歴・2026-10-28）
+
+C2作業対象は `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`。開始時は `main` と `origin/main` が同期した `cdd46519` でcleanだった。実装・検証・レビューは作業ブランチ `codex/c2-king-safety-evaluation` で行い、最終全体テストは943件・67モジュールが25.382秒で成功した。別worktreeではREADMEのセットアップスクリプトが対象外として停止したため、専用仮想環境を作り固定版Ruff 0.16.10とhook `.githooks` を確認した。製品変更前baselineは928件・62モジュールが23.349秒で成功した。これらは当時の記録であり、現在のブランチ・状態・検証は冒頭の現在地と[C2後の統合記録](learning/c2-king-safety-evaluation.md)を参照する。元の `/Users/oki2a24/kaname-shogi` は未コミット文書・比較データを保持するため、clean/reset/切替を行わず保護している。B2後の本人回答「少なくとも先手玉の周囲に後手の利きが２つ以上ある状態」と、S=-2が表す差ちょうど2の補足は[学習記録](learning/king-safety-design.md)に記録済み。通常CLIのSFEN入出力と飛車可動性バージョン2は保留し、C2へ自動追加しない。
 
 ## C1開始前の状態（履歴）
 
