@@ -6,7 +6,7 @@
 
 4局面を各509組で比較した確認分析は、95%得点区間[0.227, 0.305]で「悪化を支持」。結論は登録4局面の条件に限られ、通常CLI・USI、別局面、別探索条件へ一般化しない。通常CLIのSFEN入出力、飛車可動性バージョン2、二手・四手への適用は保留し、C2へ追加していない。128手と256手のpilotは同一標本の再観察であり、confirmation結果と合算していない。長時間の比較・分析CLIは本人端末で実行済み。
 
-本人承認を受け、2026-10-29に作業worktree `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi` で `codex/c2-king-safety-evaluation` をローカル `main` へfast-forwardした。統合コミットは `6ddeae78`。統合先で全943テスト・67モジュール、Ruff整形確認119ファイル、Ruff check、`git diff --check` が成功した。`origin/main` へのpushはしていない。最後のC2理解確認をこれから一問提示し、本人の回答を待つ。回答記録までは次テーマへ進まない。
+本人承認を受け、2026-10-29に作業worktree `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi` で `codex/c2-king-safety-evaluation` をローカル `main` へfast-forwardした。統合コミットは `6ddeae78`。統合先で全943テスト・67モジュール、Ruff整形確認119ファイル、Ruff check、`git diff --check` が成功した。`origin/main` へのpushはしていない。最後の理解確認に本人回答があり、範囲を4局面・今回の探索条件に限る補足とともに[C2学習記録](learning/c2-king-safety-evaluation.md)へ記録した。次の候補を提示する前に、ロードマップ・README・方針を確認する。
 
 現在の作業worktreeは上記パスの `main`。本人端末で作成したconfirmation種一覧、worker 1の中断出力、worker 4の4,074ファイル、分析結果は未追跡のまま保持している。元の `/Users/oki2a24/kaname-shogi` は `codex/c1-analysis-performance-investigation`（HEAD `14e7210b`）のままで、未コミット文書・比較データを保持しているため、作業ファイルのclean/reset/切替やC2のcheckoutは行っていない。mainのローカル統合と元checkoutの作業treeへの反映は別の状態として扱う。
 
