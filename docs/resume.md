@@ -1,8 +1,14 @@
 # 学習・開発の再開案内
 
-## 現在地（2026-10-28）
+## 現在地（2026-10-29）
 
-主線「駒得以外の局面評価を一項目ずつ育てる」は、A1/B1（飛車可動性）とC1（比較結果は判断不能で一旦区切り）、A2/B2（玉周辺安全度）まで完了した。本人は2026-10-28に次の主線目標C2「安全度を接続して比較評価する」を選んだ。このセッションでB2の知識・承認済み設計・実装計画、C1の接続・比較記録、現行コードを調査し、[C2学習記録](learning/c2-king-safety-evaluation.md)、[設計案](plans/2026-10-28-c2-king-safety-evaluation-design.md)、[実装計画案](plans/2026-10-28-c2-king-safety-evaluation-implementation-plan.md)を作成した。比較CLI限定の設計全体と実装計画は本人の「yes」で承認済み。Task 1〜4の実装・検証・Task別独立レビューを実施し、最終ブランチ再レビューはCritical 0 / Important 0 / Minor 0。比較CLI接続は作業ブランチ上で完了し、確認比較設計案は本人の「yes」で承認済み。confirmation種一覧は生成済み。worker 1は本人がCtrl-Cで中断し部分出力を保持した。worker 4比較は16:31に開始して21:40に完了し、4,072局・2,036組を保存済み。本人端末で21:58に分析を開始し、その後完了を報告した（保存分析ファイルの更新時刻22:01:13）。95%区間[0.227,0.305]で登録4局面の条件下における悪化を支持した。main統合・pushは別途承認待ち。[C2学習記録](learning/c2-king-safety-evaluation.md)に本人の承認と実行依頼により、4局面×1組・128手上限・worker 1の予備比較と分析を実施した。128手pilotは候補2勝5敗・上限未決着1局、83.125秒。本人承認の256手追加pilotでは同じ8局中2勝6敗、全局詰み、79.203秒。旧未決着局は同じ128手の続きから10手後に基準方式の勝ちで終局し、他7局の棋譜・終局は一致した。両pilotは同じ4組の再実行で独立標本ではなく、棋力・効果は判断できない。本人はC1統計目標（55%・信頼水準95%・検出力80%）を再採用する案がよいと思うと述べ、アシスタントも推薦した。C2四局面へ均等配分した2,036組・4,072局、256手上限の確認比較設計案は本人の「yes」で承認済み。当初のworker 1条件は、その後本人の希望でworker 4へ変更した。worker 1の約11時間12分は粗い事前参考値だった。worker 4確認比較は実測約5時間09分で完了し、本人端末での分析は95%区間[0.227,0.305]・「悪化を支持」となった。本人が生成した同じconfirmation種一覧を使用し、worker 1とworker 4の結果は合算しない。この結論は登録4局面に限定し、通常対局全般や別条件へ一般化しない。通常CLI・USI接続、main統合とpushは別途未承認。[確認比較設計案](plans/2026-10-28-c2-king-safety-confirmation-comparison-design.md)。[詳細と成果物](learning/c2-king-safety-evaluation.md#追加pilotの結果手数上限2562026-10-28)。
+主線「駒得以外の局面評価を一項目ずつ育てる」は、A1/B1（飛車可動性）、C1（比較結果は判断不能で一旦区切り）、A2/B2（玉周辺安全度）まで完了し、本人がC2「安全度を接続して比較評価する」を選んだ。C2は比較CLIだけを対象に、学習・設計・実装・確認比較・統計分析まで完了した。[C2学習記録](learning/c2-king-safety-evaluation.md)、[設計案](plans/2026-10-28-c2-king-safety-evaluation-design.md)、[実装計画](plans/2026-10-28-c2-king-safety-evaluation-implementation-plan.md)、[確認比較設計](plans/2026-10-28-c2-king-safety-confirmation-comparison-design.md)を参照する。
+
+4局面を各509組で比較した確認分析は、95%得点区間[0.227, 0.305]で「悪化を支持」。結論は登録4局面の条件に限られ、通常CLI・USI、別局面、別探索条件へ一般化しない。通常CLIのSFEN入出力、飛車可動性バージョン2、二手・四手への適用は保留し、C2へ追加していない。128手と256手のpilotは同一標本の再観察であり、confirmation結果と合算していない。長時間の比較・分析CLIは本人端末で実行済み。
+
+本人承認を受け、2026-10-29に作業worktree `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi` で `codex/c2-king-safety-evaluation` をローカル `main` へfast-forwardした。統合コミットは `6ddeae78`。統合先で全943テスト・67モジュール、Ruff整形確認119ファイル、Ruff check、`git diff --check` が成功した。`origin/main` へのpushはしていない。最後のC2理解確認をこれから一問提示し、本人の回答を待つ。回答記録までは次テーマへ進まない。
+
+現在の作業worktreeは上記パスの `main`。本人端末で作成したconfirmation種一覧、worker 1の中断出力、worker 4の4,074ファイル、分析結果は未追跡のまま保持している。元の `/Users/oki2a24/kaname-shogi` は `codex/c1-analysis-performance-investigation`（HEAD `14e7210b`）のままで、未コミット文書・比較データを保持しているため、作業ファイルのclean/reset/切替やC2のcheckoutは行っていない。mainのローカル統合と元checkoutの作業treeへの反映は別の状態として扱う。
 
 B2は承認済み4Taskの実装、検証、Task別・最終独立レビューを終え、2026-10-28にmainへ統合してorigin/mainへpush済み。統合先では全928テスト・62モジュールが25.003秒で成功し、Ruff整形確認・lint・差分検査も成功した。統合前の初回実行は統合用worktreeに `.venv` がなくUSI起動テスト3件が失敗したが、既存環境への一時リンクで8件を再確認してから全体テストを通した。詳細は[B2学習記録](learning/king-safety-design.md)、[確定知識](knowledge/king-safety-evaluation.md)、[承認済み設計](plans/2026-10-28-king-safety-design.md)、[実装計画と実績](plans/2026-10-28-king-safety-implementation-plan.md)を参照する。
 

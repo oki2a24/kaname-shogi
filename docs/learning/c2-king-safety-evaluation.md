@@ -218,3 +218,13 @@ conditions.jsonの実行記録はGit HEAD=db921cbc83f79b46dc27345664b47c9720c035
 | 歩の圧力 | 509 | 450 | 549 | 19 | [0.442, 0.461] |
 
 結論は、選択した四局面を等重みとした比較で、安全度重み1を加えた候補方式がmaterial-only対照より悪化したことを支持する、という範囲に限る。全局面、別の評価重み・探索深さ、通常CLI/USIでの効果や悪化原因を特定する結果ではない。実装変更、重み変更、main統合・pushはこの結果だけでは行わず、別途判断・承認を要する。
+
+## ローカルmain統合後の検証（2026-10-29）
+
+本人の明示承認を受け、作業worktree `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi` で `codex/c2-king-safety-evaluation` を `main` へ `--ff-only` で統合した。統合コミットは `6ddeae780c932431bf02024fab5db20f10d04daf`。`origin/main` は `cdd46519808564584c6f77507319c4d8df6edacd` のままで、pushはしていない。
+
+統合先で `python3 scripts/run_tests_parallel.py` を実行し、943テスト・67モジュールが22.068秒で成功した。Ruffは既定cacheへの一時ファイル作成が権限境界で拒否されたため、リポジトリ外の `RUFF_CACHE_DIR` を指定して再実行した。`.venv/bin/ruff format --check .` は119ファイルが整形済み、`.venv/bin/ruff check .` は全check成功。`git diff --check` も成功した。確認比較の長時間CLIは再実行していない。
+
+統合後もconfirmation種一覧、worker 1の中断出力、worker 4の対局データ、分析JSONは作業worktreeに未追跡のまま保持している。元の `/Users/oki2a24/kaname-shogi` は `codex/c1-analysis-performance-investigation` のHEAD `14e7210b` にあり、そこにある未コミット文書・比較データを保持するため、元checkoutの作業ファイルを変更せず、ブランチ切替・clean・resetもしていない。共有Git管理領域ではlinked-worktreeの登録とローカルmain refが更新された。local main統合は完了したが、元checkoutのworking treeにはC2をcheckoutしておらず、pushもしていない。
+
+この追記時点では最後の理解確認をまだ提示しておらず、本人回答は未記録である。回答と補足の記録を終えるまで次テーマへ進まない。
