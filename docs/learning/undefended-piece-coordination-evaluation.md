@@ -119,3 +119,21 @@ C2成果物4件と元checkoutを保持し、長時間比較・分析CLIは起動
 実装前確認はPython 3.15.2、Ruff 0.16.10（requirements-dev.txt固定版と一致）、local hooksPath `.githooks`。READMEの条件内でセットアップ再実行は不要と確認した。製品変更前baselineとして`PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py`を実行し、943件・67モジュール、21.826秒で成功した。baseline後、製品コード・テストは未変更。
 
 承認済み計画・学習記録・設計・現在地・索引・本引き継ぎをこのB用ブランチで対象限定コミットする。C2成果物4件は未追跡のまま保持し、ステージしない。新セッション開始時はGit状態・直近3コミット・ブランチを取り直し、本文書と現物を照合する。
+
+## B段階実装：Task 1（2026-10-30）
+
+### 実施内容と検証
+
+承認済み計画Task 1に従い、`kaname_shogi/undefended_piece.py`へ盤上の非玉駒の枚数Cと差Uを返す読み取り操作を追加した。成駒は既存利き判定の現在の動き、遮蔽、ピンを含む利きを使い、玉は対象外で攻撃元・支え役に含める。手番・持ち駒・合法な捕獲可能性には依存しない。新しい一側走査操作を2つの公開操作から共有し、既存の公開利き操作を再利用した。
+
+固定局面テストを先に作成した。未実装モジュールの`ImportError`はRedと扱わず、公開シグネチャを備える一時0スタブを置いて実行し、AでCの期待値1に対して0、双方非零例で先手Cの期待値2に対して0、先後反転例で先手Cの期待値1に対して0となるassertion失敗を確認した。最小実装後、`PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_undefended_piece.py -v`は10件成功、`PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_square_attacks.py -v`は8件成功した。 Task 1完了後の`PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py`は953件・68モジュール、21.816秒で成功した。
+
+期待値は承認済み計画の固定配置から独立に手計算し、四条件A/B/C/Dの先手C=1/0/0/0、U=-1/0/0/0、双方非零例のC先手=2・後手=1、U先手=-1・後手=+1とした。追加駒自身の走査も直接確認できるよう、後手角を先手飛車で攻める例と、先手の追加支え金を後手歩で攻める例を加え、両側のCを期待値へ含めた。
+
+### 検出力とレビュー
+
+テスト単独では四条件・先後反転・追加駒自身の枚数・全13種類・成駒の動き・玉の対象外と攻撃/支え・ピン・遮蔽・手番/持ち駒の無視・状態不変・利き例外伝播を検査する。既存`test_square_attacks.py`は、各駒の利き形状と遮蔽、味方占有マスを補う。有限の固定局面であり、全配置や合法な取り返しの証明ではない。
+
+初回の独立レビューはCritical 0 / Important 0 / Minor 1。追加攻撃元・支え役のそれ自体の計数期待値がないという指摘を受け、固定配置とC期待値を補強した。独立再レビューはCritical 0 / Important 0 / Minor 0で、追加利きを隠すインメモリ変異3通りによる意図したassertion失敗もレビュアーが確認した。Refactorは不要と判断した。Ruffのimport整理・整形・checkと`git diff --cached --check`は成功した。初回Ruff checkはcacheのsandbox拒否で未完了であり、許可付き再実行を成功結果として記録する。
+
+未検証事項は、実戦到達可能性、合法な捕獲・取り返し、全配置への正しさ、性能、評価重みや棋力への影響である。Task 2の合成評価、Task 3の選択器注入、代表変異一式、全体テスト、最終レビューは未完了。

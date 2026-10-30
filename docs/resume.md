@@ -2,13 +2,17 @@
 
 ## 現在地（2026-10-30）
 
-主線「駒得以外の局面評価を一項目ずつ育てる」はC2まで完了。現在の項目「相手の利きがあり、味方の支えがない駒」はA段階を完了し、本人は2026-10-30にB段階へ進むことを選択した。本人は2026-10-29にテーマを選んだが、選定理由は未聴取。定義・改善仮説・仮重み10/1・既存公開利き操作の再利用・Bの範囲を個別に了承し、設計全体、実装計画全体、推薦したネイティブ方式を承認済み。A最後の理解確認は本人回答`a`で正解し、補足とともに学習記録へ記録済み。製品実装は未着手。[学習記録](learning/undefended-piece-coordination-evaluation.md)、[承認済み設計](plans/2026-10-30-undefended-piece-evaluation-design.md)、[承認済み実装計画](plans/2026-10-30-undefended-piece-implementation-plan.md)、[B開始引き継ぎ](handover-undefended-piece-evaluation-implementation.md)を参照する。A3等の番号は予約していない。
+主線「駒得以外の局面評価を一項目ずつ育てる」はC2まで完了。現在の項目「相手の利きがあり、味方の支えがない駒」はA段階を終え、本人は2026-10-30にB段階へ進むことを選択した。本人は2026-10-29にテーマを選んだが、選定理由は未聴取で推測しない。定義・改善仮説・仮重み10/1・公開利き操作の再利用・Bの範囲を個別に了承し、設計全体・実装計画全体・推薦したネイティブ方式も承認済み。A最後の理解確認には`a`と回答して正解し、補足とともに記録済み。章番号A3等は予約していない。
 
-4局面を各509組で比較した確認分析は、95%得点区間[0.227, 0.305]で「悪化を支持」。結論は登録4局面の条件に限られ、通常CLI・USI、別局面、別探索条件へ一般化しない。通常CLIのSFEN入出力、飛車可動性バージョン2、二手・四手への適用は保留し、C2へ追加していない。128手と256手のpilotは同一標本の再観察であり、confirmation結果と合算していない。長時間の比較・分析CLIは本人端末で実行済み。
+B段階Task 1（枚数差C/U）の実装・専用10件・既存利き8件・全体953件/68モジュール・独立レビューまで完了した。Task 2・3、代表変異一式、全体検証、最終レビュー・記録は未完了。経緯は[学習記録](learning/undefended-piece-coordination-evaluation.md)、仕様は[承認済み設計](plans/2026-10-30-undefended-piece-evaluation-design.md)、手順と実績は[承認済み実装計画](plans/2026-10-30-undefended-piece-implementation-plan.md)、開始時の背景は[B開始引き継ぎ](handover-undefended-piece-evaluation-implementation.md)を参照する。
+
+4局面を各509組で比較したC2確認分析は、95%得点区間[0.227, 0.305]で「悪化を支持」。結論は登録4局面の条件に限られ、通常CLI・USI、別局面、別探索条件へ一般化しない。通常CLIのSFEN入出力、飛車可動性バージョン2、二手・四手への適用は保留し、C2へ追加していない。128手と256手のpilotは同一標本の再観察であり、confirmation結果と合算していない。長時間の比較・分析CLIは本人端末で実行済み。
 
 本人承認を受け、2026-10-29に作業worktree `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi` で `codex/c2-king-safety-evaluation` をローカル `main` へfast-forwardした。統合コミットは `6ddeae78`。統合先で全943テスト・67モジュール、Ruff整形確認119ファイル、Ruff check、`git diff --check` が成功した。`origin/main` へのpushはしていない。最後の理解確認に本人回答があり、範囲を4局面・今回の探索条件に限る補足とともに[C2学習記録](learning/c2-king-safety-evaluation.md)へ記録した。今回の学習・個別合意は[現テーマの学習記録](learning/undefended-piece-coordination-evaluation.md)に保存した。
 
-2026-10-30のB開始準備時、作業worktreeはブランチ`codex/undefended-piece-evaluation`へ切り替えた。切替前の基点はローカルmainのHEAD `bf826066`（作成時点でorigin/mainより20コミット先行）。Pythonは3.15.2、固定Ruffは0.16.10、local hooksPathは`.githooks`。製品変更前baselineは943件・67モジュールが21.826秒で成功し、その後に製品コード・テスト変更はない。C2成果物4件は未追跡のまま保持。引き継ぎ文書を含む記録を通常コミットした後の最新HEADは、新セッションで最初に実行するGit三コマンドで再確認する。元の`/Users/oki2a24/kaname-shogi`は`codex/c1-analysis-performance-investigation`（確認時HEAD `14e7210b`）のままで、未コミット文書・比較データを保持している。元checkoutのclean/reset/切替・削除・上書きは行わない。`origin/main`へpushしない。
+2026-10-30のB開始準備時、作業worktreeは`codex/undefended-piece-evaluation`へ切り替えた。切替前の基点はローカルmainのHEAD `bf826066`（作成時点でorigin/mainより20コミット先行）。Pythonは3.15.2、固定Ruffは0.16.10、local hooksPathは`.githooks`。製品変更前baselineは943件・67モジュールが21.826秒で成功した。baseline後、Task 1開始前まで製品コード・テストは未変更だった。
+
+現在の作業worktreeは`/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、ブランチは`codex/undefended-piece-evaluation`。Task 1の専用10件・関連8件、Ruff、差分検査、独立レビューを完了し、Task 2以降は未完了。C2成果物4件は未追跡のまま保持している。元の`/Users/oki2a24/kaname-shogi`には触れていない。main統合とpushは行わず、別途本人承認を待つ。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 

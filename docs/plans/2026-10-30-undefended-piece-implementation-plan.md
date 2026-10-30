@@ -99,7 +99,7 @@ Dは「攻撃なし・支えあり」で、A/B/Cと合わせ条件の四組合�
 **消費:** `is_square_attacked(board: Board, target: Square, attacking_side: Side) -> bool`、`Position`、`Side`、`PieceType`、`Square`。
 **生産:** `attacked_undefended_piece_count(position: Position, side: Side) -> int`、`attacked_undefended_piece_balance(position: Position, perspective: Side) -> int`。
 
-- [ ] **1. 四組合せと両視点のテストを作成する。** `design_case` と双方非零の固定盤を使い、以下の独立値をassertする。13種や特殊条件は後続の振る舞いごとに追加する。
+- [x] **1. 四組合せと両視点のテストを作成する。** `design_case` と双方非零の固定盤を使い、以下の独立値をassertする。13種や特殊条件は後続の振る舞いごとに追加する。
 
 ```python
 for name, expected_c, expected_u in (("A", 1, -1), ("B", 0, 0), ("C", 0, 0), ("D", 0, 0)):
@@ -110,14 +110,14 @@ for name, expected_c, expected_u in (("A", 1, -1), ("B", 0, 0), ("C", 0, 0), ("D
     self.assertEqual(attacked_undefended_piece_balance(position, Side.GOTE), -expected_u)
 ```
 
-- [ ] **2. Redを確認する。** 新公開操作が存在しない読込失敗は記録するがRed完了としない。必要なら公開シグネチャを備えた一時の0スタブだけを置き、Aで `1 != 0` 等の意図したassertion failureを確認する。実行: `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_undefended_piece.py -v`。
-- [ ] **3. 最小実装しGreenを確認する。** 一側ごとのCを走査する内部操作へ公開2操作を委譲する。対象非玉駒だけに敵の利きと味方の支えを公開利き操作で照会し、C(Q)-C(P)を返す。上記コマンドで実テストが発見され、終了0・OKを確認する。
-- [ ] **4. 次の独立固定例を振る舞いごとに追加し、その都度Red理由→最小実装→Greenを記録する。** すでに満たす既存利きの接続・入力境界は初回Greenと記録し、未実装のRedと混同しない。
+- [x] **2. Redを確認する。** 新公開操作が存在しない読込失敗は記録するがRed完了としない。必要なら公開シグネチャを備えた一時の0スタブだけを置き、Aで `1 != 0` 等の意図したassertion failureを確認する。実行: `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_undefended_piece.py -v`。
+- [x] **3. 最小実装しGreenを確認する。** 一側ごとのCを走査する内部操作へ公開2操作を委譲する。対象非玉駒だけに敵の利きと味方の支えを公開利き操作で照会し、C(Q)-C(P)を返す。上記コマンドで実テストが発見され、終了0・OKを確認する。
+- [x] **4. 次の独立固定例を振る舞いごとに追加し、その都度Red理由→最小実装→Greenを記録する。** すでに満たす既存利きの接続・入力境界は初回Greenと記録し、未実装のRedと混同しない。
 
 | テスト名 | 正確な固定例・期待値・検出対象 |
 | --- | --- |
 | `test_counts_four_attack_defense_combinations` | A/B/C/Dの先手C=1/0/0/0、後手C=0。AND/NOT・支え欠落・攻撃なしを誤計上する変異を検出 |
-| `test_counts_multiple_attackers_and_defenders_once` | Aに後手角７三を追加して先手C=1。Bに先手金６六を追加して先手C=0。複数攻撃元の加算・支え一枚の無視を検出。追加駒自身も盤面全体で数える |
+| `test_counts_multiple_attackers_and_defenders_once` | Aに後手角７三を追加して先手C=1。Bに先手金６六を追加して先手C=0。複数攻撃元の加算・支え一枚の無視を検出。追加角を先手飛車で攻めた後手C=1、追加の支え金を後手歩で攻めた先手C=1・後手C=1も確認 |
 | `test_handles_both_sides_and_rotated_perspectives` | 上記双方非零例でC先手2・後手1、U先手-1・後手+1。180度回転し所属交換後のC先手1・後手2、U先手+1・後手-1。片側無視・符号反転を検出 |
 | `test_includes_every_non_king_target_type` | 玉なし盤で先手の各13非玉駒を５五、後手歩を５四に置く。各場合C先手=1。成駒の対象除外や飛車だけ対象の誤りを検出。駒種と日本語名をテスト定義で併記 |
 | `test_promoted_support_uses_current_movement` | 先手桂５五・後手歩５四。先手と金４六ならC先手0、未成歩４六なら1。先手馬４五なら0、角４五なら1。先手竜４四なら0、飛車４四なら1。成駒の金移動・馬の直交一歩・竜の斜め一歩の漏れを検出 |
@@ -127,11 +127,22 @@ for name, expected_c, expected_u in (("A", 1, -1), ("B", 0, 0), ("C", 0, 0), ("D
 | `test_turn_hands_empty_and_immutability` | Aの手番変更・両側持ち歩追加で先手C=1・後手C=0・先手U=-1は不変、盤・手番・持ち駒snapshotも呼出し前後で一致。空盤と玉だけの盤はC/U=0。手番依存・持ち駒混入・不要な玉検査・副作用を検出 |
 | `test_propagates_attack_probe_errors` | 新モジュール側の `is_square_attacked` を例外送出に差替え、同じ例外を伝播しsnapshot不変。例外隠蔽を検出 |
 
-- [ ] **5. 専用・関連検査を実行する。** 上記専用コマンド、および `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_square_attacks.py -v` を実行し、それぞれ発見件数とOKを確認。既存利きの全14駒種・対象占有・遮蔽検査を補完として利用し、集計固有のテストを省かない。
-- [ ] **6. Refactor要否確認・独立レビュー・共通品質検査・限定コミット。** Critical/Importantは解消して再検証・再レビュー。記録に実際のRed/Greenと検出範囲を残す。
+- [x] **5. 専用・関連検査を実行する。** 上記専用コマンド、および `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_square_attacks.py -v` を実行し、それぞれ発見件数とOKを確認。既存利きの全14駒種・対象占有・遮蔽検査を補完として利用し、集計固有のテストを省かない。
+- [x] **6. Refactor要否確認・独立レビュー・共通品質検査・限定コミット。** Critical/Importantは解消して再検証・再レビュー。記録に実際のRed/Greenと検出範囲を残す。
 
 **GREEN条件:** C/Uの固定値、四条件、玉・全13種・成駒の動き・ピン・遮蔽・状態保持、既存利き関連検査が成功し、独立レビューのCritical/Importantが0。
 
+### Task 1 実施記録（2026-10-30）
+
+固定局面支援と四条件・双方非零のテストを先に作成した。最初の実行は新規モジュールがまだないため`ModuleNotFoundError`であり、Redとは数えない。公開シグネチャを持つ一時0スタブを置いてから同じ専用コマンドを実行し、Aで期待C=1に対して0、双方非零例で先手C=2に対して0、先後回転例で先手C=1に対して0となるassertion失敗を確認した（2テスト、assertion失敗3件）。
+
+最小実装は一側のCを走査する内部操作とし、盤上の非玉駒だけに既存公開`is_square_attacked`を使い、利きの有無で一枚を判定した。Uは両側Cの差`C(Q)-C(P)`を返す。専用テスト10件が成功し、既存`test_square_attacks.py`も8件成功した。Task 1完了後の`PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py`は953件・68モジュール、21.816秒で成功した。追加した固定ケースのうち全13種・成駒・玉・ピン・遮蔽・手番/持ち駒・状態不変・例外は、最小走査が既存利き操作へ委譲するため初回Greenだった。これを未実装Redとして記録せず、検出力は最終変異確認でも確かめる。
+
+最初の独立レビューはCritical 0 / Important 0 / Minor 1。追加した攻撃元・支え役自身の計数期待値がなかったため、後手角7三を先手飛車7九で攻める配置と、追加の先手金6六を後手歩6五で攻める配置を加え、追加駒のCも期待値に含めた。専用10件、Ruff、差分検査後の独立再レビューはCritical 0 / Important 0 / Minor 0。レビュアーは追加した利きを一時的に隠すインメモリ変異3通りで該当assertionの失敗も確認した。
+
+Refactorは不要と判断した。一側走査を内部操作に集約し、CとUの公開操作から共有する形が小さく、テスト支援も手書きの配置に限定している。import整理でRuffが1件修正し、整形・Ruff checkは成功した。`.ruff_cache`書込みが標準sandboxで拒否された一回目のRuff checkは完了結果に含めず、許可付きの再実行成功を記録する。
+
+検出範囲は固定例の四条件、先後反転、全非玉駒種、成駒の現在の動き、玉・ピン・遮蔽、局面状態の保持である。既存利きテストが全14駒種の利き形状・味方占有・遮蔽を補う。実戦局面の到達可能性、合法な捕獲や取り返し、全配置の証明、性能、棋力への影響は未検証。
 ## Task 2：駒得と新しい差の重み付き合成
 
 **ファイル:** 作成 `kaname_shogi/material_undefended_piece.py`、`tests/test_material_undefended_piece.py`。
