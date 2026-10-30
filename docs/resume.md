@@ -2,17 +2,15 @@
 
 ## 現在地（2026-10-31）
 
-主線「駒得以外の局面評価を一項目ずつ育てる」の現在テーマ「支えのない狙われた駒の評価を接続して比較する」は、比較実装・検証・pilot・独立confirmation・分析まで完了した。テーマ選定理由は本人から聞いていないため推測しない。本人は直前実装との差分 `10M` 対 `10M+U` を比較CLIで評価する範囲を選び、設計・実装計画を2026-10-30に明示承認した。B段階最後の理解確認「E=10M+U」は正解として記録済み。
+本人は次テーマ候補1「駒の連携評価を通常CLI/USIへ接続し、必要ならShogiHome実践を設計する」を選んだ。選択前の確認では、今回初めて比較で改善が支持されたことを根拠に、通常CLIとUSIで選択可能な候補として試すという理解を示した。評価項目自体を最初に選んだ理由は未聴取で、推測しない。今回の選択はテーマ選定であり、利用者向けの表現・既定値・設定寿命・確認方法・実装計画の承認ではない。ShogiHome実践を含めるかも未決定である。次セッション用の引き継ぎを本ブランチに作成・検証して記録し、本人が新セッションへプロンプトを入力するまで設計・実装を始めない。
 
-作業worktreeは `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、ブランチは `codex/undefended-piece-evaluation`。実装コミットは `75dcf81b`、実装後文書コミットは `67dd9ad7`、比較結果記録コミットは `55f511b`。ローカル `main` は `087069c7` のまま。main統合・pushは行っておらず、それぞれ別途本人承認が必要。
+前段「支えのない狙われた駒の評価を接続して比較する」は比較CLI限定で完了した。基準 `material-undefended-piece-material-only`（M=10,U=0）対候補 `material-undefended-piece`（M=10,U=1）、同じ一手選択と詰み優先、5局面均等・先後交換、各局1024手上限、対局比較 `--workers 4`。pilotは50組・100局の探索的比較。独立confirmationは2035組・4070局で、詰み4050局・合法手なし20局、その他の未決着・エラーなし。候補平均得点0.908845、95%区間 `[0.878739, 0.938951]`。指定した条件では改善を支持するが、一般的な棋力向上を示さない。詳細・分析JSONのhash・再開経緯は[学習記録](learning/undefended-piece-coordination-evaluation.md)と[承認済み計画](plans/2026-10-30-undefended-piece-comparison-implementation-plan.md)にある。
 
-比較対象は `material-undefended-piece-material-only`（M=10,U=0）対 `material-undefended-piece`（M=10,U=1）。同じ一手選択・一手詰み優先、5局面均等、各局面先後交換、1024手上限、対局比較 `--workers 4`。pilotは50組・100局で探索的のみ。独立confirmationは2035組・4070局を完了し、詰み4050局・合法手なし20局、エラー等なし。候補の平均得点は0.908845、95%区間 `[0.878739, 0.938951]`、分析判定は指定条件において「改善を支持」。一般的な棋力向上を示したものではない。確認比較は一度 `--resume` で再開し、実時間はsummary上の下限値として記録した。
+作業worktreeは `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、ブランチは `codex/undefended-piece-evaluation`。引き継ぎ準備開始時のHEADは `24f060123038a011676056e4cb5f9f278fc93535`、ローカル `main` は `087069c7e53fdf9d52b4ebeac809cc73ffedaa2b`。C段階の比較実装はmainへ統合していない。比較結果記録・回答記録の文書コミットを含む本ブランチのmain統合・pushは本人の別承認が必要。
 
-解析CLIにはworker並列オプションがなく、対応オプションで分析を実行した。pilot/confirmationそれぞれのseed、summary、analysisのSHA-256、詳細条件・局面別数値・再開経緯・限界は[学習記録](learning/undefended-piece-coordination-evaluation.md)、手順と実績は[承認済み計画](plans/2026-10-30-undefended-piece-comparison-implementation-plan.md)を参照する。比較結果とanalysis JSONは `data/comparison/runs/` の専用出力先に保存している。
+C2保護対象4件と前段pilot/confirmation成果物は未追跡のまま保持する。元の `/Users/oki2a24/kaname-shogi` は今回触れていない。次セッションでも上書き・削除・clean/reset/切替をしない。`.agents/tasks/TODO-codex-undefended-piece-evaluation.md` は前テーマ時の既存未追跡メモで、今回更新しない。
 
-今回の記録更新は文書だけで、コードは変更していない。C2の保護対象4成果物は専用出力先から分離し、再照合した。元の `/Users/oki2a24/kaname-shogi` は変更していない。
-
-最後の理解確認には本人が「b」と回答し、正解（指定した5局面・条件では `10M+U` を支持するが、一般的な棋力向上までは示さない）として学習記録へ保存した。次は主線の残る接続・実践目標と次の評価項目Aを含む候補を、補助・任意候補と区別して提示し、本人の選択を待つ。新しいテーマの学習・設計・実装は選択後に始める。C2の保護対象と元checkoutを保持する。
+次に読む正本は[新テーマ引き継ぎ](handover-undefended-piece-normal-cli-usi-connection.md)、[次テーマ選択の記録](next-topics.md)、[学習記録](learning/undefended-piece-coordination-evaluation.md)。設計・実装計画は未承認で、明示承認前にコード・テスト変更や実践対局へ進まない。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 
