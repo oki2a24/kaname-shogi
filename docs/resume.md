@@ -4,7 +4,7 @@
 
 主線「駒得以外の局面評価を一項目ずつ育てる」はC2まで完了。現在の項目「相手の利きがあり、味方の支えがない駒」はA段階を終え、本人は2026-10-30にB段階へ進むことを選択した。本人は2026-10-29にテーマを選んだが、選定理由は未聴取で推測しない。定義・改善仮説・仮重み10/1・公開利き操作の再利用・Bの範囲を個別に了承し、設計全体・実装計画全体・推薦したネイティブ方式も承認済み。A最後の理解確認には`a`と回答して正解し、補足とともに記録済み。章番号A3等は予約していない。
 
-B段階Task 1〜3（C/U集計、重み付き合成、既存一手選択器への注入）の実装・Task別検証・独立レビューまで完了した。代表変異7件は各々狙ったassertionが失敗し、復元コピーで対象10件または5件が成功した。作業ブランチでの全体961件/70モジュール（21.785秒）、Ruff、最終独立レビュー（Critical 0 / Important 0 / Minor 0）も成功した。本人の「続けて」を受け、2026-10-30に作業ブランチをローカル `main` へfast-forwardし、統合後の全体961件/70モジュール（21.745秒）が成功した。`origin/main` へのpushは未実施で、別途承認待ち。B段階完了後の最後の理解確認は未実施であり、次は一問だけ尋ねて回答を待つ。仕様と経緯は[確定知識](knowledge/undefended-piece-evaluation.md)、[学習記録](learning/undefended-piece-coordination-evaluation.md)、[承認済み設計](plans/2026-10-30-undefended-piece-evaluation-design.md)、[実装計画と実績](plans/2026-10-30-undefended-piece-implementation-plan.md)、開始時の背景は[B開始引き継ぎ](handover-undefended-piece-evaluation-implementation.md)を参照する。
+B段階Task 1〜3（C/U集計、重み付き合成、既存一手選択器への注入）の実装・Task別検証・独立レビューまで完了した。代表変異7件は各々狙ったassertionが失敗し、復元コピーで対象10件または5件が成功した。作業ブランチでの全体961件/70モジュール（21.785秒）、Ruff、最終独立レビュー（Critical 0 / Important 0 / Minor 0）も成功した。本人の「続けて」を受け、実装コミット `554cf708` を2026-10-30にローカル `main` へfast-forwardし、統合後の全体961件/70モジュール（21.745秒）が成功した。統合記録コミット `5f961270` も `main` に反映済み。`origin/main` へのpushは未実施で、別途承認待ち。B段階完了後の最後の理解確認は未実施であり、次は一問だけ尋ねて回答を待つ。仕様と経緯は[確定知識](knowledge/undefended-piece-evaluation.md)、[学習記録](learning/undefended-piece-coordination-evaluation.md)、[承認済み設計](plans/2026-10-30-undefended-piece-evaluation-design.md)、[実装計画と実績](plans/2026-10-30-undefended-piece-implementation-plan.md)、開始時の背景は[B開始引き継ぎ](handover-undefended-piece-evaluation-implementation.md)を参照する。
 
 4局面を各509組で比較したC2確認分析は、95%得点区間[0.227, 0.305]で「悪化を支持」。結論は登録4局面の条件に限られ、通常CLI・USI、別局面、別探索条件へ一般化しない。通常CLIのSFEN入出力、飛車可動性バージョン2、二手・四手への適用は保留し、C2へ追加していない。128手と256手のpilotは同一標本の再観察であり、confirmation結果と合算していない。長時間の比較・分析CLIは本人端末で実行済み。
 
@@ -12,7 +12,7 @@ B段階Task 1〜3（C/U集計、重み付き合成、既存一手選択器への
 
 2026-10-30のB開始準備時、作業worktreeは`codex/undefended-piece-evaluation`へ切り替えた。切替前の基点はローカルmainのHEAD `bf826066`（作成時点でorigin/mainより20コミット先行）。Pythonは3.15.2、固定Ruffは0.16.10、local hooksPathは`.githooks`。製品変更前baselineは943件・67モジュールが21.826秒で成功した。baseline後、Task 1開始前まで製品コード・テストは未変更だった。
 
-作業worktreeは`/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、作業ブランチは`codex/undefended-piece-evaluation`。ローカル `main` は `554cf708` へfast-forward済みで、作業ブランチと同じHEADである。統合後の全体テストは961件・70モジュール、21.745秒で成功した。pushはしていない。C2成果物4件は未追跡のまま保持し、元の`/Users/oki2a24/kaname-shogi`の作業ファイルは変更していない。最後の理解確認が未完了のため、次テーマへはまだ進まない。
+作業worktreeは`/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、作業ブランチは`codex/undefended-piece-evaluation`。ローカル `main` には実装コミット `554cf708` と統合記録コミット `5f961270` が含まれ、現在地記録まで統合済みである。統合後の全体テストは製品コードが同じ `554cf708` 時点で961件・70モジュール、21.745秒で成功した。統合後の文書のみの変更は全体テストを再実行せず、リンクと差分を検査してコミットした。pushはしていない。C2成果物4件は未追跡のまま保持し、元の`/Users/oki2a24/kaname-shogi`の作業ファイルは変更していない。最後の理解確認が未完了のため、次テーマへはまだ進まない。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 

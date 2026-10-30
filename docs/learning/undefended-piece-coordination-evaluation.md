@@ -185,3 +185,5 @@ Refactorは不要。既存の`rotate_and_swap`を再利用し、詰み局面の�
 本人の「続けて」をローカルmain統合の承認として受け、作業ブランチ `codex/undefended-piece-evaluation` をローカル `main` へfast-forwardした。統合前の `main` は `bf826066`、統合後は `554cf708`。作業worktreeのHEADも同じ `554cf708` で、元の `/Users/oki2a24/kaname-shogi` の作業ファイルは変更していない。C2比較成果物4件は未追跡のまま保持した。
 
 統合先と同一HEADの作業worktreeで `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py` を実行し、961件・70モジュールが21.745秒で成功した。`origin/main` へのpushは行っておらず、別途承認待ち。最後の理解確認は未実施で、次の対話では一問だけ尋ねて本人回答を待つ。
+
+統合後、再開案内・学習記録・実装計画・文書索引・ロードマップの現状記述を更新した。対象5文書の相対リンク764件と見出し参照3件は欠落0件、`git diff --check`と通常コミットフックは成功した。文書のみの追記をコミット `5f961270` にまとめ、ローカル `main` も `554cf708` から `5f961270` へfast-forwardした。製品コード・テストに変更はなく、文書ガイドに従い全体テストは再実行していない。再開案内の現在地もこの統合記録後に更新してローカルmainへ反映した。

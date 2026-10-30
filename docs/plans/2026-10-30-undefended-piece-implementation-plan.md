@@ -233,6 +233,8 @@ Refactorは不要。評価局面の回転は既存 `rotate_and_swap` を再利�
 
 本人の「続けて」を受け、専用ブランチ `codex/undefended-piece-evaluation` をローカル `main` へfast-forwardした。`main` は `bf826066` から `554cf708` へ進み、作業worktreeと同一HEADである。統合後の全体テスト `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py` は961件・70モジュール、21.745秒で成功した。`origin/main` へのpushは別途承認待ち。元の `/Users/oki2a24/kaname-shogi` の作業ファイルは変更せず、C2成果物4件は保持した。次にB段階の最後の理解確認を一問だけ行い、本人回答を待つ。
 
+統合後の文書のみの更新をコミット `5f961270` にまとめ、ローカル `main` もそこへfast-forwardした。対象5文書の相対リンク764件・見出し参照3件は未解決0件で、差分検査と通常コミットフックが成功した。製品コードとテストに変更はないため全体テストは再実行していない。再開案内の現在地もこの統合記録後に更新してローカルmainへ反映した。
+
 **GREEN条件:** 代表変異の狙った失敗と復元成功、専用・関連・全体検査、Ruff、文書点検、独立最終レビューでCritical/Important 0、記録・通常コミットまで完了。棋力、意図的な駒捨て、交換の連鎖、全盤面、最適重み、実時間性能は未検証。
 
 ### 最終検証・変異・レビュー記録（2026-10-30）
