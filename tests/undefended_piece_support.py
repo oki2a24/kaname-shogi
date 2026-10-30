@@ -11,6 +11,7 @@ from kaname_shogi.model import (
     Side,
     Square,
 )
+from kaname_shogi.move import BoardMove
 
 PieceSpec = tuple[PieceType, Side, Square]
 
@@ -71,6 +72,44 @@ def both_nonzero_case() -> tuple[PieceSpec, ...]:
         (PieceType.PAWN, Side.GOTE, Square(3, 4)),  # 後手歩
         (PieceType.KNIGHT, Side.GOTE, Square(7, 4)),  # 後手桂
     )
+
+
+def mate_case(perspective: Side) -> tuple[Position, BoardMove, BoardMove]:
+    """詰み・通常手の合法な候補を含む固定局面を返す。
+
+    引数:
+        perspective: 先手なら先手例、後手ならその180度回転・先後反転例を選ぶ。
+
+    戻り値:
+        (局面, 一手詰みの飛車移動, 通常の飛車移動)。
+
+    副作用:
+        なし。新しいテスト用局面を作る。
+
+    両例で二候補の合法性と詰み判定を各テストから確認し、既存選択器の詰み優先が
+    開始側・候補順に依存しないことを固定配置で調べる。
+    """
+    pieces: tuple[PieceSpec, ...] = (
+        (PieceType.KING, Side.SENTE, Square(9, 9)),
+        (PieceType.ROOK, Side.SENTE, Square(5, 3)),
+        (PieceType.GOLD, Side.SENTE, Square(4, 3)),
+        (PieceType.KING, Side.GOTE, Square(5, 1)),
+        (PieceType.PAWN, Side.GOTE, Square(4, 1)),
+        (PieceType.PAWN, Side.GOTE, Square(6, 1)),
+        (PieceType.PAWN, Side.GOTE, Square(4, 2)),
+        (PieceType.PAWN, Side.GOTE, Square(6, 2)),
+    )
+    if perspective == Side.GOTE:
+        pieces = rotate_and_swap(pieces)
+
+    current = position(*pieces, side_to_move=perspective)
+    if perspective == Side.SENTE:
+        mate = BoardMove(Square(5, 3), Square(5, 2), False)
+        normal = BoardMove(Square(5, 3), Square(6, 3), False)
+    else:
+        mate = BoardMove(Square(5, 7), Square(5, 8), False)
+        normal = BoardMove(Square(5, 7), Square(4, 7), False)
+    return current, mate, normal
 
 
 def rotate_and_swap(pieces: Iterable[PieceSpec]) -> tuple[PieceSpec, ...]:

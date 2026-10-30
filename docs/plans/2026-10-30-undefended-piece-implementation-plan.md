@@ -8,7 +8,7 @@
 
 **技術スタック:** Python 3.14以上、標準unittest、固定Ruff 0.16.10。新規依存なし。環境の現在値は実装開始時に改めて確認する。
 
-**仕様:** [本人承認済み設計](2026-10-30-undefended-piece-evaluation-design.md)、[学習・回答記録](../learning/undefended-piece-coordination-evaluation.md)。2026-10-30、本人は設計全体へ「YES」と回答した。本人は2026-10-30に本計画全体と推薦したネイティブ方式を承認した。A段階の最後の理解確認と回答記録は完了し、本人はB段階へ進むことを選択済み。Task 1・2を実装・検証・レビュー済み。Task 3と代表変異・最終検証・最終レビュー・記録が残る。
+**仕様:** [本人承認済み設計](2026-10-30-undefended-piece-evaluation-design.md)、[学習・回答記録](../learning/undefended-piece-coordination-evaluation.md)。2026-10-30、本人は設計全体へ「YES」と回答した。本人は2026-10-30に本計画全体と推薦したネイティブ方式を承認した。A段階の最後の理解確認と回答記録は完了し、本人はB段階へ進むことを選択済み。Task 1〜3を実装・検証・Task別レビュー済み。代表変異、最終検証・レビュー、文書確認と通常コミットを完了した。ローカルmainへの統合・pushは別途承認待ち。
 
 ## グローバル制約
 
@@ -187,18 +187,32 @@ Refactorは不要と判断した。重み2項目の型・下限条件は異な�
 **消費:** `choose_one_ply_move(position, moves, rng, *, evaluate)`、Task 2の評価操作、既存 `legal_moves`・`position_after_move`・`is_checkmate`。
 **生産:** 新評価を渡したときの独立期待値と、旧評価を渡したときの選択器の挙動を確認する自動検査。
 
-- [ ] **1. 設計Aから二候補を作る。** `BoardMove(Square(4,7), Square(4,6), False)` と `BoardMove(Square(4,7), Square(3,7), False)` が `legal_moves(position)` にあり、いずれも `is_checkmate(position_after_move(...))` がFalseとassertする。一手後のM=14/14、U=0/-1、E=140/139をassertする。
-- [ ] **2. 接続期待値をテストする。** 先手・180度回転した後手で両候補の順序を反転しても新評価の選択は支えを作る手。後手の対応手は６三金→６四金（支えあり）・６三金→７三金（支えなし）。`material_balance` を同じ選択器へ注入すると両手同点で、注入乱数器の `choice` が元の候補タプルを一回受ける。新評価の重み0でも同じ同点・一回抽選を確認する。
-- [ ] **3. 既存選択器の初回Greenと新たな振る舞いを区別する。** Task 2完了後の上記注入は既存の選択器によって初回Greenの可能性があり、その事実を記録する。Task 1/2で新評価の振る舞いを未実装Redで確認済みなら、接続検査に失敗を捏造しない。失敗なら原因を分析し、既存方式を変更する前に本計画の範囲を再確認する。
-- [ ] **4. 既存共通契約の補完を確認する。** 既存 `tests/test_one_ply_selection.py` と `tests/test_king_safety_selection.py` を読み、詰み優先・同点・空候補・例外・成り/捕獲/打ちの異種兄弟枝の独立性に対応する既存検査名を記録する。今回のテスト支援に `mate_case(perspective)` を追加する。先手例は先手玉９九・飛５三・金４三、後手王５一・歩４一/６一/４二/６二。詰み手は５三飛→５二飛、通常手は５三飛→６三飛。後手例は配置を180度回転して所属を交換し、詰み手５七飛→５八飛、通常手５七飛→４七飛とする。既存テストの非公開補助をimportしない。両手の合法性、詰み手のみ `is_checkmate=True` を確認し、新評価の通常点に `10**30` を足しても詰み手が選ばれ、評価が通常枝だけに一回呼ばれ、元局面snapshot不変であることを候補順両方でassertする。既存の異種枝検査で検出できる契約と、新評価が読み取りであることをTask 1/2で直接検査した範囲を区別する。
-- [ ] **5. 専用・関連検査。** `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_undefended_piece_selection.py -v`、同様のdiscoverで `test_one_ply_selection.py` と `test_king_safety_selection.py` を実行し、各々の発見件数とOKを確認する。
-- [ ] **6. Refactor要否確認・独立レビュー・品質検査・限定コミット。** 新評価を受け渡すテスト以外に既存方式を変更していないか、`git diff` と明示ファイル一覧で確認する。Critical/Importantは解消し再検証・再レビューする。
+- [x] **1. 設計Aから二候補を作る。** `BoardMove(Square(4,7), Square(4,6), False)` と `BoardMove(Square(4,7), Square(3,7), False)` が `legal_moves(position)` にあり、いずれも `is_checkmate(position_after_move(...))` がFalseとassertする。一手後のM=14/14、U=0/-1、E=140/139をassertする。
+- [x] **2. 接続期待値をテストする。** 先手・180度回転した後手で両候補の順序を反転しても新評価の選択は支えを作る手。後手の対応手は６三金→６四金（支えあり）・６三金→７三金（支えなし）。`material_balance` を同じ選択器へ注入すると両手同点で、注入乱数器の `choice` が元の候補タプルを一回受ける。新評価の重み0でも同じ同点・一回抽選を確認する。
+- [x] **3. 既存選択器の初回Greenと新たな振る舞いを区別する。** Task 2完了後の上記注入は既存の選択器によって初回Greenの可能性があり、その事実を記録する。Task 1/2で新評価の振る舞いを未実装Redで確認済みなら、接続検査に失敗を捏造しない。失敗なら原因を分析し、既存方式を変更する前に本計画の範囲を再確認する。
+- [x] **4. 既存共通契約の補完を確認する。** 既存 `tests/test_one_ply_selection.py` と `tests/test_king_safety_selection.py` を読み、詰み優先・同点・空候補・例外・成り/捕獲/打ちの異種兄弟枝の独立性に対応する既存検査名を記録する。今回のテスト支援に `mate_case(perspective)` を追加する。先手例は先手玉９九・飛５三・金４三、後手王５一・歩４一/６一/４二/６二。詰み手は５三飛→５二飛、通常手は５三飛→６三飛。後手例は配置を180度回転して所属を交換し、詰み手５七飛→５八飛、通常手５七飛→４七飛とする。既存テストの非公開補助をimportしない。両手の合法性、詰み手のみ `is_checkmate=True` を確認し、新評価の通常点に `10**30` を足しても詰み手が選ばれ、評価が通常枝だけに一回呼ばれ、元局面snapshot不変であることを候補順両方でassertする。既存の異種枝検査で検出できる契約と、新評価が読み取りであることをTask 1/2で直接検査した範囲を区別する。
+- [x] **5. 専用・関連検査。** `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_undefended_piece_selection.py -v`、同様のdiscoverで `test_one_ply_selection.py` と `test_king_safety_selection.py` を実行し、各々の発見件数とOKを確認する。
+- [x] **6. Refactor要否確認・独立レビュー・品質検査・限定コミット。** 新評価を受け渡すテスト以外に既存方式を変更していないか、`git diff` と明示ファイル一覧で確認する。Critical/Importantは解消し再検証・再レビューする。
 
 **GREEN条件:** 両手番・候補順の新評価選択、同一選択器の駒得/重み0同点、一手詰み優先、既存共通契約の補完が成功し、独立レビューのCritical/Importantが0。
 
+### Task 3 実施記録（2026-10-30）
+
+`tests/test_undefended_piece_selection.py`へ3件を追加し、詰み・通常手の先後反転配置 `mate_case(perspective)` を共有テスト支援へ追加した。先手と180度回転した後手の両方で、支えを作る金の移動と支えから離れる移動が合法で詰みでないことを確認し、一手後のM=14、U=0/-1、E=140/139を独立値で照合した。候補順を入れ替えても新評価が支えを作る移動を選んだ。`material_balance` と対象差重み0の評価はそれぞれ両候補を同点として、元候補タプルを乱数器の`choice`へ一回渡すことを確認した。
+
+詰み検査では承認済み配置（先手玉９九・飛５三・金４三、後手王５一・歩４一/６一/４二/６二）と180度回転例を使った。詰み手・通常手双方の合法性、詰み判定、候補順の両方を検査した。通常枝評価を新評価+10**30としても詰み手を選び、評価呼出しは通常枝に一回だけ、元局面は不変であることを確認した。
+
+Task 3の最初の専用3件は初回Greenだった。Task 2までの新評価を既存の汎用一手選択器へ注入する接続確認であり、選択器は既に任意評価を受けるため、新評価の存在前に同じ接続テストがRedになるべき契約ではない。未実装Redを捏造せず、Task 1/2での新しい評価操作のRed確認と区別して記録する。
+
+関連する既存検査は `test_one_ply_selection.py` 10件と `test_king_safety_selection.py` 4件。前者の `test_empty_candidates_have_no_effects`、`test_propagates_failures`、`test_selects_all_mating_ties_once`、`test_preserves_source_and_branches` は空候補・例外・同点詰み・適用枝の独立性を補う。後者の `test_prefers_safer_king_move_for_both_sides`、`test_material_only_keeps_both_moves_tied`、`test_mate_priority_survives_safety_evaluator`、`test_preserves_mixed_move_branches` は既存評価接続と成り/捕獲/打ちの枝独立性を補う。今回の新規3件はU評価の接続と二候補の固定期待値を担当し、選択器本体と製品評価コードは変更していない。
+
+専用3件・既存選択器10件・玉安全度接続4件が成功した。Task 3後の全体 `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py` は961件・70モジュール、21.785秒で成功した。import整理は1件を修正し、Ruff formatで1ファイルを整形、Ruff checkと差分検査が成功した。
+
+Refactorは不要。評価局面の回転は既存 `rotate_and_swap` を再利用し、詰み局面は共有テスト支援へ一か所で置いた。新規テストは二候補・接続・詰み優先の3契約に分かれ、既存共通テストを複製していない。独立レビューはCritical 0 / Important 0 / Minor 0。レビュアーは実行せず静的に確認した。Task 3自体の未検証事項は棋力・最適重み・実時間性能であり、次節の代表変異と最終全体レビュー・検証を残す。
+
 ## 代表的な誤りの検出・全体確認・文書
 
-- [ ] **1. 隔離コピーで以下の代表変異を一つずつ入れる。** `/private/tmp` の一時ディレクトリへ現時点の `kaname_shogi` と `tests` を複写し、指定worktreeの `.venv/bin/python3` を絶対パスで使ってコピー内から対象unittestを実行する。C2成果物・`.git`・元checkoutをコピーしない。各変異で指定assertionの失敗を確認し、ファイルを新たに複写し直して復元後に同じ検査が成功することを記録。import/構文エラーを検出成功としない。
+- [x] **1. 隔離コピーで以下の代表変異を一つずつ入れる。** `/private/tmp` の一時ディレクトリへ現時点の `kaname_shogi` と `tests` を複写し、指定worktreeの `.venv/bin/python3` を絶対パスで使ってコピー内から対象unittestを実行する。C2成果物・`.git`・元checkoutをコピーしない。各変異で指定assertionの失敗を確認し、ファイルを新たに複写し直して復元後に同じ検査が成功することを記録。import/構文エラーを検出成功としない。
 
 | 代表変異 | 意図した失敗を確認する検査 |
 | --- | --- |
@@ -210,12 +224,18 @@ Refactorは不要と判断した。重み2項目の型・下限条件は異な�
 | 合成時にU係数を既定2にする | Task 2のAのE=139 |
 | 重み0ならU操作を呼ばずに駒得を返す | Task 2の重み0でのU操作呼出し確認 |
 
-- [ ] **2. 最終検証。** import整理が必要なら実施後、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、`git diff --check`、専用3モジュール、関連の利き・駒得・一手選択、`PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py` を実行。新たな失敗・変更がなければ全体を理由なく繰り返さない。
-- [ ] **3. 最終独立レビュー。** 全差分について契約・手計算例・検出対象・既存検査の補完・未検証事項・Refactor判断・各Taskのレビューを渡す。Critical/Importantを修正した場合、影響する検査とレビューをやり直す。重大度と対応を記録する。
-- [ ] **4. 知識・学習・入口を更新。** 実装した契約・限界を `docs/knowledge/undefended-piece-evaluation.md`、実際のRed/Green・代表変異・全体結果・レビュー結果を学習記録・本計画へ、現在地と索引を `docs/resume.md`・`docs/README.md` 等へ記録する。リンク・差分を確認し、実測していない棋力・全局面・速度を証明済みとしない。
-- [ ] **5. 差分を限定して通常コミット。** C2の4成果物と元checkoutを保持し、明示された対象のみステージする。main統合と元checkoutへの取り込みは別途本人承認を得てから行い、取り込み先で検証する。
+- [x] **2. 最終検証。** import整理が必要なら実施後、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、`git diff --check`、専用3モジュール、関連の利き・駒得・一手選択、`PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py` を実行。新たな失敗・変更がなければ全体を理由なく繰り返さない。
+- [x] **3. 最終独立レビュー。** 全差分について契約・手計算例・検出対象・既存検査の補完・未検証事項・Refactor判断・各Taskのレビューを渡す。Critical/Importantを修正した場合、影響する検査とレビューをやり直す。重大度と対応を記録する。
+- [x] **4. 知識・学習・入口を更新。** 実装した契約・限界を `docs/knowledge/undefended-piece-evaluation.md`、実際のRed/Green・代表変異・全体結果・レビュー結果を学習記録・本計画へ、現在地と索引を `docs/resume.md`・`docs/README.md` 等へ記録する。リンク・差分を確認し、実測していない棋力・全局面・速度を証明済みとしない。
+- [x] **5. 差分を限定して通常コミット。** C2の4成果物と元checkoutを保持し、明示された対象のみステージする。main統合と元checkoutへの取り込みは別途本人承認を得てから行い、取り込み先で検証する。
 
 **GREEN条件:** 代表変異の狙った失敗と復元成功、専用・関連・全体検査、Ruff、文書点検、独立最終レビューでCritical/Important 0、記録・通常コミットまで完了。棋力、意図的な駒捨て、交換の連鎖、全盤面、最適重み、実時間性能は未検証。
+
+### 最終検証・変異・レビュー記録（2026-10-30）
+
+7種の代表変異を`/private/tmp`内のソースとテストだけの隔離コピーへ個別に注入した。支え無視はTask 1四条件、攻撃/支え照会逆転は四条件A、玉の対象化は玉除外例、U符号逆転は両側非零例、成駒を未成駒へ戻す変異はと金/馬/竜の支え例、既定U重み2はTask 2独立E例、重み0でU操作を省略はTask 2のMock呼出し例が、それぞれ意図したassertion failureを出した。各変異の対象unittestを新規コピーへ戻して再実行し、Task 1側は10件、Task 2側は5件がそれぞれ成功した。移動候補関数を成駒へ直接割り当てる初回の変異案は駒種検証のValueErrorとなったため検出成功に数えず、複製盤上の支え側を基本駒種へ戻す変異に直してassertion失敗を確認した。
+
+指定worktreeで専用3件、既存選択器10件、玉安全度接続4件を再確認済み。全体テストは961件・70モジュール、21.785秒で成功。Ruff import整理・format・check、文書5件の相対ファイルリンク737件（未解決0件）を確認した。全差分の独立最終レビューはCritical 0 / Important 0 / Minor 0。限定通常コミットを完了した。棋力・最適重み・全局面・性能は未検証のまま記録する。
 
 ## 計画の自己点検
 
