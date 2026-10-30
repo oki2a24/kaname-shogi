@@ -73,7 +73,7 @@ class UsiEngineLauncherTests(unittest.TestCase):
             result.stdout,
             "id name kaname-shogi\n"
             "id author kaname-shogi project\n"
-            "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4\n"
+            "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece\n"
             "usiok\n",
         )
         self.assertEqual(result.stderr, "")
@@ -127,7 +127,7 @@ class UsiEngineLauncherTests(unittest.TestCase):
             [
                 "id name kaname-shogi",
                 "id author kaname-shogi project",
-                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece",
                 "usiok",
             ],
         )

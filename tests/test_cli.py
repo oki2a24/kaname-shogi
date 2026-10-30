@@ -1,5 +1,6 @@
 """CLIの指し手解析と対局進行を検証する。"""
 
+import inspect
 import random
 import unittest
 from fractions import Fraction
@@ -199,7 +200,7 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         return choose(**kwargs)
 
     def test_choose_move_selection_policy_maps_choices(self):
-        """番号1〜5を既存三方式・全幅・αβの各選択肢へ対応付ける。
+        """番号1〜6を既存方式と新候補へ対応付ける。
 
         表示値と内部方針を取り違える誤りや、利用者向けの合意済み名称を欠かす
         誤りを検出する。
@@ -210,6 +211,7 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
             ("3", MoveSelectionPolicy.TWO_PLY_MATERIAL),
             ("4", MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH),
             ("5", MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA),
+            ("6", MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE),
         )
         for value, expected in cases:
             outputs = []
@@ -225,8 +227,52 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
                     [
                         "一手選択方針を選んでください（1: ランダム、2: 一手駒得、"
                         "3: 二手先読み（駒得）、4: 全幅読み（最大4手）、"
-                        "5: αβ枝刈り（最大4手）、空入力: ランダム）:"
+                        "5: αβ枝刈り（最大4手）、"
+                        "6: 一手駒得＋支えのない狙われた駒、空入力: ランダム）:"
                     ],
+                )
+
+    def test_choose_move_selection_policy_prompts_for_side(self):
+        """先後別の選択メニューは対象側と第6候補名を案内する。
+
+        CVCの同じ選択表を先後別に使うとき、無標識の質問や別の側の選択と
+        誤認される表示を検出する。
+        """
+        choose = getattr(cli, "choose_move_selection_policy", None)
+        self.assertIsNotNone(choose)
+        self.assertIn("side", inspect.signature(choose).parameters)
+
+        for side, side_name in ((Side.SENTE, "先手"), (Side.GOTE, "後手")):
+            outputs = []
+            with self.subTest(side=side):
+                policy = self._choose_policy(
+                    input_fn=ScriptedInput(["6"]),
+                    output_fn=outputs.append,
+                    side=side,
+                )
+
+                self.assertEqual(policy, MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE)
+                self.assertIn(side_name, outputs[0])
+                self.assertIn("6: 一手駒得＋支えのない狙われた駒", outputs[0])
+
+    def test_empty_input_defaults_each_side_to_random(self):
+        """先手・後手それぞれの空入力は独立してRANDOMになる。
+
+        一方の選択値がもう一方へ流用されたり、新方式が暗黙の既定になる誤りを検出する。
+        """
+        choose = getattr(cli, "choose_move_selection_policy", None)
+        self.assertIsNotNone(choose)
+        self.assertIn("side", inspect.signature(choose).parameters)
+
+        for side in (Side.SENTE, Side.GOTE):
+            with self.subTest(side=side):
+                self.assertEqual(
+                    self._choose_policy(
+                        input_fn=ScriptedInput([""]),
+                        output_fn=lambda _: None,
+                        side=side,
+                    ),
+                    MoveSelectionPolicy.RANDOM,
                 )
 
     def test_choose_move_selection_policy_defaults_to_random_on_empty_input(self):
@@ -247,14 +293,14 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         """
         outputs = []
         policy = self._choose_policy(
-            input_fn=ScriptedInput(["6", "2"]), output_fn=outputs.append
+            input_fn=ScriptedInput(["7", "2"]), output_fn=outputs.append
         )
 
         self.assertEqual(policy, MoveSelectionPolicy.MATERIAL)
         self.assertEqual(
             sum("一手選択方針を選んでください" in line for line in outputs), 2
         )
-        self.assertIn("エラー：一手選択方針を1〜5で選んでください。", outputs)
+        self.assertIn("エラー：一手選択方針を1〜6で選んでください。", outputs)
 
 
 class ScriptedInput:
@@ -335,6 +381,122 @@ class GameplayTests(unittest.TestCase):
 
                 search_move.assert_called_once()
                 self.assertIs(search_move.call_args.args[1], policy)
+
+    def test_run_game_routes_distinct_policies_by_side(self):
+        """CVCは先後の選択方針を手番どおり探索へ渡す。
+
+        一方の方針を両側に適用する誤りと、先後を逆に割り当てる誤りを検出する。
+        """
+        self.assertIn(
+            "move_selection_policies", inspect.signature(cli.run_game).parameters
+        )
+        cases = (
+            (
+                {
+                    Side.SENTE: MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+                    Side.GOTE: MoveSelectionPolicy.MATERIAL,
+                },
+                [
+                    (Side.SENTE, MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE),
+                    (Side.GOTE, MoveSelectionPolicy.MATERIAL),
+                ],
+            ),
+            (
+                {
+                    Side.SENTE: MoveSelectionPolicy.MATERIAL,
+                    Side.GOTE: MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+                },
+                [
+                    (Side.SENTE, MoveSelectionPolicy.MATERIAL),
+                    (Side.GOTE, MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE),
+                ],
+            ),
+        )
+        selected_moves = (
+            BoardMove(Square(7, 7), Square(7, 6), False),
+            BoardMove(Square(3, 3), Square(3, 4), False),
+        )
+
+        for policies, expected in cases:
+            with self.subTest(policies=policies):
+                calls = []
+
+                def search_with_policy(
+                    search_position,
+                    policy,
+                    rng,
+                    control,
+                    calls=calls,
+                    selected_moves=selected_moves,
+                ):
+                    if len(calls) == 2:
+                        raise KeyboardInterrupt
+                    calls.append((search_position.side_to_move, policy))
+                    return SearchResult(
+                        SearchCompletion.COMPLETE, selected_moves[len(calls) - 1]
+                    )
+
+                with patch.object(
+                    game_search, "search_move", side_effect=search_with_policy
+                ) as search_move:
+                    record = cli.run_game(
+                        mode=cli.GameMode.COMPUTER_VS_COMPUTER,
+                        move_selection_policies=policies,
+                        output_fn=lambda _: None,
+                        clock_settings=_TEST_CLOCK_SETTINGS,
+                        time_config=_TEST_TIME_CONFIG,
+                        now_ns=lambda: 0,
+                    )
+
+                self.assertEqual(calls, expected)
+                self.assertEqual(search_move.call_count, 3)
+                self.assertEqual(len(record.moves), 2)
+
+    def test_run_game_rejects_incomplete_or_wrong_side_policy_mapping(self):
+        """方針マップの不足・人間側指定は対局開始前に拒否する。
+
+        欠落側を既定方針で隠す誤りや、無効な割当の後に設定読込・盤面表示を始める
+        誤りを検出する。
+        """
+        self.assertIn(
+            "move_selection_policies", inspect.signature(cli.run_game).parameters
+        )
+        cases = (
+            (
+                cli.GameMode.COMPUTER_VS_COMPUTER,
+                {Side.SENTE: MoveSelectionPolicy.MATERIAL},
+            ),
+            (
+                cli.GameMode.HUMAN_VS_COMPUTER,
+                {Side.SENTE: MoveSelectionPolicy.MATERIAL},
+            ),
+            (
+                cli.GameMode.HUMAN_VS_HUMAN,
+                {Side.SENTE: MoveSelectionPolicy.MATERIAL},
+            ),
+        )
+
+        for mode, policies in cases:
+            with self.subTest(mode=mode, policies=policies):
+                outputs = []
+                with (
+                    patch.object(
+                        cli,
+                        "load_time_management_config",
+                        side_effect=AssertionError("不正割当より先に設定を読んだ"),
+                    ) as load_config,
+                    patch.object(game_search, "search_move") as search_move,
+                ):
+                    with self.assertRaises(ValueError):
+                        cli.run_game(
+                            mode=mode,
+                            move_selection_policies=policies,
+                            output_fn=outputs.append,
+                        )
+
+                load_config.assert_not_called()
+                search_move.assert_not_called()
+                self.assertEqual(outputs, [])
 
     def test_new_modes_remain_fixed_for_game(self):
         """新二方式を一局中の複数コンピュータ手へ同じ値で渡す。

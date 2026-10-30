@@ -14,6 +14,10 @@ _LEGACY_POLICIES = (
     movegen.MoveSelectionPolicy.MATERIAL,
     movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
 )
+_CONTROLLED_ONE_PLY_POLICIES = (
+    *_LEGACY_POLICIES,
+    movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+)
 _ONE_PLY_POLICIES = (
     *_LEGACY_POLICIES,
     movegen.MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,
@@ -76,16 +80,16 @@ def search_move(
 ) -> movegen.SearchResult:
     """制御付き方式から既存のUSI向け完了・中断・抑制結果を返す。
 
-    引数: positionは開始局面、policyは既存三方式か四手探索方式、rngは既存方式用、
-    controlは呼出し元が所有する一探索分の制御。
+    引数: positionは開始局面、policyは既存三方式・制御付き一手10M+U方式・四手探索方式、
+    rngは既存方式用、controlは呼出し元が所有する一探索分の制御。
     戻り値: 既存のmovegen.SearchResult。新方式のSTOPPEDはINTERRUPTED、
     SUPPRESSEDは手なしのSUPPRESSED、手なし確定は手なしのCOMPLETEへ対応する。
-    副作用: 旧三方式はmovegen.search_moveと同じ。新方式は同じcontrolで反復探索し、
-    rngを使わない。送信・時計原点・予算生成を行わない。
+    副作用: 既存三方式と一手10M+Uはmovegen.search_moveと同じ。四手探索方式は同じ
+    controlで反復探索し、rngを使わない。送信・時計原点・予算生成を行わない。
     前提・設計理由: 対局層の送信責務を既存USI側に保つため、新しい探索結果を
     既存応答型へ変換する。抑制時に診断用の最終完了手を応答として復活させない。
     """
-    if policy in _LEGACY_POLICIES:
+    if policy in _CONTROLLED_ONE_PLY_POLICIES:
         return movegen.search_move(position, policy, rng, control)
     pruning = _pruning_for(policy)
     operations = shogi.make_controlled_operations(position.side_to_move)

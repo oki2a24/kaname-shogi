@@ -194,7 +194,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             [
                 "id name kaname-shogi",
                 "id author kaname-shogi project",
-                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece",
                 "usiok",
                 "readyok",
             ],
@@ -225,7 +225,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             [
                 "id name kaname-shogi",
                 "id author kaname-shogi project",
-                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece",
                 "usiok",
             ],
         )
@@ -266,6 +266,23 @@ class UsiEngineFunctionTests(unittest.TestCase):
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL)
 
+    def test_applies_material_undefended_piece_at_first_go(self):
+        """新Difficulty値は最初のgoで連携評価方針を使う。
+
+        通知名を受付候補へ加え忘れたり、Materialなど別方針へ誤対応させる誤りを検出する。
+        """
+        calls, _ = self._run_with_policy_spy(
+            [
+                "setoption name Difficulty value MaterialUndefendedPiece",
+                "position startpos moves 7g7f",
+                "go",
+                "quit",
+            ]
+        )
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE)
+
     def test_accepts_difficulty_option_case_insensitively(self):
         """Difficulty名とRandom/Material値の大文字小文字を区別しない。
 
@@ -303,6 +320,30 @@ class UsiEngineFunctionTests(unittest.TestCase):
 
                 self.assertEqual(len(calls), 1)
                 self.assertEqual(calls[0][2], MoveSelectionPolicy.TWO_PLY_MATERIAL)
+
+    def test_accepts_material_undefended_piece_case_insensitively(self):
+        """MaterialUndefendedPieceは大小混在でも連携評価方針へ対応する。
+
+        大文字小文字の差だけでUSI設定を無視する誤りを検出する。
+        """
+        for value in (
+            "MaterialUndefendedPiece",
+            "mAtErIaLuNdEfEnDeDpIeCe",
+        ):
+            with self.subTest(value=value):
+                calls, _ = self._run_with_policy_spy(
+                    [
+                        f"setoption name Difficulty value {value}",
+                        "position startpos moves 7g7f",
+                        "go",
+                        "quit",
+                    ]
+                )
+
+                self.assertEqual(len(calls), 1)
+                self.assertEqual(
+                    calls[0][2], MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE
+                )
 
     def test_accepts_four_ply_modes_case_insensitively_and_keeps_unknown_value(self):
         """FullWidth4とAlphaBeta4を大小無視で受け未知値後も保持する。
@@ -365,6 +406,34 @@ class UsiEngineFunctionTests(unittest.TestCase):
                     [call[2] for call in calls], [current, current, next_policy]
                 )
 
+    def test_material_undefended_piece_is_fixed_until_next_game(self):
+        """連携評価方針は局中固定され、usinewgame後に設定値を使う。
+
+        二回目のgoで局中変更を早期適用したり、次局に新設定を反映し忘れる誤りを検出する。
+        """
+        calls, _ = self._run_with_policy_spy(
+            [
+                "setoption name Difficulty value MaterialUndefendedPiece",
+                "position startpos moves 7g7f",
+                "go",
+                "setoption name Difficulty value Material",
+                "go",
+                "usinewgame",
+                "position startpos moves 2g2f",
+                "go",
+                "quit",
+            ]
+        )
+
+        self.assertEqual(
+            [call[2] for call in calls],
+            [
+                MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+                MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+                MoveSelectionPolicy.MATERIAL,
+            ],
+        )
+
     def test_invalid_value_preserves_two_ply_setting(self):
         """新値後の未知値で設定を失わず、無設定と旧値も従来方針を使う。
 
@@ -406,7 +475,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         """
         calls, _ = self._run_with_policy_spy(
             [
-                "setoption name Difficulty value Material",
+                "setoption name Difficulty value MaterialUndefendedPiece",
                 "setoption name USI_Hash value 32",
                 "setoption name Difficulty value Strong",
                 "position startpos moves 7g7f",
@@ -415,7 +484,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             ]
         )
         self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL)
+        self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE)
 
         calls, _ = self._run_with_policy_spy(
             [
@@ -891,7 +960,7 @@ class UsiEngineProcessTests(unittest.TestCase):
             self.assertEqual(reader.read_line(), "id author kaname-shogi project")
             self.assertEqual(
                 reader.read_line(),
-                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece",
             )
             self.assertEqual(reader.read_line(), "usiok")
 

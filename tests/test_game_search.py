@@ -365,6 +365,30 @@ class GameSearchTests(unittest.TestCase):
                         )
                 generate.assert_not_called()
 
+    def test_undefended_piece_uses_controlled_selection_path(self):
+        """Uは時計付き探索の既存候補選択へ同じ引数で委譲する。
+
+        未知の四手方式へ誤分類したり、停止制御を捨てて別入口へ送る誤りを検出する。
+        """
+        policy = mg.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE
+        position = kings_only(Side.SENTE)
+        rng = object()
+        control = object()
+        move = mg.legal_moves(position)[0]
+        expected = mg.SearchResult(
+            mg.SearchCompletion.COMPLETE,
+            move,
+        )
+
+        with patch.object(mg, "search_move", return_value=expected) as controlled:
+            try:
+                result = game_search.search_move(position, policy, rng, control)
+            except ValueError as error:
+                self.fail(f"U方針が制御付き候補選択へ接続されていません: {error}")
+
+        self.assertIs(result, expected)
+        controlled.assert_called_once_with(position, policy, rng, control)
+
     def test_new_modes_use_depth_four_and_starting_side(self):
         """新二方式は開始側視点で深さ4へ接続し、同じ制御と乱数なしを守る。
 

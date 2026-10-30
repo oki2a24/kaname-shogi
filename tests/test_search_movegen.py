@@ -22,6 +22,10 @@ LEGACY_POLICIES = (
     mg.MoveSelectionPolicy.MATERIAL,
     mg.MoveSelectionPolicy.TWO_PLY_MATERIAL,
 )
+CONTROLLED_ONE_PLY_POLICIES = (
+    *LEGACY_POLICIES,
+    mg.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+)
 
 
 def snapshot(p):
@@ -43,6 +47,17 @@ def pawns():
     p = Position(Board(), Side.SENTE)
     for f in (2, 7):
         p.board.set_piece(Square(f, 7), Piece(PieceType.PAWN, Side.SENTE))
+    return p
+
+
+def kings_and_pawns(side):
+    """先後の玉と二歩だけを置いたU制御探索用局面を返す。"""
+    p = Position(Board(), side)
+    p.board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+    p.board.set_piece(Square(5, 1), Piece(PieceType.KING, Side.GOTE))
+    rank = 7 if side is Side.SENTE else 3
+    for file in (2, 7):
+        p.board.set_piece(Square(file, rank), Piece(PieceType.PAWN, side))
     return p
 
 
@@ -439,6 +454,95 @@ def mating(side):
 
 
 class ControlledEvaluationTests(unittest.TestCase):
+    def test_undefended_piece_controlled_score_uses_turn_perspective(self):
+        """通常局面のU評価値・着手後局面・視点を先後とも正しく渡す。
+
+        評価関数へ着手前局面を渡す誤り、値の反転、手番視点の誤りを検出する。
+        """
+        policy = mg.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE
+        for side in Side:
+            with self.subTest(side=side):
+                position = kings_and_pawns(side)
+                move = mg.legal_moves(position)[0]
+                before = snapshot(position)
+                expected_after = position.copy()
+                mg.apply_move(
+                    expected_after, move.source, move.destination, promote=move.promote
+                )
+
+                with patch(
+                    "kaname_shogi.material_undefended_piece.evaluate_material_undefended_piece",
+                    return_value=7,
+                ) as evaluate:
+                    result = mg._evaluate_candidate(
+                        position,
+                        move,
+                        policy,
+                        control=SearchControl(None, 0),
+                    )
+
+                    self.assertEqual(result, mg.CandidateEvaluation(True, (0, 7)))
+                    evaluate.assert_called_once()
+                    self.assertEqual(
+                        snapshot(evaluate.call_args.args[0]), snapshot(expected_after)
+                    )
+                    self.assertIs(evaluate.call_args.args[1], side)
+                self.assertEqual(snapshot(position), before)
+
+    def test_undefended_piece_scores_mate_before_normal_evaluation(self):
+        """制御付きU評価も先後とも一手詰みを `(1, 0)` として優先する。
+
+        時計付き経路だけ詰みを通常評価へ混ぜる誤りと、候補適用で元局面を変える誤りを検出する。
+        """
+        policy = mg.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE
+        for side in Side:
+            with self.subTest(side=side):
+                position, move = mating(side)
+                self.assertIn(move, mg.legal_moves(position))
+                before = snapshot(position)
+
+                try:
+                    result = mg._evaluate_candidate(
+                        position,
+                        move,
+                        policy,
+                        control=SearchControl(None, 0),
+                    )
+                except ValueError as error:
+                    self.fail(f"制御付き候補評価がU方針を拒否しました: {error}")
+
+                self.assertEqual(result, mg.CandidateEvaluation(True, (1, 0)))
+                self.assertEqual(snapshot(position), before)
+
+    def test_undefended_piece_discards_evaluation_stopped_at_boundary(self):
+        """U採点中の停止は候補未完了として返す。
+
+        採点復帰後の停止確認を省いて部分・期限超過の点を完了扱いにする誤りを検出する。
+        """
+        position = kings_and_pawns(Side.SENTE)
+        move = mg.legal_moves(position)[0]
+        control = SearchControl(None, 0)
+
+        def stop_after_evaluation(*args, **kwargs):
+            control.request_stop()
+            return 7
+
+        with patch(
+            "kaname_shogi.material_undefended_piece.evaluate_material_undefended_piece",
+            side_effect=stop_after_evaluation,
+        ):
+            try:
+                result = mg._evaluate_candidate(
+                    position,
+                    move,
+                    mg.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+                    control=control,
+                )
+            except ValueError as error:
+                self.fail(f"制御付き候補評価がU方針を拒否しました: {error}")
+
+        self.assertEqual(result, mg.CandidateEvaluation(False, None))
+
     def test_completed_scores_preserve_policy_and_perspective(self):
         """先後反転でも一手7/5点、二手-23/5点と詰みの勝敗を維持する。
 
@@ -648,12 +752,40 @@ class ControlledEvaluationTests(unittest.TestCase):
 
 
 class RootSearchTests(unittest.TestCase):
+    def test_undefended_piece_policy_returns_legal_move_for_both_sides(self):
+        """U方針は先後とも制御付き探索で合法手を完了する。
+
+        対局専用入口で新候補を未知扱いにしたり、手番側・乱数・元局面を壊す誤りを検出する。
+        """
+        policy = mg.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE
+        for side in Side:
+            with self.subTest(side=side):
+                position = kings_and_pawns(side)
+                before = snapshot(position)
+                legal = mg.legal_moves(position)
+                rng = RecordingChoice()
+
+                try:
+                    result = mg.search_move(
+                        position,
+                        policy,
+                        rng,
+                        SearchControl(None, 0),
+                    )
+                except ValueError as error:
+                    self.fail(f"制御付き探索がU方針を拒否しました: {error}")
+
+                self.assertEqual(result.completion, mg.SearchCompletion.COMPLETE)
+                self.assertIn(result.move, legal)
+                self.assertEqual(len(rng.calls), 1)
+                self.assertEqual(snapshot(position), before)
+
     def test_zero_budget_returns_fallback_or_confirmed_no_moves(self):
-        """三方式の0予算と開始前stopは最初の合法手、空盤は確定手なしを返す。
+        """旧三方式とUの0予算・開始前stopは予備手、空盤は手なし確定を返す。
 
         0を時計なし扱い、未確保を投了、部分一覧の抽選にする誤りを検出する。
         """
-        for policy in LEGACY_POLICIES:
+        for policy in CONTROLLED_ONE_PLY_POLICIES:
             for side in Side:
                 for zero in (False, True):
                     with self.subTest(policy=policy, side=side, zero=zero):
@@ -688,7 +820,7 @@ class RootSearchTests(unittest.TestCase):
 
         SUPPRESSEDを手なし確定や予備手へ変換する誤りを検出する。
         """
-        for policy in LEGACY_POLICIES:
+        for policy in CONTROLLED_ONE_PLY_POLICIES:
             p = pawns()
             c = SearchControl(SearchBudget(0, 0), 0, now_ns=lambda: 0)
             c.request_stop(suppress_response=True)
@@ -862,7 +994,7 @@ class RootSearchTests(unittest.TestCase):
 
         目標まで探索を引き延ばす誤りを偽時計のまま検出する。
         """
-        for policy in LEGACY_POLICIES:
+        for policy in CONTROLLED_ONE_PLY_POLICIES:
             with self.subTest(policy=policy):
                 rng = RecordingChoice()
                 r = mg.search_move(
@@ -876,11 +1008,11 @@ class RootSearchTests(unittest.TestCase):
                 self.assertEqual(len(rng.calls), 1)
 
     def test_new_search_preserves_position_and_does_not_reuse_result(self):
-        """三方式の連続探索は元局面を保存し前回の停止と予備手を引き継がない。
+        """旧三方式とUは元局面を保存し前回の停止と予備手を引き継がない。
 
         共有結果・制御フラグ・元局面の部分変更を検出する。
         """
-        for policy in LEGACY_POLICIES:
+        for policy in CONTROLLED_ONE_PLY_POLICIES:
             with self.subTest(policy=policy):
                 p = pawns()
                 before = snapshot(p)

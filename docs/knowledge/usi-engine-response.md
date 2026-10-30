@@ -1,6 +1,6 @@
 # USIエンジンの一手応答
 
-更新日：2026-10-19
+更新日：2026-10-31
 
 ## 境界
 
@@ -18,10 +18,10 @@
 `usi` には次のcombo行を `usiok` より前に出す。
 
 ```text
-option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4
+option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece
 ```
 
-`setoption name Difficulty value Random` は一様ランダム、`value Material` は一手後の駒得比較、`value TwoPlyMaterial` は二手先読み（駒得）の方針を選択境界へ渡す。`value FullWidth4` は枝を省略しない最大4手の反復深化、`value AlphaBeta4` はαβ枝刈り付き最大4手の反復深化を選ぶ。新二方式は各 `go` で深さ1から4へ進む。設定がない場合は `Random`。USI仕様に従い、受信時のoption名と値は大文字小文字を区別せずに比較する。[USI仕様 §5.3 `setoption`](https://hgm.nubati.net/usi.html)はnameとvalueをcase-insensitiveとしている。未知の設定名は読み飛ばし、既知の `Difficulty` に不正値が届いた場合は最後の有効値を保つ。
+`setoption name Difficulty value Random` は一様ランダム、`value Material` は一手後の駒得比較、`value TwoPlyMaterial` は二手先読み（駒得）の方針を選択境界へ渡す。`value FullWidth4` は枝を省略しない最大4手の反復深化、`value AlphaBeta4` はαβ枝刈り付き最大4手の反復深化を選ぶ。`value MaterialUndefendedPiece` は既存の `10M+U` 評価を使う制御付き一手選択を選ぶ。一手詰み優先と既存の停止制御を使い、二手・四手探索には切り替えない。新二方式は各 `go` で深さ1から4へ進む。設定がない場合は `Random`。USI仕様に従い、受信時のoption名と値は大文字小文字を区別せずに比較する。[USI仕様 §5.3 `setoption`](https://hgm.nubati.net/usi.html)はnameとvalueをcase-insensitiveとしている。未知の設定名は読み飛ばし、既知の `Difficulty` に不正値が届いた場合は最後の有効値を保つ。
 
 設定値は `run_usi_engine` 内で `_UsiEngineState` と別に保持する。局の最初の `go` で有効値を局内方針として固定するため、後から届いた `setoption` は現在局の後続 `go` には影響しない。`usinewgame` は局面を消し、局内固定だけを解除して、設定値を次局へ残す。乱数器も設定・局面状態と別にし、一回のエンジン実行中で共有する。
 

@@ -33,6 +33,7 @@ _USI_DIFFICULTY_VALUES = {
     "twoplymaterial": MoveSelectionPolicy.TWO_PLY_MATERIAL,
     "fullwidth4": MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
     "alphabeta4": MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
+    "materialundefendedpiece": MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
 }
 
 
@@ -397,7 +398,8 @@ def _run_session(read_line, output_fn, rng, config, cancel_input) -> None:
                     "id author kaname-shogi project",
                     "option name Difficulty type combo default Random "
                     "var Random var Material var TwoPlyMaterial "
-                    "var FullWidth4 var AlphaBeta4",
+                    "var FullWidth4 var AlphaBeta4 "
+                    "var MaterialUndefendedPiece",
                     "usiok",
                 ):
                     emit(response)

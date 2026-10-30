@@ -4,11 +4,13 @@ import sys
 
 from .cli import (
     GameMode,
+    _format_move_selection_policy_name,
     choose_clock_settings,
     choose_game_mode,
     choose_move_selection_policy,
     run_game,
 )
+from .model import Side
 from .time_management import load_time_management_config
 
 
@@ -35,16 +37,42 @@ def main() -> int:
         if mode == GameMode.HUMAN_VS_HUMAN:
             run_game(mode=mode)
         else:
-            move_selection_policy = choose_move_selection_policy()
+            if mode == GameMode.HUMAN_VS_COMPUTER:
+                move_selection_policies = {
+                    Side.GOTE: choose_move_selection_policy(side=Side.GOTE)
+                }
+            else:
+                move_selection_policies = {
+                    Side.SENTE: choose_move_selection_policy(side=Side.SENTE),
+                    Side.GOTE: choose_move_selection_policy(side=Side.GOTE),
+                }
             clock_settings = choose_clock_settings()
             try:
                 time_config = load_time_management_config()
             except (ValueError, OSError) as error:
                 print("時間設定を読み込めませんでした: " + str(error), file=sys.stderr)
                 return 1
+            if mode == GameMode.HUMAN_VS_COMPUTER:
+                print(
+                    "選択方針：先手=人間、後手="
+                    + _format_move_selection_policy_name(
+                        move_selection_policies[Side.GOTE]
+                    )
+                )
+            else:
+                print(
+                    "選択方針：先手="
+                    + _format_move_selection_policy_name(
+                        move_selection_policies[Side.SENTE]
+                    )
+                    + "、後手="
+                    + _format_move_selection_policy_name(
+                        move_selection_policies[Side.GOTE]
+                    )
+                )
             run_game(
                 mode=mode,
-                move_selection_policy=move_selection_policy,
+                move_selection_policies=move_selection_policies,
                 clock_settings=clock_settings,
                 time_config=time_config,
             )

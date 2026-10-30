@@ -1,6 +1,6 @@
 # 合法手列挙と方針別の一手選択：参照メモ
 
-更新日：2026-10-11
+更新日：2026-10-31
 
 ## 中立な一手データと合法手一覧
 
@@ -39,6 +39,12 @@
 
 これは探索付きの評価関数や棋力保証ではなく、駒得の変化を比較する一手の教材用ヒューリスティックである。
 
+## 支えのない狙われた駒を加える一手方針
+
+`MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE` は既存の `10M+U` 評価を一手選択へ使う方針データ。各候補手を独立した複製局面へ適用し、`evaluate_material_undefended_piece` が返す開始手番側の評価値を比べ、最大候補から注入乱数器で選ぶ。`M` は既存の駒得差、`U` は相手の利きがあり味方の支えがない非玉の駒数の差で、重みは `10 × M + 1 × U`。定義と比較条件は[駒の連携評価メモ](undefended-piece-evaluation.md)にある。
+
+制御付き一手探索では、候補を評価する前に一手詰みを調べ、勝ちを通常評価より優先する。停止時の合法な予備手・完了候補・探索制御は既存の制御付き探索と共有する。二手・四手先の評価はこの方針に加えない。実際のCLI/USI接続では `game_search.search_move` から制御付き一手経路へ渡す。
+
 ## 二手先読み（駒得）の内部方針
 
 `MoveSelectionPolicy.TWO_PLY_MATERIAL` は二手比較を指定する方針データ。`choose_move` は各候補を独立した複製へ適用し、相手の全合法応手もそれぞれ別の複製へ適用する操作である。開始手番側の視点を固定し、応手後の最小評価が最大となる候補を選ぶ。最高同点候補だけを元の候補順で集め、注入乱数器で一回抽選する。元局面・双方の持ち駒・候補データを変更しない。
@@ -49,8 +55,8 @@
 
 ## 利用面
 
-- CLIは対局形式を選んだ後、コンピュータが参加する場合に方針を尋ねる。1または空入力は「ランダム」、2は「一手駒得」、3は「二手先読み（駒得）」。選択は一局中固定する。
-- USIは `Difficulty` comboを通知し、`Random` / `Material` / `TwoPlyMaterial` を受け付ける。新値固有の局中固定・次局継承は[実施記録](../learning/usi-policy-lifetime.md)の1系列で検証済み（main取り込み・検証済み）。新値後の未知値保持は[実施記録](../learning/usi-invalid-value.md)、関数境界の合法応答・局面保存・手なしresignは[実施記録](../learning/usi-function-response.md)、実プロセス応答は[実施記録](../learning/usi-process-response.md)の範囲で検証済み。詳細とUSI状態の寿命は[USIエンジン応答](usi-engine-response.md)を参照する。
+- CLIは対局形式に応じてコンピュータ側の方針を尋ねる。CVCは先手、後手の順に別々に選択する。空入力はそれぞれランダム。候補はランダム、一手駒得、二手先読み（駒得）、全幅読み（最大4手）、αβ枝刈り（最大4手）、一手駒得＋支えのない狙われた駒。選択は一局中固定する。
+- USIは `Difficulty` comboを通知し、`Random` / `Material` / `TwoPlyMaterial` / `FullWidth4` / `AlphaBeta4` / `MaterialUndefendedPiece` を受け付ける。未設定時はRandom。設定はプロセス中に保持し、局の最初のgoから `usinewgame` まで局内固定する。新値固有の局中固定・次局継承、未知値保持、応答範囲は[USIエンジン応答](usi-engine-response.md)と[今回の学習記録](../learning/undefended-piece-coordination-evaluation.md)を参照する。先行する三択やUSI各境界の実施記録はそれぞれのリンク先の歴史的検証範囲を示す。
 - ShogiHome画面でのこの設定や実対局は、この実装テーマでは確認していない。
 
 ## 対象外

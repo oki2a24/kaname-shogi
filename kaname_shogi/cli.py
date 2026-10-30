@@ -2,7 +2,7 @@
 
 import random
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import Enum
 
@@ -40,6 +40,15 @@ __all__ = (
 
 
 FORMAT_ERROR = "入力形式が正しくありません。"
+
+_MOVE_SELECTION_POLICY_NAMES = {
+    MoveSelectionPolicy.RANDOM: "ランダム",
+    MoveSelectionPolicy.MATERIAL: "一手駒得",
+    MoveSelectionPolicy.TWO_PLY_MATERIAL: "二手先読み（駒得）",
+    MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH: "全幅読み（最大4手）",
+    MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA: "αβ枝刈り（最大4手）",
+    MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE: "一手駒得＋支えのない狙われた駒",
+}
 
 _HELP_TEXT = "\n".join(
     (
@@ -121,18 +130,23 @@ def choose_game_mode(
 
 
 def choose_move_selection_policy(
-    input_fn: Callable[[], str] = input, output_fn: Callable[[str], None] = print
+    input_fn: Callable[[], str] = input,
+    output_fn: Callable[[str], None] = print,
+    *,
+    side: Side | None = None,
 ) -> MoveSelectionPolicy:
     """コンピュータの一手選択方針を対局開始前に選ぶ。
 
     引数:
         input_fn: 方針番号または空入力を一つ返す入力操作。
         output_fn: 選択肢と入力エラーを表示する操作。
+        side: 先後別選択なら質問対象の側。省略時は一般向けの質問にする。
 
     戻り値:
         1なら既存一様ランダムのRANDOM、2なら一手後の駒得比較のMATERIAL、
         3なら二手駒得のTWO_PLY_MATERIAL、4なら全幅四手のFOUR_PLY_FULL_WIDTH、
-        5ならαβ四手のFOUR_PLY_ALPHA_BETA。
+        5ならαβ四手のFOUR_PLY_ALPHA_BETA、6なら一手駒得と支えのない狙われた駒の
+        MATERIAL_UNDEFENDED_PIECE。
         空入力はRANDOMを返す。不正入力では返さず再入力する。
 
     副作用:
@@ -149,12 +163,17 @@ def choose_move_selection_policy(
         "3": MoveSelectionPolicy.TWO_PLY_MATERIAL,
         "4": MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
         "5": MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
+        "6": MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
     }
+    side_prefix = (
+        "先手の" if side is Side.SENTE else "後手の" if side is Side.GOTE else ""
+    )
     while True:
         output_fn(
-            "一手選択方針を選んでください（1: ランダム、2: 一手駒得、"
+            side_prefix + "一手選択方針を選んでください（1: ランダム、2: 一手駒得、"
             "3: 二手先読み（駒得）、4: 全幅読み（最大4手）、"
-            "5: αβ枝刈り（最大4手）、空入力: ランダム）:"
+            "5: αβ枝刈り（最大4手）、"
+            "6: 一手駒得＋支えのない狙われた駒、空入力: ランダム）:"
         )
         choice = input_fn().strip()
         if choice == "":
@@ -162,7 +181,29 @@ def choose_move_selection_policy(
         try:
             return policies[choice]
         except KeyError:
-            output_fn("エラー：一手選択方針を1〜5で選んでください。")
+            output_fn("エラー：一手選択方針を1〜6で選んでください。")
+
+
+def _format_move_selection_policy_name(policy: MoveSelectionPolicy) -> str:
+    """対局開始前に表示する、選択方式の日本語名を返す。
+
+    引数:
+        policy: 表示名を得る既知の一手選択方針。
+
+    戻り値:
+        CLI選択表と同じ利用者向け名称。
+
+    副作用:
+        なし。方針や局面、乱数を変更しない。
+
+    前提条件:
+        policyはMoveSelectionPolicyのいずれか。方針番号と開始前表示の食い違いを
+        避けるため、表示名をこのモジュールの一箇所で管理する。
+    """
+    try:
+        return _MOVE_SELECTION_POLICY_NAMES[policy]
+    except KeyError as error:
+        raise ValueError("未知の一手選択方針です") from error
 
 
 def choose_clock_settings(
@@ -640,6 +681,7 @@ def run_game(
     rng: random.Random | None = None,
     mode: GameMode = GameMode.HUMAN_VS_COMPUTER,
     move_selection_policy: MoveSelectionPolicy = MoveSelectionPolicy.RANDOM,
+    move_selection_policies: Mapping[Side, MoveSelectionPolicy] | None = None,
     clock_settings: CliClockSettings | None = None,
     time_config: TimeManagementConfig | None = None,
     now_ns: Callable[[], int] = time.monotonic_ns,
@@ -655,6 +697,9 @@ def run_game(
             人間先手・コンピュータ後手とする。
         move_selection_policy: コンピュータが一手を選ぶ方針。一局中固定する。省略時は
             現行と同じ一様ランダムのRANDOMとする。
+        move_selection_policies: 先後別の方式を指定するMapping。省略時は単一方針を
+            全コンピュータ側へ適用する。指定時は単一方針より優先し、対局形式に必要な
+            コンピュータ側を過不足なく含むか検証して、一局用に複製する。
         clock_settings: コンピュータ参加対局の初期持ち時間・秒読み。省略時は10分・30秒。
             人間対人間では時計を作らない。
         time_config: コンピュータ探索の予算設定。省略時は対局開始時に一度だけ読む。
@@ -680,6 +725,8 @@ def run_game(
         双方連続王手の未裁定結果は表示して現在の一局を終了する。人間対人間
         では両側、人間対コンピュータでは先手だけが入力し、コンピュータ対コンピュータ
         では両側が自動手を指す。
+        先後別方針は局開始時に必要なコンピュータ側を検証し、現在局の各自動手に固定して
+        手番の側へ渡す。既存の単一方針引数は直接呼び出し元との互換用に残す。
 
     前提条件:
         人間手番の行動前に詰みを確認する。コンピュータ手は共通の制御付き探索へ渡し、
@@ -689,6 +736,7 @@ def run_game(
         `load` 成功後は読込局面の `side_to_move` と `mode` に従って、次の人間入力または
         コンピュータ手へ進む。標準のinputとprintは差し替え可能である。
     """
+    game_policies = _snapshot_move_selection_policies(mode, move_selection_policies)
     if rng is None:
         rng = random.Random()
     clock = None
@@ -716,7 +764,11 @@ def run_game(
                     repetition_tracker,
                     rng,
                     output_fn,
-                    move_selection_policy,
+                    (
+                        game_policies[position.side_to_move]
+                        if game_policies is not None
+                        else move_selection_policy
+                    ),
                     clock,
                     time_config,
                     now_ns,
@@ -783,3 +835,45 @@ def run_game(
     except EOFError, KeyboardInterrupt:
         output_fn("入力を終了しました。")
         return record
+
+
+def _snapshot_move_selection_policies(
+    mode: GameMode,
+    policies: Mapping[Side, MoveSelectionPolicy] | None,
+) -> dict[Side, MoveSelectionPolicy] | None:
+    """先後別方針を局用に複製し、対局形式に必要な側だけかを検証する。
+
+    引数:
+        mode: 自動担当側を決める対局形式。
+        policies: 先後別方針。Noneなら従来の単一方針引数を使う。
+
+    戻り値:
+        必要な側を過不足なく含む新しいdict。Noneなら単一方針を使う。
+
+    副作用:
+        なし。元Mapping・局面・時計・乱数を変更しない。
+
+    例外:
+        ValueError: 先後別Mappingのキーが対局形式の自動担当側と一致しない、または
+            値がMoveSelectionPolicyでない場合。
+
+    前提条件・設計理由:
+        人間対コンピュータでは後手だけ、CVCでは先後両側、人間対人間では空Mapが必要。
+        不正Mapは設定読込・時計作成・盤面表示より前に拒否し、一局開始後に外部からMapを
+        変更されてもその局の方針が変わらないよう複製する。
+    """
+    if policies is None:
+        return None
+    expected_sides = {
+        GameMode.HUMAN_VS_HUMAN: set(),
+        GameMode.HUMAN_VS_COMPUTER: {Side.GOTE},
+        GameMode.COMPUTER_VS_COMPUTER: {Side.SENTE, Side.GOTE},
+    }.get(mode)
+    if expected_sides is None:
+        raise ValueError("未知の対局形式です")
+    snapshot = dict(policies)
+    if set(snapshot) != expected_sides or any(
+        not isinstance(policy, MoveSelectionPolicy) for policy in snapshot.values()
+    ):
+        raise ValueError("対局形式に必要なコンピュータ側の方針だけを指定してください")
+    return snapshot

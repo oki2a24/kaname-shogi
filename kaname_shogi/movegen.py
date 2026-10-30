@@ -1615,6 +1615,7 @@ def _evaluate_candidate(
     if policy not in (
         MoveSelectionPolicy.MATERIAL,
         MoveSelectionPolicy.TWO_PLY_MATERIAL,
+        MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
     ):
         raise ValueError("候補評価に対応していない方針です")
     if control is None:
@@ -1625,7 +1626,22 @@ def _evaluate_candidate(
         )
     if not applied.completed or _stopped(control):
         return CandidateEvaluation(False, None)
-    if policy == MoveSelectionPolicy.MATERIAL:
+    if policy == MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE:
+        mate = (
+            CheckmateResult(True, is_checkmate(after))
+            if control is None
+            else _is_checkmate_controlled(
+                after, check_uchi_fuzume=True, control=control
+            )
+        )
+        if not mate.completed or _stopped(control):
+            return CandidateEvaluation(False, None)
+        if mate.value:
+            return CandidateEvaluation(True, (1, 0))
+        from .material_undefended_piece import evaluate_material_undefended_piece
+
+        score = (0, evaluate_material_undefended_piece(after, position.side_to_move))
+    elif policy == MoveSelectionPolicy.MATERIAL:
         score = (0, material_balance(after, position.side_to_move))
     elif control is None:
         score = _two_ply_score(after, position.side_to_move)
@@ -1667,7 +1683,7 @@ def search_move(
 
     引数:
         position: 探索開始局面。盤面・両持駒・手番を変更しない。
-        policy: RANDOM/一手駒得/二手駒得の既存方針データ。
+        policy: RANDOM/一手駒得/二手駒得/10M+Uの方針データ。
         rng: 全完了ランダムまたは完了最高同点の一回抽選に使う生成器。
         control: 読取り原点と予算を持つ一探索専用制御。
     戻り値:
@@ -1685,6 +1701,7 @@ def search_move(
         MoveSelectionPolicy.RANDOM,
         MoveSelectionPolicy.MATERIAL,
         MoveSelectionPolicy.TWO_PLY_MATERIAL,
+        MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
     ):
         raise ValueError("未知の一手選択方針です")
     generated = _legal_moves_controlled(
