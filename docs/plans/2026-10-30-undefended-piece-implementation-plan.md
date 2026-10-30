@@ -8,7 +8,7 @@
 
 **技術スタック:** Python 3.14以上、標準unittest、固定Ruff 0.16.10。新規依存なし。環境の現在値は実装開始時に改めて確認する。
 
-**仕様:** [本人承認済み設計](2026-10-30-undefended-piece-evaluation-design.md)、[学習・回答記録](../learning/undefended-piece-coordination-evaluation.md)。2026-10-30、本人は設計全体へ「YES」と回答した。本人は2026-10-30に本計画全体と推薦したネイティブ方式を承認した。A段階の最後の理解確認と回答記録は完了し、本人はB段階へ進むことを選択済み。Task 1〜3を実装・検証・Task別レビュー済み。代表変異、最終検証・レビュー、文書確認と通常コミットを完了した。ローカルmainへの統合・pushは別途承認待ち。
+**仕様:** [本人承認済み設計](2026-10-30-undefended-piece-evaluation-design.md)、[学習・回答記録](../learning/undefended-piece-coordination-evaluation.md)。2026-10-30、本人は設計全体へ「YES」と回答した。本人は2026-10-30に本計画全体と推薦したネイティブ方式を承認した。A段階の最後の理解確認と回答記録は完了し、本人はB段階へ進むことを選択済み。Task 1〜3を実装・検証・Task別レビューし、代表変異、最終検証・レビュー、通常コミットまで完了した。本人の「続けて」を受け、2026-10-30にローカルmainへfast-forward統合し、統合後テスト961件・70モジュールが成功した。pushは未実施。B段階最後の理解確認が残る。
 
 ## グローバル制約
 
@@ -228,6 +228,10 @@ Refactorは不要。評価局面の回転は既存 `rotate_and_swap` を再利�
 - [x] **3. 最終独立レビュー。** 全差分について契約・手計算例・検出対象・既存検査の補完・未検証事項・Refactor判断・各Taskのレビューを渡す。Critical/Importantを修正した場合、影響する検査とレビューをやり直す。重大度と対応を記録する。
 - [x] **4. 知識・学習・入口を更新。** 実装した契約・限界を `docs/knowledge/undefended-piece-evaluation.md`、実際のRed/Green・代表変異・全体結果・レビュー結果を学習記録・本計画へ、現在地と索引を `docs/resume.md`・`docs/README.md` 等へ記録する。リンク・差分を確認し、実測していない棋力・全局面・速度を証明済みとしない。
 - [x] **5. 差分を限定して通常コミット。** C2の4成果物と元checkoutを保持し、明示された対象のみステージする。main統合と元checkoutへの取り込みは別途本人承認を得てから行い、取り込み先で検証する。
+
+### ローカルmain統合・取り込み先検証（2026-10-30）
+
+本人の「続けて」を受け、専用ブランチ `codex/undefended-piece-evaluation` をローカル `main` へfast-forwardした。`main` は `bf826066` から `554cf708` へ進み、作業worktreeと同一HEADである。統合後の全体テスト `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py` は961件・70モジュール、21.745秒で成功した。`origin/main` へのpushは別途承認待ち。元の `/Users/oki2a24/kaname-shogi` の作業ファイルは変更せず、C2成果物4件は保持した。次にB段階の最後の理解確認を一問だけ行い、本人回答を待つ。
 
 **GREEN条件:** 代表変異の狙った失敗と復元成功、専用・関連・全体検査、Ruff、文書点検、独立最終レビューでCritical/Important 0、記録・通常コミットまで完了。棋力、意図的な駒捨て、交換の連鎖、全盤面、最適重み、実時間性能は未検証。
 
