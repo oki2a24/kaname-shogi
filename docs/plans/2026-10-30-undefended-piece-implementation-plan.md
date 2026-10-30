@@ -8,7 +8,7 @@
 
 **技術スタック:** Python 3.14以上、標準unittest、固定Ruff 0.16.10。新規依存なし。環境の現在値は実装開始時に改めて確認する。
 
-**仕様:** [本人承認済み設計](2026-10-30-undefended-piece-evaluation-design.md)、[学習・回答記録](../learning/undefended-piece-coordination-evaluation.md)。2026-10-30、本人は設計全体へ「YES」と回答した。本人は2026-10-30に本計画全体と推薦したネイティブ方式を承認した。A段階の最後の理解確認と回答記録は完了し、本人はB段階へ進むことを選択済み。実装は次セッションから開始し、現時点で全Task未着手。
+**仕様:** [本人承認済み設計](2026-10-30-undefended-piece-evaluation-design.md)、[学習・回答記録](../learning/undefended-piece-coordination-evaluation.md)。2026-10-30、本人は設計全体へ「YES」と回答した。本人は2026-10-30に本計画全体と推薦したネイティブ方式を承認した。A段階の最後の理解確認と回答記録は完了し、本人はB段階へ進むことを選択済み。Task 1・2を実装・検証・レビュー済み。Task 3と代表変異・最終検証・最終レビュー・記録が残る。
 
 ## グローバル制約
 
@@ -149,10 +149,10 @@ Refactorは不要と判断した。一側走査を内部操作に集約し、C�
 **消費:** Task 1の `attacked_undefended_piece_balance(position, perspective) -> int` と `evaluation.material_balance(position, perspective) -> int`。
 **生産:** 凍結設定データ `UndefendedPieceWeights(material: int = 10, undefended: int = 1)`、`evaluate_material_undefended_piece(position: Position, perspective: Side, *, weights: UndefendedPieceWeights = 既定設定) -> int`。
 
-- [ ] **1. 独立値と別重みの失敗するテストを作る。** A/B/Cと双方非零のE先手=139/140/140/139、後手=-139/-140/-140/-139をassertする。Aで `UndefendedPieceWeights(material=2, undefended=3)` は25、`material=2, undefended=0` は28。変更後の既定評価A=139を再確認する。
-- [ ] **2. Redを確認する。** 読込エラーだけなら、正確な公開シグネチャ・凍結設定を備える一時の0戻り値スタブを作り、Aで `139 != 0` のassertion failureを確認する。実行: `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_material_undefended_piece.py -v`。
-- [ ] **3. 最小実装してGreenを確認する。** 既存MとTask 1のUを取得し `material*M + undefended*U` を返す。上記専用コマンドの件数とOKを確認する。
-- [ ] **4. 次の振る舞いを各々追加し、Red/Greenまたは初回Greenとその理由を記録する。**
+- [x] **1. 独立値と別重みの失敗するテストを作る。** A/B/Cと双方非零のE先手=139/140/140/139、後手=-139/-140/-140/-139をassertする。Aで `UndefendedPieceWeights(material=2, undefended=3)` は25、`material=2, undefended=0` は28。変更後の既定評価A=139を再確認する。
+- [x] **2. Redを確認する。** 読込エラーだけなら、正確な公開シグネチャ・凍結設定を備える一時の0戻り値スタブを作り、Aで `139 != 0` のassertion failureを確認する。実行: `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_material_undefended_piece.py -v`。
+- [x] **3. 最小実装してGreenを確認する。** 既存MとTask 1のUを取得し `material*M + undefended*U` を返す。上記専用コマンドの件数とOKを確認する。
+- [x] **4. 次の振る舞いを各々追加し、Red/Greenまたは初回Greenとその理由を記録する。**
 
 | テスト名 | 固定値・検出対象 |
 | --- | --- |
@@ -162,10 +162,24 @@ Refactorは不要と判断した。一側走査を内部操作に集約し、C�
 | `test_hand_turn_and_missing_kings` | 玉なし盤のA相当でも139。Aに先手の持ち歩を1枚追加でM=15・U=-1・E=149、手番だけ変更してもE同じ。盤・手番・持ち駒snapshot不変。玉必須化・持ち駒のU混入を検出 |
 | `test_propagates_balance_errors_without_mutation` | U操作の例外を伝播し、盤面・手番・持ち駒が不変。0重みも含め例外隠蔽を検出 |
 
-- [ ] **5. 専用・関連検査。** 上記専用コマンド、Task 1の専用コマンド、`PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_evaluation.py -v` を実行。件数とOKを確認する。
-- [ ] **6. Refactor要否確認・独立レビュー・品質検査・限定コミット。** Critical/Importantは解消して再検証・再レビューし、独立期待値と検出範囲を記録する。
+- [x] **5. 専用・関連検査。** 上記専用コマンド、Task 1の専用コマンド、`PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest discover -s tests -p test_evaluation.py -v` を実行。件数とOKを確認する。
+- [x] **6. Refactor要否確認・独立レビュー・品質検査・限定コミット。** Critical/Importantは解消して再検証・再レビューし、独立期待値と検出範囲を記録する。
 
 **GREEN条件:** 独立E・逆視点・重み境界・0経路・持ち駒と玉なし・例外/副作用、および関連検査が成功し、独立レビューのCritical/Importantが0。
+
+### Task 2 実施記録（2026-10-30）
+
+テストを先に作り、未実装モジュールのImportErrorはRedに数えなかった。正確な名前付き設定と関数を持つ一時0スタブを用意し、最初のスタブで生じた属性エラーを除去した後に再実行した。5テストで計19件のassertion failure、エラー0を確認した。AのE期待値139に対して0となるほか、重み境界のValueError、例外伝播、別重みの期待値などのassertionが失敗した。最小実装後は専用5件が成功した。
+
+`UndefendedPieceWeights`を凍結dataclassとして追加し、materialはboolを含まない1以上の整数、undefendedはboolを含まない0以上の整数に限定した。合成操作は既存MとTask 1のUをそれぞれ一度取得し、重み0でもUを呼んで `material*M + undefended*U` を返す。CLI/USI等の既存経路には接続していない。
+
+専用5件、Task 1専用10件、`test_evaluation.py` 2件が成功した。関連テストを `tests.test_*` のモジュール名で一括指定した試行は、`tests`がパッケージでないため共有補助を読み込めず失敗した。計画どおり各々を `unittest discover -s tests -p ...` で再実行し、17件すべて成功した。Task 2実装後の全体ランナーは958件・69モジュール、21.787秒で成功した。レビュー指摘対応後に専用5件を再実行して成功した。全体ランナーはこのテスト一行追加より前の実行であり、最終全体検証で再確認する。
+
+Ruff import整理が1件を修正し、`ruff format .`、`ruff check .`、`git diff --check`は成功した。関連テスト指定を誤った一度目のパイプ出力では `tail` が終了状態を隠す形になったため、その実行は成功として扱わず、正しいdiscover方式で終了状態を確認した。
+
+Refactorは不要と判断した。重み2項目の型・下限条件は異なり、抽象化すると小さな設定に不要な共通層を加える。評価操作もM/Uの正本へ委譲する短い式である。独立レビュー初回はCritical 0 / Important 0 / Minor 1（material=1の許容下限をassertしていない）だった。`UndefendedPieceWeights(material=1).material == 1`を追加し、専用5件・Ruff・差分検査後の再レビューはCritical 0 / Important 0 / Minor 0。再レビュー担当はテストや変異を実行していない。対象契約とテスト範囲を学習記録にも記載した。
+
+未検証はTask 3での選択器注入、Task 2を含む代表変異の隔離コピー確認、最終全体検証・独立レビュー、および棋力・最適重み・全配置・性能である。
 
 ## Task 3：既存一手選択器への注入と既存契約
 
