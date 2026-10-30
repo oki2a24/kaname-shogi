@@ -289,9 +289,9 @@
 
   詳細な各局面成績、seed/summary/analysis SHA-256、resume経緯、経過時間の下限性、C2照合、未検証事項を[学習記録](../learning/undefended-piece-coordination-evaluation.md)へ記録した。確定知識メモには固定条件で得られた結論と一般化できない範囲を要約した。pilotとconfirmationは別々の出力先・seedで保存し、合算していない。
 
-- [ ] **ステップ7: 文書差分・リンクを確認して限定コミット**
+- [x] **ステップ7: 文書差分・リンクを確認して限定コミット**
 
-  結果記録を学習記録・確定知識・再開案内・次テーマ入口・docs README・本計画の明示Markdownだけに限定し、seed一覧・比較ディレクトリ・分析JSON、C2成果物4件、`.agents/tasks/` はstage対象から除外した。文書差分・相対リンク・見出し参照を確認してからtopic branchへ通常コミットする。main統合・pushは行わない。
+  実績: 学習記録・確定知識・再開案内・次テーマ入口・docs README・本計画の明示した6文書だけをstageし、seed一覧・比較ディレクトリ・分析JSON、C2成果物4件、`.agents/tasks/` はindex外であることを再確認した。`git diff --check`、cached diff check、ローカルMarkdownリンク767件・見出し参照6件（欠落0）を確認した。通常hookのRuff format/checkが成功し、topic branchへ `55f511b`（`docs: 駒の連携比較結果を記録`）をコミットした。main統合・pushは行っていない。
 
 ## GREEN条件
 

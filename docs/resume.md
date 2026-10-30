@@ -4,7 +4,7 @@
 
 主線「駒得以外の局面評価を一項目ずつ育てる」の現在テーマ「支えのない狙われた駒の評価を接続して比較する」は、比較実装・検証・pilot・独立confirmation・分析まで完了した。テーマ選定理由は本人から聞いていないため推測しない。本人は直前実装との差分 `10M` 対 `10M+U` を比較CLIで評価する範囲を選び、設計・実装計画を2026-10-30に明示承認した。B段階最後の理解確認「E=10M+U」は正解として記録済み。
 
-作業worktreeは `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、ブランチは `codex/undefended-piece-evaluation`。実装コミットは `75dcf81b`、実装後文書コミットは `67dd9ad7`。ローカル `main` は `087069c7` のまま。main統合・pushは行っておらず、それぞれ別途本人承認が必要。
+作業worktreeは `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、ブランチは `codex/undefended-piece-evaluation`。実装コミットは `75dcf81b`、実装後文書コミットは `67dd9ad7`、比較結果記録コミットは `55f511b`。ローカル `main` は `087069c7` のまま。main統合・pushは行っておらず、それぞれ別途本人承認が必要。
 
 比較対象は `material-undefended-piece-material-only`（M=10,U=0）対 `material-undefended-piece`（M=10,U=1）。同じ一手選択・一手詰み優先、5局面均等、各局面先後交換、1024手上限、対局比較 `--workers 4`。pilotは50組・100局で探索的のみ。独立confirmationは2035組・4070局を完了し、詰み4050局・合法手なし20局、エラー等なし。候補の平均得点は0.908845、95%区間 `[0.878739, 0.938951]`、分析判定は指定条件において「改善を支持」。一般的な棋力向上を示したものではない。確認比較は一度 `--resume` で再開し、実時間はsummary上の下限値として記録した。
 
