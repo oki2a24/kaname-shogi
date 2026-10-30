@@ -10,9 +10,9 @@
 
 ShogiHome実対局は本人が遠隔PCのロックを解除できないため今回除外した。PCへアクセスできると本人から伝えられた後、次に適切な機会にShogiHome実践を含めるか再提案する。アクセス可能になったこと自体を対局開始の承認とは扱わない。実際のShogiHome接続・設定・対局・ログ採取は行っていない。
 
-作業worktreeは `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、作業ブランチは `codex/undefended-piece-evaluation`、HEADは `445b648e3cf754b1d1722b85ef6a81bb9ed44ee3`。元の `/Users/oki2a24/kaname-shogi` はブランチ切替や作業ファイル変更をしていない。`.agents/tasks/` と `data/comparison/runs/` の未追跡データは保持している。詳細な本人の選択・補足・検証・限界は[学習記録](learning/undefended-piece-coordination-evaluation.md)、現在と過去の候補は[次テーマ候補](next-topics.md)を参照する。
+作業worktreeは `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、作業ブランチは `codex/undefended-piece-evaluation`。直近確認時のHEAD・ローカルmain・origin/mainは `803d7b4df289853eaf8c63a2c832a6da39a14924` で一致していた。元の `/Users/oki2a24/kaname-shogi` はブランチ切替や作業ファイル変更をしていない。`.agents/tasks/` と `data/comparison/runs/` の未追跡データは保持している。詳細な本人の選択・補足・検証・限界は[学習記録](learning/undefended-piece-coordination-evaluation.md)、現在と過去の候補は[次テーマ候補](next-topics.md)を参照する。
 
-次は通常CLIの2局から一般的な棋力差を断定できない範囲を一問で確認する。本人回答を学習記録へ残した後、README・[学習ロードマップ](next-topics.md)・[方向性](02-project-direction.md)を見直して次テーマ候補を提示する。ShogiHome実対局はPCアクセス可能の連絡後に提案する保留事項として残す。
+最後の理解確認は本人の正確な回答を[学習記録](learning/undefended-piece-coordination-evaluation.md)へ記録した。README・[学習ロードマップ](roadmap-non-material-position-evaluation.md)・[方向性](02-project-direction.md)を確認し、現在は[次テーマ候補](next-topics.md)を提示して選定を待つ段階。元の主線へ戻る目標は次の評価項目Aを選び学習・設計すること。今回のShogiHome実践はPCアクセス可能の連絡後に提案する保留事項として残す。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 
