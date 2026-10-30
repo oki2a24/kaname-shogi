@@ -2,19 +2,17 @@
 
 ## 現在地（2026-10-31）
 
-主線テーマ「駒の連携評価を通常CLI・USIへ接続する」は実装・検証・独立レビューまで完了した。通常CLI・USIから10M+U候補を選べるようにし、CVCの先手・後手別選択、USI `MaterialUndefendedPiece` の設定経路を追加した。実使用で見つかった制御付き探索の接続漏れも修正し、先後を入れ替えた通常CLI 2局は終局まで確認済み。関連テスト155件（13.869秒）、全体987件・75モジュール（22.468秒）、Ruff、相対リンク818件の確認が成功し、最終独立レビューはCritical 0 / Important 0 / Minor 0。現在は学習記録と知識メモの内容を本人へ提示し、確認後の通常ブランチコミットを待つ。前段比較は基準10M対候補10M+U、5登録局面の2035組・4070局で完了し、候補平均得点0.908845、95%区間[0.878739, 0.938951]となった。これは指定条件で改善を支持する結果であり、一般的な棋力向上や既定採用の根拠ではない。元テーマを選んだ理由は本人の明示内容を超えて推測しない。
+主線テーマ「駒の連携評価を通常CLI・USIへ接続する」は実装・検証・独立レビューを終え、コミット `445b648e` を作成した。通常CLI・USIから10M+U候補を選べる。CVCでは先手・後手を別々に選べ、開始前に両側の方式名を表示する。設定の既定値・寿命などの合意は[設計案](plans/2026-10-31-undefended-piece-normal-cli-usi-design.md)を参照する。
 
-本人は通常CLIのCVCで先手・後手を別々に選び、方式差を見やすくしたいと述べた。現在の通常CLI公開5方式と今回の10M+Uの計6方式を選択肢にする。CVCは同じ表を先手・後手の順に二度表示し、それぞれ選ぶ。CLIの表示名は「一手駒得＋支えのない狙われた駒」、USIのDifficulty値はMaterialUndefendedPieceとし、開始前に各側の選択名を表示する。CLI各側の空入力とUSI未設定時はRandom。CLI方式は一局中固定し、USI設定はプロセス中保持、各局は最初のgoからusinewgameまで固定する。
+通常CLIではMaterial対「一手駒得＋支えのない狙われた駒」を先後入れ替えで2局実行し、両局とも新候補側が相手の投了で勝った。これは2局の操作観察であり、方式全体の棋力や一般的な優位性の証明ではない。前段比較の候補平均得点0.908845、95%区間[0.878739, 0.938951]も、5登録局面・指定条件での改善支持に限られる。
 
-本人はShogiHome実対局を今回除外した。遠隔先のPCをロック解除できないためで、ロック解除可能になった後の保留事項とする。選択・USI設定の自動テストに加え、Material対10M+Uを先後入れ替えで2局観察し、両局とも終局した。2局は操作例であり、Uだけを分離した比較や棋力の証明ではない。設計詳細と実際のCVC試行は[接続設計案](plans/2026-10-31-undefended-piece-normal-cli-usi-design.md)と[学習記録](learning/undefended-piece-coordination-evaluation.md)を参照する。
+2026-10-31、ローカル `main` は `087069c7` から `445b648e` へfast-forwardし、`origin/main` へpushした。統合先の全体テストは987件・75モジュール、23.801秒で成功した。専用worktreeでは最初 `.venv` がなくランチャー検査3件が失敗したが、検証済み仮想環境を参照させて8件と全体を再実行し、成功を確認した。ローカルmainとorigin/mainはともに `445b648e`。製品実装・テスト・独立レビュー・統合後検証は完了し、最後の理解確認はこれから一問行う。
 
-設計案は独立ビルダーチェックで重要な未解決質問がないことを確認後、本人が2026-10-31に明示承認した。[実装計画案](plans/2026-10-31-undefended-piece-normal-cli-usi-implementation-plan.md)全体とネイティブ実行も同日に承認された。Ruff 0.16.10と.githooksを確認し、変更前baselineは関連105件・全体973件/75モジュールが成功。代表変異は狙ったassertion failureと復元後成功を確認し、最終Ruff・関連/全体テスト・リンク確認・独立レビューも完了した。ShogiHome実対局はPCロック解除可能後の保留事項。main統合とpushはそれぞれ別途本人承認を要する。
+ShogiHome実対局は本人が遠隔PCのロックを解除できないため今回除外した。PCへアクセスできると本人から伝えられた後、次に適切な機会にShogiHome実践を含めるか再提案する。アクセス可能になったこと自体を対局開始の承認とは扱わない。実際のShogiHome接続・設定・対局・ログ採取は行っていない。
 
-brainstorming中、通常CLIでRandom対RandomとMaterial対Materialを終局まで実行した。TwoPlyMaterial対TwoPlyMaterialは約30秒でCtrl-C停止し、未終局。自己対局なので方式間の比較ではなく、棋譜は保存していない。
+作業worktreeは `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、作業ブランチは `codex/undefended-piece-evaluation`、HEADは `445b648e3cf754b1d1722b85ef6a81bb9ed44ee3`。元の `/Users/oki2a24/kaname-shogi` はブランチ切替や作業ファイル変更をしていない。`.agents/tasks/` と `data/comparison/runs/` の未追跡データは保持している。詳細な本人の選択・補足・検証・限界は[学習記録](learning/undefended-piece-coordination-evaluation.md)、現在と過去の候補は[次テーマ候補](next-topics.md)を参照する。
 
-作業worktreeは /Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi、ブランチは codex/undefended-piece-evaluation。開始時HEADは195c660958e8d1ec8ef9ec51a656b24e8d6f05b5、ローカルmainは087069c7e53fdf9d52b4ebeac809cc73ffedaa2b。現在は承認済み設計・実装計画案・学習・入口文書の未コミット変更がある。C2保護対象4件と比較結果は未追跡のまま保持する。元の /Users/oki2a24/kaname-shogi は触らず、clean/reset/切替・上書き・削除をしない。前段比較成果物と .agents/tasks/TODO-codex-undefended-piece-evaluation.md も変更・削除・ステージしない。
-
-次は学習記録と知識メモの内容を本人に提示して確認を待つ。確認後に対象差分だけを通常コミットする。main統合・pushは別途承認まで行わない。ShogiHome実対局は今回除外し、PCロック解除後の保留事項とする。
+次は通常CLIの2局から一般的な棋力差を断定できない範囲を一問で確認する。本人回答を学習記録へ残した後、README・[学習ロードマップ](next-topics.md)・[方向性](02-project-direction.md)を見直して次テーマ候補を提示する。ShogiHome実対局はPCアクセス可能の連絡後に提案する保留事項として残す。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 
