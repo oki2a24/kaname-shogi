@@ -69,7 +69,7 @@
 
 ## 対局方式の比較とC1分析
 
-`python -m kaname_shogi.compare_games` は開発用の一手選択方式を指定局面群で比較する。方式名は `random`、`material`、`material-rook-mobility`、`material-king-safety-material-only`、`material-king-safety`、`two-ply-material`、`full-width-4`、`alpha-beta-4`。飛車可動性と玉周辺安全度の比較方式は通常CLI・USIの選択肢には加えていない。C2の二方式は同じ一手選択・詰み優先を使い、安全度重みだけを0と1にする。詳細は[玉周辺安全度メモ](king-safety-evaluation.md)を参照する。
+`python -m kaname_shogi.compare_games` は開発用の一手選択方式を指定局面群で比較する。方式名は `random`、`material`、`material-rook-mobility`、`material-king-safety-material-only`、`material-king-safety`、`material-undefended-piece-material-only`、`material-undefended-piece`、`two-ply-material`、`full-width-4`、`alpha-beta-4`。飛車可動性・玉周辺安全度・支えのない駒の比較方式は通常CLI・USIの選択肢には加えていない。C2と支えのない駒の対照/候補は同じ一手選択・詰み優先を使い、それぞれ安全度またはUの重みだけを0と1にする。支えのない駒は `material=10, undefended=0/1`。詳細は[玉周辺安全度メモ](king-safety-evaluation.md)と[支えのない駒の評価メモ](undefended-piece-evaluation.md)を参照する。
 
 ### 乱数種一覧と実行
 
@@ -88,7 +88,7 @@ python3 -m kaname_shogi.analyze_comparison \
   --input-dir /path/new-run --output /path/new-analysis.json
 ```
 
-準備CLIは局面群全体を検証した後、OS乱数源から128ビット種をbaseline/candidate用に各組一つずつ抽出し、`pilot` または `confirmation` と局面ファイルのSHA-256を含むJSONへ保存する。同じ数値の種が偶然重なっても引き直さない。出力は新規パス限定。比較CLIは `--seed` と `--seed-list` のどちらか一方を要求する。`--workers` は1〜4、既定値1で、2〜4はspawnプロセス並列を使う。種一覧実験では局面JSONのバイト列・順序・ID・局面ごとの組数を一覧と照合してから対局する。逐次の種一覧条件は `kaname-shogi-comparison-conditions-v2`、複数worker条件はv3とし、`execution` に `executor=process-pool` とworker数を保存する。`--seed` 実験は逐次conditions v1、並列conditions v3を使うが、現在の分析CLIは種一覧を保存したv2/v3だけを受け付けるため、これらの `--seed` 結果は分析できない。
+準備CLIは局面群全体を検証した後、OS乱数源から128ビット種をbaseline/candidate用に各組一つずつ抽出し、`pilot` または `confirmation` と局面ファイルのSHA-256を含むJSONへ保存する。同じ数値の種が偶然重なっても引き直さない。出力は新規パス限定。比較CLIは `--seed` と `--seed-list` のどちらか一方を要求する。`--workers` は1〜4、既定値1で、2〜4はspawnプロセス並列を使う。種一覧実験では局面JSONのバイト列・順序・ID・局面ごとの組数を一覧と照合してから対局する。逐次の種一覧条件は `kaname-shogi-comparison-conditions-v2`、複数worker条件はv3とし、`execution` に `executor=process-pool` とworker数を保存する。C2または支えのない駒方式を使う場合は `policy_parameters` にbaseline/candidateの実効重みを保存する。`--seed` 実験は逐次conditions v1、並列conditions v3を使うが、現在の分析CLIは種一覧を保存したv2/v3だけを受け付けるため、これらの `--seed` 結果は分析できない。
 
 予定の各組は同じ開始盤面・駒配置で二局を行い、方式の先後だけ交換する。二局内は同じ方式別種を保つ。棋譜・summaryを含む出力先は新規パスで、同じ一覧の再実行は再現性の確認であり、独立した追加標本ではない。時間・環境情報を含む全出力のバイト一致は期待しない。準備・比較・分析CLIのヘルプが引数の正本である。
 

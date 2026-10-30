@@ -452,12 +452,16 @@ def _summary_policy_order(
             MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,
             MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY,
             MoveSelectionPolicy.MATERIAL_KING_SAFETY,
+            MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY,
+            MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
         )
     )
     for policy in (
         MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,
         MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY,
         MoveSelectionPolicy.MATERIAL_KING_SAFETY,
+        MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY,
+        MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
     ):
         if policy in {config.baseline, config.candidate}:
             policies += (policy,)
@@ -1625,7 +1629,11 @@ def _format_recorded_move(move: RecordedMove | RecordedDrop) -> str:
 
 
 def _policy_parameter_payload(policy: MoveSelectionPolicy) -> dict[str, object]:
-    """conditions v2に保存した方式重みを独立した固定値で返す。"""
+    """readerで検証する実効重みを比較writerの固定方式契約から返す。
+
+    方式名と重みの対応をreaderとwriterで別々に持つと、片側だけ更新されて誤った
+    conditionsを受理するため、同じ固定契約を共有する。
+    """
     return comparison_io._policy_parameters(policy)
 
 

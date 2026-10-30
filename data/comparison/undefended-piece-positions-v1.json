@@ -1,0 +1,59 @@
+{
+  "format": "kaname-shogi-comparison-positions-v1",
+  "id": "undefended-piece-positions-v1",
+  "positions": [
+    {
+      "id": "initial",
+      "setup_moves": [],
+      "rationale": "平手の中立対照"
+    },
+    {
+      "id": "two-unsupported-pawns",
+      "setup_moves": ["7g7f", "3c3d", "7f7e", "7c7d"],
+      "rationale": "双方に攻撃され支えのない歩があるが、差は0"
+    },
+    {
+      "id": "both-pawns-supported",
+      "setup_moves": [
+        "7g7f",
+        "3c3d",
+        "7f7e",
+        "7c7d",
+        "6i7h",
+        "6a7b",
+        "7h7g",
+        "7b7c",
+        "7g7f"
+      ],
+      "rationale": "双方の対象歩に支えができた対照"
+    },
+    {
+      "id": "sente-threatened",
+      "setup_moves": [
+        "7g7f",
+        "3c3d",
+        "7f7e",
+        "7c7d",
+        "2g2f",
+        "6a7b",
+        "2f2e",
+        "7b7c"
+      ],
+      "rationale": "先手の支えのない歩が狙われる状態"
+    },
+    {
+      "id": "gote-threatened",
+      "setup_moves": [
+        "7g7f",
+        "3c3d",
+        "3g3f",
+        "3d3e",
+        "4i3h",
+        "4c4d",
+        "3h3g",
+        "9c9d"
+      ],
+      "rationale": "後手の支えのない歩が狙われる状態"
+    }
+  ]
+}

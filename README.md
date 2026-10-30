@@ -134,7 +134,7 @@ python3 -m kaname_shogi.analyze_comparison \
   --resume
 ```
 
-分析結果の新規保存が成功するとcheckpointを削除します。保存中に中断した場合は完成JSONを作らず、保存済み局から最終保存を再試行します。最終JSONが既に存在する場合は上書きしないため、削除に失敗したcheckpointが残っていても同じ出力先へ再実行しないでください。JSON保存直後にCtrl-Cが入った場合は保存内容が今回の分析結果と一致するかを確かめ、一致すればcheckpoint削除へ進んで終了コード0を返します。保存後のcleanup中にCtrl-Cが入った場合も終了コード0を返し、残ったcheckpointの確認を案内します。lock解除中に中断された場合は終了コードを変えず、lockが残っているときはPID確認後に手動で解除してください。強制終了後に `<出力名>.lock` が残った場合も、ファイル内のPIDが動作中でないことを確認してから解除します。長時間の比較・分析CLIは本人が端末から実行します。
+分析結果の新規保存が成功するとcheckpointを削除します。保存中に中断した場合は完成JSONを作らず、保存済み局から最終保存を再試行します。最終JSONが既に存在する場合は上書きしないため、削除に失敗したcheckpointが残っていても同じ出力先へ再実行しないでください。JSON保存直後にCtrl-Cが入った場合は保存内容が今回の分析結果と一致するかを確かめ、一致すればcheckpoint削除へ進んで終了コード0を返します。保存後のcleanup中にCtrl-Cが入った場合も終了コード0を返し、残ったcheckpointの確認を案内します。lock解除中に中断された場合は終了コードを変えず、lockが残っているときはPID確認後に手動で解除してください。強制終了後に `<出力名>.lock` が残った場合も、ファイル内のPIDが動作中でないことを確認してから解除します。C1（飛車可動性）の当時の比較は本人が端末から実行しました。現在テーマの実行担当と進捗確認は、その承認済み設計に従います。
 
 分析CLIが受け付けるのは `--seed-list` で乱数種一覧を保存した実験です。従来の `--seed` による逐次・並列実行は対局できますが、現在の分析CLIには接続していません。
 
@@ -145,6 +145,34 @@ python3 -m kaname_shogi.analyze_comparison \
 比較CLIでは基準方式に `material-king-safety-material-only`、候補方式に `material-king-safety` を指定できます。両方とも同じ一手選択と詰み優先を使い、駒得重み10に対して安全度重みは基準0・候補1です。基準も安全度の計算と両玉の検査を行います。既存の `material` とは選択経路が異なります。
 
 比較準備用の局面候補は `data/comparison/c2-king-safety-positions-v1.json` です。平手、角道による玉周辺への利き、角交換後、歩打ち後の4局面を含みます。2026-10-28の確認比較では、4局面各509組、各局256手上限、worker 4を使用しました。95%得点区間は `[0.227, 0.305]` で、登録4局面の条件では候補方式の悪化を支持しました。この結果は他局面や通常対局全体の棋力を示しません。条件・分析・限界は[C2学習記録](docs/learning/c2-king-safety-evaluation.md)を参照してください。新しい比較ではC2専用の種一覧・出力先を使い、分析には `--seed-list` を指定します。C1の組数・手数上限・worker数を自動で流用しません。通常CLI・USIにはこの方式を追加していません。
+
+### 駒の連携評価を比較する開発用実験
+
+比較CLIだけで、同じ一手選択器・一手詰み優先を使う `material-undefended-piece-material-only`（`material=10, undefended=0`）と `material-undefended-piece`（`material=10, undefended=1`）を比較できます。差はUの重みだけです。通常CLIとUSIの方式選択肢には追加していません。
+
+承認済み局面セットは `data/comparison/undefended-piece-positions-v1.json` です。pilotは5局面各10組、1局1024手上限、`--workers 4` で実行します。pilot成績は強さ判定へ使わず、confirmationとも合算しません。
+
+```sh
+python3 -m kaname_shogi.prepare_comparison_seeds \
+  --positions data/comparison/undefended-piece-positions-v1.json \
+  --pairs-per-position 10 --purpose pilot \
+  --output data/comparison/runs/undefended-piece-evaluation-pilot-2026-10-30-seeds.json
+
+python3 -m kaname_shogi.compare_games \
+  --baseline material-undefended-piece-material-only \
+  --candidate material-undefended-piece \
+  --positions data/comparison/undefended-piece-positions-v1.json \
+  --pairs-per-position 10 \
+  --seed-list data/comparison/runs/undefended-piece-evaluation-pilot-2026-10-30-seeds.json \
+  --max-plies 1024 --workers 4 \
+  --output-dir data/comparison/runs/undefended-piece-evaluation-pilot-2026-10-30
+
+python3 -m kaname_shogi.analyze_comparison \
+  --input-dir data/comparison/runs/undefended-piece-evaluation-pilot-2026-10-30 \
+  --output data/comparison/runs/undefended-piece-evaluation-pilot-2026-10-30-analysis.json
+```
+
+独立confirmationは別の `purpose=confirmation` 種一覧を作り、5局面各407組・計2035組で実施します。予定出力先がすべて未使用であることを確認してから実行してください。承認済み条件、確認方法、未実施の比較は[設計](docs/plans/2026-10-30-undefended-piece-comparison-design.md)と[学習記録](docs/learning/undefended-piece-coordination-evaluation.md)を参照してください。
 
 反復深化の比較は、次の専用コマンドで実行します。
 

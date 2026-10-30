@@ -29,10 +29,21 @@ undefendedを0にしてもUを計算する。依存先の例外を伝播し、�
 
 設計局面A/B/Cでは、いずれも `M=14` で、先手視点の `U=-1/0/0`、既定Eは `139/140/140` となる。これらは固定局面の式と実装を確かめる値で、棋力や仮重みの妥当性を示す実戦結果ではない。
 
+## 比較CLIへの接続
+
+承認済みの比較CLIでは、同じ一手選択器と一手詰み優先を使い、次の2方式を選べる。違いはUの重みだけである。
+
+| 比較方式 | 実効重み | 意味 |
+| --- | --- | --- |
+| `material-undefended-piece-material-only` | `material=10`, `undefended=0` | `10M` の対照。Uも計算するが評価値へ加えない |
+| `material-undefended-piece` | `material=10`, `undefended=1` | `10M+U` の候補 |
+
+両方式の接続先は比較CLIに限る。通常CLI・USIの方式選択肢や、保存棋譜の公開形式は変更しない。
+
 ## 境界と未検証事項
 
-- 通常CLI・USI、比較CLI、保存形式には公開していない。通常CLIのSFEN入出力、飛車可動性バージョン2、玉周辺安全度との合成、二手・四手への適用も含めない。
-- 固定局面で対象枚数・符号・成駒・玉・ピン・遮蔽・手番/持ち駒の無視、重み境界、例外伝播、選択器への注入と一手詰み優先を確認した。
-- 全局面、合法な駒取りや交換連鎖、最適重み、棋力・勝率、実時間性能は未検証。
+- 通常CLI・USI、二手・四手探索、通常利用向け方式には接続しない。通常CLIのSFEN入出力、飛車可動性バージョン2、玉周辺安全度との合成、ShogiHome対局も含めない。
+- 固定局面で対象枚数・符号・成駒・玉・ピン・遮蔽・手番/持ち駒の無視、重み境界、例外伝播、選択器への注入と一手詰み優先を確認した。比較CLIの接続・保存・分析は小規模pipelineで確認した。
+- 長時間比較は未実施であり、所要時間、手数上限率、未裁定率、得点区間は未測定。全局面、合法な駒取りや交換連鎖、最適重み、棋力・勝率、実時間性能も未検証。
 
-実装は [`undefended_piece.py`](../../kaname_shogi/undefended_piece.py) と [`material_undefended_piece.py`](../../kaname_shogi/material_undefended_piece.py)、一手選択との接続確認は [`test_undefended_piece_selection.py`](../../tests/test_undefended_piece_selection.py) にある。独立期待値・TDD・検出範囲・検証結果は[学習記録](../learning/undefended-piece-coordination-evaluation.md)、合意と手順は[承認済み設計](../plans/2026-10-30-undefended-piece-evaluation-design.md)および[実装計画](../plans/2026-10-30-undefended-piece-implementation-plan.md)を参照する。
+実装は [`undefended_piece.py`](../../kaname_shogi/undefended_piece.py) と [`material_undefended_piece.py`](../../kaname_shogi/material_undefended_piece.py)、比較方式の接続は [`comparison_io.py`](../../kaname_shogi/comparison_io.py)・[`comparison.py`](../../kaname_shogi/comparison.py)・[`game_search.py`](../../kaname_shogi/game_search.py)、独立期待値とpipelineは関連する `test_undefended_piece*` にある。理由・検出範囲・検証結果は[学習記録](../learning/undefended-piece-coordination-evaluation.md)、承認仕様は[接続比較設計](../plans/2026-10-30-undefended-piece-comparison-design.md)、実施手順は[実装計画](../plans/2026-10-30-undefended-piece-comparison-implementation-plan.md)を参照する。

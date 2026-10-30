@@ -49,6 +49,8 @@ _POLICIES = {
     "material-rook-mobility": movegen.MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,
     "material-king-safety-material-only": movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY,
     "material-king-safety": movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY,
+    "material-undefended-piece-material-only": movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY,
+    "material-undefended-piece": movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
     "two-ply-material": movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
     "full-width-4": movegen.MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
     "alpha-beta-4": movegen.MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
@@ -387,7 +389,8 @@ def conditions_payload(
         POSIX相対パス順にし、4バイトのパス長・パス・8バイトの内容長・内容を連結する。
         Git情報が取れない場合はnull値と診断を記録し、実験条件の他部分は残す。
         v2では検証済み一覧と方式の実効評価重みも保存する。主乱数種を使う
-        条件でも玉周辺安全度方式を含む場合は両方式の重みを記録する。
+        条件でも玉周辺安全度方式または支えのない駒方式を含む場合は、baseline/candidate
+        ごとの実効policy_parametersを記録する。
     """
     if tuple(schedule) != make_schedule(config):
         raise ValueError("条件JSONの予定が比較条件から生成した予定と一致しません")
@@ -442,6 +445,8 @@ def conditions_payload(
         if {
             movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY,
             movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY,
+            movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY,
+            movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
         } & {config.baseline, config.candidate}:
             payload["policy_parameters"] = {
                 "baseline": _policy_parameters(config.baseline),
@@ -498,6 +503,10 @@ def _policy_parameters(policy: movegen.MoveSelectionPolicy) -> dict[str, object]
         return {"material": 10, "safety": 0, "mate_priority": True}
     if policy is movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY:
         return {"material": 10, "safety": 1, "mate_priority": True}
+    if policy is movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY:
+        return {"material": 10, "undefended": 0, "mate_priority": True}
+    if policy is movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE:
+        return {"material": 10, "undefended": 1, "mate_priority": True}
     return {}
 
 

@@ -593,12 +593,16 @@ def summarize(
             MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,
             MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY,
             MoveSelectionPolicy.MATERIAL_KING_SAFETY,
+            MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY,
+            MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
         )
     )
     for policy in (
         MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY,
         MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY,
         MoveSelectionPolicy.MATERIAL_KING_SAFETY,
+        MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY,
+        MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
     ):
         if policy in {config.baseline, config.candidate}:
             policies += (policy,)
@@ -705,6 +709,8 @@ _POLICY_NAMES = {
     MoveSelectionPolicy.MATERIAL_ROOK_MOBILITY: "material-rook-mobility",
     MoveSelectionPolicy.MATERIAL_KING_SAFETY_MATERIAL_ONLY: "material-king-safety-material-only",
     MoveSelectionPolicy.MATERIAL_KING_SAFETY: "material-king-safety",
+    MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY: "material-undefended-piece-material-only",
+    MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE: "material-undefended-piece",
     MoveSelectionPolicy.TWO_PLY_MATERIAL: "two-ply-material",
     MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH: "full-width-4",
     MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA: "alpha-beta-4",

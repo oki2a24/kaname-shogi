@@ -2,17 +2,23 @@
 
 ## 現在地（2026-10-30）
 
-主線「駒得以外の局面評価を一項目ずつ育てる」はC2まで完了。現在の項目「相手の利きがあり、味方の支えがない駒」はA・B段階を終え、ローカルmain統合と取り込み先検証も完了した。本人は2026-10-29にテーマを選んだが、選定理由は未聴取で推測しない。定義・改善仮説・仮重み10/1・公開利き操作の再利用・Bの範囲を個別に了承し、設計全体・実装計画全体・推薦したネイティブ方式も承認済み。A最後の理解確認には`a`、B最後の理解確認には「E=10M+U」と回答し、それぞれ正解・補足とともに記録済み。本人は次の主線段階としてこの評価の接続・比較を選んだ。具体範囲は未設計・未承認で、選定理由は未聴取。長時間比較はアシスタントが実行し、`--workers 4`、約一時間ごとの進捗確認、人間からの進捗質問への応答を希望している。章番号A3等は予約していない。
+主線「駒得以外の局面評価を一項目ずつ育てる」の現テーマは、B段階で実装した支えのない駒評価を接続・比較するC段階である。テーマ選定理由は本人から聞いていないため推測しない。本人は前回実装との差分である10M対10M+Uを比較CLIで評価する範囲を選び、設計・実装計画・pilot/confirmation条件全体を2026-10-30に明示承認した。B段階の最後の理解確認「E=10M+U」は正解として記録済みである。
 
-B段階Task 1〜3（C/U集計、重み付き合成、既存一手選択器への注入）の実装・Task別検証・独立レビューまで完了した。代表変異7件は各々狙ったassertionが失敗し、復元コピーで対象10件または5件が成功した。作業ブランチでの全体961件/70モジュール（21.785秒）、Ruff、最終独立レビュー（Critical 0 / Important 0 / Minor 0）も成功した。本人の「続けて」を受け、作業ブランチ先端 `554cf708` を2026-10-30にローカル `main` へfast-forwardし、統合後の全体961件/70モジュール（21.745秒）が成功した。製品コード追加コミットは `40d79a6c` と `0872aa29`、Task 3の選択器接続テスト・記録コミットは `554cf708`。統合記録コミット `5f961270` も `main` に反映済み。`origin/main` へのpushは未実施で、別途承認待ち。最後の理解確認には本人が正解し、回答・補足を学習記録に保存した。次テーマ「駒の連携評価の接続・比較」は選定済みで、新セッション用引き継ぎを準備する。具体設計・実装はまだ始めない。仕様と経緯は[確定知識](knowledge/undefended-piece-evaluation.md)、[学習記録](learning/undefended-piece-coordination-evaluation.md)、[承認済み設計](plans/2026-10-30-undefended-piece-evaluation-design.md)、[実装計画と実績](plans/2026-10-30-undefended-piece-implementation-plan.md)、開始時の背景は[B開始引き継ぎ](handover-undefended-piece-evaluation-implementation.md)を参照する。
+作業場所は /Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi、ブランチは codex/undefended-piece-evaluation、作業開始時HEADは288adb141f7bc630332e137ef7582674f71f3df3、mainは087069c7e53fdf9d52b4ebeac809cc73ffedaa2b。実装・局面データ・テスト・設計・計画の変更はまだ通常コミット前である。独立レビューはCritical 0 / Important 0 / Minor 2（続行可）。指摘された条件保存docstringと設計書の承認状態を修正した。
 
-4局面を各509組で比較したC2確認分析は、95%得点区間[0.227, 0.305]で「悪化を支持」。結論は登録4局面の条件に限られ、通常CLI・USI、別局面、別探索条件へ一般化しない。通常CLIのSFEN入出力、飛車可動性バージョン2、二手・四手への適用は保留し、C2へ追加していない。128手と256手のpilotは同一標本の再観察であり、confirmation結果と合算していない。長時間の比較・分析CLIは本人端末で実行済み。
+比較policyは material-undefended-piece-material-only（material 10 / undefended 0）と material-undefended-piece（material 10 / undefended 1）。同じ一手選択器と一手詰み優先を使い、通常CLI・USIには公開しない。対象テストと関連30モジュール・327件、全体973件・75モジュール、Ruffおよび5種の代表変異検査は成功済み。全体ログは /private/tmp/task4-full.log、変異ログは /private/tmp/undefended-piece-mutation-4_wy6h2q にある。pilotとconfirmationのseed生成・比較・分析は未実施で、強さの結果はない。
 
-本人承認を受け、2026-10-29に作業worktree `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi` で `codex/c2-king-safety-evaluation` をローカル `main` へfast-forwardした。統合コミットは `6ddeae78`。統合先で全943テスト・67モジュール、Ruff整形確認119ファイル、Ruff check、`git diff --check` が成功した。`origin/main` へのpushはしていない。最後の理解確認に本人回答があり、範囲を4局面・今回の探索条件に限る補足とともに[C2学習記録](learning/c2-king-safety-evaluation.md)へ記録した。今回の学習・個別合意は[現テーマの学習記録](learning/undefended-piece-coordination-evaluation.md)に保存した。
+次は文書リンク・見出し参照・差分を確認し、今回の対象ファイルだけを明示してtopic branchへコミットする。その後、専用の新規出力先が未使用でC2成果物4件が保持されていることを再確認し、pilot（5局面各10組、100局）をアシスタントが --workers 4・1024手上限で実行する。pilotを分析して問題がなければ独立seed一覧を用いるconfirmation（5局面各407組、4070局）へ進む。進捗は保存summaryからおおむね一時間ごとに確認する。中断時は同条件・同出力先でresumeする。
 
-2026-10-30のB開始準備時、作業worktreeは`codex/undefended-piece-evaluation`へ切り替えた。切替前の基点はローカルmainのHEAD `bf826066`（作成時点でorigin/mainより20コミット先行）。Pythonは3.15.2、固定Ruffは0.16.10、local hooksPathは`.githooks`。製品変更前baselineは943件・67モジュールが21.826秒で成功した。baseline後、Task 1開始前まで製品コード・テストは未変更だった。
+保護対象の4成果物と元checkoutの作業状態は次のとおり。C2成果物と .agents/tasks/ はstageしない。clean/reset/switch、元checkoutへの変更は行わない。main統合とpushはそれぞれ本人の別承認が必要である。比較終了後は最後の理解確認を一問だけ行い、本人の回答を待つ。
 
-作業worktreeは`/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、作業ブランチは`codex/undefended-piece-evaluation`。次テーマを選ぶ直前のローカル `main` は `087069c7` で、引き継ぎ・現在地更新はB用作業ブランチへ追加コミットする。次テーマ用の新しい作業ブランチはこの現在ブランチから分け、local mainが祖先であることを確認して引き継ぎ記録を含める。作業ブランチ先端 `554cf708` の統合後テストは961件・70モジュール、21.745秒で成功した。その後の文書のみの変更は全体テストを再実行せず、リンクと差分を検査している。`origin/main` へのpushはしていない。C2成果物4件は未追跡のまま保持し、元の`/Users/oki2a24/kaname-shogi`の作業ファイルは変更していない。次テーマは選定済みだが、設計・計画・実装は未着手。詳細は[接続・比較テーマの引き継ぎ](handover-undefended-piece-evaluation-comparison.md)を参照する。
+- data/comparison/runs/c2-king-safety-confirmation-2026-10-28-seeds.json
+- data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4-analysis.json
+- data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4/
+- data/comparison/runs/c2-king-safety-confirmation-2026-10-28/
+- 元checkout: /Users/oki2a24/kaname-shogi（作業ファイルを保持）
+
+承認仕様・根拠は[接続比較設計](plans/2026-10-30-undefended-piece-comparison-design.md)、実施と検証の手順は[実装計画](plans/2026-10-30-undefended-piece-comparison-implementation-plan.md)、本人回答・理由・実績は[学習記録](learning/undefended-piece-coordination-evaluation.md)、主線と保留目標は[次テーマ候補](next-topics.md)を参照する。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 
