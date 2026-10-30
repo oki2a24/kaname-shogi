@@ -248,9 +248,13 @@
 
   実績: README、確定知識2件、学習記録、再開案内、次テーマ入口、ロードマップ、docs README、承認済み設計を更新した。対象10文書から辿る相対Markdownリンク848件・見出し参照9件は欠落0件。`git diff --check` は成功。Task 4後の通常コミットと確認はステップ6で記録する。
 
-- [ ] **ステップ6: 実装・記録を明示パスだけで通常コミット**
+- [x] **ステップ6: 実装・記録を明示パスだけで通常コミット**
 
   `git status --short --branch` と差分を確認し、設計案・実装計画を含め、タスク1〜4で変更した個別ファイルだけを指定してstageする。C2成果物4件・他の未追跡ファイルをstageしない。stage後に git diff --cached --check とstaged diffを確認し、通常hookを通してtopic branch上へコミットする。main統合・pushはしない。
+
+  実績: 明示した21ファイルだけをstageし、C2成果物4件と `.agents/tasks/` がindex外であることを確認した。`git diff --cached --check` が成功し、通常hookのRuff整形・checkも成功した。`codex/undefended-piece-evaluation` へ `75dcf81b`（`feat: 比較CLIに駒の連携評価を接続`）をコミットした。main統合・pushは行っていない。
+
+  コミット後検証: Task 4の `task-done` で対象policy・条件保存・artifact reader・resume・analysis・通常CLI/USIテストを実行し、全体 `python3 scripts/run_tests_parallel.py` も再実行した。全973件・75モジュールが21.753秒で成功した。Task完了ledgerは `.superpowers/sdd/2026-10-30-undefended-piece-comparison-implementation-plan/progress.md` に記録した。
 
 ### タスク 5: pilot、confirmation、分析を行い結果を記録する
 

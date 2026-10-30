@@ -4,13 +4,13 @@
 
 主線「駒得以外の局面評価を一項目ずつ育てる」の現テーマは、B段階で実装した支えのない駒評価を接続・比較するC段階である。テーマ選定理由は本人から聞いていないため推測しない。本人は前回実装との差分である10M対10M+Uを比較CLIで評価する範囲を選び、設計・実装計画・pilot/confirmation条件全体を2026-10-30に明示承認した。B段階の最後の理解確認「E=10M+U」は正解として記録済みである。
 
-作業場所は /Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi、ブランチは codex/undefended-piece-evaluation、作業開始時HEADは288adb141f7bc630332e137ef7582674f71f3df3、mainは087069c7e53fdf9d52b4ebeac809cc73ffedaa2b。実装・局面データ・テスト・設計・計画の変更はまだ通常コミット前である。独立レビューはCritical 0 / Important 0 / Minor 2（続行可）。指摘された条件保存docstringと設計書の承認状態を修正した。
+作業場所は /Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi、ブランチは codex/undefended-piece-evaluation。実装・テスト・局面・設計・計画・記録の主コミットは 75dcf81b（feat: 比較CLIに駒の連携評価を接続）。ローカルmainは087069c7のままで、main統合・pushは行っていない。実装コミット後、指定対象テストと全体テストを再実行し、全973件・75モジュールが21.753秒で成功した。通常hookのRuff整形・check、文書リンク848件・見出し参照9件、差分検査も成功した。Task 4は完了し、post-commit検証の記録を保存している。
 
-比較policyは material-undefended-piece-material-only（material 10 / undefended 0）と material-undefended-piece（material 10 / undefended 1）。同じ一手選択器と一手詰み優先を使い、通常CLI・USIには公開しない。対象テストと関連30モジュール・327件、全体973件・75モジュール、Ruffおよび5種の代表変異検査は成功済み。全体ログは /private/tmp/task4-full.log、変異ログは /private/tmp/undefended-piece-mutation-4_wy6h2q にある。pilotとconfirmationのseed生成・比較・分析は未実施で、強さの結果はない。
+比較policyは material-undefended-piece-material-only（material 10 / undefended 0）と material-undefended-piece（material 10 / undefended 1）。同じ一手選択器と一手詰み優先を使い、通常CLI・USIには公開しない。pilotとconfirmationは未実施で、seed一覧・長時間対局・分析結果・強さ判定はない。
 
-次は文書リンク・見出し参照・差分を確認し、今回の対象ファイルだけを明示してtopic branchへコミットする。その後、専用の新規出力先が未使用でC2成果物4件が保持されていることを再確認し、pilot（5局面各10組、100局）をアシスタントが --workers 4・1024手上限で実行する。pilotを分析して問題がなければ独立seed一覧を用いるconfirmation（5局面各407組、4070局）へ進む。進捗は保存summaryからおおむね一時間ごとに確認する。中断時は同条件・同出力先でresumeする。
+次はTask 5の実行前点検で、C2保護対象4パスの存在と未変更、今回のpilot/confirmationそれぞれのseed一覧・結果ディレクトリ・分析JSONの6出力先が未使用であることを確認する。問題がなければpilot（5局面各10組、50組/100局、各局1024手上限）をアシスタントが --workers 4 で実行し、分析後に問題がなければ独立seed一覧のconfirmation（5局面各407組、2035組/4070局）へ進む。進捗は保存summaryからおおむね一時間ごとに確認し、本人から進捗質問があればその時点の実状態を確認する。中断時は同条件・同出力先でresumeする。
 
-保護対象の4成果物と元checkoutの作業状態は次のとおり。C2成果物と .agents/tasks/ はstageしない。clean/reset/switch、元checkoutへの変更は行わない。main統合とpushはそれぞれ本人の別承認が必要である。比較終了後は最後の理解確認を一問だけ行い、本人の回答を待つ。
+保護対象の4成果物と元checkoutの作業状態は次のとおり。C2成果物と .agents/tasks/ はstageしない。clean/reset/switch、元checkoutへの変更は行わない。比較終了後は最後の理解確認を一問だけ行い、本人の回答を待つ。
 
 - data/comparison/runs/c2-king-safety-confirmation-2026-10-28-seeds.json
 - data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4-analysis.json
