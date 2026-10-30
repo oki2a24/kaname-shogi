@@ -1,24 +1,18 @@
 # 学習・開発の再開案内
 
-## 現在地（2026-10-30）
+## 現在地（2026-10-31）
 
-主線「駒得以外の局面評価を一項目ずつ育てる」の現テーマは、B段階で実装した支えのない駒評価を接続・比較するC段階である。テーマ選定理由は本人から聞いていないため推測しない。本人は前回実装との差分である10M対10M+Uを比較CLIで評価する範囲を選び、設計・実装計画・pilot/confirmation条件全体を2026-10-30に明示承認した。B段階の最後の理解確認「E=10M+U」は正解として記録済みである。
+主線「駒得以外の局面評価を一項目ずつ育てる」の現在テーマ「支えのない狙われた駒の評価を接続して比較する」は、比較実装・検証・pilot・独立confirmation・分析まで完了した。テーマ選定理由は本人から聞いていないため推測しない。本人は直前実装との差分 `10M` 対 `10M+U` を比較CLIで評価する範囲を選び、設計・実装計画を2026-10-30に明示承認した。B段階最後の理解確認「E=10M+U」は正解として記録済み。
 
-作業場所は /Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi、ブランチは codex/undefended-piece-evaluation。実装・テスト・局面・設計・計画・記録の主コミットは 75dcf81b（feat: 比較CLIに駒の連携評価を接続）。ローカルmainは087069c7のままで、main統合・pushは行っていない。実装コミット後、指定対象テストと全体テストを再実行し、全973件・75モジュールが21.753秒で成功した。通常hookのRuff整形・check、文書リンク848件・見出し参照9件、差分検査も成功した。Task 4は完了し、post-commit検証の記録を保存している。
+作業worktreeは `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、ブランチは `codex/undefended-piece-evaluation`。実装コミットは `75dcf81b`、実装後文書コミットは `67dd9ad7`。ローカル `main` は `087069c7` のまま。main統合・pushは行っておらず、それぞれ別途本人承認が必要。
 
-比較policyは material-undefended-piece-material-only（material 10 / undefended 0）と material-undefended-piece（material 10 / undefended 1）。同じ一手選択器と一手詰み優先を使い、通常CLI・USIには公開しない。pilotとconfirmationは未実施で、seed一覧・長時間対局・分析結果・強さ判定はない。
+比較対象は `material-undefended-piece-material-only`（M=10,U=0）対 `material-undefended-piece`（M=10,U=1）。同じ一手選択・一手詰み優先、5局面均等、各局面先後交換、1024手上限、対局比較 `--workers 4`。pilotは50組・100局で探索的のみ。独立confirmationは2035組・4070局を完了し、詰み4050局・合法手なし20局、エラー等なし。候補の平均得点は0.908845、95%区間 `[0.878739, 0.938951]`、分析判定は指定条件において「改善を支持」。一般的な棋力向上を示したものではない。確認比較は一度 `--resume` で再開し、実時間はsummary上の下限値として記録した。
 
-次はTask 5の実行前点検で、C2保護対象4パスの存在と未変更、今回のpilot/confirmationそれぞれのseed一覧・結果ディレクトリ・分析JSONの6出力先が未使用であることを確認する。問題がなければpilot（5局面各10組、50組/100局、各局1024手上限）をアシスタントが --workers 4 で実行し、分析後に問題がなければ独立seed一覧のconfirmation（5局面各407組、2035組/4070局）へ進む。進捗は保存summaryからおおむね一時間ごとに確認し、本人から進捗質問があればその時点の実状態を確認する。中断時は同条件・同出力先でresumeする。
+解析CLIにはworker並列オプションがなく、対応オプションで分析を実行した。pilot/confirmationそれぞれのseed、summary、analysisのSHA-256、詳細条件・局面別数値・再開経緯・限界は[学習記録](learning/undefended-piece-coordination-evaluation.md)、手順と実績は[承認済み計画](plans/2026-10-30-undefended-piece-comparison-implementation-plan.md)を参照する。比較結果とanalysis JSONは `data/comparison/runs/` の専用出力先に保存している。
 
-保護対象の4成果物と元checkoutの作業状態は次のとおり。C2成果物と .agents/tasks/ はstageしない。clean/reset/switch、元checkoutへの変更は行わない。比較終了後は最後の理解確認を一問だけ行い、本人の回答を待つ。
+今回の記録更新は文書だけで、コードは変更していない。C2の保護対象4成果物は専用出力先から分離し、再照合した。元の `/Users/oki2a24/kaname-shogi` は変更していない。
 
-- data/comparison/runs/c2-king-safety-confirmation-2026-10-28-seeds.json
-- data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4-analysis.json
-- data/comparison/runs/c2-king-safety-confirmation-2026-10-28-workers-4/
-- data/comparison/runs/c2-king-safety-confirmation-2026-10-28/
-- 元checkout: /Users/oki2a24/kaname-shogi（作業ファイルを保持）
-
-承認仕様・根拠は[接続比較設計](plans/2026-10-30-undefended-piece-comparison-design.md)、実施と検証の手順は[実装計画](plans/2026-10-30-undefended-piece-comparison-implementation-plan.md)、本人回答・理由・実績は[学習記録](learning/undefended-piece-coordination-evaluation.md)、主線と保留目標は[次テーマ候補](next-topics.md)を参照する。
+次は最後の理解確認を一問だけ行い、本人回答を記録する。回答後に、主線・補助・任意の次テーマ候補と主線への帰還関係を提示する。回答と次テーマ選定が済むまでは、新しいテーマの学習・設計・実装へ進まない。C2の保護対象と元checkoutを保持する。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 

@@ -35,7 +35,9 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-現在は主線「駒得以外の局面評価を一項目ずつ育てる」の接続・比較段階として、B段階で実装した支えのない駒評価を比較CLIへ接続するテーマを進めている。本人は10M対10M+Uの差分比較を選び、比較CLI限定の設計・実装計画全体を2026-10-30に承認した。実装・全体検証・代表変異・独立レビューは完了し、pilotと独立confirmationは未実施である。現在のGit状態と次の行動は[再開案内](resume.md)、確定仕様と実績は[接続比較設計](plans/2026-10-30-undefended-piece-comparison-design.md)・[実装計画](plans/2026-10-30-undefended-piece-comparison-implementation-plan.md)・[学習記録](learning/undefended-piece-coordination-evaluation.md)を参照する。選定理由は本人から聞いていないため推測しない。main統合・pushは別途本人承認を要する。
+主線「駒得以外の局面評価を一項目ずつ育てる」の「支えのない狙われた駒」について、比較CLIへの接続・検証・pilot・独立confirmation・分析まで完了した。本人は直前実装との差 `10M` 対 `10M+U` の比較を選び、比較CLI限定の設計・計画を2026-10-30に承認した。confirmationは5登録局面・2035組で候補側平均得点0.908845、95%区間 `[0.878739, 0.938951]`、指定条件では改善を支持する。これは一般的な棋力向上を示さない。main統合・pushは別途本人承認を要する。
+
+次は最後の理解確認を一問だけ行い、回答記録後に次テーマ候補を示す。現在地は[再開案内](resume.md)、理由・実測・限界は[学習記録](learning/undefended-piece-coordination-evaluation.md)、承認仕様と手順は[設計](plans/2026-10-30-undefended-piece-comparison-design.md)・[実装計画](plans/2026-10-30-undefended-piece-comparison-implementation-plan.md)を参照する。選定理由は本人から聞いていないため推測しない。
 
 主線の前段であるA/B段階では、評価の定義・合成式・既存一手選択器への注入を実装し、最後の理解確認に本人は「E=10M+U」と正しく回答した。C2は登録4局面の比較で安全度重み1の悪化を支持した。C1は確認比較と独立追試とも区間が50%を含み、判断不能で一旦区切った。各テーマの理由・実測・限界は索引下部の学習記録を参照する。
 
@@ -54,7 +56,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
-| 支えのない狙われた駒の評価・比較CLI接続（主線・B実装/理解確認完了、C接続実装/検証/レビュー済み。pilot/confirmation未実施、main統合・push未承認） | [本人回答・実装・検証・レビュー](learning/undefended-piece-coordination-evaluation.md) | [枚数差・重み付き評価・比較方式](knowledge/undefended-piece-evaluation.md) | [承認済み接続比較設計](plans/2026-10-30-undefended-piece-comparison-design.md) | [承認済み実装計画・進捗](plans/2026-10-30-undefended-piece-comparison-implementation-plan.md) | [開始時の引き継ぎ](handover-undefended-piece-evaluation-comparison.md) |
+| 支えのない狙われた駒の評価・比較CLI接続（主線・B実装/理解確認、C比較実装/検証/レビュー・pilot/confirmation/分析完了、最後の理解確認待ち。main統合・push未承認） | [本人回答・実装・検証・比較結果](learning/undefended-piece-coordination-evaluation.md) | [枚数差・重み付き評価・比較方式](knowledge/undefended-piece-evaluation.md) | [承認済み接続比較設計](plans/2026-10-30-undefended-piece-comparison-design.md) | [承認済み実装計画・進捗](plans/2026-10-30-undefended-piece-comparison-implementation-plan.md) | [開始時の引き継ぎ](handover-undefended-piece-evaluation-comparison.md) |
 | B2：玉周辺安全度の実装（主線・実装/検証/レビュー/main統合・push・最後の理解確認済み） | [学習・本人回答・補足・実績](learning/king-safety-design.md) | [玉周辺安全度の合成評価](knowledge/king-safety-evaluation.md) | [承認済み設計](plans/2026-10-28-king-safety-design.md) | [承認済み実装計画・実績](plans/2026-10-28-king-safety-implementation-plan.md) | [B2開始時の背景](handover-b2-king-safety-implementation.md) |
 | A2：玉の安全度の小さな指標を学び設計する（主線・学習/設計/計画承認/理解確認完了） | [学習・本人回答・個別合意](learning/king-safety-design.md) | [評価項目の候補と方針](roadmap-non-material-position-evaluation.md) | [承認済み設計](plans/2026-10-28-king-safety-design.md) | [承認済み実装計画](plans/2026-10-28-king-safety-implementation-plan.md) | [A2開始時の引き継ぎ](handover-a2-non-material-position-evaluation.md) |
 | C1：飛車可動性の接続・比較評価（確認比較・分析完了、統計判定は判断不能。分析CLI再開は補助） | [学習・個別合意・pilot実績](learning/c1-rook-mobility-evaluation.md) | [比較CLI・分析](knowledge/search-comparison.md) | [承認済み設計](plans/2026-10-24-c1-rook-mobility-evaluation-design.md) | [C1実装計画](plans/2026-10-24-c1-rook-mobility-evaluation-implementation-plan.md)、[承認済み並列化計画・実績](plans/2026-10-24-c1-comparison-parallel-workers-implementation-plan.md)、[再開機能計画](plans/2026-10-25-c1-comparison-resume-plan.md) | [開始時の背景](handover-c1-rook-mobility-evaluation.md) |

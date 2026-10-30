@@ -261,48 +261,37 @@
 **ファイル:**
 
 - 新規seed一覧、比較ディレクトリ、analysis JSONは設計書で指定した個別の新規パス。
-- 変更 `docs/learning/undefended-piece-coordination-evaluation.md`
-- 変更 `docs/resume.md`、`docs/next-topics.md`
+- 変更 `docs/learning/undefended-piece-coordination-evaluation.md`、`docs/knowledge/undefended-piece-evaluation.md`、`docs/resume.md`、`docs/next-topics.md`、`docs/README.md`。
 
-- [ ] **ステップ1: 比較実行前の条件・保持物を確認**
+- [x] **ステップ1: 比較実行前の条件・保持物を確認**
 
-  C2の保護対象4パスが存在し、今回の成果物として変更されていないことを確認する。設計書にある全ての新規出力パスが未使用であることも確認する。出力先が一つでも既存なら書き込まず、別の日時付きprefixを決めて記録する。
+  実績: 4件のC2保護対象と元checkoutの状態を確認し、今回の6出力先が未使用であることを確認してから作成した。今回の比較・分析出力は専用パスのみを使った。終了後、C2のseed/analysis JSONは開始時と同じSHA-256、二つのC2比較ディレクトリは開始時と同じ4074件・20件を確認した。元checkoutへ書き込んでいない。
 
-- [ ] **ステップ2: pilot seed一覧を新規生成**
+- [x] **ステップ2: pilot seed一覧を新規生成**
 
-  実行: `.venv/bin/python -m kaname_shogi.prepare_comparison_seeds --positions data/comparison/undefended-piece-positions-v1.json --pairs-per-position 10 --purpose pilot --output data/comparison/runs/undefended-piece-evaluation-pilot-2026-10-30-seeds.json`
+  `.venv/bin/python -m kaname_shogi.prepare_comparison_seeds --positions data/comparison/undefended-piece-positions-v1.json --pairs-per-position 10 --purpose pilot --output data/comparison/runs/undefended-piece-evaluation-pilot-2026-10-30-seeds.json` を終了コード0で実行した。5局面各10組。seed SHA-256は `7d933f2b800f8ae3275419bba49d706cf65a77e7c0b866b8d6355a36d5d785ac`。
 
-  期待: 終了コード0で5局面各10組のpilot seed一覧を新規保存する。失敗時は比較へ進まない。
+- [x] **ステップ3: pilot比較と分析を行う**
 
-- [ ] **ステップ3: pilot比較と分析を行う**
+  計画どおり `--workers 4`、各局1024手上限で実行し、100/100局・50/50組を完了。詰み100局、その他の終局・故障0。elapsed `877773198625 ns`。候補側92勝・8敗、平均得点0.920、95%区間 `[0.727935, 1.000000]`。分析CLIは終了コード0で「予備比較（強さの結論は出さない）」とした。pilotはconfirmationへ合算せず、採否判定にも使っていない。分析CLIの `--help` にworker指定はなかった。
 
-  比較: `.venv/bin/python -m kaname_shogi.compare_games --baseline material-undefended-piece-material-only --candidate material-undefended-piece --positions data/comparison/undefended-piece-positions-v1.json --pairs-per-position 10 --seed-list data/comparison/runs/undefended-piece-evaluation-pilot-2026-10-30-seeds.json --max-plies 1024 --workers 4 --output-dir data/comparison/runs/undefended-piece-evaluation-pilot-2026-10-30`
+- [x] **ステップ4: 独立confirmation seed一覧を新規生成**
 
-  正常終了後、`.venv/bin/python -m kaname_shogi.analyze_comparison --input-dir data/comparison/runs/undefended-piece-evaluation-pilot-2026-10-30 --output data/comparison/runs/undefended-piece-evaluation-pilot-2026-10-30-analysis.json` を実行する。
+  `.venv/bin/python -m kaname_shogi.prepare_comparison_seeds --positions data/comparison/undefended-piece-positions-v1.json --pairs-per-position 407 --purpose confirmation --output data/comparison/runs/undefended-piece-evaluation-confirmation-2026-10-30-seeds.json` を終了コード0で実行した。5局面各407組、合計2035組。pilotとは異なるseed一覧で、SHA-256は `5ff463f7dd82fc23246f2b5f4a6722d9398495e5a4bed5f18e178b2662c123d8`。
 
-  pilot成績は採否・改善判定へ使わない。比較・分析はアシスタントが実行し、おおむね1時間ごとに実ファイルから局数・組数・残数・故障・保存状態を報告する。本人から進捗質問があればその時点の実状態を確認する。
+- [x] **ステップ5: confirmation比較と分析を行う**
 
-- [ ] **ステップ4: 独立confirmation seed一覧を新規生成**
+  計画の方式・局面・seed・1024手上限を維持して `--workers 4` で4070局を実行した。初回実行が47局終了で停止したことを確認し、ロックPIDが存在しないことを確認して残存 `.comparison.lock` だけを除去後、同じ条件・seed・出力先に `--resume` を付けて再開した。最終summaryは `complete`、4070/4070局・2035/2035組。詰み4050局、合法手なし20局、エラー・中断・千日手・手数上限到達0。`elapsed_lower_bound=true`、`elapsed_ns=39072091809958`（下限値）。分析CLIにworker指定はないため `--workers` を付けずに実行し、終了コード0で分析を完了した。
 
-  実行: `.venv/bin/python -m kaname_shogi.prepare_comparison_seeds --positions data/comparison/undefended-piece-positions-v1.json --pairs-per-position 407 --purpose confirmation --output data/comparison/runs/undefended-piece-evaluation-confirmation-2026-10-30-seeds.json`
+  候補側3699勝・371敗、平均得点 `0.908845`、95%区間 `[0.878739, 0.938951]`。分析判定は「改善を支持」。区間は独立単位を一組とし、設定5局面を等重みにした `hoeffding-paired-bounds-v1`。この固定比較に限る結果であり、一般的な棋力へ拡張しない。
 
-  期待: 終了コード0でpilotと独立した5局面各407組、合計2035組のseed一覧を保存する。
+- [x] **ステップ6: 実測結果と限界を学習・再開案内へ記録**
 
-- [ ] **ステップ5: confirmation比較と分析を行う**
-
-  比較: `.venv/bin/python -m kaname_shogi.compare_games --baseline material-undefended-piece-material-only --candidate material-undefended-piece --positions data/comparison/undefended-piece-positions-v1.json --pairs-per-position 407 --seed-list data/comparison/runs/undefended-piece-evaluation-confirmation-2026-10-30-seeds.json --max-plies 1024 --workers 4 --output-dir data/comparison/runs/undefended-piece-evaluation-confirmation-2026-10-30`
-
-  正常終了後、`.venv/bin/python -m kaname_shogi.analyze_comparison --input-dir data/comparison/runs/undefended-piece-evaluation-confirmation-2026-10-30 --output data/comparison/runs/undefended-piece-evaluation-confirmation-2026-10-30-analysis.json` を実行する。中断時は同じ条件・seed・出力先を保って `--resume` する。
-
-  区間判定は設計書どおり、改善支持・悪化支持・判断不能を記録する。未決着・双方未裁定はanalysisの上下限に含める。今回の固定局面と条件の結果を一般的な棋力へ拡張しない。
-
-- [ ] **ステップ6: 実測結果と限界を学習・再開案内へ記録**
-
-  seed、条件、局数・組数、終局理由、未決着、経過時間、分析区間、終了コード、出力先、pilot/confirmation独立性、途中再開の有無を実物と照合して記録する。pilotをconfirmへ合算しない。結果JSONを保存し、C2成果物を変更していないことを確認する。
+  詳細な各局面成績、seed/summary/analysis SHA-256、resume経緯、経過時間の下限性、C2照合、未検証事項を[学習記録](../learning/undefended-piece-coordination-evaluation.md)へ記録した。確定知識メモには固定条件で得られた結論と一般化できない範囲を要約した。pilotとconfirmationは別々の出力先・seedで保存し、合算していない。
 
 - [ ] **ステップ7: 文書差分・リンクを確認して限定コミット**
 
-  `git diff --check`、相対リンク、見出し参照、更新した文書の重複・履歴を確認する。学習記録・再開案内・ロードマップの対象ファイルだけをstageし、比較出力やC2成果物を含めず通常コミットする。main統合とpushは行わない。
+  結果記録を学習記録・確定知識・再開案内・次テーマ入口・docs README・本計画の明示Markdownだけに限定し、seed一覧・比較ディレクトリ・分析JSON、C2成果物4件、`.agents/tasks/` はstage対象から除外した。文書差分・相対リンク・見出し参照を確認してからtopic branchへ通常コミットする。main統合・pushは行わない。
 
 ## GREEN条件
 

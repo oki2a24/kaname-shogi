@@ -44,6 +44,6 @@ undefendedを0にしてもUを計算する。依存先の例外を伝播し、�
 
 - 通常CLI・USI、二手・四手探索、通常利用向け方式には接続しない。通常CLIのSFEN入出力、飛車可動性バージョン2、玉周辺安全度との合成、ShogiHome対局も含めない。
 - 固定局面で対象枚数・符号・成駒・玉・ピン・遮蔽・手番/持ち駒の無視、重み境界、例外伝播、選択器への注入と一手詰み優先を確認した。比較CLIの接続・保存・分析は小規模pipelineで確認した。
-- 長時間比較は未実施であり、所要時間、手数上限率、未裁定率、得点区間は未測定。全局面、合法な駒取りや交換連鎖、最適重み、棋力・勝率、実時間性能も未検証。
+- 2026-10-31、比較CLI限定のpilot（50組）と独立confirmation（2035組）を実施した。confirmationは指定5局面で候補 `10M+U` の平均得点0.908845、95%区間 `[0.878739, 0.938951]` となり、今回の固定条件では改善を支持する。これは一般的な棋力向上を示さない。条件・局面別結果・再開経緯は[学習記録](../learning/undefended-piece-coordination-evaluation.md)を参照する。
 
 実装は [`undefended_piece.py`](../../kaname_shogi/undefended_piece.py) と [`material_undefended_piece.py`](../../kaname_shogi/material_undefended_piece.py)、比較方式の接続は [`comparison_io.py`](../../kaname_shogi/comparison_io.py)・[`comparison.py`](../../kaname_shogi/comparison.py)・[`game_search.py`](../../kaname_shogi/game_search.py)、独立期待値とpipelineは関連する `test_undefended_piece*` にある。理由・検出範囲・検証結果は[学習記録](../learning/undefended-piece-coordination-evaluation.md)、承認仕様は[接続比較設計](../plans/2026-10-30-undefended-piece-comparison-design.md)、実施手順は[実装計画](../plans/2026-10-30-undefended-piece-comparison-implementation-plan.md)を参照する。
