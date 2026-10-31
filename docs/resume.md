@@ -2,13 +2,13 @@
 
 ## 現在地（2026-10-31）
 
-主線の次項目として本人が選んだテーマを対話で具体化し、「支えがある駒への低価値駒の利き」Vを設計した。本人の最初の主線候補選定理由は聞いていないため推測しない。「駒の働き・活性度」は以前に示した例であり、本人が選んだ項目ではない。設計と実装計画の全体承認を受け、ネイティブ実行でTask 1〜4を完了した。合成式は10M+U+Vで、固定局面・一手選択・両側反転を確認した。棋力向上や重みの最適性は検証していない。詳細は[学習記録](learning/supported-piece-lower-value-threat.md)、[確定知識](knowledge/supported-piece-lower-value-threat.md)、[設計](plans/2026-10-31-supported-piece-lower-value-threat-design.md)、[実装計画](plans/2026-10-31-supported-piece-lower-value-threat-implementation-plan.md)。
+Vの設計・実装計画を承認後、本人は比較の二段階案（V典型局面の予備比較、独立した幅広い局面の確認比較）を選び、設計と実装計画の全体を2026-10-31に明示承認した。本人は「実装」を比較CLIへの接続とし、予備・確認の両方を `--workers 4` で実施するよう指定した。最初に主線候補を選んだ理由は聞いていないため推測しない。「駒の働き・活性度」は以前に示した例であり、本人が選んだ評価項目ではない。Vの比較接続・実験の具体条件・非ゴールは[比較設計](plans/2026-10-31-supported-lower-value-threat-comparison-design.md)と[承認済み実装計画](plans/2026-10-31-supported-lower-value-threat-comparison-implementation-plan.md)を参照する。
 
-通常の完了手順として、引き継ぎ文書コミット 37719073 を除く評価機能・記録の5コミットを、クリーンな統合worktreeでローカルmainへfast-forward統合した。main上の全体検証は1014件・79モジュールが22.464秒で成功し、Ruff format確認137ファイル、Ruff check、差分検査も成功した。引き継ぎ文書コミットは統合・pushしていない。origin/mainへの最初のpush試行は自動レビューに拒否された。本人の明示承認を受けた後、通常のgit push origin mainによりpushを完了し、origin/mainとローカルmainは同期した。
+**再開境界：** 設計・実装計画承認後に新セッションへ移ることを本人が選択した。現セッションでは引き継ぎを記録・コミットし、TDD、コード・テスト変更、実装、比較実行には着手しない。次のセッションで本人が[引き継ぎ](handover-supported-lower-value-threat-comparison.md)の再開プロンプトを入力した後、承認済み計画に従って比較CLIだけへ接続する。予備は専用5局面・50組/100局、確認は別の幅広い6局面・2040組/4080局を提案条件としており、局面列と独立期待値、seed一覧、出力先は実行前に固定する。比較実行前に `--help` でworker 4が利用可能か確認し、不可なら縮退せず止める。実行中は約一時間ごとに実測進捗を確認する。
 
-統合用worktreeは /Users/oki2a24/.codex/worktrees/undefended-piece-integration/kaname-shogi で、ローカルmainを検証した。元の /Users/oki2a24/kaname-shogi は codex/c1-analysis-performance-investigation の既存文書変更と未追跡データを保持するため、切替・変更していない。実装worktreeの .agents/tasks/ と data/comparison/runs/、C2保護対象4件も保持した。
+引き継ぎ時点の作業場所は `/Users/oki2a24/.codex/worktrees/undefended-piece-integration/kaname-shogi`、topic branch は `codex/supported-lower-value-threat-comparison`。開始HEADと `main` はともに `5a8395a270bc8c9b308e801b7bc65fa2f9dca072`。この引き継ぎ文書群はtopic branch上の本コミットに含める。本コミットをmainへ統合・pushしない。実装worktreeの `.agents/tasks/` と `data/comparison/runs/` の未追跡物、特にC2保護対象4件を保持する。元の `/Users/oki2a24/kaname-shogi` には既存の文書変更と未追跡物があるため、切替・上書き・clean/reset・削除をしない。U候補のShogiHome実践は遠隔PCへアクセス可能との本人連絡後に再提案する。通常CLIのSFEN入出力、飛車可動性v2、玉安全度との合成、U評価の二手・四手適用は今回へ追加しない。Vの固定局面・一手選択の検証は棋力向上を示さない。最後の理解確認の回答と補足は[学習記録](learning/supported-piece-lower-value-threat.md)にある。
 
-最後の理解確認に本人は「V=0」と回答し、Vが「相手側の対象枚数−自分側の対象枚数」であることも説明した。回答と補足を[学習記録](learning/supported-piece-lower-value-threat.md)へ追記済み。Vの棋力比較は未実施で、比較CLI・通常CLI・USIにも未接続。次の主線候補は、VのC段階比較へ進む案と、新しい評価項目のA段階を選ぶ案。本人の選択を待ち、比較設計・実行や新テーマの学習・設計・実装にはまだ進まない。ShogiHomeのU候補実対局はPCアクセス可能との本人連絡後に再提案する保留事項。CLIのSFEN入出力、飛車可動性v2、玉安全度との合成、二手・四手へのU適用は今回へ追加していない。
+**作業境界：** Vの比較CLI接続、TDD、コード・テスト変更、比較実行は未着手。現在のtopic branchで引き継ぎコミットだけを作成し、取り込み・pushはしない。元の作業ディレクトリと未追跡保護データは変更しない。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 
