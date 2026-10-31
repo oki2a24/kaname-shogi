@@ -3,13 +3,49 @@
 import importlib.util
 import unittest
 
-from kaname_shogi import movegen
-from kaname_shogi.model import BasicPieceType, Side, Square
+from kaname_shogi import evaluation, movegen
+from kaname_shogi.model import BasicPieceType, PieceType, Side, Square
 from kaname_shogi.sfen import format_sfen, parse_sfen
 from kaname_shogi.usi_move import parse_usi_move
 
 
 class EvaluationTests(unittest.TestCase):
+    def test_piece_reference_values_match_current_table(self):
+        """盤上駒の全参考価値を駒得評価と共有する。
+
+        価値表の複製、成駒を基本駒価値へ戻す誤り、飛と角の区別漏れを検出する。
+        """
+        value = getattr(evaluation, "piece_reference_value", None)
+        self.assertTrue(callable(value), "盤上駒の参考価値操作が必要")
+        expected = (
+            (PieceType.PAWN, 1),
+            (PieceType.PRO_PAWN, 12),
+            (PieceType.LANCE, 5),
+            (PieceType.PRO_LANCE, 10),
+            (PieceType.KNIGHT, 6),
+            (PieceType.PRO_KNIGHT, 10),
+            (PieceType.SILVER, 8),
+            (PieceType.PRO_SILVER, 9),
+            (PieceType.GOLD, 9),
+            (PieceType.BISHOP, 13),
+            (PieceType.HORSE, 15),
+            (PieceType.ROOK, 15),
+            (PieceType.DRAGON, 17),
+        )
+        for piece_type, points in expected:
+            with self.subTest(piece_type=piece_type):
+                self.assertEqual(value(piece_type), points)
+
+    def test_king_has_no_piece_reference_value(self):
+        """玉には交換価値として使う参考値を設けない。
+
+        玉を最安の0点として危険な攻撃元に扱う実装を検出する。
+        """
+        value = getattr(evaluation, "piece_reference_value", None)
+        self.assertTrue(callable(value), "盤上駒の参考価値操作が必要")
+        with self.assertRaisesRegex(ValueError, "玉の参考価値は定義しません"):
+            value(PieceType.KING)
+
     def test_material_balance_keeps_perspective_and_compatibility(self):
         """共有評価は開始側の符号と既存入口の値を保つ。
 

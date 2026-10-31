@@ -30,6 +30,29 @@ _TANIGAWA_HAND_VALUES = {
 }
 
 
+def piece_reference_value(piece_type: PieceType) -> int:
+    """盤上駒の参考価値を既存の駒得評価と同じ表から返す。
+
+    引数:
+        piece_type: 価値を調べる有効な盤上駒種。成駒は成った後の駒種で渡す。
+
+    戻り値:
+        非玉駒の参考価値を表す整数。
+
+    例外:
+        ValueError: 玉には駒得評価用の参考価値を定義していない。
+
+    副作用:
+        なし。評価用の設定値を読み取るだけ。
+
+    駒の価値を新しい表へ複製せず、駒得評価が使う正本へ委譲する。成駒の値を
+    基本駒へ戻さず、玉に架空の値を与えないことで価値比較の意味を保つ。
+    """
+    if piece_type == PieceType.KING:
+        raise ValueError("玉の参考価値は定義しません")
+    return _TANIGAWA_PIECE_VALUES[piece_type]
+
+
 def material_balance(position: Position, perspective: Side) -> int:
     """盤上と持ち駒の参考点を合算し、指定側から見た駒得差を返す。
 
