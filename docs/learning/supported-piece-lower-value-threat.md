@@ -33,7 +33,7 @@
 
 ## 設計と未完了
 
-[設計案](../plans/2026-10-31-supported-piece-lower-value-threat-design.md)へ定義、手法比較、手計算局面、構成提案、確認範囲をまとめ、全体を提示した。本人は「YES」と回答し、設計全体と実装計画の作成を承認した。writing-plansで[実装計画](../plans/2026-10-31-supported-piece-lower-value-threat-implementation-plan.md)を作成し、本人は計画全体とネイティブ方式を承認した。TDDに従いTask 1・2を完了し、Task 3・4と全体検証を残す。
+[設計案](../plans/2026-10-31-supported-piece-lower-value-threat-design.md)へ定義、手法比較、手計算局面、構成提案、確認範囲をまとめ、全体を提示した。本人は「YES」と回答し、設計全体と実装計画の作成を承認した。writing-plansで[実装計画](../plans/2026-10-31-supported-piece-lower-value-threat-implementation-plan.md)を作成し、本人は計画全体とネイティブ方式を承認した。Task 1〜3の実装・検証を終え、Task 4と最終全体検証を残す。
 
 固定局面での計数の正しさと対局比較の結果を区別する。合法な駒取り、強制損失、交換の続き、駒を取らせる戦術、棋力向上は保証しない。
 
@@ -76,3 +76,15 @@ TDDでは公開操作がない状態でcallableのassertion failure、Falseの�
 検出範囲：占有先の扱い、同一マス・空出発点、両側の遮蔽、玉・馬・竜と先後の歩の利き、ピン、盤面不変、候補生成例外を確認する。固定例であり、全駒・全配置の証明とはしない。Task 3の各攻撃駒種テストと既存移動生成テストが動き形状を補う。
 
 Refactor要否：不要。独立レビュー初回はCritical 0 / Important 0 / Minor 1（後手の味方占有先が直接未検査）。後手飛車の味方占有先、および先後の歩の向きを追加し、再レビューでCritical 0 / Important 0 / Minor 0。追加指摘なし。Task 2は続行可能との判断。
+
+## Task 3：支えあり低価値脅威の枚数・差（実施記録）
+
+`supported_piece_threat.py` に `supported_lower_value_threat_count(position, side)` と `supported_lower_value_threat_balance(position, perspective)` を追加した。固定局面のA/B/Cと両側に対象があるDを独立した駒配置で組み立て、両側の枚数と視点差を検査する。価値は厳密な `<`、攻撃元・対象は全13種類、玉は対象・安い攻撃元から除外し支えには許可する。遮蔽とピンはTask 2の幾何学的利きに委譲し、手番・持ち駒は無視する。
+
+TDDでは、未定義の枚数操作に対してA/B/Cのcallable assertionが失敗し、枚数実装後に未定義の差操作に対して同じ配置のcallable assertionが失敗した。共通走査を実装後、残りの固定契約テストは一つずつ追加して実行し、実装を変えず成功した。計画が推奨した各ケースでの個別Red確認は全ケースでは実施できていないため、これを実施済みとは記録しない。代わりにTask3完了後、隔離コピーで代表誤実装を5種類注入し、いずれも意図した assertion failure を確認した。
+
+専用テスト13件、既存Uテスト10件、移動生成186件、玉安全12件が成功。全体検証 `python3 scripts/run_tests_parallel.py` は1006テスト・77モジュール・22.348秒で成功。Ruffのimport整理・format確認・checkと `git diff --check` も成功。`ruff format .` はサンドボックスが新規テストファイルへの書き込みを拒否したため、`ruff format --diff` の一箇所を手動反映し、全134ファイルのformat確認で成功した。
+
+検出範囲：価値境界・支え条件・複数攻撃元の重複・玉の攻撃元扱い・差の先後固定の各変異はそれぞれ専用期待値で検出された。固定局面・代表変異であり、全局面の証明や合法な交換損得、棋力向上は示さない。変異はすべて `/private/tmp/value-threat-task-3-mutants/` 内の隔離コピーで行い、作業ツリーや保護データを変更していない。
+
+Refactor要否：occupied squaresを一度列挙し、支えと安い攻撃元を `any` で別々に調べる形へ整理した。局面を変更しない既存の契約テスト、13件の専用テスト、全体検証で成功を確認した。独立レビューはCritical 0 / Important 0 / Minor 1（現在地文書が計画承認待ち・実装未着手のまま）だった。指摘に従い `docs/resume.md`、`docs/README.md`、`docs/next-topics.md`、`docs/02-project-direction.md`、ロードマップの現在地を実状に更新した。レビュアーによる再レビューと再テストは未実施。コード上の指摘なし、Task 3から次工程へ続行可能との評価。
