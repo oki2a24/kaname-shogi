@@ -2,17 +2,13 @@
 
 ## 現在地（2026-10-31）
 
-主線テーマ「駒の連携評価を通常CLI・USIへ接続する」は実装・検証・独立レビューを終え、コミット `445b648e` を作成した。通常CLI・USIから10M+U候補を選べる。CVCでは先手・後手を別々に選べ、開始前に両側の方式名を表示する。設定の既定値・寿命などの合意は[設計案](plans/2026-10-31-undefended-piece-normal-cli-usi-design.md)を参照する。
+主線の次項目として本人が選んだテーマを対話で具体化し、「支えがある駒への低価値駒の利き」Vを設計した。本人の最初の主線候補選定理由は聞いていないため推測しない。「駒の働き・活性度」は以前に示した例であり、本人が選んだ項目ではない。設計と実装計画の全体承認を受け、ネイティブ実行でTask 1〜4を完了した。合成式は10M+U+Vで、固定局面・一手選択・両側反転を確認した。棋力向上や重みの最適性は検証していない。詳細は[学習記録](learning/supported-piece-lower-value-threat.md)、[確定知識](knowledge/supported-piece-lower-value-threat.md)、[設計](plans/2026-10-31-supported-piece-lower-value-threat-design.md)、[実装計画](plans/2026-10-31-supported-piece-lower-value-threat-implementation-plan.md)。
 
-通常CLIではMaterial対「一手駒得＋支えのない狙われた駒」を先後入れ替えで2局実行し、両局とも新候補側が相手の投了で勝った。これは2局の操作観察であり、方式全体の棋力や一般的な優位性の証明ではない。前段比較の候補平均得点0.908845、95%区間[0.878739, 0.938951]も、5登録局面・指定条件での改善支持に限られる。
+通常の完了手順として、引き継ぎ文書コミット 37719073 を除く評価機能・記録の5コミットを、クリーンな統合worktreeでローカルmainへfast-forward統合した。main上の全体検証は1014件・79モジュールが22.464秒で成功し、Ruff format確認137ファイル、Ruff check、差分検査も成功した。引き継ぎ文書コミットは統合・pushしていない。通常手順に沿って、統合済みmainをorigin/mainへpushした。
 
-2026-10-31、ローカル `main` は `087069c7` から `445b648e` へfast-forwardし、`origin/main` へpushした。統合先の全体テストは987件・75モジュール、23.801秒で成功した。専用worktreeでは最初 `.venv` がなくランチャー検査3件が失敗したが、検証済み仮想環境を参照させて8件と全体を再実行し、成功を確認した。ローカルmainとorigin/mainはともに `445b648e`。製品実装・テスト・独立レビュー・統合後検証は完了し、最後の理解確認はこれから一問行う。
+統合用worktreeは /Users/oki2a24/.codex/worktrees/undefended-piece-integration/kaname-shogi で、ローカルmainを検証した。元の /Users/oki2a24/kaname-shogi は codex/c1-analysis-performance-investigation の既存文書変更と未追跡データを保持するため、切替・変更していない。実装worktreeの .agents/tasks/ と data/comparison/runs/、C2保護対象4件も保持した。
 
-ShogiHome実対局は本人が遠隔PCのロックを解除できないため今回除外した。PCへアクセスできると本人から伝えられた後、次に適切な機会にShogiHome実践を含めるか再提案する。アクセス可能になったこと自体を対局開始の承認とは扱わない。実際のShogiHome接続・設定・対局・ログ採取は行っていない。
-
-作業worktreeは `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`、作業ブランチは `codex/undefended-piece-evaluation`。直近確認時のHEAD・ローカルmain・origin/mainは `803d7b4df289853eaf8c63a2c832a6da39a14924` で一致していた。元の `/Users/oki2a24/kaname-shogi` はブランチ切替や作業ファイル変更をしていない。`.agents/tasks/` と `data/comparison/runs/` の未追跡データは保持している。詳細な本人の選択・補足・検証・限界は[学習記録](learning/undefended-piece-coordination-evaluation.md)、現在と過去の候補は[次テーマ候補](next-topics.md)を参照する。
-
-最後の理解確認は本人の正確な回答を[学習記録](learning/undefended-piece-coordination-evaluation.md)へ記録した。README・[学習ロードマップ](roadmap-non-material-position-evaluation.md)・[方向性](02-project-direction.md)を確認し、現在は[次テーマ候補](next-topics.md)を提示して選定を待つ段階。元の主線へ戻る目標は次の評価項目Aを選び学習・設計すること。今回のShogiHome実践はPCアクセス可能の連絡後に提案する保留事項として残す。
+最後の理解確認はまだ行っていない。ここで一問だけ確認し、回答を学習記録へ追記してから、README・[ロードマップ](roadmap-non-material-position-evaluation.md)・[方向性](02-project-direction.md)を確認して次テーマ候補を提示する。本人が次テーマを選ぶまで新しい学習・設計・実装へ進まない。ShogiHomeのU候補実対局はPCアクセス可能との本人連絡後に再提案する保留事項。CLIのSFEN入出力、飛車可動性v2、玉安全度との合成、二手・四手へのU適用は今回へ追加していない。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 
