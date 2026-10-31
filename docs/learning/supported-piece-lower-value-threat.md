@@ -119,10 +119,53 @@ Task 4のRed確認では、公開評価操作が未定義であることをcalla
 
 ShogiHomeでのU実践は遠隔PCへアクセス可能との本人連絡待ちで保留する。
 
-## Vの比較設計・実装計画承認（2026-10-31）
+## Vの比較設計・実装計画承認時の状態（履歴・2026-10-31）
 
 本人はVの比較を先に設計することを選んだ。比較方式の確認では「二段階にする（V典型局面で予備比較、独立した幅広い局面で確認比較）」を選択した。選択理由は本人が述べた範囲を越えて補わない。比較設計は `10M+U` と `10M+U+V` でV係数だけを変え、比較CLIに限って接続する。通常CLI・USI、通常CLIのSFEN入出力、飛車可動性v2、玉安全度との合成、Uの二手・四手適用は含めない。
 
 本人は実装対象が比較CLIへの接続かを確認し、予備・確認の両比較を `--workers 4` で行うよう指示した。その後、本人は比較設計案と実装計画を全体承認した（2026-10-31）。したがって、計画内の初期統計条件案も承認済みである。比較実行は、接続実装・検証、局面列・独立M/U/V期待値・seed一覧・conditions・出力先の固定後に行う。実行時にCLIがworker 4を受け付けなければ縮退せず停止する。予備の結果は確認判定へ加算せず、初期条件を実質変更する必要があれば確認比較の前に本人承認を得る。
 
 本人はこの承認を区切りに新しいセッションへ移ることを選んだ。したがってこの記録・引き継ぎのコミット後、本人が再開プロンプトを新セッションへ入力するまでTDD・コード・テスト変更・比較実行を始めない。詳細は[承認済み比較設計](../plans/2026-10-31-supported-lower-value-threat-comparison-design.md)、[承認済み実装計画](../plans/2026-10-31-supported-lower-value-threat-comparison-implementation-plan.md)、[開始時引き継ぎ](../handover-supported-lower-value-threat-comparison.md)を参照する。
+
+
+## V比較CLI接続・実装検証（2026-10-31、topic branch）
+
+### 目的と合意範囲
+
+承認済み比較計画に従い、比較CLI専用の `material-piece-threat-v0`（10M+U+0V）と `material-piece-threat-v1`（10M+U+1V）を接続した。通常CLI・USI、通常CLIのSFEN入出力、飛車可動性v2、玉安全度との合成、Uの二手・四手適用は対象外で、変更していない。worker 4の比較2段階は本人の明示指示で承認済み。main統合・pushは未承認で実施していない。
+
+### 固定局面と独立期待値
+
+比較結果を見る前に専用JSONの局面列・順序と、次のM/U/V期待値を固定した。Mは先手視点の材料差、U/Vは「後手側対象枚数−先手側対象枚数」。予備と確認は別JSON・別seed一覧・別出力先にする。
+
+| 区分・局面ID | M | U | V | 手番・独立した役割 |
+| --- | ---: | ---: | ---: | --- |
+| pilot-sente-bishop-pawn | 0 | +1 | −1 | 後手番。先手角5五を後手歩5四が狙い、先手金4六が支える。後手歩6四はU対象 |
+| pilot-gote-bishop-pawn | 0 | 0 | +1 | 先手番。後手角5五を先手歩5六が狙い、後手歩5四が支える |
+| pilot-sente-knight-pawn | −2 | 0 | −1 | 後手番。先手桂7七を後手歩7六が狙い、先手金6八と角8八が支える。支え2枚でも対象は1枚 |
+| pilot-undefended-bishop | 0 | −1 | 0 | 後手番。先手角5五は後手歩5四に狙われるが支えなし。Uのみの対照 |
+| pilot-no-threat | 0 | 0 | 0 | 先手番。無脅威対照 |
+| confirmation-opening-side-pawns | 0 | 0 | 0 | 先手番。開局の左右の歩・角道 |
+| confirmation-king-side-development | 0 | 0 | 0 | 後手番。15手の駒組み後 |
+| confirmation-bishop-exchange | 0 | 0 | 0 | 先手番。角交換後、双方が角を持ち駒にする |
+| confirmation-rook-pawn-push | 0 | 0 | 0 | 後手番。11手の飛車先歩・金銀進出 |
+| confirmation-central-development | 0 | 0 | 0 | 先手番。12手の中央・隣接筋の歩、金銀桂進出 |
+| confirmation-pawn-exchange | −2 | 0 | 0 | 後手番。中央歩交換後、先手歩を一枚失った状態 |
+
+予備5局面はV対象3役、Uのみ、無脅威の各対照を持つ。確認6局面は開局・駒組み・角交換・歩交換を含み、手番を先手3・後手3にそろえた。`tests/test_piece_threat_comparison_positions.py` はM/U/Vの各期待値、対象・攻撃元・支えの駒種と筋段、両セット内外の局面非重複を独立に照合する。確認用開始局面でVが0でも、対局中に生じる比較の対象から外していない。
+
+### TDD・実装・検出範囲
+
+Task 1は方式名未登録を含むassertion Redから始め、同じ評価器と一手選択器へ(10,1,0)/(10,1,1)を渡す比較専用経路を追加した。V方式を通常の制御付き探索、CLI選択肢、USI optionに公開していない。Task 2ではV識別子、実効重み、worker/seed-list条件、reader検証、選択時のsummary計時列とresumeへ接続し、旧U条件と旧summary順も維持する。重みの正本は `comparison_io._policy_parameters` 一つである。Task 3では上記の二局面セットと、seed準備→worker 4・一手上限比較→reader/分析の一時pipelineを追加した。同じseedで2回比較し、予定と棋譜内容が一致すること、未決着の一組を `[0,1]` の得点範囲へ残すことを確認した。
+
+変異検査は保護領域を含まない `/private/tmp` の647ファイル隔離コピーで行った。V係数反転、両V係数0、候補U係数変更、一手詰み優先迂回、V conditions重み欠落、writer/reader summary順への未選択V漏れ、手計算V期待値誤り、二局の先後割当同一の8種類で、それぞれ狙ったassertion failureを確認した。各変異を戻した後に対象テストが成功した。.git、`.agents/tasks/`、`data/comparison/runs/`はコピーへ含めず、元の `/Users/oki2a24/kaname-shogi` も変更していない。
+
+検証実測：関連18モジュール228テスト成功。全体 `PYTHONDONTWRITEBYTECODE=1 python3 scripts/run_tests_parallel.py` は1031テスト・84モジュール・25.146秒で成功。Ruff import整理、format、checkと `git diff --check` も成功。Task 1〜3の独立レビューは各Critical 0 / Important 0 / Minor 0。独立全体レビューの初回結論はCritical 0 / Important 0 / Minor 1で、Minorはroot READMEの比較方式説明不足だった。READMEへ方式名・重み・比較CLI専用の境界を追記し、同じレビュアーが確認した最終結論はCritical 0 / Important 0 / Minor 0。レビュアーはテストを実行していない。
+
+この固定テスト・短い一手pipeline・変異検査は、提案した局面における契約と成果物の接続を確認する。4,080局での強さ、一般棋力向上、別局面への一般化は示さない。
+
+### 未完了と次の検証
+
+長時間比較はまだ始めていない。出力rootと全ファイル名を `/private/tmp/kaname-shogi-supported-piece-threat-comparison-2026-10-31-4w` 配下に固定した。seed一覧は `pilot-seeds-v1.json` / `confirmation-seeds-v1.json`、予備・確認の出力先は `pilot-2026-10-31-4w` / `confirmation-2026-10-31-4w`、分析出力は `pilot-analysis-v1.json` / `confirmation-analysis-v1.json`。rootと全出力先は未作成で、各seed一覧・conditionsのhashを対局結果を見る前に記録する。予備は5局面×10組=50組/100局、`--max-plies 1024`、`--workers 4`。確認は独立した6局面×340組=2040組/4080局、手数上限1024を予備後・確認前に最終固定する。予備は確認判定へ加算しない。実行時の `--help` は `--workers {1,2,3,4}` を示して4対応を確認済みであり、実行条件はworker 4に固定する。保護対象の `data/comparison/runs/` は使わない。確認比較は95% Hoeffding区間・50%境界・55%効果目標・80%検出力案で主判定し、結論を固定局面・一手選択・実行条件に限定する。
+
+最後の理解確認は本ブランチの実験成果と統合先検証がそろった後に行う。質問・回答がまだないため、回答や補足を作成していない。

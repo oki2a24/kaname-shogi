@@ -28,7 +28,7 @@ from .search_control import SearchControl, SearchSignal
 
 
 class MoveSelectionPolicy(Enum):
-    """対局・比較で使う選択方式を表す値。強さの保証は表さない。"""
+    """一手選択方式を表す値。通常CLI・USIに公開するかは方式ごとに異なる。"""
 
     RANDOM = auto()
     MATERIAL = auto()
@@ -40,6 +40,8 @@ class MoveSelectionPolicy(Enum):
     MATERIAL_KING_SAFETY = auto()
     MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY = auto()
     MATERIAL_UNDEFENDED_PIECE = auto()
+    MATERIAL_PIECE_THREAT_V0 = auto()
+    MATERIAL_PIECE_THREAT_V1 = auto()
 
 
 _DROP_PIECE_TYPES = (
@@ -682,7 +684,8 @@ def choose_move(
         見た一手後の駒得差が最大の手。MATERIAL_ROOK_MOBILITYなら一手後の駒得と
         飛車可動性の合成値を開始側視点で評価し、一手詰みを優先する。
         比較用の玉周辺安全度・未守備駒評価方式は、主評価の駒得重み10と対象重み
-        0または1で評価し、同じ一手詰み優先の選択器を使う。
+        0または1で評価し、同じ一手詰み優先の選択器を使う。V0/V1はM/Uの重みを
+        10/1に固定し、V重みだけを0/1へ切り替える比較専用方式である。
         TWO_PLY_MATERIALなら相手の全応手後の最悪評価が最大の手。同点最高候補だけから
         一様に抽選する。
 
@@ -757,6 +760,28 @@ def choose_move(
             moves,
             rng,
             evaluate=partial(evaluate_material_undefended_piece, weights=weights),
+        )
+    if policy in (
+        MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0,
+        MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+    ):
+        from .material_piece_threat import (
+            PieceThreatWeights,
+            evaluate_material_piece_threat,
+        )
+        from .one_ply_selection import choose_one_ply_move
+
+        supported_weight = (
+            0 if policy == MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0 else 1
+        )
+        weights = PieceThreatWeights(
+            material=10, undefended=1, supported_threat=supported_weight
+        )
+        return choose_one_ply_move(
+            position,
+            moves,
+            rng,
+            evaluate=partial(evaluate_material_piece_threat, weights=weights),
         )
     if policy != MoveSelectionPolicy.MATERIAL:
         raise ValueError("未知の一手選択方針です")

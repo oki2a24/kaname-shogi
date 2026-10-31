@@ -454,6 +454,8 @@ def _summary_policy_order(
             MoveSelectionPolicy.MATERIAL_KING_SAFETY,
             MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY,
             MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+            MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0,
+            MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
         )
     )
     for policy in (
@@ -462,6 +464,8 @@ def _summary_policy_order(
         MoveSelectionPolicy.MATERIAL_KING_SAFETY,
         MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY,
         MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+        MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0,
+        MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
     ):
         if policy in {config.baseline, config.candidate}:
             policies += (policy,)

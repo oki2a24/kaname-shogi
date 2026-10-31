@@ -25,6 +25,8 @@ _ONE_PLY_POLICIES = (
     movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY,
     movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY,
     movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+    movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0,
+    movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
 )
 _FULL_WIDTH_POLICY = movegen.MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH
 _ALPHA_BETA_POLICY = movegen.MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA
@@ -48,7 +50,7 @@ def choose_move(
     """選択方式に応じて、現在局面からコンピュータの一手を返す。
 
     引数: positionは開始局面、movesは同局面の全合法手、policyは既存三方式・
-    駒得と飛車可動性・玉周辺安全度・未守備駒評価の一手方式・四手探索方式のいずれか、
+    駒得と飛車可動性・玉周辺安全度・未守備駒評価・比較専用V0/V1の一手方式・四手探索方式のいずれか、
     rngは一手方式の抽選に使う生成器。
     戻り値: 選択した合法手。合法手なしならNone。
     副作用: 一手方式はmovegen.choose_moveと同じ副作用を持つ。四手探索方式は
@@ -80,7 +82,8 @@ def search_move(
 ) -> movegen.SearchResult:
     """制御付き方式から既存のUSI向け完了・中断・抑制結果を返す。
 
-    引数: positionは開始局面、policyは既存三方式・制御付き一手10M+U方式・四手探索方式、
+    引数: positionは開始局面、policyは既存三方式・制御付き一手10M+U方式・四手探索方式。
+    比較専用V0/V1は時計付き入口へ登録しない。
     rngは既存方式用、controlは呼出し元が所有する一探索分の制御。
     戻り値: 既存のmovegen.SearchResult。新方式のSTOPPEDはINTERRUPTED、
     SUPPRESSEDは手なしのSUPPRESSED、手なし確定は手なしのCOMPLETEへ対応する。

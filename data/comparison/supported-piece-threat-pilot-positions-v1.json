@@ -1,0 +1,71 @@
+{
+  "format": "kaname-shogi-comparison-positions-v1",
+  "id": "supported-piece-threat-pilot-v1",
+  "positions": [
+    {
+      "id": "pilot-sente-bishop-pawn",
+      "setup_moves": [
+        "7g7f",
+        "5c5d",
+        "4g4f",
+        "3c3d",
+        "4i4h",
+        "4c4d",
+        "4f4e",
+        "6c6d",
+        "4h4g",
+        "8c8d",
+        "4g4f",
+        "8d8e",
+        "8h5e"
+      ],
+      "rationale": "先手の角5五を後手歩5四が狙い、先手金4六が支えるV典型。後手歩6四が支えのない駒として残る。"
+    },
+    {
+      "id": "pilot-gote-bishop-pawn",
+      "setup_moves": [
+        "5g5f",
+        "3c3d",
+        "7g7f",
+        "5c5d",
+        "6g6f",
+        "2b5e"
+      ],
+      "rationale": "後手の角5五を先手歩5六が狙い、後手歩5四が支える先後反対のV典型。"
+    },
+    {
+      "id": "pilot-sente-knight-pawn",
+      "setup_moves": [
+        "7g7f",
+        "7c7d",
+        "7f7e",
+        "7d7e",
+        "6i6h",
+        "7e7f",
+        "8i7g"
+      ],
+      "rationale": "歩交換後の先手桂7七を後手歩7六が狙う。先手金6八と角8八の二枚が支え、対象は一枚として数える。"
+    },
+    {
+      "id": "pilot-undefended-bishop",
+      "setup_moves": [
+        "7g7f",
+        "5c5d",
+        "7f7e",
+        "3c3d",
+        "8h5e"
+      ],
+      "rationale": "後手歩5四の利きに先手角5五を置くが、味方の支えはなく、UのみでVには数えない対照。"
+    },
+    {
+      "id": "pilot-no-threat",
+      "setup_moves": [
+        "7g7f",
+        "3c3d",
+        "2g2f",
+        "8c8d"
+      ],
+      "rationale": "先後の歩を進めた無脅威の中立対照。開始時のM・U・V差はいずれも0。"
+    }
+  ]
+}

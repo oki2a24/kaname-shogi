@@ -526,6 +526,25 @@ class GameSearchTests(unittest.TestCase):
                 )
         self.assertIs(caught.exception, failure)
 
+    def test_search_move_rejects_comparison_only_v_policy(self):
+        """制御付き探索入口で比較専用V方式を拒否する。
+
+        比較用一手方式が通常CLI・USIの時計付き入口へ漏れる誤りを検出する。
+        """
+        for name in (
+            "MATERIAL_PIECE_THREAT_V0",
+            "MATERIAL_PIECE_THREAT_V1",
+        ):
+            policy = self.new_policy(name)
+            with self.subTest(policy=name):
+                with self.assertRaises(ValueError):
+                    game_search.search_move(
+                        kings_only(Side.SENTE),
+                        policy,
+                        random.Random(0),
+                        SearchControl(None, 0, now_ns=lambda: 0),
+                    )
+
     def test_unknown_policy_fails_before_search(self):
         """未知値やNoneは探索操作を作る前に両対局入口で拒否する。
 

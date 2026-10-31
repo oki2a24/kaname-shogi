@@ -302,6 +302,19 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         )
         self.assertIn("エラー：一手選択方針を1〜6で選んでください。", outputs)
 
+    def test_comparison_only_v_policies_are_not_cli_choices(self):
+        """比較専用V方式を通常CLIの選択肢から除外する。
+
+        7番をV方式として受け付ける漏れや通常メニューへの公開を検出する。
+        """
+        outputs = []
+        policy = self._choose_policy(
+            input_fn=ScriptedInput(["7", "1"]), output_fn=outputs.append
+        )
+        self.assertIs(policy, MoveSelectionPolicy.RANDOM)
+        self.assertIn("エラー：一手選択方針を1〜6で選んでください。", outputs)
+        self.assertNotIn("支えのある駒への低価値駒の利き", "".join(outputs))
+
 
 class ScriptedInput:
     """テスト用に入力列を返し、列が尽きたらEOFを発生させる。"""

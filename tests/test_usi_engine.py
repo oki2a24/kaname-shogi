@@ -230,6 +230,27 @@ class UsiEngineFunctionTests(unittest.TestCase):
             ],
         )
 
+    def test_comparison_only_v_policies_are_not_usi_options(self):
+        """比較専用V方式をUSI optionやDifficulty値として公開しない。
+
+        option一覧への漏れと通常USI入口が比較policyを受理する誤りを検出する。
+        """
+        for value in ("MaterialPieceThreatV0", "MaterialPieceThreatV1"):
+            calls, outputs = self._run_with_policy_spy(
+                [
+                    "usi",
+                    f"setoption name Difficulty value {value}",
+                    "position startpos moves 7g7f",
+                    "go",
+                ]
+            )
+            option = next(
+                line for line in outputs if line.startswith("option name Difficulty")
+            )
+            with self.subTest(value=value):
+                self.assertNotIn(value, option)
+                self.assertEqual(calls[0][2], MoveSelectionPolicy.RANDOM)
+
     def test_uses_random_policy_when_difficulty_is_unset(self):
         """setoptionなしの最初のgoは既定のRANDOMを使う。
 

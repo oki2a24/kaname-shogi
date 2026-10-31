@@ -88,7 +88,7 @@ python3 -m kaname_shogi.analyze_comparison \
   --input-dir /path/new-run --output /path/new-analysis.json
 ```
 
-準備CLIは局面群全体を検証した後、OS乱数源から128ビット種をbaseline/candidate用に各組一つずつ抽出し、`pilot` または `confirmation` と局面ファイルのSHA-256を含むJSONへ保存する。同じ数値の種が偶然重なっても引き直さない。出力は新規パス限定。比較CLIは `--seed` と `--seed-list` のどちらか一方を要求する。`--workers` は1〜4、既定値1で、2〜4はspawnプロセス並列を使う。種一覧実験では局面JSONのバイト列・順序・ID・局面ごとの組数を一覧と照合してから対局する。逐次の種一覧条件は `kaname-shogi-comparison-conditions-v2`、複数worker条件はv3とし、`execution` に `executor=process-pool` とworker数を保存する。C2または支えのない駒方式を使う場合は `policy_parameters` にbaseline/candidateの実効重みを保存する。`--seed` 実験は逐次conditions v1、並列conditions v3を使うが、現在の分析CLIは種一覧を保存したv2/v3だけを受け付けるため、これらの `--seed` 結果は分析できない。
+準備CLIは局面群全体を検証した後、OS乱数源から128ビット種をbaseline/candidate用に各組一つずつ抽出し、`pilot` または `confirmation` と局面ファイルのSHA-256を含むJSONへ保存する。同じ数値の種が偶然重なっても引き直さない。出力は新規パス限定。比較CLIは `--seed` と `--seed-list` のどちらか一方を要求する。`--workers` は1〜4、既定値1で、2〜4はspawnプロセス並列を使う。種一覧実験では局面JSONのバイト列・順序・ID・局面ごとの組数を一覧と照合してから対局する。逐次の種一覧条件は `kaname-shogi-comparison-conditions-v2`、複数worker条件はv3とし、`execution` に `executor=process-pool` とworker数を保存する。C2、支えのない駒方式、またはV比較専用方式を使う場合は `policy_parameters` にbaseline/candidateの実効重みを保存する。V比較専用識別子は `material-piece-threat-v0`（10M+U+0V）と `material-piece-threat-v1`（10M+U+1V）で、比較CLIだけが受け付ける。`--seed` 実験は逐次conditions v1、並列conditions v3を使うが、現在の分析CLIは種一覧を保存したv2/v3だけを受け付けるため、これらの `--seed` 結果は分析できない。
 
 予定の各組は同じ開始盤面・駒配置で二局を行い、方式の先後だけ交換する。二局内は同じ方式別種を保つ。棋譜・summaryを含む出力先は新規パスで、同じ一覧の再実行は再現性の確認であり、独立した追加標本ではない。時間・環境情報を含む全出力のバイト一致は期待しない。準備・比較・分析CLIのヘルプが引数の正本である。
 

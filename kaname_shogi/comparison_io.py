@@ -51,6 +51,8 @@ _POLICIES = {
     "material-king-safety": movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY,
     "material-undefended-piece-material-only": movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY,
     "material-undefended-piece": movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+    "material-piece-threat-v0": movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0,
+    "material-piece-threat-v1": movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
     "two-ply-material": movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
     "full-width-4": movegen.MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
     "alpha-beta-4": movegen.MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
@@ -447,6 +449,8 @@ def conditions_payload(
             movegen.MoveSelectionPolicy.MATERIAL_KING_SAFETY,
             movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE_MATERIAL_ONLY,
             movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+            movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0,
+            movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
         } & {config.baseline, config.candidate}:
             payload["policy_parameters"] = {
                 "baseline": _policy_parameters(config.baseline),
@@ -507,6 +511,20 @@ def _policy_parameters(policy: movegen.MoveSelectionPolicy) -> dict[str, object]
         return {"material": 10, "undefended": 0, "mate_priority": True}
     if policy is movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE:
         return {"material": 10, "undefended": 1, "mate_priority": True}
+    if policy is movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0:
+        return {
+            "material": 10,
+            "undefended": 1,
+            "supported_threat": 0,
+            "mate_priority": True,
+        }
+    if policy is movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1:
+        return {
+            "material": 10,
+            "undefended": 1,
+            "supported_threat": 1,
+            "mate_priority": True,
+        }
     return {}
 
 

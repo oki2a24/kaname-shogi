@@ -2,13 +2,15 @@
 
 ## 現在地（2026-10-31）
 
-Vの設計・実装計画を承認後、本人は比較の二段階案（V典型局面の予備比較、独立した幅広い局面の確認比較）を選び、設計と実装計画の全体を2026-10-31に明示承認した。本人は「実装」を比較CLIへの接続とし、予備・確認の両方を `--workers 4` で実施するよう指定した。最初に主線候補を選んだ理由は聞いていないため推測しない。「駒の働き・活性度」は以前に示した例であり、本人が選んだ評価項目ではない。Vの比較接続・実験の具体条件・非ゴールは[比較設計](plans/2026-10-31-supported-lower-value-threat-comparison-design.md)と[承認済み実装計画](plans/2026-10-31-supported-lower-value-threat-comparison-implementation-plan.md)を参照する。
+V比較設計と実装計画は本人承認済み。現在の作業場所は `/Users/oki2a24/.codex/worktrees/undefended-piece-integration/kaname-shogi`、branchは `codex/supported-lower-value-threat-comparison`。開始時に指定されたGit確認はbranch・main・HEADを実測して完了している。元の `/Users/oki2a24/kaname-shogi` は変更しない。
 
-**再開境界：** 設計・実装計画承認後に新セッションへ移ることを本人が選択した。現セッションでは引き継ぎを記録・コミットし、TDD、コード・テスト変更、実装、比較実行には着手しない。次のセッションで本人が[引き継ぎ](handover-supported-lower-value-threat-comparison.md)の再開プロンプトを入力した後、承認済み計画に従って比較CLIだけへ接続する。予備は専用5局面・50組/100局、確認は別の幅広い6局面・2040組/4080局を提案条件としており、局面列と独立期待値、seed一覧、出力先は実行前に固定する。比較実行前に `--help` でworker 4が利用可能か確認し、不可なら縮退せず止める。実行中は約一時間ごとに実測進捗を確認する。
+Task 1〜3の比較専用V0/V1実装、二種類の固定局面JSONと独立M/U/V期待値、短いworker 4 pipelineは完了。Task 4の8種類の代表変異、228件の関連テスト、全体1031テスト・84モジュール・25.146秒、Ruff import/format/check、差分検査も成功した。Task 1〜3の独立レビューはすべてCritical 0 / Important 0 / Minor 0。Task 4時点のブランチ全体レビューと長時間実験は次に行う。
 
-引き継ぎ時点の作業場所は `/Users/oki2a24/.codex/worktrees/undefended-piece-integration/kaname-shogi`、topic branch は `codex/supported-lower-value-threat-comparison`。開始HEADと `main` はともに `5a8395a270bc8c9b308e801b7bc65fa2f9dca072`。この引き継ぎ文書群はtopic branch上の本コミットに含める。本コミットをmainへ統合・pushしない。実装worktreeの `.agents/tasks/` と `data/comparison/runs/` の未追跡物、特にC2保護対象4件を保持する。元の `/Users/oki2a24/kaname-shogi` には既存の文書変更と未追跡物があるため、切替・上書き・clean/reset・削除をしない。U候補のShogiHome実践は遠隔PCへアクセス可能との本人連絡後に再提案する。通常CLIのSFEN入出力、飛車可動性v2、玉安全度との合成、U評価の二手・四手適用は今回へ追加しない。Vの固定局面・一手選択の検証は棋力向上を示さない。最後の理解確認の回答と補足は[学習記録](learning/supported-piece-lower-value-threat.md)にある。
+独立全体レビューの初回Minor（READMEのV方式記載不足）は解消して再確認を受け、最終結論はCritical 0 / Important 0 / Minor 0。次に記録と対象変更をtopic branchへコミットする。main統合・pushは行わない。ユーザーの明示指示により `.agents/tasks/` と `data/comparison/runs/` は変更しない。したがって比較seed一覧と実験成果物は、同じ `data/comparison/` のその外側に新規固有パスを用意する。予備は専用5局面×10組=50組/100局、`--max-plies 1024`、`--workers 4`。確認は別の幅広い6局面×340組=2040組/4080局で、手数上限は予備後・確認開始前に最終固定する。両比較とも実行直前の `--help` がworker 4を示さなければ縮退せず停止する。出力rootは `/private/tmp/kaname-shogi-supported-piece-threat-comparison-2026-10-31-4w`。seed一覧は `pilot-seeds-v1.json` / `confirmation-seeds-v1.json`、出力先は `pilot-2026-10-31-4w` / `confirmation-2026-10-31-4w`、分析JSONは `pilot-analysis-v1.json` / `confirmation-analysis-v1.json` とし、いずれも未作成である。seed一覧とconditionsは各比較の結果を見る前に確定し、予備を確認判定に加算しない。長時間実行では保存summaryの実測完了局・組・残数・失敗を約一時間ごとに確認する。
 
-**作業境界：** Vの比較CLI接続、TDD、コード・テスト変更、比較実行は未着手。現在のtopic branchで引き継ぎコミットだけを作成し、取り込み・pushはしない。元の作業ディレクトリと未追跡保護データは変更しない。
+統計は承認済み条件（95% Hoeffding区間、50%境界、55%効果目標、80%検出力案）を使い、結論は固定局面・一手選択・実行条件に限定する。V比較CLIの仕様とM/U/V局面期待値は[確定知識](knowledge/supported-piece-lower-value-threat.md)および[学習記録](learning/supported-piece-lower-value-threat.md)、計画・承認は[比較設計](plans/2026-10-31-supported-lower-value-threat-comparison-design.md)と[実装計画](plans/2026-10-31-supported-lower-value-threat-comparison-implementation-plan.md)を参照する。
+
+**作業境界：** 通常CLI・USI、通常CLIのSFEN入出力、飛車可動性v2、玉安全度合成、Uの二手・四手適用は追加しない。保護対象の作業ディレクトリ・runs・C2データは変更しない。最終理解確認は統合先の承認済み検証ができるまで保留し、未回答を記録しない。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 

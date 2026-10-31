@@ -1,0 +1,109 @@
+{
+  "format": "kaname-shogi-comparison-positions-v1",
+  "id": "supported-piece-threat-confirmation-v1",
+  "positions": [
+    {
+      "id": "confirmation-opening-side-pawns",
+      "setup_moves": [
+        "2g2f",
+        "8c8d",
+        "7g7f",
+        "3c3d",
+        "6g6f",
+        "4c4d"
+      ],
+      "rationale": "開局の左右の歩と角道を進めた6手の局面。"
+    },
+    {
+      "id": "confirmation-king-side-development",
+      "setup_moves": [
+        "7g7f",
+        "8c8d",
+        "6g6f",
+        "3c3d",
+        "5g5f",
+        "4c4d",
+        "4g4f",
+        "5c5d",
+        "4i4h",
+        "6c6d",
+        "3i3h",
+        "3a3b",
+        "6i6h",
+        "4a4b",
+        "8g8f"
+      ],
+      "rationale": "中央歩と金・銀を進め、後手の銀・金も展開した15手の駒組み後局面。"
+    },
+    {
+      "id": "confirmation-bishop-exchange",
+      "setup_moves": [
+        "7g7f",
+        "3c3d",
+        "8h2b+",
+        "3a2b",
+        "6g6f",
+        "4c4d",
+        "4g4f",
+        "5c5d",
+        "4i4h",
+        "6c6d"
+      ],
+      "rationale": "角交換後に双方が歩と金を進めた10手の局面。双方が角を持ち駒にしている。"
+    },
+    {
+      "id": "confirmation-rook-pawn-push",
+      "setup_moves": [
+        "2g2f",
+        "8c8d",
+        "2f2e",
+        "8d8e",
+        "6g6f",
+        "3c3d",
+        "6i6h",
+        "4c4d",
+        "7g7f",
+        "3a4b",
+        "7f7e"
+      ],
+      "rationale": "先手2筋と後手8筋の歩を進め、双方の金銀も動いた11手の局面。"
+    },
+    {
+      "id": "confirmation-central-development",
+      "setup_moves": [
+        "5g5f",
+        "5c5d",
+        "6g6f",
+        "4c4d",
+        "4g4f",
+        "6c6d",
+        "4i4h",
+        "6a6b",
+        "3g3f",
+        "3c3d",
+        "6i6h",
+        "2a3c"
+      ],
+      "rationale": "中央と隣接筋の歩に加え、双方の金銀桂を展開した12手の駒組み後局面。"
+    },
+    {
+      "id": "confirmation-pawn-exchange",
+      "setup_moves": [
+        "5g5f",
+        "3c3d",
+        "7g7f",
+        "8c8d",
+        "5f5e",
+        "5c5d",
+        "6g6f",
+        "5d5e",
+        "2g2f",
+        "6c6d",
+        "7i7h",
+        "4c4d",
+        "6i6h"
+      ],
+      "rationale": "中央の歩交換後に双方の別筋の歩・銀・金を進めた13手の局面。"
+    }
+  ]
+}
