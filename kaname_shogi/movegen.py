@@ -110,6 +110,43 @@ def _move_candidates_for_piece(board: Board, source: Square) -> list[Square]:
     return candidate_functions[piece.piece_type](board, source)
 
 
+def is_piece_attacking_square(board: Board, source: Square, target: Square) -> bool:
+    """指定駒がtargetへ利いているかを返す読み取り操作。
+
+    引数:
+        board: 指定駒と対象マスを含む盤面。盤面は変更しない。
+        source: 利きの起点となる盤上駒の筋・段。
+        target: 利きの有無を調べる筋・段。
+
+    戻り値:
+        sourceの駒の候補マスにtargetが含まれる場合はTrue。sourceが空か、sourceと
+        targetが同じならFalse。
+
+    副作用:
+        なし。味方駒の占有マスを確認するときだけ複製盤を使う。
+
+    前提条件:
+        board、source、targetが有効な盤面・盤内マスである。手番・合法性・ピンを
+        判定せず、既存の候補生成規則による幾何学的な利きを返す。
+
+    対象が味方駒で占有される場合だけ対象マスを複製盤上で空け、他の遮蔽を保って
+    候補生成へ委譲する。対象自身を利きの起点にしない。駒種別の動きを再実装せず、
+    個別の攻撃元を識別するため、攻撃側全体を調べる既存照会と分けている。
+    候補生成中の例外は呼び出し元へ伝播する。
+    """
+    piece = board.piece_at(source)
+    if piece is None or source == target:
+        return False
+
+    query_board = board
+    target_piece = board.piece_at(target)
+    if target_piece is not None and target_piece.side == piece.side:
+        query_board = board.copy()
+        query_board.set_piece(target, None)
+
+    return target in _move_candidates_for_piece(query_board, source)
+
+
 def is_square_attacked(board: Board, target: Square, attacking_side: Side) -> bool:
     """指定側の盤上駒がtargetへ利いているかを返す読み取り操作。
 
