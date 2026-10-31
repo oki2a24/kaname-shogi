@@ -8,7 +8,7 @@
 
 統合用worktreeは /Users/oki2a24/.codex/worktrees/undefended-piece-integration/kaname-shogi で、ローカルmainを検証した。元の /Users/oki2a24/kaname-shogi は codex/c1-analysis-performance-investigation の既存文書変更と未追跡データを保持するため、切替・変更していない。実装worktreeの .agents/tasks/ と data/comparison/runs/、C2保護対象4件も保持した。
 
-最後の理解確認に本人は「V=0」と回答し、Vが「相手側の対象枚数−自分側の対象枚数」であることも説明した。回答と補足を[学習記録](learning/supported-piece-lower-value-threat.md)へ追記済み。次はREADME・[ロードマップ](roadmap-non-material-position-evaluation.md)・[方向性](02-project-direction.md)と候補プール・現行評価を照合した候補を提示し、本人の選択を待つ。選択前に次テーマの設計・実装へ進まない。ShogiHomeのU候補実対局はPCアクセス可能との本人連絡後に再提案する保留事項。CLIのSFEN入出力、飛車可動性v2、玉安全度との合成、二手・四手へのU適用は今回へ追加していない。
+最後の理解確認に本人は「V=0」と回答し、Vが「相手側の対象枚数−自分側の対象枚数」であることも説明した。回答と補足を[学習記録](learning/supported-piece-lower-value-threat.md)へ追記済み。Vの棋力比較は未実施で、比較CLI・通常CLI・USIにも未接続。次の主線候補は、VのC段階比較へ進む案と、新しい評価項目のA段階を選ぶ案。本人の選択を待ち、比較設計・実行や新テーマの学習・設計・実装にはまだ進まない。ShogiHomeのU候補実対局はPCアクセス可能との本人連絡後に再提案する保留事項。CLIのSFEN入出力、飛車可動性v2、玉安全度との合成、二手・四手へのU適用は今回へ追加していない。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 
