@@ -4,7 +4,7 @@
 
 主線の次項目として本人が選んだテーマを対話で具体化し、「支えがある駒への低価値駒の利き」Vを設計した。本人の最初の主線候補選定理由は聞いていないため推測しない。「駒の働き・活性度」は以前に示した例であり、本人が選んだ項目ではない。設計と実装計画の全体承認を受け、ネイティブ実行でTask 1〜4を完了した。合成式は10M+U+Vで、固定局面・一手選択・両側反転を確認した。棋力向上や重みの最適性は検証していない。詳細は[学習記録](learning/supported-piece-lower-value-threat.md)、[確定知識](knowledge/supported-piece-lower-value-threat.md)、[設計](plans/2026-10-31-supported-piece-lower-value-threat-design.md)、[実装計画](plans/2026-10-31-supported-piece-lower-value-threat-implementation-plan.md)。
 
-通常の完了手順として、引き継ぎ文書コミット 37719073 を除く評価機能・記録の5コミットを、クリーンな統合worktreeでローカルmainへfast-forward統合した。main上の全体検証は1014件・79モジュールが22.464秒で成功し、Ruff format確認137ファイル、Ruff check、差分検査も成功した。引き継ぎ文書コミットは統合・pushしていない。通常手順に沿って、統合済みmainをorigin/mainへpushした。
+通常の完了手順として、引き継ぎ文書コミット 37719073 を除く評価機能・記録の5コミットを、クリーンな統合worktreeでローカルmainへfast-forward統合した。main上の全体検証は1014件・79モジュールが22.464秒で成功し、Ruff format確認137ファイル、Ruff check、差分検査も成功した。引き継ぎ文書コミットは統合・pushしていない。origin/mainへのpushは自動レビューにより拒否され、未実施。理由は宛先へのpushについてユーザーの明示承認がないこと。origin/mainはaaf224bdのままで、ローカルmainが先行している。回避手段で再試行せず、明示承認を待つ。
 
 統合用worktreeは /Users/oki2a24/.codex/worktrees/undefended-piece-integration/kaname-shogi で、ローカルmainを検証した。元の /Users/oki2a24/kaname-shogi は codex/c1-analysis-performance-investigation の既存文書変更と未追跡データを保持するため、切替・変更していない。実装worktreeの .agents/tasks/ と data/comparison/runs/、C2保護対象4件も保持した。
 
