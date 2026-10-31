@@ -107,6 +107,6 @@ Task 4のRed確認では、公開評価操作が未定義であることをcalla
 
 本人の「普段の流れ通り続けて」の指示を受け、クリーンな統合用worktree /Users/oki2a24/.codex/worktrees/undefended-piece-integration/kaname-shogi でローカルmainへfast-forwardした。作業ブランチの評価機能・記録コミット5件（3576644e、be16c2b0、bdf43dd9、7f810acc、3864897a）を引き継ぎ文書コミット 37719073 を除いて適用した。main上の統合コミットは 8c4d5366、a405bc62、ec7a6cfc、07e38d9e、b25b7d7d。引き継ぎ文書コミットはmainおよびorigin/mainへ含めていない。
 
-統合後のmainで python3 scripts/run_tests_parallel.py は1014件・79モジュール、22.464秒で成功した。Ruff format確認は137ファイル、Ruff check、git diff --check も成功。先行する独立ブランチレビューは最終Critical 0 / Important 0 / Minor 0。origin/mainへの通常pushを試みたが、自動レビューに「リモートへのpushは明示承認されていない」として拒否された。pushや強制pushの回避手段は使っていない。ローカルmainはorigin/mainより先行し、origin/mainはaaf224bdのまま。元の /Users/oki2a24/kaname-shogi は別ブランチの既存文書変更と未追跡データを保持するため切替・編集していない。実装worktreeの .agents/tasks/ と data/comparison/runs/、C2保護対象4件も保持した。
+統合後のmainで python3 scripts/run_tests_parallel.py は1014件・79モジュール、22.464秒で成功した。Ruff format確認は137ファイル、Ruff check、git diff --check も成功。先行する独立ブランチレビューは最終Critical 0 / Important 0 / Minor 0。最初のpushは自動レビューに拒否されたため、本人からorigin/mainへの明示承認を得て通常のpushを再実行し成功した。強制pushは使っていない。ローカルmainとorigin/mainが同期することを確認した。元の /Users/oki2a24/kaname-shogi は別ブランチの既存文書変更と未追跡データを保持するため切替・編集していない。実装worktreeの .agents/tasks/ と data/comparison/runs/、C2保護対象4件も保持した。
 
 最後の理解確認は統合後に一問だけ提示する予定で、まだ実施していない。ShogiHomeでのU候補実対局も遠隔PCへアクセス可能との本人連絡待ちで保留する。
