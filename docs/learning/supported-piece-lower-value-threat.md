@@ -164,8 +164,17 @@ Task 1は方式名未登録を含むassertion Redから始め、同じ評価器�
 
 この固定テスト・短い一手pipeline・変異検査は、提案した局面における契約と成果物の接続を確認する。4,080局での強さ、一般棋力向上、別局面への一般化は示さない。
 
-### 未完了と次の検証
+### 予備比較の実測（2026-10-31）
 
-長時間比較はまだ始めていない。出力rootと全ファイル名を `/private/tmp/kaname-shogi-supported-piece-threat-comparison-2026-10-31-4w` 配下に固定した。seed一覧は `pilot-seeds-v1.json` / `confirmation-seeds-v1.json`、予備・確認の出力先は `pilot-2026-10-31-4w` / `confirmation-2026-10-31-4w`、分析出力は `pilot-analysis-v1.json` / `confirmation-analysis-v1.json`。rootと全出力先は未作成で、各seed一覧・conditionsのhashを対局結果を見る前に記録する。予備は5局面×10組=50組/100局、`--max-plies 1024`、`--workers 4`。確認は独立した6局面×340組=2040組/4080局、手数上限1024を予備後・確認前に最終固定する。予備は確認判定へ加算しない。実行時の `--help` は `--workers {1,2,3,4}` を示して4対応を確認済みであり、実行条件はworker 4に固定する。保護対象の `data/comparison/runs/` は使わない。確認比較は95% Hoeffding区間・50%境界・55%効果目標・80%検出力案で主判定し、結論を固定局面・一手選択・実行条件に限定する。
+結果を見る前にpilot用5局面、独立M/U/V期待値、10組/局面、1024手上限、worker 4、seed一覧、conditions、出力先を固定した。局面SHA-256 `adb79402b2927b1e8b95a13ce0568299a4ed170517989320b5ab593aa70dbd2e`、seed一覧SHA-256 `66f085c6c0b44740320c04cd883aebe093d4b52b062696122fd0edd084e0ba44`、凍結conditions SHA-256 `dd59c0f24a0eb377bf6a7345dc1c815bdf7fa54593cb2e61aa6f7f806fbd2b8e`。実際に保存された `conditions.json` は事前スナップショットと完全一致した。凍結manifestは `/private/tmp/kaname-shogi-supported-piece-threat-comparison-2026-10-31-4w/pilot-freeze-v1.json`（SHA-256 `713f22e92fa038e4377d0877b801dfcc5da6aa283ff869c071417dd88799cbf7`）。
 
+出力先は `/private/tmp/kaname-shogi-supported-piece-threat-comparison-2026-10-31-4w/pilot-2026-10-31-4w`。50組・100局が約30分31秒で完了し、詰み99局、合法手なし1局、通常千日手・連続王手負け・双方連続王手未裁定・手数上限・故障・中断は各0だった。分析JSONは `/private/tmp/kaname-shogi-supported-piece-threat-comparison-2026-10-31-4w/pilot-analysis-v1.json`。候補方式得点区間は `[0.368, 0.752]` で、分析CLIの判定は「予備比較（強さの結論は出さない）」。この50組を確認比較へ加算しない。
+
+### 確認比較の事前固定と進捗
+
+予備で1024手上限到達が0だったため、確認上限は初期案の1024手を維持した。確認セットは予備と別の6局面で重複なし。独立期待値は5局面が(M,U,V)=(0,0,0)、`confirmation-pawn-exchange` が(-2,0,0)。2040組/4080局、`purpose=confirmation`、worker 4、95% Hoeffding区間・50%境界・55%効果目標・80%検出力案、未決着は得点範囲[0,1]とした。局面SHA-256 `e717298db4f2ae9b078266786fa13cafd267713063b1ee3f6269fe2396c37243`、seed一覧SHA-256 `b321986cd654dfaf3de01e9e0e402dc3d4f7c8e374748a2889ac2178035d2a93`、凍結conditions SHA-256 `29e683dbd8176c4edf26e8b9238c940affd1b217d28016b3ffdb297e163bc397`。実際の保存conditionsも事前スナップショットと一致した。凍結manifestは `/private/tmp/kaname-shogi-supported-piece-threat-comparison-2026-10-31-4w/confirmation-freeze-v1.json`（SHA-256 `5aa3dc9c29af1087f882d6f6961df03fbc327680d7cbd4d00c2535d83a8db0a1`）。
+
+確認出力先は `/private/tmp/kaname-shogi-supported-piece-threat-comparison-2026-10-31-4w/confirmation-2026-10-31-4w`、分析出力予定は `confirmation-analysis-v1.json`。実行時 `--help` は `--workers {1,2,3,4}` を示し、4 workerを確認した。実行中の保存summaryは2026-10-31 16:56 JST時点で8/4080局終了、4/2040組完了、4069局未開始、error/interrupted 0。結果分析は未実施で、局面・seed・conditions・出力先は変更しない。結果を見て追加・差替えもしない。
+
+全seed一覧・比較・分析成果物は上記 `/private/tmp` に保存し、保護対象 `data/comparison/runs/`、C2保護4件、`.agents/tasks/`、元checkoutには触れていない。確認完了後にsummary・分析を点検し、実測・統計・適用範囲を追記する。
 最後の理解確認は本ブランチの実験成果と統合先検証がそろった後に行う。質問・回答がまだないため、回答や補足を作成していない。
