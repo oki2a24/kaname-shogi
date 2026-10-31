@@ -1,6 +1,6 @@
 # 支えがある駒への低価値駒の利き：実装計画
 
-> **実施状況:** 設計案・本計画の全体承認とネイティブ実行の本人選択を受けて作業中。Task 1〜3の実装・検証・Task別レビューが完了し、Task 4と最終検証を残す。チェック項目は実施結果に合わせて更新する。
+> **実施状況:** 設計案・本計画の全体承認とネイティブ実行の本人選択を受けて実施。Task 1〜4の実装・専用検証・Task別レビュー、全体検証・独立レビューを完了し、記録を確定してコミット準備中。
 
 **目標:** V枚数・差と10M+U+Vの合成を実装し、既存の評価差替式一手選択器へ注入できることを確認する。
 
@@ -112,22 +112,25 @@
 
 materialは正整数、他は非負整数、bool/floatを拒否する。エラー文言は既存の「駒得重みは1以上の整数にしてください」「対象差重みは0以上の整数にしてください」と、新規「支えあり脅威重みは0以上の整数にしてください」。M/U/Vを各一度読み、係数0でも呼び出し、例外を伝播する。
 
-- [ ] test_design_scores_and_zero_v：A/B/Cは既定209/209/210、V係数0なら210/209/210、逆視点は各負値。Uを二重加算しない。
-- [ ] test_all_terms_nonzero_and_custom_weights：DはM=10、U=−1、V=−1。既定98、(3,2,4)なら24、逆視点−98/−24。Dの歩8四は後手飛に狙われ無支えなのでUで一枚、V対象の角二枚・後手飛一枚とは別。
-- [ ] test_weights_and_dependency_contract：既定と凍結、(1,0,0)の受理、各フィールドへの−1/bool/float、material=0拒否。各依存操作のMockで一回・同じ引数、0でも呼出し、例外伝播、snapshot不変。ゼロ係数で評価項を省略する実装を検出する。
-- [ ] test_selects_escape_with_v_for_both_sides_and_orders：局面は先手玉9九・角5五・金4六、後手玉1二・歩5四、先手番。候補は角5五→6六（逃げる）と金4六→4五（支えを維持）。両方legal_movesに含まれ、適用後非詰みとassert。両枝M=21/U=0、Vは逃げ0/維持−1、既定210/209。先後反転・候補順反転でも逃げる手を選ぶ。
-- [ ] test_zero_v_keeps_both_candidates_tied：同じ二枝はV係数0で共に210。rng.choiceが元順の候補二つで一度呼ばれ、元局面snapshot不変。
-- [ ] test_mate_priority_with_new_evaluator：既存mate_caseを先後双方・両候補順で使用し合法性と詰み/非詰みを直接assert。新合成評価に10**30を加えたラッパーでも詰み手を選び、通常枝だけ評価される。空候補・枝独立性等の一般契約は既存test_one_ply_selectionが補完する。
-- [ ] 共通サイクルを実施。実行：python3 -m unittest discover -s tests -p 'test_material_piece_threat.py' -v および test_piece_threat_selection.py、test_one_ply_selection.py、test_undefended_piece_selection.pyを同方式で実行する。
+- [x] test_design_scores_and_zero_v：A/B/Cは既定209/209/210、V係数0なら210/209/210、逆視点は各負値。Uを二重加算しない。
+- [x] test_all_terms_nonzero_and_custom_weights：DはM=10、U=−1、V=−1。既定98、(3,2,4)なら24、逆視点−98/−24。Dの歩8四は後手飛に狙われ無支えなのでUで一枚、V対象の角二枚・後手飛一枚とは別。
+- [x] test_weights_and_dependency_contract：既定と凍結、(1,0,0)の受理、各フィールドへの−1/bool/float、material=0拒否。各依存操作のMockで一回・同じ引数、0でも呼出し、例外伝播、snapshot不変。ゼロ係数で評価項を省略する実装を検出する。
+- [x] test_selects_escape_with_v_for_both_sides_and_orders：局面は先手玉9九・角5五・金4六、後手玉4三・歩5四、先手番。候補は角5五→6六（逃げる）と金4六→4五（支えを維持）。両方legal_movesに含まれ、適用後非詰みとassert。両枝M=21/U=0、Vは逃げ0/維持−1、既定210/209。先後反転・候補順反転でも逃げる手を選ぶ。
+- [x] test_zero_v_keeps_both_candidates_tied：同じ二枝はV係数0で共に210。rng.choiceが元順の候補二つで一度呼ばれ、元局面snapshot不変。
+- [x] test_mate_priority_with_new_evaluator：既存mate_caseを先後双方・両候補順で使用し合法性と詰み/非詰みを直接assert。新合成評価に10**30を加えたラッパーでも詰み手を選び、通常枝だけ評価される。空候補・枝独立性等の一般契約は既存test_one_ply_selectionが補完する。
+- 計画時の選択局面は後手歩5四を後手玉が支えておらず、支えを保つ枝でUが+1になることがTask 4の接続確認で分かった。そのままではVだけを変える比較にならないため、歩5四を守る後手玉を4三へ置いた。両候補の合法性、非詰み、M=21/U=0、V差と得点差を再計算してからテストを確定した。評価仕様・対象範囲の変更ではない。
+- [x] 共通サイクルを実施。専用合成5件・一手接続3件、既存一手選択10件・U選択3件の合計21件が成功。全体 `python3 scripts/run_tests_parallel.py` は1014件・79モジュール・22.462秒で成功。Ruff format 137ファイル確認・check・差分検査も成功。
+
+Task 4では公開操作未定義とV重み0を無視する振る舞いのRedを確認し、M/U/V合成と一手選択接続後に専用8件を成功させた。各契約テストを個別に失敗させてから実装したとは記録しない。接続試験で計画局面の後手玉1二が後手歩5四を支えておらず、支え維持枝のUが+1となることを発見した。歩を守る後手玉4三へ修正し、合法手・非詰み・M=21/U=0・V差と合成点を再確認した。局面フィクスチャの修正であり評価仕様は変えていない。Refactor要否：不要。Task 4の独立レビューはCritical 0 / Important 0 / Minor 0。
 
 ## 検出力・全体検証・記録
 
-- [ ] 隔離コピーで代表変異を一つずつ入れ、狙ったassertion failureと復元後成功を記録する。Task 1は成駒値を元値化、Task 2は味方占有を除外/遮蔽を無視、Task 3は<=/支え条件反転/攻撃元重複/玉を安い攻撃元/片側固定、Task 4はV省略/U二重加算。追加変異は未解決リスクがある場合のみ。元checkoutやC2/Uデータに変異を入れない。
-- [ ] テストの単独検出と既存全体の補完を区別し、検出しない誤りと未検証を記録する。固定例を全配置の証明と呼ばない。
-- [ ] imports整理、format、check、差分確認後、python3 scripts/run_tests_parallel.pyで全発見モジュールを実行する。今回はランナーを変えないため逐次全体実行は通常不要。共有状態・順序依存を疑った場合は python3 -m unittest discover -s tests -v を併用する。
-- [ ] Task別レビュー後、ブランチ全体を新しい独立レビュアーが確認する。Critical/Importantを解消して再検証・再レビューし、Critical/Important/Minorと対応を学習記録へ残す。
-- [ ] docs/knowledge/supported-piece-lower-value-threat.mdを作成し、学習・設計・実装計画へ実績を追記。docs/README.mdの索引、resumeの承認段階を更新する。文書リンク・差分を確認し明示ステージでコミットする。
-- [ ] 元の作業ディレクトリへの取り込み状況を確認して報告する。main統合・pushを自動実行しない。統合承認後は取り込み先で検証し、最後の理解確認を一問ずつ行う。新項目・CLI接続へ自動移行しない。
+- [x] 隔離コピーで代表変異を一つずつ入れ、狙ったassertion failureと変異なしの作業ツリーでの成功を記録する。Task 1の成駒を基本価値へ戻す変異は `/private/tmp/kaname-shogi-task1-2-mutants-langsvd9/` のコピーで検出。Task 2の味方占有先を空けない変異も同コピー、途中駒を盤面から除去する変異は `/private/tmp/kaname-shogi-task2-blocker-mutant-1whyzcba/` で検出。Task 3は<=/支え条件反転/攻撃元重複/玉を安い攻撃元/片側固定、Task 4はV省略/U二重加算を完了。Task 4は `/private/tmp/kaname-shogi-task4-mutants-hngetkyw/` の隔離コピーで意図したassertion failureを確認し、変異なしの作業ツリーでは関連テストと全体テストが成功した。比較データは変更していない。
+- [x] テストの単独検出と既存全体の補完を区別し、検出しない誤りと未検証を記録する。固定例を全配置の証明と呼ばない。
+- [x] imports整理、format、check、差分確認後、python3 scripts/run_tests_parallel.pyで全発見モジュールを実行する。今回はランナーを変えないため逐次全体実行は通常不要。共有状態・順序依存を疑った場合は python3 -m unittest discover -s tests -v を併用する。
+- [x] Task別レビュー後、ブランチ全体を新しい独立レビュアーが確認する。初回はCritical 0 / Important 0 / Minor 0。追補文書の再確認でMinor 1（学習記録とREADME索引の進捗表示が古い）を受け、2箇所を更新。最終再確認はCritical 0 / Important 0 / Minor 0、追加指摘なし。レビュアーはテスト・Ruffを再実行していない。
+- [x] docs/knowledge/supported-piece-lower-value-threat.mdを作成し、学習・設計・実装計画へ実績を追記。docs/README.mdの索引、resumeの承認段階を更新した。変更した文書9件について相対Markdownリンク877件・見出し参照6件を確認し欠落0。差分確認後、対象ファイルだけを明示ステージし通常hook付きでコミットする。
+- [x] 元の作業ディレクトリを読み取り確認し、変更・取り込みがないことを報告する。main統合・pushは別途本人の明示承認を待つ。承認後の取り込み先検証と最後の理解確認を一問ずつ行い、新項目・CLI接続へ自動移行しない。
 
 ## 実行方式とセルフレビュー
 
