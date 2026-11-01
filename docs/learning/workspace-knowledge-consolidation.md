@@ -52,3 +52,5 @@ USI知識メモは四手二方式が接続時点では実機未確認だった�
 `usi-move-notation-record` には本人回答と設計再承認を含む学習記録の未コミット27行があり、元ディレクトリの未追跡 `worktree-preservation-2026-11-01/` にファイルと差分を退避し、元ファイルとのバイト一致を確認した。`b2-main-integration` には `.agents/tasks/`、C2保護4件、U比較結果があり、変更していない。他にも無視対象があるworktreeがある。既存worktreeはいずれも未削除、main統合・pushも未実施である。
 
 上記の整理状況と退避物は独立レビューでCritical 0、Important 0、Minor 0。退避ファイルとpatchの内容・SHA-256、main使用中の一時worktreeの状態、保護4件の存在を照合した。全9 worktreeの全ファイル内容は網羅していない。文書のみの変更のため製品テストは再実行していない。
+
+本人は `/private/tmp/kaname-shogi-main-integration` の削除を承認した。2026-11-01、追跡変更・未追跡・無視対象がないこととmainの `7a389a52` を再確認し、`git worktree remove` で同worktreeだけを削除した。mainの統合・pushは実施していない。残る8 worktreeと保護対象は保持している。
