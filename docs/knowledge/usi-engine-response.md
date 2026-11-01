@@ -25,7 +25,7 @@ option name Difficulty type combo default Random var Random var Material var Two
 
 設定値は `run_usi_engine` 内で `_UsiEngineState` と別に保持する。局の最初の `go` で有効値を局内方針として固定するため、後から届いた `setoption` は現在局の後続 `go` には影響しない。`usinewgame` は局面を消し、局内固定だけを解除して、設定値を次局へ残す。乱数器も設定・局面状態と別にし、一回のエンジン実行中で共有する。
 
-以前の三択通知・受付とそのShogiHome確認は、各リンク先に記録した当時の実績として保持する。2026-10-19に `FullWidth4`・`AlphaBeta4` を追加し、`game_search.search_move` をUSI入口へ接続した。先行する新二方式の局中固定・次局継承、未知値保持、時計予算・同一制御、応答状態・送信競合・実入口確認は[今回の実装・学習記録](../learning/four-ply-search-game-integration-plan.md)を参照する。この作業ではShogiHome実機を確認していないため、二新方式のGUI表示・対局互換性・応答時間は未検証である。
+以前の三択通知・受付とそのShogiHome確認は、各リンク先に記録した当時の実績として保持する。2026-10-19に `FullWidth4`・`AlphaBeta4` を追加し、`game_search.search_move` をUSI入口へ接続した。先行する新二方式の局中固定・次局継承、未知値保持、時計予算・同一制御、応答状態・送信競合・実入口確認は[今回の実装・学習記録](../learning/four-ply-search-game-integration-plan.md)を参照する。この接続作業の時点ではShogiHome実機を確認していなかった。その後、ShogiHome 1.28.2で `FullWidth4` と `AlphaBeta4` を各一局観察し、選択・応答・終局を確認した。これは限られた条件の実例であり、全局面の互換性や応答時間の上限は保証しない。条件と結果は[実機観察記録](../learning/shogihome-four-ply-practice-verification.md)を参照する。
 
 ## コマンドとエラー
 

@@ -2,9 +2,11 @@
 
 ## 現在地（2026-11-01）
 
+現在は本人が選択した文書整理を実施中。作業先は `/Users/oki2a24/kaname-shogi`、branchは `codex/documentation-maintenance`。[設計案](plans/2026-11-01-documentation-maintenance-design.md)は本人が2026-11-01に承認済み。共通手順はこのリポジトリ内で利用する。[実施計画案](plans/2026-11-01-documentation-maintenance-implementation-plan.md)を作成し、本人が2026-11-01に承認し、整理を実施中。次の非駒得評価項目は未選定の主線として保留し、ShogiHomeでのU実践もアクセス可能との本人連絡後に再提案する。
+
 作業は `/Users/oki2a24/kaname-shogi` だけで行い、開発は同じディレクトリ内の作業ブランチで行う。別worktreeや別cloneは使用しない。再開時は[作業場所と知識メモの継続点検](documentation-guide.md#作業場所と知識メモの継続点検)を適用し、Git状態と仮想環境のPython本体を確認する。
 
-2026-11-01、本人の希望により主線の作業先を `/Users/oki2a24/kaname-shogi` へ戻した。作業branchは `codex/next-non-material-evaluation-item`。元のC1作業の変更文書3件と、同名衝突する未追跡文書3件は内容照合後、元ディレクトリ内の未追跡 `migration-preservation-2026-11-01/original-documents.tar` と差分patchに退避した。元branch `codex/c1-analysis-performance-investigation` も保持する。既存の比較データとC2保護4件は保持し、本人の許可を得て追跡済みC2比較成果物23件を展開した。飛車可動性・玉安全度・Uの知識メモは現行の接続と比較結果に合わせて修正した。具体的な次の評価項目は未選定のままである。移行経緯と文書レビューは[整理記録](learning/workspace-knowledge-consolidation.md)にある。過去の引き継ぎにある作業先は作成時点の情報である。
+2026-11-01、本人の希望により主線の作業先を `/Users/oki2a24/kaname-shogi` へ戻した。移行直後の作業branchは `codex/next-non-material-evaluation-item`。元のC1作業の変更文書3件と、同名衝突する未追跡文書3件は内容照合後、元ディレクトリ内の未追跡 `migration-preservation-2026-11-01/original-documents.tar` と差分patchに退避した。元branch `codex/c1-analysis-performance-investigation` も保持する。既存の比較データとC2保護4件は保持し、本人の許可を得て追跡済みC2比較成果物23件を展開した。飛車可動性・玉安全度・Uの知識メモは現行の接続と比較結果に合わせて修正した。具体的な次の評価項目は未選定のままである。移行経緯と文書レビューは[整理記録](learning/workspace-knowledge-consolidation.md)にある。過去の引き継ぎにある作業先は作成時点の情報である。
 
 V比較CLI接続・予備比較・確認比較・分析を完了し、本人承認後にmainへ統合した。確認比較は事前固定6局面・一手選択・指定条件の範囲で改善を支持したが、一般局面の棋力向上を示さない。通常CLI・USI接続の設計案・実装計画は本人が全体承認し、実装も承認した。V1は通常CLI候補7とUSI `MaterialSupportedPieceThreat` に接続済み。通常CLI CVCは先後を入れ替えた2局を既定の10分・30秒で完局し、開始表示・両側の実着手・終局を確認した。詳細は[設計](plans/2026-11-01-v-normal-cli-usi-design.md)、[実装計画](plans/2026-11-01-v-normal-cli-usi-implementation-plan.md)、[学習記録](learning/supported-piece-lower-value-threat.md)にある。
 
@@ -26,13 +28,13 @@ B2は承認済み4Taskの実装、検証、Task別・最終独立レビューを
 
 ### C2作業時点の環境・Git状態（履歴・2026-10-28）
 
-C2作業対象は `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`。開始時は `main` と `origin/main` が同期した `cdd46519` でcleanだった。実装・検証・レビューは作業ブランチ `codex/c2-king-safety-evaluation` で行い、最終全体テストは943件・67モジュールが25.382秒で成功した。別worktreeではREADMEのセットアップスクリプトが対象外として停止したため、専用仮想環境を作り固定版Ruff 0.16.10とhook `.githooks` を確認した。製品変更前baselineは928件・62モジュールが23.349秒で成功した。これらは当時の記録であり、現在のブランチ・状態・検証は冒頭の現在地と[C2後の統合記録](learning/c2-king-safety-evaluation.md)を参照する。元の `/Users/oki2a24/kaname-shogi` は未コミット文書・比較データを保持するため、clean/reset/切替を行わず保護している。B2後の本人回答「少なくとも先手玉の周囲に後手の利きが２つ以上ある状態」と、S=-2が表す差ちょうど2の補足は[学習記録](learning/king-safety-design.md)に記録済み。通常CLIのSFEN入出力と飛車可動性バージョン2は保留し、C2へ自動追加しない。
+C2作業対象は `/Users/oki2a24/.codex/worktrees/b2-main-integration/kaname-shogi`。開始時は `main` と `origin/main` が同期した `cdd46519` でcleanだった。実装・検証・レビューは作業ブランチ `codex/c2-king-safety-evaluation` で行い、最終全体テストは943件・67モジュールが25.382秒で成功した。別worktreeではREADMEのセットアップスクリプトが対象外として停止したため、専用仮想環境を作り固定版Ruff 0.16.10とhook `.githooks` を確認した。製品変更前baselineは928件・62モジュールが23.349秒で成功した。これらは当時の記録であり、現在のブランチ・状態・検証は冒頭の現在地と[C2後の統合記録](learning/c2-king-safety-evaluation.md)を参照する。当時は元の `/Users/oki2a24/kaname-shogi` の未コミット文書・比較データを保持するため、clean/reset/切替を行わず保護していた。B2後の本人回答「少なくとも先手玉の周囲に後手の利きが２つ以上ある状態」と、S=-2が表す差ちょうど2の補足は[学習記録](learning/king-safety-design.md)に記録済み。通常CLIのSFEN入出力と飛車可動性バージョン2は保留し、C2へ自動追加しない。
 
 ## C1開始前の状態（履歴）
 
 2026-10-24、主線A1「駒得以外の局面評価を一項目から学び設計する」の飛車可動性について、本人承認済み計画に従うB1実装・検証・記録を作業ブランチで完了し、本人承認後にローカルmainへ統合した。未成飛車の可動性差、名前付き重みによる駒得との合成評価、評価関数を差し替えられる一手選択を個別ファイルへ追加した。詳細は[学習・本人回答・実装・検証記録](learning/rook-mobility-design.md)、[確定知識](knowledge/rook-mobility-evaluation.md)、[承認済み設計](plans/2026-10-24-rook-mobility-design.md)、[実装計画と実績](plans/2026-10-24-rook-mobility-implementation-plan.md)を参照する。
 
-作業場所は `/Users/oki2a24/kaname-shogi`、現在の作業ブランチは `main`。C1引き継ぎ開始時のGit状態と未追跡の保持物は[C1引き継ぎ](handover-c1-rook-mobility-evaluation.md)を参照する。実装コミットは `8f39c9b`、`e9a3d45`、`bc6651b`、統合時点は `06453c9`。統合先で全体テスト729件・48モジュールが14.634秒で成功し、Ruff（90ファイル変更なし）・差分検査・文書リンク790件/アンカー5件（欠落0）も成功した。代表変異7件は意図したassertion failureですべて検出済み。独立コードレビューはCritical 0 / Important 0 / Minor 1、最終文書レビューはCritical 0 / Important 0で追加指摘なし。Minorは異なる手種の兄弟枝を混在させた相互干渉の直接検査がない範囲上の残件として学習記録に残した。pushはしていない。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持している。
+当時の作業場所は `/Users/oki2a24/kaname-shogi`、当時の作業ブランチは `main`。C1引き継ぎ開始時のGit状態と未追跡の保持物は[C1引き継ぎ](handover-c1-rook-mobility-evaluation.md)を参照する。実装コミットは `8f39c9b`、`e9a3d45`、`bc6651b`、統合時点は `06453c9`。統合先で全体テスト729件・48モジュールが14.634秒で成功し、Ruff（90ファイル変更なし）・差分検査・文書リンク790件/アンカー5件（欠落0）も成功した。代表変異7件は意図したassertion failureですべて検出済み。独立コードレビューはCritical 0 / Important 0 / Minor 1、最終文書レビューはCritical 0 / Important 0で追加指摘なし。Minorは異なる手種の兄弟枝を混在させた相互干渉の直接検査がない範囲上の残件として学習記録に残した。pushはしていない。未追跡 `.antigravity/tasks/` と `.venv.backup-2026-10-22/` は保持している。
 
 A1の学習・設計、B1の実装・main統合・統合先検証、最後の理解確認と回答記録まで完了した。本人は次の主線目標C1「飛車可動性を接続して比較評価する」を選定済み。C1の学習・調査・設計はまだ始めておらず、新セッション開始待ちである。接続先、比較条件、判定方法は未決定で、選定は実装承認ではない。再開時は[C1引き継ぎ](handover-c1-rook-mobility-evaluation.md)のプロンプトから始める。 引き継ぎ準備では更新した6文書の相対Markdownリンク792件が欠落0件、`git diff --check`が成功した。文書のみの変更のため製品テストは再実行していない。通常CLIのSFEN入出力と「可動性バージョン2」は別候補として[next-topics](next-topics.md)へ保持する。P2以前の記述は履歴であり、現在の段階は本節と学習記録を正本とする。
 
