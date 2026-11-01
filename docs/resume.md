@@ -2,9 +2,9 @@
 
 ## 現在地（2026-11-02）
 
-主線の具体項目として「支えのない被攻撃駒の価値を評価へ反映する」を本人が選定した。対象一枚は攻撃元の数によらず一度だけ数え、従来のU（支えのない被攻撃駒の枚数差）を価値合計差へ置き換え、M（駒得）とV（支えあり低価値駒脅威）を保つ。価値合計差の仮重みは1。設計・実施計画とネイティブ方式を本人が承認し、集計・合成・既存一手選択器への注入を実装した。全体1054件・87モジュール（コミット後24.614秒）、Ruff、独立レビューが成功し、最終判定はCritical 0 / Important 0 / Minor 0。topic commitは `23306c01`。[本人回答・実装・検証の記録](learning/undefended-piece-value.md)、[確定仕様](knowledge/undefended-piece-value.md)、[設計](plans/2026-11-02-undefended-piece-value-design.md)、[実施計画](plans/2026-11-02-undefended-piece-value-implementation-plan.md)を参照する。比較CLI接続・比較実行は別途承認待ちで、棋力向上は未検証。A番号は割り当てていない。
+主線の具体項目「支えのない被攻撃駒の価値を評価へ反映する」は、集計・合成・既存一手選択器への注入まで実装・検証し、mainへ統合してorigin/mainへpushした。統合後テストは1054件・87モジュール・24.711秒で成功。独立レビュー最終判定はCritical 0 / Important 0 / Minor 0。最後の理解確認では本人が「-14。2枚から狙われていても一回計算するのみ」と回答し、学習記録へ追記した。[回答・実装・検証の記録](learning/undefended-piece-value.md)、[確定仕様](knowledge/undefended-piece-value.md)、[設計](plans/2026-11-02-undefended-piece-value-design.md)、[実施計画](plans/2026-11-02-undefended-piece-value-implementation-plan.md)を参照する。
 
-作業先は `/Users/oki2a24/kaname-shogi`、branchは `codex/next-evaluation-after-docs`、実装topic commitは `23306c01`（開始HEAD `135976dc`）。`main` は `9b72404e` のままで未統合。別worktree・cloneは使用していない。Git状態はセッション再開時に `git status --short --branch` と `git log -3 --oneline --decorate` で確認する。比較データ・`.agents/tasks/`・C2保護4件と退避アーカイブを保持した。main統合とpushはそれぞれ別承認待ち。開始時の背景は[引き継ぎ](handover-mainline-after-documentation.md)、文書整理の完了事項は[整理記録](learning/workspace-knowledge-consolidation.md)に保存済み。ShogiHomeでのU候補実践は、アクセス可能との本人連絡後に再提案する保留目標。
+作業先は `/Users/oki2a24/kaname-shogi`。再開時に `git status --short --branch` と `git log -3 --oneline --decorate` を確認する。新しい評価は比較CLIへ未接続で、棋力向上は未検証。主線の現在段階は次の接続・比較評価を選ぶところ。ShogiHomeでのU候補実践はアクセス可能との本人連絡後に再提案する保留目標。本人は次テーマをまだ選んでいない。選択肢と位置付けは[次テーマ候補](next-topics.md)、主線全体は[ロードマップ](roadmap-non-material-position-evaluation.md)を参照する。開始時の背景は[引き継ぎ](handover-mainline-after-documentation.md)、文書整理の完了事項は[整理記録](learning/workspace-knowledge-consolidation.md)に保存済み。
 
 ### 作業場所の整理と前テーマの履歴
 
