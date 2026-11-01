@@ -2,6 +2,8 @@
 
 ## 現在地（2026-11-01）
 
+再開時は[作業場所と知識メモの継続点検](documentation-guide.md#作業場所と知識メモの継続点検)を適用し、正本の作業場所と仮想環境のPython本体を確認する。
+
 2026-11-01、本人の希望により主線の作業先を `/Users/oki2a24/kaname-shogi` へ戻した。作業branchは `codex/next-non-material-evaluation-item`。元のC1作業の変更文書3件と、同名衝突する未追跡文書3件は内容照合後、元ディレクトリ内の未追跡 `migration-preservation-2026-11-01/original-documents.tar` と差分patchに退避した。元branch `codex/c1-analysis-performance-investigation` も保持する。既存の比較データとC2保護4件は保持し、本人の許可を得て追跡済みC2比較成果物23件を展開した。飛車可動性・玉安全度・Uの知識メモは現行の接続と比較結果に合わせて修正した。具体的な次の評価項目は未選定のままである。移行経緯と文書レビューは[整理記録](learning/workspace-knowledge-consolidation.md)にある。過去の引き継ぎにある作業先は作成時点の情報である。
 
 V比較CLI接続・予備比較・確認比較・分析を完了し、本人承認後にmainへ統合した。確認比較は事前固定6局面・一手選択・指定条件の範囲で改善を支持したが、一般局面の棋力向上を示さない。通常CLI・USI接続の設計案・実装計画は本人が全体承認し、実装も承認した。V1は通常CLI候補7とUSI `MaterialSupportedPieceThreat` に接続済み。通常CLI CVCは先後を入れ替えた2局を既定の10分・30秒で完局し、開始表示・両側の実着手・終局を確認した。詳細は[設計](plans/2026-11-01-v-normal-cli-usi-design.md)、[実装計画](plans/2026-11-01-v-normal-cli-usi-implementation-plan.md)、[学習記録](learning/supported-piece-lower-value-threat.md)にある。
