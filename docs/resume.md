@@ -4,13 +4,13 @@
 
 V比較CLI接続・予備比較・確認比較・分析を完了し、本人承認後にmainへ統合した。確認比較は事前固定6局面・一手選択・指定条件の範囲で改善を支持したが、一般局面の棋力向上を示さない。通常CLI・USI接続の設計案・実装計画は本人が全体承認し、実装も承認した。V1は通常CLI候補7とUSI `MaterialSupportedPieceThreat` に接続済み。通常CLI CVCは先後を入れ替えた2局を既定の10分・30秒で完局し、開始表示・両側の実着手・終局を確認した。詳細は[設計](plans/2026-11-01-v-normal-cli-usi-design.md)、[実装計画](plans/2026-11-01-v-normal-cli-usi-implementation-plan.md)、[学習記録](learning/supported-piece-lower-value-threat.md)にある。
 
-作業・統合先は標準clone `/private/tmp/kaname-shogi-main-integration-clone`。本人確認後にtopic branchへコミット `2f49b186ba9b775bebaa4da79381feb721b28b50`を作成し、明示承認後にclone内の`main`をfast-forwardしてGitHubへpushした。push後のfetchでローカル`main`とGitHub`main`のSHA一致（`2f49b186ba9b775bebaa4da79381feb721b28b50`）を確認した。関連185件・統合後全体1039件/84モジュール、Ruff、差分検査が成功。独立レビューは初回Minor 1件を説明修正で解消し、再確認でCritical 0 / Important 0 / Minor 0となった。開始時の物理状態は[引き継ぎ](handover-v-normal-cli-usi-connection.md)を参照。
+作業・統合先は標準clone `/private/tmp/kaname-shogi-main-integration-clone`。本人確認後にtopic branchへ実装コミット `2f49b186ba9b775bebaa4da79381feb721b28b50`を作成し、明示承認後にclone内の`main`をfast-forwardしてGitHubへpushした。統合記録コミット `86e98980`もpush済みで、この最終理解確認の記録更新開始時点ではローカル`main`とGitHub `main`が一致していた。全体1039件/84モジュール、Ruff、差分検査、レビューが成功。cloneの`origin`は元checkoutを指し`origin/main`が古いため、GitHubの実先端とは区別する。開始時の物理状態は[引き継ぎ](handover-v-normal-cli-usi-connection.md)を参照。
 
 前テーマの確認比較は別の6局面・2040組/4080局・`--workers 4` で完了し、候補平均得点の95% Hoeffding区間[0.505225, 0.567569]から、固定した条件下で改善を支持した。一般局面の棋力向上は示さない。結果と本人回答は[学習記録](learning/supported-piece-lower-value-threat.md)に記録した。統合先テストは1031件・84モジュール・25.565秒で成功し、後続の文書コミットはhookと差分・リンク検査を通過した。
 
 元の `/Users/oki2a24/kaname-shogi` はbranch `codex/c1-analysis-performance-investigation` 上の既存変更・未追跡データを保持したまま、本テーマでは変更していない。保護指定 `.agents/tasks/`、`data/comparison/runs/` とC2保護4件も変更していない。
 
-Vの通常CLI・USI接続は実装・検証・独立レビュー・main統合・pushまで完了した。最後の理解確認はこれから一問提示し、本人回答を待つ。回答と補足を学習記録へ追記した後に、ロードマップ・README・プロジェクト方向性を照合して次テーマ候補を示す。主線の次の非駒得評価項目の選定とShogiHomeでのU実践は未完了の帰還目標として残す。
+Vの通常CLI・USI接続は実装・検証・独立レビュー・main統合・pushと最後の理解確認まで完了した。本人はCVCの印象として「前のエンジンと同等に見える」と答えたが、2局から棋力の同等性は判定できない。固定6局面比較は指定条件下で改善を支持する一方、一般局面での棋力向上は示さない。次テーマは未選定で、主線の次の非駒得評価項目選びが未完了の帰還目標として残る。ShogiHomeでのU実践も、遠隔PCへアクセス可能との本人連絡後に再提案する。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 
