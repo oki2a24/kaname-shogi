@@ -15,3 +15,6 @@
 旧cloneの全Git参照は `migration-preservation-2026-11-01/clone-all-refs.bundle` に、無視対象の `.superpowers` と `.venv` は `clone-ignored-artifacts.tar` に退避した。bundleの検証と、tar内の通常ファイル1770件の内容照合を行った。旧cloneの知識メモ3件の差分は、元ディレクトリのコミットとSHA-256が一致した。本人は保護指定の例外として、退避と照合後の旧clone全体の削除を承認した。旧clone全体を `clone-complete-2026-11-01.tar` に保存し、通常ファイル3607件の内容とシンボリックリンクを照合してから旧cloneを削除した。元ディレクトリの比較データと退避アーカイブは保持している。
 
 再発防止策の独立レビューはCritical 0、Important 1、Minor 0。再開時の必読入口から手順に到達できない指摘に対応し、再開案内に適用指示とガイドへのリンクを追加し、再レビューはCritical 0、Important 0、Minor 0だった。
+
+2026-11-01、本人は再発防止として、作業を `/Users/oki2a24/kaname-shogi` に限定し、開発は別worktreeや別の場所を使わず、同じディレクトリの作業ブランチで行うよう指定した。再開案内と文書更新ガイドにこの方針を反映する。既存の保護指定とmain統合・pushの別承認は維持する。
+今回の方針追記は独立文書レビューでCritical 0、Important 0、Minor 0。相対リンク43件の欠落なし、`git diff --check` が成功した。文書のみのため製品テストは再実行していない。
