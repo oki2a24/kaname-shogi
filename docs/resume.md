@@ -2,7 +2,7 @@
 
 ## 現在地（2026-11-01）
 
-現在は本人が選択した文書整理を実施中。作業先は `/Users/oki2a24/kaname-shogi`、branchは `codex/documentation-maintenance`。[設計案](plans/2026-11-01-documentation-maintenance-design.md)は本人が2026-11-01に承認済み。共通手順はこのリポジトリ内で利用する。[実施計画案](plans/2026-11-01-documentation-maintenance-implementation-plan.md)を作成し、本人が2026-11-01に承認し、整理を実施中。次の非駒得評価項目は未選定の主線として保留し、ShogiHomeでのU実践もアクセス可能との本人連絡後に再提案する。
+現在は本人が選択した文書整理の作業ブランチでの実施・検証・独立レビューを完了し、mainへの統合承認を待つ。作業先は `/Users/oki2a24/kaname-shogi`、branchは `codex/documentation-maintenance`。[設計案](plans/2026-11-01-documentation-maintenance-design.md)は本人が2026-11-01に承認済み。共通手順はこのリポジトリ内で利用する。[実施計画案](plans/2026-11-01-documentation-maintenance-implementation-plan.md)を作成し、本人が2026-11-01に承認し、整理・スキル作成・検証を実施した。作業コミットは `114611f`。main統合とpushはそれぞれ別承認待ち。次の非駒得評価項目は未選定の主線として保留し、ShogiHomeでのU実践もアクセス可能との本人連絡後に再提案する。
 
 作業は `/Users/oki2a24/kaname-shogi` だけで行い、開発は同じディレクトリ内の作業ブランチで行う。別worktreeや別cloneは使用しない。再開時は[作業場所と知識メモの継続点検](documentation-guide.md#作業場所と知識メモの継続点検)を適用し、Git状態と仮想環境のPython本体を確認する。
 
