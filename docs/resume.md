@@ -10,7 +10,11 @@ V比較CLI接続・予備比較・確認比較・分析を完了し、本人承�
 
 元の `/Users/oki2a24/kaname-shogi` はbranch `codex/c1-analysis-performance-investigation` 上の既存変更・未追跡データを保持したまま、本テーマでは変更していない。保護指定 `.agents/tasks/`、`data/comparison/runs/` とC2保護4件も変更していない。
 
-Vの通常CLI・USI接続は実装・検証・独立レビュー・main統合・pushと最後の理解確認まで完了した。本人はCVCの印象として「前のエンジンと同等に見える」と答えたが、2局から棋力の同等性は判定できない。固定6局面比較は指定条件下で改善を支持する一方、一般局面での棋力向上は示さない。次テーマは未選定で、主線の次の非駒得評価項目選びが未完了の帰還目標として残る。ShogiHomeでのU実践も、遠隔PCへアクセス可能との本人連絡後に再提案する。
+Vの通常CLI・USI接続は実装・検証・独立レビュー・main統合・pushと最後の理解確認まで完了した。本人はCVCの印象として「前のエンジンと同等に見える」と答えたが、2局から棋力の同等性は判定できない。固定6局面比較は指定条件下で改善を支持する一方、一般局面での棋力向上は示さない。
+
+本人は2026-11-01、次の非駒得評価項目を一つ選び学ぶ主線を採用した。これは主線テーマの選択であり、具体的な評価項目は未選定。候補の現行評価との重複・独立期待値・確認可能性を照合し、本人が一項目を選ぶところから新セッションで再開する。設計・実装計画・TDD・コード・テスト変更は未着手・未承認である。詳細と再開プロンプトは[新しい引き継ぎ](handover-mainline-next-evaluation-item.md)に記録した。ShogiHomeでのU実践も、遠隔PCへアクセス可能との本人連絡後に再提案する保留目標として残る。
+
+新しい引き継ぎ用branchは `codex/next-non-material-evaluation-item`、作業先は標準clone `/private/tmp/kaname-shogi-main-integration-clone`。基点は `9cad36da20c8fed785bcda8bf4501f96d3aecc95`。文書のみのbranchで、GitHubへpushしていない。`origin` は元checkoutを指し、`origin/main` は古い。元の `/Users/oki2a24/kaname-shogi` と保護対象 `.agents/tasks/`、`data/comparison/runs/`、C2保護4件は変更していない。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 
