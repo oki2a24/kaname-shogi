@@ -10,7 +10,7 @@ V比較CLI接続・予備比較・確認比較・分析を完了し、本人の�
 
 通常CLI・USI、通常CLIのSFEN入出力、飛車可動性v2、玉安全度との合成、Uの二手・四手適用は今回の対象外。`.agents/tasks/`、`data/comparison/runs/` とC2保護4件、および元の `/Users/oki2a24/kaname-shogi` は変更していない。元checkoutは現在も別branch `codex/c1-analysis-performance-investigation` 上の既存変更・未追跡データを保持する。比較成果は `/private/tmp/kaname-shogi-supported-piece-threat-comparison-2026-10-31-4w` に保存した。
 
-統計条件の承認・比較CLIの確定仕様・計画は[確定知識](knowledge/supported-piece-lower-value-threat.md)、[比較設計](plans/2026-10-31-supported-lower-value-threat-comparison-design.md)、[実装計画](plans/2026-10-31-supported-lower-value-threat-comparison-implementation-plan.md)を参照する。最後の理解確認は完了し、本人回答と補足を[学習記録](learning/supported-piece-lower-value-threat.md)へ保存した。
+統計条件の承認・比較CLIの確定仕様・計画は[確定知識](knowledge/supported-piece-lower-value-threat.md)、[比較設計](plans/2026-10-31-supported-lower-value-threat-comparison-design.md)、[実装計画](plans/2026-10-31-supported-lower-value-threat-comparison-implementation-plan.md)を参照する。最後の理解確認は完了し、本人回答と補足を[学習記録](learning/supported-piece-lower-value-threat.md)へ保存した。次は主線の次の評価項目選定待ちで、候補と未完了の帰還目標は[次テーマ候補](next-topics.md)を参照する。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 
