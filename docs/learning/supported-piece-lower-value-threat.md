@@ -205,4 +205,10 @@ Task 1は方式名未登録を含むassertion Redから始め、同じ評価器�
 
 統合用worktreeでは`.venv`がなかったため、USI起動テスト3件が環境不足で失敗した。READMEのsetupスクリプトは別worktreeでは実行しないよう停止したため、標準clone`/private/tmp/kaname-shogi-main-integration-clone`で`python3 scripts/setup_dev.py`を実行して検証した。Ruff 0.16.10、`.githooks`、Ruff format（142 files already formatted）、Ruff check、`git diff --check`が成功し、全体テスト`PYTHONDONTWRITEBYTECODE=1 python3 scripts/run_tests_parallel.py`は1031テスト・84モジュール・25.565秒で成功した。今回の再開案内・索引更新は文書だけの変更であり、全体テストは再実行せず、コミットフック、`git diff --check`、Markdown相対リンク700件（欠落0件）で確認した。
 
-統合先検証が終わったため、最後の理解確認を次に一問提示する。本人の回答と補足はまだ記録していない。
+### 最後の理解確認（2026-11-01）
+
+質問：今回の結果を、一般局面での棋力向上を示すものとは言えないのはなぜか。
+
+本人回答：「統計的な改善を支持だから」
+
+補足：本人回答は、事前固定した6局面・一手選択・実行条件の下で、候補平均得点の95%区間下限が比較境界0.5を上回り、統計的に改善を支持したという今回の判定を指す。標本に含まれない一般局面への効果は評価していないため、この結果から一般局面での棋力向上までは結論できない。
