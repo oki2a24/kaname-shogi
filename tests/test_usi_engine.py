@@ -194,7 +194,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             [
                 "id name kaname-shogi",
                 "id author kaname-shogi project",
-                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece var MaterialSupportedPieceThreat",
                 "usiok",
                 "readyok",
             ],
@@ -225,31 +225,30 @@ class UsiEngineFunctionTests(unittest.TestCase):
             [
                 "id name kaname-shogi",
                 "id author kaname-shogi project",
-                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece var MaterialSupportedPieceThreat",
                 "usiok",
             ],
         )
 
-    def test_comparison_only_v_policies_are_not_usi_options(self):
-        """比較専用V方式をUSI optionやDifficulty値として公開しない。
+    def test_v0_remains_comparison_only(self):
+        """V0は比較専用に保ち、USI optionのV1値へ混同しない。
 
-        option一覧への漏れと通常USI入口が比較policyを受理する誤りを検出する。
+        比較専用対照値を通常設定として受け入れる誤りを検出する。
         """
-        for value in ("MaterialPieceThreatV0", "MaterialPieceThreatV1"):
-            calls, outputs = self._run_with_policy_spy(
-                [
-                    "usi",
-                    f"setoption name Difficulty value {value}",
-                    "position startpos moves 7g7f",
-                    "go",
-                ]
-            )
-            option = next(
-                line for line in outputs if line.startswith("option name Difficulty")
-            )
-            with self.subTest(value=value):
-                self.assertNotIn(value, option)
-                self.assertEqual(calls[0][2], MoveSelectionPolicy.RANDOM)
+        calls, outputs = self._run_with_policy_spy(
+            [
+                "usi",
+                "setoption name Difficulty value MaterialPieceThreatV0",
+                "position startpos moves 7g7f",
+                "go",
+            ]
+        )
+        option = next(
+            line for line in outputs if line.startswith("option name Difficulty")
+        )
+        self.assertIn("var MaterialSupportedPieceThreat", option)
+        self.assertNotIn("MaterialPieceThreatV0", option)
+        self.assertEqual(calls[0][2], MoveSelectionPolicy.RANDOM)
 
     def test_uses_random_policy_when_difficulty_is_unset(self):
         """setoptionなしの最初のgoは既定のRANDOMを使う。
@@ -303,6 +302,47 @@ class UsiEngineFunctionTests(unittest.TestCase):
 
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE)
+
+    def test_applies_material_supported_piece_threat_at_first_go(self):
+        """最初のgoはMaterialSupportedPieceThreatをV1方針へ対応付ける。
+
+        option表示のみ追加して設定値を読み飛ばす誤りを検出する。
+        """
+        calls, _ = self._run_with_policy_spy(
+            [
+                "setoption name Difficulty value MaterialSupportedPieceThreat",
+                "position startpos moves 7g7f",
+                "go",
+                "quit",
+            ]
+        )
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1)
+
+    def test_accepts_material_supported_piece_threat_case_insensitively(self):
+        """USI option名とMaterialSupportedPieceThreat値の大小文字を無視する。
+
+        V1値だけが表記揺れでRandomへ落ちる誤りを検出する。
+        """
+        for value in (
+            "MaterialSupportedPieceThreat",
+            "mAtErIaLsUpPoRtEdPiEcEtHrEaT",
+        ):
+            with self.subTest(value=value):
+                calls, _ = self._run_with_policy_spy(
+                    [
+                        f"setoption name dIfFiCuLtY value {value}",
+                        "position startpos moves 7g7f",
+                        "go",
+                        "quit",
+                    ]
+                )
+
+                self.assertEqual(len(calls), 1)
+                self.assertEqual(
+                    calls[0][2], MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1
+                )
 
     def test_accepts_difficulty_option_case_insensitively(self):
         """Difficulty名とRandom/Material値の大文字小文字を区別しない。
@@ -455,6 +495,34 @@ class UsiEngineFunctionTests(unittest.TestCase):
             ],
         )
 
+    def test_material_supported_piece_threat_is_fixed_until_next_game(self):
+        """V1は現在局の全goで固定し、usinewgame後だけ新設定を使う。
+
+        局中setoptionの早期反映や、新局での切替忘れを検出する。
+        """
+        calls, _ = self._run_with_policy_spy(
+            [
+                "setoption name Difficulty value MaterialSupportedPieceThreat",
+                "position startpos moves 7g7f",
+                "go",
+                "setoption name Difficulty value Material",
+                "go",
+                "usinewgame",
+                "position startpos moves 2g2f",
+                "go",
+                "quit",
+            ]
+        )
+
+        self.assertEqual(
+            [call[2] for call in calls],
+            [
+                MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+                MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+                MoveSelectionPolicy.MATERIAL,
+            ],
+        )
+
     def test_invalid_value_preserves_two_ply_setting(self):
         """新値後の未知値で設定を失わず、無設定と旧値も従来方針を使う。
 
@@ -496,7 +564,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
         """
         calls, _ = self._run_with_policy_spy(
             [
-                "setoption name Difficulty value MaterialUndefendedPiece",
+                "setoption name Difficulty value MaterialSupportedPieceThreat",
                 "setoption name USI_Hash value 32",
                 "setoption name Difficulty value Strong",
                 "position startpos moves 7g7f",
@@ -505,7 +573,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             ]
         )
         self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE)
+        self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1)
 
         calls, _ = self._run_with_policy_spy(
             [
@@ -968,10 +1036,9 @@ class UsiEngineProcessTests(unittest.TestCase):
                 process.wait(timeout=2.0)
 
     def test_entrypoint_flushes_protocol_and_bestmove(self):
-        """実行入口が終了前に改行付きUSI応答をflushする。
+        """実入口でV1を設定し、改行付きの合法bestmoveを一度返す。
 
-        新方式を設定しても合法な手を返さないこと、flush欠落、診断混入や
-        余分なstdoutを検出する。合法性だけでは方針の取り違えは検出しない。
+        設定・局面・goの実プロセス接続、flush欠落、診断混入や余分な応答を検出する。
         """
         process = self.start_engine()
         reader = PipeLineReader(process.stdout)
@@ -981,14 +1048,16 @@ class UsiEngineProcessTests(unittest.TestCase):
             self.assertEqual(reader.read_line(), "id author kaname-shogi project")
             self.assertEqual(
                 reader.read_line(),
-                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece var MaterialSupportedPieceThreat",
             )
             self.assertEqual(reader.read_line(), "usiok")
 
             self.send_line(process, "isready")
             self.assertEqual(reader.read_line(), "readyok")
 
-            self.send_line(process, "setoption name Difficulty value TwoPlyMaterial")
+            self.send_line(
+                process, "setoption name Difficulty value MaterialSupportedPieceThreat"
+            )
             position_command = "position startpos moves 7g7f"
             self.send_line(process, position_command)
             self.send_line(process, "go btime 591199 wtime 600000 byoyomi 30000")

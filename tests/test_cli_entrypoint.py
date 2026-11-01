@@ -130,58 +130,70 @@ class CliEntrypointTests(unittest.TestCase):
     def test_main_prompts_sente_then_gote_for_computer_vs_computer(self):
         """CVCは先手を選んだ後に後手を選び、割当名を開始前に表示する。
 
-        二つの選択を逆順にしたり、表示名とrun_gameへ渡す方針を食い違わせる誤りを検出する。
+        V1と10M+Uを先後逆順でも正しく割り当て、表示とrun_gameの方針を食い違わせる誤りを検出する。
         """
-        outputs = []
         config = TimeManagementConfig(20, Fraction(2), Fraction(3, 4), 2000)
-        choices = iter(
+        cases = (
             (
-                MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
-                MoveSelectionPolicy.MATERIAL,
-            )
+                {
+                    Side.SENTE: MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+                    Side.GOTE: MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+                },
+                "選択方針：先手=一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）、後手=一手駒得＋支えのない狙われた駒",
+            ),
+            (
+                {
+                    Side.SENTE: MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+                    Side.GOTE: MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+                },
+                "選択方針：先手=一手駒得＋支えのない狙われた駒、後手=一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）",
+            ),
         )
-        with (
-            patch.object(
-                entrypoint,
-                "choose_game_mode",
-                return_value=GameMode.COMPUTER_VS_COMPUTER,
-            ),
-            patch.object(
-                entrypoint,
-                "choose_move_selection_policy",
-                create=True,
-                side_effect=lambda **kwargs: next(choices),
-            ) as choose_policy,
-            patch.object(
-                entrypoint,
-                "choose_clock_settings",
-                return_value=CliClockSettings(600_000, 30_000),
-            ),
-            patch.object(
-                entrypoint, "load_time_management_config", return_value=config
-            ),
-            patch.object(entrypoint, "run_game") as run_game,
-            patch("builtins.print", side_effect=outputs.append),
-        ):
-            self.assertEqual(entrypoint.main(), 0)
+        for policies, expected_display in cases:
+            with self.subTest(policies=policies):
+                outputs = []
+                choices = iter((policies[Side.SENTE], policies[Side.GOTE]))
+                with (
+                    patch.object(
+                        entrypoint,
+                        "choose_game_mode",
+                        return_value=GameMode.COMPUTER_VS_COMPUTER,
+                    ),
+                    patch.object(
+                        entrypoint,
+                        "choose_move_selection_policy",
+                        create=True,
+                        side_effect=lambda choices=choices, **kwargs: next(choices),
+                    ) as choose_policy,
+                    patch.object(
+                        entrypoint,
+                        "choose_clock_settings",
+                        return_value=CliClockSettings(600_000, 30_000),
+                    ),
+                    patch.object(
+                        entrypoint, "load_time_management_config", return_value=config
+                    ),
+                    patch.object(entrypoint, "run_game") as run_game,
+                    patch("builtins.print", side_effect=outputs.append),
+                ):
+                    try:
+                        result = entrypoint.main()
+                    except ValueError as error:
+                        self.fail(f"V1の開始前表示名を取得できません: {error}")
 
-        self.assertEqual(
-            choose_policy.call_args_list,
-            [call(side=Side.SENTE), call(side=Side.GOTE)],
-        )
-        run_game.assert_called_once_with(
-            mode=GameMode.COMPUTER_VS_COMPUTER,
-            move_selection_policies={
-                Side.SENTE: MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
-                Side.GOTE: MoveSelectionPolicy.MATERIAL,
-            },
-            clock_settings=CliClockSettings(600_000, 30_000),
-            time_config=config,
-        )
-        self.assertEqual(
-            outputs,
-            ["選択方針：先手=一手駒得＋支えのない狙われた駒、後手=一手駒得"],
-        )
+                self.assertEqual(result, 0)
+
+                self.assertEqual(
+                    choose_policy.call_args_list,
+                    [call(side=Side.SENTE), call(side=Side.GOTE)],
+                )
+                run_game.assert_called_once_with(
+                    mode=GameMode.COMPUTER_VS_COMPUTER,
+                    move_selection_policies=policies,
+                    clock_settings=CliClockSettings(600_000, 30_000),
+                    time_config=config,
+                )
+                self.assertEqual(outputs, [expected_display])
 
     def test_main_selects_only_gote_for_human_vs_computer(self):
         """人間対コンピュータは自動担当の後手だけを選び先手を人間と表示する。

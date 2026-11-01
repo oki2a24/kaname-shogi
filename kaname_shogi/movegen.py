@@ -1678,6 +1678,7 @@ def _evaluate_candidate(
         MoveSelectionPolicy.MATERIAL,
         MoveSelectionPolicy.TWO_PLY_MATERIAL,
         MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+        MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
     ):
         raise ValueError("候補評価に対応していない方針です")
     if control is None:
@@ -1688,7 +1689,10 @@ def _evaluate_candidate(
         )
     if not applied.completed or _stopped(control):
         return CandidateEvaluation(False, None)
-    if policy == MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE:
+    if policy in (
+        MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+        MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+    ):
         mate = (
             CheckmateResult(True, is_checkmate(after))
             if control is None
@@ -1700,9 +1704,26 @@ def _evaluate_candidate(
             return CandidateEvaluation(False, None)
         if mate.value:
             return CandidateEvaluation(True, (1, 0))
-        from .material_undefended_piece import evaluate_material_undefended_piece
+        if policy == MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE:
+            from .material_undefended_piece import evaluate_material_undefended_piece
 
-        score = (0, evaluate_material_undefended_piece(after, position.side_to_move))
+            normal_score = evaluate_material_undefended_piece(
+                after, position.side_to_move
+            )
+        else:
+            from .material_piece_threat import (
+                PieceThreatWeights,
+                evaluate_material_piece_threat,
+            )
+
+            normal_score = evaluate_material_piece_threat(
+                after,
+                position.side_to_move,
+                weights=PieceThreatWeights(
+                    material=10, undefended=1, supported_threat=1
+                ),
+            )
+        score = (0, normal_score)
     elif policy == MoveSelectionPolicy.MATERIAL:
         score = (0, material_balance(after, position.side_to_move))
     elif control is None:
@@ -1745,7 +1766,7 @@ def search_move(
 
     引数:
         position: 探索開始局面。盤面・両持駒・手番を変更しない。
-        policy: RANDOM/一手駒得/二手駒得/10M+Uの方針データ。
+        policy: RANDOM/一手駒得/二手駒得/10M+U/V1の方針データ。V0は比較専用。
         rng: 全完了ランダムまたは完了最高同点の一回抽選に使う生成器。
         control: 読取り原点と予算を持つ一探索専用制御。
     戻り値:
@@ -1764,6 +1785,7 @@ def search_move(
         MoveSelectionPolicy.MATERIAL,
         MoveSelectionPolicy.TWO_PLY_MATERIAL,
         MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+        MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
     ):
         raise ValueError("未知の一手選択方針です")
     generated = _legal_moves_controlled(

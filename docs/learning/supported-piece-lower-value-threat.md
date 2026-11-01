@@ -218,3 +218,65 @@ Task 1は方式名未登録を含むassertion Redから始め、同じ評価器�
 本人は、比較で改善が支持されたVを通常CLIとUSIへ接続することが完了しているか確認し、未完了なら実施したいと希望した。Vは現在、比較CLIだけで選択でき、通常CLI・USIには接続していない。次テーマを「10M+U+Vを通常CLI・USIから選べるようにする接続」として選定した。
 
 これは比較済みVの通常利用経路を追加する派生・接続テーマであり、主線の次の評価項目を選んだことにはしない。新テーマの設計・実装計画は未作成・未承認で、TDD・コード・テスト変更は開始していない。詳細と再開プロンプトは[開始時引き継ぎ](../handover-v-normal-cli-usi-connection.md)を参照する。
+
+## Vの通常CLI・USI接続（2026-11-01）
+
+### 承認と範囲
+
+本人は[通常CLI・USI接続設計](../plans/2026-11-01-v-normal-cli-usi-design.md)と[実装計画](../plans/2026-11-01-v-normal-cli-usi-implementation-plan.md)全体、および承認済み計画をネイティブ実行することを明示承認した。対象は通常CLI選択肢7、先後別CVC割当、制御付き一手探索での既存V1再利用、USI `Difficulty` 値 `MaterialSupportedPieceThreat`、既定Randomと局内固定の維持である。V0は比較CLI専用のまま、評価式・係数、二手/四手探索、比較CLI条件・保存、ShogiHome接続は変更しない。main統合・pushは別承認事項である。
+
+### 実装とTDD
+
+| 対象 | Redで確認した契約違反 | 実装・Green |
+| --- | --- | --- |
+| 制御付き探索 | V1が `game_search.search_move`、`movegen.search_move`、`_evaluate_candidate` で未対応となることをassertionで検出した。 | V1を制御付き一手方針へ追加。V=1、M=10/U=1、開始側視点・着手後評価を接続し、一手詰み優先と停止契約を維持した。関連27件が成功。 |
+| CLIとCVC | 新番号、表示名、許容範囲が存在しない状態を選択・開始前表示のassertion failureで確認した。 | 既存1〜6、HVC/HVH、Random既定を維持し、7を先後別に割り当てる。開始前表示と割当の両方をテストし、関連64件が成功。 |
+| USI | V1設定後もRandomへ落ちること、Difficulty一覧に新値がないことをassertion failureで確認した。 | `MaterialSupportedPieceThreat` をcase-insensitiveでV1へ対応。プロセス設定保持、最初のgoで局内固定、usinewgame後の更新を維持。USI設定・launcher・実プロセスを含む関連40件が成功。 |
+
+Task 1の根探索テスト初回Greenでは、実合法手一覧すべてを採点したため、V比較の逃げ手でなく合法な昇格角手が選ばれた。Vの固定期待値はM/Uが同点の既知2候補の比較を対象としているため、合法手生成と合法性確認を残し、その後の候補列だけをその2候補へ絞るテスト修正をした。実装仕様を変えず、先後・候補順反転でV側の手を選ぶことを確認した。
+
+### 通常CLIでのCVC操作実証
+
+操作手順と記録粒度は、先行する[U通常CLI接続時のCVC操作確認](undefended-piece-coordination-evaluation.md)を参照した。実コマンド `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -u -m kaname_shogi` を作業cloneで起動し、形式3（コンピュータ対コンピュータ）、両側の番号、時計欄は空入力にした。空欄の時計はコードの既定値と端末表示で持ち時間10分・秒読み30秒を確認した。
+
+| 局 | 開始前表示（先手 / 後手） | 端末に出た実着手の抜粋（先手 / 後手） | 終局表示 |
+| --- | --- | --- | --- |
+| 1 | 10M+U+V / 10M+U | `move 7 7 7 6`、`move 8 8 3 3 +` / `move 4 1 5 2`、`move 2 2 3 3` | 後手が投了、先手勝ち |
+| 2 | 10M+U / 10M+U+V | `move 5 9 4 8`、`move 7 9 6 8` / `move 6 3 6 4`、`move 4 3 4 4` | 後手が投了、先手勝ち |
+
+両局とも選択表示が先後別に一致し、両方式から実着手が出て、CLIが終局表示を出すところまで確認した。棋譜ファイルや永続ログは保存していない。2局とも先手勝ちだったが、2局の勝敗・少数局の実使用は棋力やV単独の効果を示さず、V比較CLIの統計結果とも別の操作実証である。比較CLIの再実行とShogiHome対局はしていない。
+
+### 代表変異と検出範囲
+
+隔離した `.superpowers/sdd/2026-11-01-v-normal-cli-usi-implementation-plan/mutation-task-4/` の複製だけで、次の変異を行い、全て復元後の対象テスト成功を確認した。読み込み・設定エラーではなく、期待値・手・方針列のAssertionErrorだけを検出成功として数えた。
+
+| 変異 | 意図した検出 | 結果 |
+| --- | --- | --- |
+| 制御付き評価のV係数を1から0へ | `test_supported_piece_threat_v1_uses_post_move_position_and_turn_perspective` の210/209点と、`test_v1_selects_v_move_for_both_sides_and_orders` の先後・候補順 | 先手・後手の両方でV保持手が逃げ手と同点になるAssertionErrorを検出 |
+| V1の詰み優先分岐を除去 | `test_supported_piece_threat_v1_prioritizes_mate` の先後 `(1, 0)` | 両側で通常点 `(0, 199)` へ落ちるAssertionErrorを検出 |
+| CLI選択表へV0を追加 | `test_v0_stays_outside_normal_cli_choices` の選択値・Random対照 | 追加した番号からV0が返り、期待するRandomとのAssertionErrorを検出 |
+| USI各goで設定値を再適用 | `test_material_supported_piece_threat_is_fixed_until_next_game` の局内二回目のgo | V1固定を破りMaterialへ変わる方針列のAssertionErrorを検出 |
+| CVCの先手設定を後手にも流用 | Task 2の側別割当テスト（先後反転を含む） | 各側で期待方針との差をAssertionErrorとして検出 |
+| CLI番号6/7を入れ替え | Task 2の番号マッピングテスト | 番号の期待値AssertionErrorを検出 |
+| 空入力をV1へ変更 | Task 2の既定Randomテスト | 既定値の期待AssertionErrorを検出 |
+
+最初のV係数変異は比較用の非制御 `movegen.search_move` 側へ入れたため、通常CLI/USIが通る制御付き評価のテストは通過した。この試行は検出証拠に含めず、`_evaluate_candidate` の実際の係数へ変異を移して再実行した。USI変異の初回は複製に時計設定JSONを含めず読込エラーとなったため除外し、`config/` を含めてからAssertionErrorを確認した。復元済みの隔離baseでは4つのTask 4対象テストが成功した。
+
+| 契約 | 代表的な単独テスト | テスト範囲と残る未検証 |
+| --- | --- | --- |
+| CLI番号・候補名・既定 | `MoveSelectionPolicyMenuTests` の番号対応、空入力、V0拒否。`CliEntrypointTests` の先後表示。 | 番号違い、表示/方針ずれ、既定変更を検出。全ての端末・誤入力パターンは網羅しない。 |
+| 先後視点・着手後のV評価 | `test_supported_piece_threat_v1_uses_post_move_position_and_turn_perspective` | 固定配置の先後両方で独立値210/209を確認。任意の合法局面の値は網羅しない。 |
+| Vの根選択 | `test_v1_selects_v_move_for_both_sides_and_orders` | 合法な逃げ手・保持手の2候補を先後・順序反転で確認。全候補での棋力は測定しない。 |
+| 詰み優先と停止 | `test_supported_piece_threat_v1_prioritizes_mate`、`test_supported_piece_threat_v1_discards_stopped_evaluation` と既存の制御付き共通テスト | 勝敗点の優先・採点停止の未完了化を確認。全停止時刻や各OSの実時間保証は未検証。 |
+| USI値と局内寿命 | `test_applies_material_supported_piece_threat_at_first_go`、`test_material_supported_piece_threat_is_fixed_until_next_game` | 値受付、局中固定、次局更新、未知値保持、未設定Randomを確認。外部GUIのoption表示・対局は未確認。 |
+| USI実入口 | `UsiEngineProcessTests.test_entrypoint_flushes_protocol_and_bestmove` | 実プロセスでoption・position・go・合法bestmove一回を確認。ShogiHomeや別OSは未確認。 |
+
+### 最終検証とレビュー状態
+
+関連回帰は `PYTHONPATH=tests PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 -m unittest tests.test_game_search tests.test_search_movegen tests.test_piece_threat_selection tests.test_cli tests.test_cli_entrypoint tests.test_usi_engine tests.test_usi_engine_launcher -v` を実行し、185件が14.142秒で成功した。最初は `PYTHONPATH` なしで実行して `test_piece_threat_selection` が `supported_piece_threat_support` を見つけられなかったため、これはloader errorとして除外し、テスト補助を解決する環境を付けて再実行した。
+
+全体回帰 `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py` は1039 tests・84 modules・24.987秒で成功した。最終Ruffは `.venv/bin/ruff check --select I --fix .`、`.venv/bin/ruff format .`（142 files left unchanged）、`.venv/bin/ruff check .` が成功した。最初の全Ruff checkでは新しいテスト内のループ変数クロージャ6件をB023が指摘したため、各反復値を明示的に束縛してから整形・lintを再実行した。`git diff --check` は成功し、変更Markdown 10ファイルの相対リンク775件を検査して欠落0件だった。追加・更新した文書リンクに見出しアンカー指定はない。
+
+Refactor判断では、新しい評価器や探索経路を作らず、V1を既存の制御付き一手選択へ加える範囲が最小と判断し、別のコード整理を追加しなかった。開始HEADとの差分を対象に独立レビューを行い、初回結論はCritical 0 / Important 0 / Minor 1だった。Minorは `CONTROLLED_ONE_PLY_POLICIES` にV1が含まれる一方、停止時の予備手・局面保持テストのdocstringが「旧三方式とU」と書いていた説明の範囲ずれである。該当2つの説明を「制御付き一手方針」に直し、V1を含む実ループと一致させた。製品コード・テスト動作は変えていない。独立レビュアーの差分再確認後はCritical 0 / Important 0 / Minor 0となった。修正後に対象2テストが成功し、Ruff・`git diff --check`も再実行して成功した。説明文だけの修正のため全体回帰は再実行していない。
+
+学習・知識文書は本人確認前の作業ブランチ上にあり、コミットは未実施。本人が内容を確認した後に通常hook付きで作業ブランチへコミットする。main統合・pushは別途承認を待つ。

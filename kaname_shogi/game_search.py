@@ -17,6 +17,7 @@ _LEGACY_POLICIES = (
 _CONTROLLED_ONE_PLY_POLICIES = (
     *_LEGACY_POLICIES,
     movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+    movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
 )
 _ONE_PLY_POLICIES = (
     *_LEGACY_POLICIES,
@@ -82,12 +83,13 @@ def search_move(
 ) -> movegen.SearchResult:
     """制御付き方式から既存のUSI向け完了・中断・抑制結果を返す。
 
-    引数: positionは開始局面、policyは既存三方式・制御付き一手10M+U方式・四手探索方式。
-    比較専用V0/V1は時計付き入口へ登録しない。
+    引数: positionは開始局面、policyは既存三方式・制御付き一手10M+U/V1方式・四手探索方式。
+    比較専用V0は通常の時計付き入口で受け付けない。
+    通常で使うV1は既存の制御付き一手候補経路へ登録する。
     rngは既存方式用、controlは呼出し元が所有する一探索分の制御。
     戻り値: 既存のmovegen.SearchResult。新方式のSTOPPEDはINTERRUPTED、
     SUPPRESSEDは手なしのSUPPRESSED、手なし確定は手なしのCOMPLETEへ対応する。
-    副作用: 既存三方式と一手10M+Uはmovegen.search_moveと同じ。四手探索方式は同じ
+    副作用: 既存三方式と一手10M+U/V1はmovegen.search_moveと同じ。四手探索方式は同じ
     controlで反復探索し、rngを使わない。送信・時計原点・予算生成を行わない。
     前提・設計理由: 対局層の送信責務を既存USI側に保つため、新しい探索結果を
     既存応答型へ変換する。抑制時に診断用の最終完了手を応答として復活させない。

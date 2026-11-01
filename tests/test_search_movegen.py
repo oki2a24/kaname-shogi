@@ -25,6 +25,7 @@ LEGACY_POLICIES = (
 CONTROLLED_ONE_PLY_POLICIES = (
     *LEGACY_POLICIES,
     mg.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+    mg.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
 )
 
 
@@ -453,7 +454,112 @@ def mating(side):
     return p, BoardMove(sq(5, 3), sq(5, 2), False)
 
 
+def supported_piece_threat_case(side):
+    """V設計Aを置き、先手・後手それぞれの逃げ手と保持手を返す。"""
+    pieces = (
+        (PieceType.KING, Side.SENTE, Square(9, 9)),
+        (PieceType.BISHOP, Side.SENTE, Square(5, 5)),
+        (PieceType.GOLD, Side.SENTE, Square(4, 6)),
+        (PieceType.PAWN, Side.GOTE, Square(5, 4)),
+        (PieceType.KING, Side.GOTE, Square(4, 3)),
+    )
+    if side is Side.GOTE:
+        pieces = tuple(
+            (
+                piece_type,
+                Side.GOTE if owner is Side.SENTE else Side.SENTE,
+                Square(10 - square.file, 10 - square.rank),
+            )
+            for piece_type, owner, square in pieces
+        )
+    board = Board()
+    for piece_type, owner, square in pieces:
+        board.set_piece(square, Piece(piece_type, owner))
+    position = Position(board, side)
+    if side is Side.SENTE:
+        escape = BoardMove(Square(5, 5), Square(6, 6), False)
+        preserve = BoardMove(Square(4, 6), Square(4, 5), False)
+    else:
+        escape = BoardMove(Square(5, 5), Square(4, 4), False)
+        preserve = BoardMove(Square(6, 4), Square(6, 5), False)
+    return position, escape, preserve
+
+
 class ControlledEvaluationTests(unittest.TestCase):
+    def test_supported_piece_threat_v1_uses_post_move_position_and_turn_perspective(
+        self,
+    ):
+        """V1は着手後の局面を開始側視点で採点する。
+
+        着手前局面や手番反転後、誤った側の視点を使うと既知の210/209点を外す。
+        """
+        policy = mg.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1
+        for side in Side:
+            with self.subTest(side=side):
+                position, escape, preserve = supported_piece_threat_case(side)
+                for move, expected_score in ((escape, 210), (preserve, 209)):
+                    with self.subTest(move=move):
+                        self.assertIn(move, mg.legal_moves(position))
+                        try:
+                            result = mg._evaluate_candidate(
+                                position,
+                                move,
+                                policy,
+                                control=SearchControl(None, 0),
+                            )
+                        except ValueError as error:
+                            self.fail(f"制御付き候補評価がV1を拒否しました: {error}")
+                        self.assertEqual(
+                            result, mg.CandidateEvaluation(True, (0, expected_score))
+                        )
+
+    def test_supported_piece_threat_v1_prioritizes_mate(self):
+        """V1は通常評価より一手詰みを先後とも優先する。
+
+        V点を勝敗点へ混ぜるか詰み判定を省く変更を検出する。
+        """
+        policy = mg.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1
+        for side in Side:
+            with self.subTest(side=side):
+                position, move = mating(side)
+                self.assertIn(move, mg.legal_moves(position))
+                try:
+                    result = mg._evaluate_candidate(
+                        position, move, policy, control=SearchControl(None, 0)
+                    )
+                except ValueError as error:
+                    self.fail(f"制御付き候補評価がV1を拒否しました: {error}")
+                self.assertEqual(result, mg.CandidateEvaluation(True, (1, 0)))
+
+    def test_supported_piece_threat_v1_discards_stopped_evaluation(self):
+        """V採点中に停止した場合は候補を未完了として返す。
+
+        評価関数復帰後の停止確認を省き、途中点を確定する誤りを検出する。
+        """
+        position, move, _ = supported_piece_threat_case(Side.SENTE)
+        control = SearchControl(None, 0)
+
+        def stop_after_evaluation(*args, **kwargs):
+            del args, kwargs
+            control.request_stop()
+            return 999
+
+        with patch(
+            "kaname_shogi.material_piece_threat.evaluate_material_piece_threat",
+            side_effect=stop_after_evaluation,
+        ):
+            try:
+                result = mg._evaluate_candidate(
+                    position,
+                    move,
+                    mg.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+                    control=control,
+                )
+            except ValueError as error:
+                self.fail(f"制御付き候補評価がV1を拒否しました: {error}")
+
+        self.assertEqual(result, mg.CandidateEvaluation(False, None))
+
     def test_undefended_piece_controlled_score_uses_turn_perspective(self):
         """通常局面のU評価値・着手後局面・視点を先後とも正しく渡す。
 
@@ -752,6 +858,53 @@ class ControlledEvaluationTests(unittest.TestCase):
 
 
 class RootSearchTests(unittest.TestCase):
+    def test_v1_selects_v_move_for_both_sides_and_orders(self):
+        """V1は先後と候補順に依存せず、Vの逃げ手を合法な最善手にする。
+
+        Vを採点しない、符号を固定する、または先頭候補を返す誤りを検出する。
+        """
+        policy = mg.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1
+        original_generation = mg._legal_moves_controlled
+        for side in Side:
+            position, escape, preserve = supported_piece_threat_case(side)
+            self.assertIn(escape, mg.legal_moves(position))
+            self.assertIn(preserve, mg.legal_moves(position))
+            for reverse in (False, True):
+                with self.subTest(side=side, reverse=reverse):
+
+                    def generate_with_order(
+                        *args,
+                        reverse=reverse,
+                        escape=escape,
+                        preserve=preserve,
+                        **kwargs,
+                    ):
+                        generated = original_generation(*args, **kwargs)
+                        self.assertTrue(generated.completed)
+                        ordered = (preserve, escape) if reverse else (escape, preserve)
+                        self.assertTrue(
+                            all(move in generated.moves for move in ordered)
+                        )
+                        return mg.LegalMovesResult(generated.completed, ordered)
+
+                    rng = RecordingChoice()
+                    try:
+                        with patch.object(
+                            mg,
+                            "_legal_moves_controlled",
+                            side_effect=generate_with_order,
+                        ):
+                            result = mg.search_move(
+                                position, policy, rng, SearchControl(None, 0)
+                            )
+                    except ValueError as error:
+                        self.fail(f"時計付き根探索がV1を拒否しました: {error}")
+
+                    self.assertEqual(result.completion, mg.SearchCompletion.COMPLETE)
+                    self.assertEqual(result.move, escape)
+                    self.assertIn(result.move, mg.legal_moves(position))
+                    self.assertEqual(len(rng.calls), 1)
+
     def test_undefended_piece_policy_returns_legal_move_for_both_sides(self):
         """U方針は先後とも制御付き探索で合法手を完了する。
 
@@ -781,7 +934,7 @@ class RootSearchTests(unittest.TestCase):
                 self.assertEqual(snapshot(position), before)
 
     def test_zero_budget_returns_fallback_or_confirmed_no_moves(self):
-        """旧三方式とUの0予算・開始前stopは予備手、空盤は手なし確定を返す。
+        """制御付き一手方針の0予算・開始前stopは予備手、空盤は手なし確定を返す。
 
         0を時計なし扱い、未確保を投了、部分一覧の抽選にする誤りを検出する。
         """
@@ -1008,7 +1161,7 @@ class RootSearchTests(unittest.TestCase):
                 self.assertEqual(len(rng.calls), 1)
 
     def test_new_search_preserves_position_and_does_not_reuse_result(self):
-        """旧三方式とUは元局面を保存し前回の停止と予備手を引き継がない。
+        """制御付き一手方針は元局面を保存し前回の停止と予備手を引き継がない。
 
         共有結果・制御フラグ・元局面の部分変更を検出する。
         """

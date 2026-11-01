@@ -48,6 +48,9 @@ _MOVE_SELECTION_POLICY_NAMES = {
     MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH: "全幅読み（最大4手）",
     MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA: "αβ枝刈り（最大4手）",
     MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE: "一手駒得＋支えのない狙われた駒",
+    MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1: (
+        "一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）"
+    ),
 }
 
 _HELP_TEXT = "\n".join(
@@ -146,16 +149,17 @@ def choose_move_selection_policy(
         1なら既存一様ランダムのRANDOM、2なら一手後の駒得比較のMATERIAL、
         3なら二手駒得のTWO_PLY_MATERIAL、4なら全幅四手のFOUR_PLY_FULL_WIDTH、
         5ならαβ四手のFOUR_PLY_ALPHA_BETA、6なら一手駒得と支えのない狙われた駒の
-        MATERIAL_UNDEFENDED_PIECE。
+        MATERIAL_UNDEFENDED_PIECE、7なら一手駒得と支えがある駒への低価値駒の利きの
+        MATERIAL_PIECE_THREAT_V1。
         空入力はRANDOMを返す。不正入力では返さず再入力する。
 
     副作用:
         局面、棋譜、乱数を変更せず、メニューとエラーだけを表示する。
 
     難易度を強さの保証ではなく一手選択方針として示す。現行の一様ランダムを
-    既定値として保ち、五方式の選択を対局進行から分離する。新二方式も一局中に固定し、
-    各コンピュータ手で深さ1から4まで再探索する。時計は対局管理層が持ち、各手を
-    共通探索の制御へ渡す。
+    既定値として保ち、方式の選択を対局進行から分離する。選択した方式は一局中固定し、
+    四手探索は各コンピュータ手で深さ1から4まで再探索する。時計は対局管理層が持ち、
+    各手を共通探索の制御へ渡す。
     """
     policies = {
         "1": MoveSelectionPolicy.RANDOM,
@@ -164,6 +168,7 @@ def choose_move_selection_policy(
         "4": MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
         "5": MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
         "6": MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+        "7": MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
     }
     side_prefix = (
         "先手の" if side is Side.SENTE else "後手の" if side is Side.GOTE else ""
@@ -173,7 +178,9 @@ def choose_move_selection_policy(
             side_prefix + "一手選択方針を選んでください（1: ランダム、2: 一手駒得、"
             "3: 二手先読み（駒得）、4: 全幅読み（最大4手）、"
             "5: αβ枝刈り（最大4手）、"
-            "6: 一手駒得＋支えのない狙われた駒、空入力: ランダム）:"
+            "6: 一手駒得＋支えのない狙われた駒、"
+            "7: 一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）、"
+            "空入力: ランダム）:"
         )
         choice = input_fn().strip()
         if choice == "":
@@ -181,7 +188,7 @@ def choose_move_selection_policy(
         try:
             return policies[choice]
         except KeyError:
-            output_fn("エラー：一手選択方針を1〜6で選んでください。")
+            output_fn("エラー：一手選択方針を1〜7で選んでください。")
 
 
 def _format_move_selection_policy_name(policy: MoveSelectionPolicy) -> str:
@@ -519,9 +526,9 @@ def _run_computer_turn(
     引数:
         record: 現在局面と成功手の履歴を保持する対局記録。
         repetition_tracker: 成功した実着手だけを判定する一局の履歴追跡器。
-        rng: 五方式で共有する対局単位の乱数生成器。
+        rng: 対局単位でコンピュータ手の抽選に使う乱数生成器。
         output_fn: 思考開始・結果・盤面を受け取る表示操作。
-        move_selection_policy: 一局で固定する五方式の一手選択方針。
+        move_selection_policy: コンピュータ側へ一局中固定して適用する選択方針。
         clock: 開始時の残り時間を含む現在のCLI時計。
         time_config: 予算計算に使う対局中固定の時間設定。
         now_ns: 探索開始・返却時点を同じ単調時計で読む操作。

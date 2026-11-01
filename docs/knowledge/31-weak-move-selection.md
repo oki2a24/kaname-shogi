@@ -45,6 +45,14 @@
 
 制御付き一手探索では、候補を評価する前に一手詰みを調べ、勝ちを通常評価より優先する。停止時の合法な予備手・完了候補・探索制御は既存の制御付き探索と共有する。二手・四手先の評価はこの方針に加えない。実際のCLI/USI接続では `game_search.search_move` から制御付き一手経路へ渡す。
 
+## 支えがある駒への低価値駒の利きを加える一手方針
+
+`MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1` は既存の `10M+U+V` 評価を使う一手選択方針データ。各候補を着手後の複製局面で、開始手番側の視点から採点し、最高点の手を選ぶ。重みは `M=10`、`U=1`、`V=1` に固定し、一手詰みを通常点より優先する。同点は注入乱数器で選ぶ。停止・合法な予備手・局面保護は制御付き一手選択の共通契約に従う。
+
+通常CLIは選択肢7、USIは `Difficulty` の `MaterialSupportedPieceThreat` から選べる。通常CLIのCVCは先手・後手に別の方針を指定し、対局前に双方の表示を確認できる。USI未設定時とCLIの空入力は従来どおりRandom。`MATERIAL_PIECE_THREAT_V0`（`10M+U+0V`）は比較CLI専用のままである。比較の結果は事前固定6局面・一手選択・指定条件下で改善を支持した範囲に限られ、一般局面の棋力向上は示さない。
+
+実装時の探索経路、先後を入れ替えた通常CLI CVCの2局、検出範囲と未検証事項は[通常CLI・USI接続の学習記録](../learning/supported-piece-lower-value-threat.md)と[承認済み実装計画](../plans/2026-11-01-v-normal-cli-usi-implementation-plan.md)を参照する。ShogiHome実機でのV選択・対局は未確認。
+
 ## 二手先読み（駒得）の内部方針
 
 `MoveSelectionPolicy.TWO_PLY_MATERIAL` は二手比較を指定する方針データ。`choose_move` は各候補を独立した複製へ適用し、相手の全合法応手もそれぞれ別の複製へ適用する操作である。開始手番側の視点を固定し、応手後の最小評価が最大となる候補を選ぶ。最高同点候補だけを元の候補順で集め、注入乱数器で一回抽選する。元局面・双方の持ち駒・候補データを変更しない。
@@ -55,8 +63,8 @@
 
 ## 利用面
 
-- CLIは対局形式に応じてコンピュータ側の方針を尋ねる。CVCは先手、後手の順に別々に選択する。空入力はそれぞれランダム。候補はランダム、一手駒得、二手先読み（駒得）、全幅読み（最大4手）、αβ枝刈り（最大4手）、一手駒得＋支えのない狙われた駒。選択は一局中固定する。
-- USIは `Difficulty` comboを通知し、`Random` / `Material` / `TwoPlyMaterial` / `FullWidth4` / `AlphaBeta4` / `MaterialUndefendedPiece` を受け付ける。未設定時はRandom。設定はプロセス中に保持し、局の最初のgoから `usinewgame` まで局内固定する。新値固有の局中固定・次局継承、未知値保持、応答範囲は[USIエンジン応答](usi-engine-response.md)と[今回の学習記録](../learning/undefended-piece-coordination-evaluation.md)を参照する。先行する三択やUSI各境界の実施記録はそれぞれのリンク先の歴史的検証範囲を示す。
+- CLIは対局形式に応じてコンピュータ側の方針を尋ねる。CVCは先手、後手の順に別々に選択する。空入力はそれぞれランダム。候補はランダム、一手駒得、二手先読み（駒得）、全幅読み（最大4手）、αβ枝刈り（最大4手）、一手駒得＋支えのない狙われた駒、一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）。選択は一局中固定する。
+- USIは `Difficulty` comboを通知し、`Random` / `Material` / `TwoPlyMaterial` / `FullWidth4` / `AlphaBeta4` / `MaterialUndefendedPiece` / `MaterialSupportedPieceThreat` を受け付ける。未設定時はRandom。設定はプロセス中に保持し、局の最初のgoから `usinewgame` まで局内固定する。新値固有の局中固定・次局継承、未知値保持、応答範囲は[USIエンジン応答](usi-engine-response.md)と[今回の学習記録](../learning/undefended-piece-coordination-evaluation.md)、[V接続記録](../learning/supported-piece-lower-value-threat.md)を参照する。先行する三択やUSI各境界の実施記録はそれぞれのリンク先の歴史的検証範囲を示す。
 - ShogiHome画面でのこの設定や実対局は、この実装テーマでは確認していない。
 
 ## 対象外

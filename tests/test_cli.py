@@ -200,7 +200,7 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         return choose(**kwargs)
 
     def test_choose_move_selection_policy_maps_choices(self):
-        """番号1〜6を既存方式と新候補へ対応付ける。
+        """番号1〜7を既存方式とV1へ対応付ける。
 
         表示値と内部方針を取り違える誤りや、利用者向けの合意済み名称を欠かす
         誤りを検出する。
@@ -212,6 +212,7 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
             ("4", MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH),
             ("5", MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA),
             ("6", MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE),
+            ("7", MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1),
         )
         for value, expected in cases:
             outputs = []
@@ -228,12 +229,14 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
                         "一手選択方針を選んでください（1: ランダム、2: 一手駒得、"
                         "3: 二手先読み（駒得）、4: 全幅読み（最大4手）、"
                         "5: αβ枝刈り（最大4手）、"
-                        "6: 一手駒得＋支えのない狙われた駒、空入力: ランダム）:"
+                        "6: 一手駒得＋支えのない狙われた駒、"
+                        "7: 一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）、"
+                        "空入力: ランダム）:"
                     ],
                 )
 
     def test_choose_move_selection_policy_prompts_for_side(self):
-        """先後別の選択メニューは対象側と第6候補名を案内する。
+        """先後別の選択メニューは対象側と6・7番の候補名を案内する。
 
         CVCの同じ選択表を先後別に使うとき、無標識の質問や別の側の選択と
         誤認される表示を検出する。
@@ -242,18 +245,31 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         self.assertIsNotNone(choose)
         self.assertIn("side", inspect.signature(choose).parameters)
 
+        cases = (
+            (
+                "6",
+                MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+                "6: 一手駒得＋支えのない狙われた駒",
+            ),
+            (
+                "7",
+                MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+                "7: 一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）",
+            ),
+        )
         for side, side_name in ((Side.SENTE, "先手"), (Side.GOTE, "後手")):
-            outputs = []
-            with self.subTest(side=side):
-                policy = self._choose_policy(
-                    input_fn=ScriptedInput(["6"]),
-                    output_fn=outputs.append,
-                    side=side,
-                )
+            for value, expected, label in cases:
+                outputs = []
+                with self.subTest(side=side, value=value):
+                    policy = self._choose_policy(
+                        input_fn=ScriptedInput([value, "1"]),
+                        output_fn=outputs.append,
+                        side=side,
+                    )
 
-                self.assertEqual(policy, MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE)
-                self.assertIn(side_name, outputs[0])
-                self.assertIn("6: 一手駒得＋支えのない狙われた駒", outputs[0])
+                    self.assertEqual(policy, expected)
+                    self.assertIn(side_name, outputs[0])
+                    self.assertIn(label, outputs[0])
 
     def test_empty_input_defaults_each_side_to_random(self):
         """先手・後手それぞれの空入力は独立してRANDOMになる。
@@ -293,27 +309,27 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         """
         outputs = []
         policy = self._choose_policy(
-            input_fn=ScriptedInput(["7", "2"]), output_fn=outputs.append
+            input_fn=ScriptedInput(["8", "2"]), output_fn=outputs.append
         )
 
         self.assertEqual(policy, MoveSelectionPolicy.MATERIAL)
         self.assertEqual(
             sum("一手選択方針を選んでください" in line for line in outputs), 2
         )
-        self.assertIn("エラー：一手選択方針を1〜6で選んでください。", outputs)
+        self.assertIn("エラー：一手選択方針を1〜7で選んでください。", outputs)
 
-    def test_comparison_only_v_policies_are_not_cli_choices(self):
-        """比較専用V方式を通常CLIの選択肢から除外する。
+    def test_v0_stays_outside_normal_cli_choices(self):
+        """V0を通常CLIへ公開せず、選択肢外の番号を拒否する。
 
-        7番をV方式として受け付ける漏れや通常メニューへの公開を検出する。
+        比較専用の対照方式をV1の候補番号へ誤配線する変更を検出する。
         """
         outputs = []
         policy = self._choose_policy(
-            input_fn=ScriptedInput(["7", "1"]), output_fn=outputs.append
+            input_fn=ScriptedInput(["8", "1"]), output_fn=outputs.append
         )
         self.assertIs(policy, MoveSelectionPolicy.RANDOM)
-        self.assertIn("エラー：一手選択方針を1〜6で選んでください。", outputs)
-        self.assertNotIn("支えのある駒への低価値駒の利き", "".join(outputs))
+        self.assertIn("エラー：一手選択方針を1〜7で選んでください。", outputs)
+        self.assertNotIn("10M+U+0V", "".join(outputs))
 
 
 class ScriptedInput:
@@ -333,7 +349,7 @@ class ScriptedInput:
 
 class GameplayTests(unittest.TestCase):
     def test_cli_uses_game_search_adapter(self):
-        """CLIの対局手選択入口は五方式用アダプターを参照する。
+        """CLIの対局手選択入口は制御付き探索アダプターを参照する。
 
         旧無制御入口へ戻す接続漏れを検出する。
         """
@@ -366,7 +382,7 @@ class GameplayTests(unittest.TestCase):
         self.assertIs(search_move.call_args.args[2], rng)
 
     def test_run_game_passes_selected_policy_to_computer_turn(self):
-        """明示された三方式それぞれを局中の自動手へ一度渡す。
+        """明示された選択方針を局中の自動手へ一度渡す。
 
         対局前に選んだ方針をrun_gameが保持せず、既定のランダムへ戻す誤りを検出する。
         """
@@ -374,6 +390,8 @@ class GameplayTests(unittest.TestCase):
             MoveSelectionPolicy.RANDOM,
             MoveSelectionPolicy.MATERIAL,
             MoveSelectionPolicy.TWO_PLY_MATERIAL,
+            MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+            MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
         ):
             with self.subTest(policy=policy):
                 selected_move = BoardMove(Square(3, 3), Square(3, 4), False)
@@ -422,6 +440,26 @@ class GameplayTests(unittest.TestCase):
                 [
                     (Side.SENTE, MoveSelectionPolicy.MATERIAL),
                     (Side.GOTE, MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE),
+                ],
+            ),
+            (
+                {
+                    Side.SENTE: MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+                    Side.GOTE: MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+                },
+                [
+                    (Side.SENTE, MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1),
+                    (Side.GOTE, MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE),
+                ],
+            ),
+            (
+                {
+                    Side.SENTE: MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+                    Side.GOTE: MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+                },
+                [
+                    (Side.SENTE, MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE),
+                    (Side.GOTE, MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1),
                 ],
             ),
         )

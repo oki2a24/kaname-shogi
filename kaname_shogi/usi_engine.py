@@ -34,6 +34,7 @@ _USI_DIFFICULTY_VALUES = {
     "fullwidth4": MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
     "alphabeta4": MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
     "materialundefendedpiece": MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+    "materialsupportedpiecethreat": MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
 }
 
 
@@ -399,7 +400,8 @@ def _run_session(read_line, output_fn, rng, config, cancel_input) -> None:
                     "option name Difficulty type combo default Random "
                     "var Random var Material var TwoPlyMaterial "
                     "var FullWidth4 var AlphaBeta4 "
-                    "var MaterialUndefendedPiece",
+                    "var MaterialUndefendedPiece "
+                    "var MaterialSupportedPieceThreat",
                     "usiok",
                 ):
                     emit(response)

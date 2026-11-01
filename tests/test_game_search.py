@@ -526,24 +526,47 @@ class GameSearchTests(unittest.TestCase):
                 )
         self.assertIs(caught.exception, failure)
 
-    def test_search_move_rejects_comparison_only_v_policy(self):
-        """制御付き探索入口で比較専用V方式を拒否する。
+    def test_search_move_rejects_comparison_only_v0_policy(self):
+        """比較専用V0は時計付き通常探索へ公開しない。
 
-        比較用一手方式が通常CLI・USIの時計付き入口へ漏れる誤りを検出する。
+        通常CLI・USIに比較の対照方式を誤って露出させる変更を検出する。
         """
-        for name in (
-            "MATERIAL_PIECE_THREAT_V0",
-            "MATERIAL_PIECE_THREAT_V1",
-        ):
-            policy = self.new_policy(name)
-            with self.subTest(policy=name):
-                with self.assertRaises(ValueError):
-                    game_search.search_move(
-                        kings_only(Side.SENTE),
-                        policy,
-                        random.Random(0),
-                        SearchControl(None, 0, now_ns=lambda: 0),
-                    )
+        policy = self.new_policy("MATERIAL_PIECE_THREAT_V0")
+        with self.assertRaises(ValueError):
+            game_search.search_move(
+                kings_only(Side.SENTE),
+                policy,
+                random.Random(0),
+                SearchControl(None, 0, now_ns=lambda: 0),
+            )
+
+    def test_v1_uses_controlled_one_ply_search(self):
+        """先後ともV1を同じ制御付き一手探索へ一度だけ渡す。
+
+        V1を四手探索や比較専用の拒否経路へ誤配線し、引数を差し替える変更を検出する。
+        """
+        adapter = game_search
+        policy = self.new_policy("MATERIAL_PIECE_THREAT_V1")
+        for side in Side:
+            with self.subTest(side=side):
+                position = kings_only(side)
+                rng = random.Random(0)
+                control = SearchControl(None, 0, now_ns=lambda: 0)
+                with (
+                    patch.object(mg, "search_move", wraps=mg.search_move) as controlled,
+                    patch.object(
+                        adapter.iterative_deepening, "search_controlled"
+                    ) as four_ply,
+                ):
+                    try:
+                        result = adapter.search_move(position, policy, rng, control)
+                    except ValueError as error:
+                        self.fail(f"制御付き探索がV1を拒否しました: {error}")
+
+                self.assertEqual(result.completion, mg.SearchCompletion.COMPLETE)
+                self.assertIn(result.move, mg.legal_moves(position))
+                controlled.assert_called_once_with(position, policy, rng, control)
+                four_ply.assert_not_called()
 
     def test_unknown_policy_fails_before_search(self):
         """未知値やNoneは探索操作を作る前に両対局入口で拒否する。

@@ -2,13 +2,13 @@
 
 ## 現在地（2026-11-01）
 
-V比較CLI接続・予備比較・確認比較・分析を完了し、本人承認後にmainへ統合した。V comparison policy `material-piece-threat-v0` / `material-piece-threat-v1` は比較CLI専用であり、通常CLI・USIの選択肢にはまだ接続していない。本人は2026-11-01に、比較で改善が支持されたVを通常CLI・USIへ接続することを次テーマとして選んだ。設計・実装計画は未作成・未承認で、TDD・コード・テスト変更はまだ開始していない。
+V比較CLI接続・予備比較・確認比較・分析を完了し、本人承認後にmainへ統合した。確認比較は事前固定6局面・一手選択・指定条件の範囲で改善を支持したが、一般局面の棋力向上を示さない。通常CLI・USI接続の設計案・実装計画は本人が全体承認し、実装も承認した。V1は通常CLI候補7とUSI `MaterialSupportedPieceThreat` に接続済み。通常CLI CVCは先後を入れ替えた2局を既定の10分・30秒で完局し、開始表示・両側の実着手・終局を確認した。詳細は[設計](plans/2026-11-01-v-normal-cli-usi-design.md)、[実装計画](plans/2026-11-01-v-normal-cli-usi-implementation-plan.md)、[学習記録](learning/supported-piece-lower-value-threat.md)にある。
 
-次テーマ用に、クリーンな標準clone `/private/tmp/kaname-shogi-main-integration-clone` のbranch `codex/v-supported-threat-normal-cli-usi-connection` を作成した。起点はGitHub `main` と直接照合した `02f7612a8ac005dbfa79cb079f2ea93303496fd5`。cloneの `origin/main` は元checkoutのローカルmainを参照しており古いため、GitHubの先端と混同しない。作業状態・背景・次の読み物・再開用プロンプトは[引き継ぎ](handover-v-normal-cli-usi-connection.md)にある。本人が新セッションで再開プロンプトを入力するまで、設計・実装を始めない。
+作業場所は標準clone `/private/tmp/kaname-shogi-main-integration-clone` のbranch `codex/v-supported-threat-normal-cli-usi-connection`。起点はGitHub `main` と直接照合した `02f7612a8ac005dbfa79cb079f2ea93303496fd5`、開始HEADは `f60aad53f171d94ae73d933447a46589c28052c2`。関連185件・全体1039件/84モジュール、Ruff、差分検査、変更Markdownの775相対リンク検査は成功した。独立レビューの初回Minor 1件はテスト説明を修正し、再確認でCritical 0 / Important 0 / Minor 0となった。学習・知識文書の本人確認を待ち、確認を受けてからtopic branchへコミットする。main統合・pushは別途承認を得る。開始時の物理状態は[引き継ぎ](handover-v-normal-cli-usi-connection.md)にある。
 
 前テーマの確認比較は別の6局面・2040組/4080局・`--workers 4` で完了し、候補平均得点の95% Hoeffding区間[0.505225, 0.567569]から、固定した条件下で改善を支持した。一般局面の棋力向上は示さない。結果と本人回答は[学習記録](learning/supported-piece-lower-value-threat.md)に記録した。統合先テストは1031件・84モジュール・25.565秒で成功し、後続の文書コミットはhookと差分・リンク検査を通過した。
 
-元の `/Users/oki2a24/kaname-shogi` は現在もbranch `codex/c1-analysis-performance-investigation` 上の既存変更・未追跡データを保持し、変更していない。比較テーマのtopic branch `codex/supported-lower-value-threat-comparison` とそのworktreeはcleanな状態で保持している。保護指定 `.agents/tasks/`、`data/comparison/runs/` とC2保護4件も変更していない。
+元の `/Users/oki2a24/kaname-shogi` はbranch `codex/c1-analysis-performance-investigation` 上の既存変更・未追跡データを保持しており、この設計作業では変更していない。保護指定 `.agents/tasks/`、`data/comparison/runs/` とC2保護4件も変更していない。main統合・pushは別途承認待ち。
 
 現在選定したVの通常CLI・USI接続は補助・派生テーマである。主線の次の非駒得評価項目の選定は未完了の目標として残す。ほかの候補・ShogiHomeでのU実践など保留中の帰還先は[次テーマ候補](next-topics.md)を参照する。
 
