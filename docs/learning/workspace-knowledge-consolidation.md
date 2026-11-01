@@ -12,6 +12,6 @@
 
 今回、旧知識メモの未更新と一時cloneの継続使用が本人の指摘で判明した。固定版Ruffだけでは古いPython参照を検出できず、コミットフックで発覚した。以後の具体的な確認手順は[文書更新ガイド](../documentation-guide.md#作業場所と知識メモの継続点検)へ追加し、このセッションでも作業先・既存差分・退避物・Python本体・各知識メモを照合した。これらの手順は将来のセッションでも再開時と関係文書更新時に適用する。
 
-旧cloneの全Git参照は `migration-preservation-2026-11-01/clone-all-refs.bundle` に、無視対象の `.superpowers` と `.venv` は `clone-ignored-artifacts.tar` に退避した。bundleの検証と、tar内の通常ファイル1770件の内容照合を行った。旧cloneの知識メモ3件の差分は、元ディレクトリのコミットとSHA-256が一致した。旧cloneの保護指定に関係する成果物の扱いは、整理時に改めて現物と本人の指定を確認する。
+旧cloneの全Git参照は `migration-preservation-2026-11-01/clone-all-refs.bundle` に、無視対象の `.superpowers` と `.venv` は `clone-ignored-artifacts.tar` に退避した。bundleの検証と、tar内の通常ファイル1770件の内容照合を行った。旧cloneの知識メモ3件の差分は、元ディレクトリのコミットとSHA-256が一致した。本人は保護指定の例外として、退避と照合後の旧clone全体の削除を承認した。旧clone全体を `clone-complete-2026-11-01.tar` に保存し、通常ファイル3607件の内容とシンボリックリンクを照合してから旧cloneを削除した。元ディレクトリの比較データと退避アーカイブは保持している。
 
 再発防止策の独立レビューはCritical 0、Important 1、Minor 0。再開時の必読入口から手順に到達できない指摘に対応し、再開案内に適用指示とガイドへのリンクを追加し、再レビューはCritical 0、Important 0、Minor 0だった。
