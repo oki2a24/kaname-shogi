@@ -66,3 +66,7 @@ C2保護対象を含まない `c1-analysis-resume`・`c1-analysis-speedup`・`un
 `b2-main-integration` 全体を `worktree-preservation-2026-11-01/b2-main-integration.tar` に複写し、通常ファイル10061件とシンボリックリンクを元実体と照合した。実体側のファイル・リンク収録漏れと余分は0件で、C2保護4件と `.agents/tasks/` の内容を含む。空ディレクトリ、ファイルモード、拡張属性、展開後の動作は未検証。元の保護対象は変更していない。
 
 B2 tarの独立照合では通常ファイル10061件・シンボリックリンク3件の不一致0、元実体からの収録漏れ0。C2保護4件と `.agents/tasks/` の元・tar双方の存在を確認した。tarのSHA-256は `60c4ec54270b3e7e9fe3951200234c3a4bdbb2dc3d405a4feb89ef4e96577bd1`。空ディレクトリの収録漏れ、権限・所有権・拡張属性、展開後の実用性は未検証。
+
+本人は、C2保護4件と `.agents/tasks/` を含む最後の `b2-main-integration` worktreeについて、退避アーカイブを保持したうえで元を削除する例外を明示承認した。削除直前にtarと元の通常ファイル10061件・シンボリックリンク3件を再照合し、収録対象の一致を確認した後、未追跡の保護対象を含むため `git worktree remove --force` で削除した。tar、他の退避物、元ディレクトリにある既存比較データ、branch `codex/undefended-piece-evaluation` のコミット `3864897a` は保持した。main統合とpushは未実施。
+
+削除後の記録・退避物の独立レビューは初回Critical 0、Important 1、Minor 0、再確認でImportant 1、Minor 1。退避READMEの調査時点と削除後の状態を区別して修正し、最終確認はCritical 0、Important 0、Minor 0だった。文書のみのため製品テストは再実行していない。
