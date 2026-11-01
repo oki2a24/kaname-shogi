@@ -36,6 +36,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
+本人が選択した主線「次の非駒得評価項目を一つ選び学ぶ」の再開は[引き継ぎ](handover-mainline-after-documentation.md)、現在の状態は[再開案内](resume.md)を参照する。
+
 現在の作業場所・承認段階・次の行動は[再開案内](resume.md)を正本とする。元ディレクトリへの移行、退避物と文書整備の経緯は[整理記録](learning/workspace-knowledge-consolidation.md)を参照する。
 
 非駒得評価の主線では、UとVの通常CLI・USI接続を終えた。比較条件・結果と本人回答は[Uの学習記録](learning/undefended-piece-coordination-evaluation.md)と[Vの学習記録](learning/supported-piece-lower-value-threat.md)を参照する。次の評価項目は未選定であり、ShogiHomeでのU候補実践はアクセス可能との本人連絡後に再提案する保留事項である。
