@@ -203,6 +203,6 @@ Task 1は方式名未登録を含むassertion Redから始め、同じ評価器�
 
 本人の「承認する」を受け、`codex/supported-lower-value-threat-comparison` をmainへfast-forward統合し、結果コミット`7a389a52f0b68a57a68c3bee97b750ae5475858a`をorigin/mainへpushした。topic branchと元の作業worktreeは保持した。統合範囲に保護対象`.agents/tasks/`、`data/comparison/runs/`およびC2保護4件は含まれず、元の`/Users/oki2a24/kaname-shogi`の作業ファイルも編集していない。
 
-統合用worktreeでは`.venv`がなかったため、USI起動テスト3件が環境不足で失敗した。READMEのsetupスクリプトは別worktreeでは実行しないよう停止したため、標準clone`/private/tmp/kaname-shogi-main-integration-clone`で`python3 scripts/setup_dev.py`を実行して検証した。Ruff 0.16.10、`.githooks`、Ruff format（142 files already formatted）、Ruff check、`git diff --check`が成功し、全体テスト`PYTHONDONTWRITEBYTECODE=1 python3 scripts/run_tests_parallel.py`は1031テスト・84モジュール・25.565秒で成功した。後続の再開案内・索引更新は文書だけの変更であり、文書ガイドに従って全体テストは再実行せず、コミットフックと差分・リンク確認で検証する。
+統合用worktreeでは`.venv`がなかったため、USI起動テスト3件が環境不足で失敗した。READMEのsetupスクリプトは別worktreeでは実行しないよう停止したため、標準clone`/private/tmp/kaname-shogi-main-integration-clone`で`python3 scripts/setup_dev.py`を実行して検証した。Ruff 0.16.10、`.githooks`、Ruff format（142 files already formatted）、Ruff check、`git diff --check`が成功し、全体テスト`PYTHONDONTWRITEBYTECODE=1 python3 scripts/run_tests_parallel.py`は1031テスト・84モジュール・25.565秒で成功した。今回の再開案内・索引更新は文書だけの変更であり、全体テストは再実行せず、コミットフック、`git diff --check`、Markdown相対リンク700件（欠落0件）で確認した。
 
 統合先検証が終わったため、最後の理解確認を次に一問提示する。本人の回答と補足はまだ記録していない。
