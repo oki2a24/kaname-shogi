@@ -44,3 +44,11 @@ USI知識メモは四手二方式が接続時点では実機未確認だった�
 文書とスキルの独立レビューは初回Critical 0、Important 2、Minor 0。設計案と再開案内の承認状態・現在地の不一致を修正し、再レビューはCritical 0、Important 0、Minor 0だった。索引の未承認案を区別する追記も再確認した。
 
 2026-11-01、文書整理とスキルを作業ブランチの `114611f` としてコミットした。通常フックはRuff整形・lintに成功した。main統合とpushはそれぞれ本人の別承認待ち。別ユーザーセッションでのスキル自動発見は未確認。
+
+## 既存ワークツリーの確認（2026-11-01）
+
+本人は今後ワークツリーを使用しない方針で整理を依頼した。元ディレクトリからGit一覧と各worktreeの状態を読み取った。追加worktreeは9件で、`main` が `/private/tmp/kaname-shogi-main-integration` の `7a389a52` で使用中だった。同worktreeの追跡変更・未追跡・無視対象は表示されなかった。
+
+`usi-move-notation-record` には本人回答と設計再承認を含む学習記録の未コミット27行があり、元ディレクトリの未追跡 `worktree-preservation-2026-11-01/` にファイルと差分を退避し、元ファイルとのバイト一致を確認した。`b2-main-integration` には `.agents/tasks/`、C2保護4件、U比較結果があり、変更していない。他にも無視対象があるworktreeがある。既存worktreeはいずれも未削除、main統合・pushも未実施である。
+
+上記の整理状況と退避物は独立レビューでCritical 0、Important 0、Minor 0。退避ファイルとpatchの内容・SHA-256、main使用中の一時worktreeの状態、保護4件の存在を照合した。全9 worktreeの全ファイル内容は網羅していない。文書のみの変更のため製品テストは再実行していない。

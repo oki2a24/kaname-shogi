@@ -4,6 +4,8 @@
 
 現在は本人が選択した文書整理の作業ブランチでの実施・検証・独立レビューを完了し、mainへの統合承認を待つ。作業先は `/Users/oki2a24/kaname-shogi`、branchは `codex/documentation-maintenance`。[設計案](plans/2026-11-01-documentation-maintenance-design.md)は本人が2026-11-01に承認済み。共通手順はこのリポジトリ内で利用する。[実施計画案](plans/2026-11-01-documentation-maintenance-implementation-plan.md)を作成し、本人が2026-11-01に承認し、整理・スキル作成・検証を実施した。作業コミットは `114611f`。main統合とpushはそれぞれ別承認待ち。次の非駒得評価項目は未選定の主線として保留し、ShogiHomeでのU実践もアクセス可能との本人連絡後に再提案する。
 
+2026-11-01、本人は今後ワークツリーを使用しない方針を再確認した。既存9件の調査では `main` が別の一時ワークツリーで使用中で、他のワークツリーには未コミット学習記録やC2保護データがある。学習記録の写しと差分は未追跡 `worktree-preservation-2026-11-01/` に退避・照合した。既存ワークツリーは未削除で、取り扱いは本人の指定と保護条件に従う。
+
 作業は `/Users/oki2a24/kaname-shogi` だけで行い、開発は同じディレクトリ内の作業ブランチで行う。別worktreeや別cloneは使用しない。再開時は[作業場所と知識メモの継続点検](documentation-guide.md#作業場所と知識メモの継続点検)を適用し、Git状態と仮想環境のPython本体を確認する。
 
 2026-11-01、本人の希望により主線の作業先を `/Users/oki2a24/kaname-shogi` へ戻した。移行直後の作業branchは `codex/next-non-material-evaluation-item`。元のC1作業の変更文書3件と、同名衝突する未追跡文書3件は内容照合後、元ディレクトリ内の未追跡 `migration-preservation-2026-11-01/original-documents.tar` と差分patchに退避した。元branch `codex/c1-analysis-performance-investigation` も保持する。既存の比較データとC2保護4件は保持し、本人の許可を得て追跡済みC2比較成果物23件を展開した。飛車可動性・玉安全度・Uの知識メモは現行の接続と比較結果に合わせて修正した。具体的な次の評価項目は未選定のままである。移行経緯と文書レビューは[整理記録](learning/workspace-knowledge-consolidation.md)にある。過去の引き継ぎにある作業先は作成時点の情報である。
