@@ -70,3 +70,9 @@ B2 tarの独立照合では通常ファイル10061件・シンボリックリン
 本人は、C2保護4件と `.agents/tasks/` を含む最後の `b2-main-integration` worktreeについて、退避アーカイブを保持したうえで元を削除する例外を明示承認した。削除直前にtarと元の通常ファイル10061件・シンボリックリンク3件を再照合し、収録対象の一致を確認した後、未追跡の保護対象を含むため `git worktree remove --force` で削除した。tar、他の退避物、元ディレクトリにある既存比較データ、branch `codex/undefended-piece-evaluation` のコミット `3864897a` は保持した。main統合とpushは未実施。
 
 削除後の記録・退避物の独立レビューは初回Critical 0、Important 1、Minor 0、再確認でImportant 1、Minor 1。退避READMEの調査時点と削除後の状態を区別して修正し、最終確認はCritical 0、Important 0、Minor 0だった。文書のみのため製品テストは再実行していない。
+
+## mainへの統合と検証（2026-11-01）
+
+本人はmainへの統合とpushを依頼した。GitHub `main` は統合前に `9cad36da20c8fed785bcda8bf4501f96d3aecc95`、ローカル `main` は `7a389a52f0b68a57a68c3bee97b750ae5475858a` で、いずれも作業ブランチ `4e94596a761b5ca0b130ccedfac325ed9c3848f4` の祖先と確認した。指定の元ディレクトリで `main` へ切り替え、`git merge --ff-only codex/documentation-maintenance` で早送り統合した。
+
+統合先で `python3 scripts/run_tests_parallel.py` は1039テスト・84モジュール、25.282秒で成功。Ruff整形確認は142ファイル変更なし、lintと `git diff --check` は成功した。関連9文書・スキルの相対リンク808件は欠落0件（見出しの意味や文書全体の正確性は保証しない）。この記録作成時点ではpush未実施、最後の理解確認は未実施。
