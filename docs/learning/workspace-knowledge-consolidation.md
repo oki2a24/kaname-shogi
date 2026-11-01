@@ -54,3 +54,9 @@ USI知識メモは四手二方式が接続時点では実機未確認だった�
 上記の整理状況と退避物は独立レビューでCritical 0、Important 0、Minor 0。退避ファイルとpatchの内容・SHA-256、main使用中の一時worktreeの状態、保護4件の存在を照合した。全9 worktreeの全ファイル内容は網羅していない。文書のみの変更のため製品テストは再実行していない。
 
 本人は `/private/tmp/kaname-shogi-main-integration` の削除を承認した。2026-11-01、追跡変更・未追跡・無視対象がないこととmainの `7a389a52` を再確認し、`git worktree remove` で同worktreeだけを削除した。mainの統合・pushは実施していない。残る8 worktreeと保護対象は保持している。
+
+本人は必要な内容を取り込んだうえで不要になったworktreeの削除を依頼した。追跡変更・未追跡・無視対象がなく、HEADが現行branchの祖先である `2e7a`・`9c92`・`cedb` を削除した。対応する名前付きbranchとコミット履歴は保持した。
+
+`usi-move-notation-record` の未コミット27行は[第55回の学習記録](55-usi-move-notation.md#第55回の再確認と設計再承認2026-10-02)へ、当時の次テーマを現在と区別する注記付きで取り込んだ。C1早期終了の別系統 `45d3a04c` は現行 `_has_legal_move` と同じ処理が既にあり、実施と取り込みの履歴も `c1-comparison-game-internal-speedup.md` にある。Vの別系統 `3864897a` は該当する評価コード・テストが現行と一致し、後続の学習記録も現行にある。コミットSHAが祖先でないことだけを理由に重複した製品変更を適用せず、元のbranch参照を保持する。
+
+C2保護対象を含まない `c1-analysis-resume`・`c1-analysis-speedup`・`undefended-piece-integration`・`usi-move-notation-record` の4 worktreeはそれぞれ `worktree-preservation-2026-11-01/` にtarで退避。独立レビューは通常ファイル計4345件とシンボリックリンクを参照元と照合し、不一致・未収録0件。空ディレクトリ、ファイルモード、拡張属性、展開後の動作は未検証。USI追記の履歴保全と退避について独立レビューはCritical 0、Important 0、Minor 0だった。
