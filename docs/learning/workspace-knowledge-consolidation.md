@@ -76,3 +76,5 @@ B2 tarの独立照合では通常ファイル10061件・シンボリックリン
 本人はmainへの統合とpushを依頼した。GitHub `main` は統合前に `9cad36da20c8fed785bcda8bf4501f96d3aecc95`、ローカル `main` は `7a389a52f0b68a57a68c3bee97b750ae5475858a` で、いずれも作業ブランチ `4e94596a761b5ca0b130ccedfac325ed9c3848f4` の祖先と確認した。指定の元ディレクトリで `main` へ切り替え、`git merge --ff-only codex/documentation-maintenance` で早送り統合した。
 
 統合先で `python3 scripts/run_tests_parallel.py` は1039テスト・84モジュール、25.282秒で成功。Ruff整形確認は142ファイル変更なし、lintと `git diff --check` は成功した。関連9文書・スキルの相対リンク808件は欠落0件（見出しの意味や文書全体の正確性は保証しない）。この記録作成時点ではpush未実施、最後の理解確認は未実施。
+
+2026-11-01、本人の依頼により、統合・検証を記録した `4dcf6b76` をGitHub `main` へ通常pushした。push結果は `9cad36da..4dcf6b76`。最後の理解確認は未実施。
