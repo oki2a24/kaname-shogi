@@ -60,3 +60,9 @@ USI知識メモは四手二方式が接続時点では実機未確認だった�
 `usi-move-notation-record` の未コミット27行は[第55回の学習記録](55-usi-move-notation.md#第55回の再確認と設計再承認2026-10-02)へ、当時の次テーマを現在と区別する注記付きで取り込んだ。C1早期終了の別系統 `45d3a04c` は現行 `_has_legal_move` と同じ処理が既にあり、実施と取り込みの履歴も `c1-comparison-game-internal-speedup.md` にある。Vの別系統 `3864897a` は該当する評価コード・テストが現行と一致し、後続の学習記録も現行にある。コミットSHAが祖先でないことだけを理由に重複した製品変更を適用せず、元のbranch参照を保持する。
 
 C2保護対象を含まない `c1-analysis-resume`・`c1-analysis-speedup`・`undefended-piece-integration`・`usi-move-notation-record` の4 worktreeはそれぞれ `worktree-preservation-2026-11-01/` にtarで退避。独立レビューは通常ファイル計4345件とシンボリックリンクを参照元と照合し、不一致・未収録0件。空ディレクトリ、ファイルモード、拡張属性、展開後の動作は未検証。USI追記の履歴保全と退避について独立レビューはCritical 0、Important 0、Minor 0だった。
+
+4 worktreeの退避・照合後、本人の整理指示に従い4件を `git worktree remove` で削除した。USIの元worktreeだけは既に履歴へ取り込んだ追跡ファイルの未コミット差分を含んでいたため、照合済みtarとpatchを保持した上で `--force` を使用した。残る `b2-main-integration` にはC2保護4件と `.agents/tasks/` があるため、元の保護指示を守り削除せず保持している。
+
+`b2-main-integration` 全体を `worktree-preservation-2026-11-01/b2-main-integration.tar` に複写し、通常ファイル10061件とシンボリックリンクを元実体と照合した。実体側のファイル・リンク収録漏れと余分は0件で、C2保護4件と `.agents/tasks/` の内容を含む。空ディレクトリ、ファイルモード、拡張属性、展開後の動作は未検証。元の保護対象は変更していない。
+
+B2 tarの独立照合では通常ファイル10061件・シンボリックリンク3件の不一致0、元実体からの収録漏れ0。C2保護4件と `.agents/tasks/` の元・tar双方の存在を確認した。tarのSHA-256は `60c4ec54270b3e7e9fe3951200234c3a4bdbb2dc3d405a4feb89ef4e96577bd1`。空ディレクトリの収録漏れ、権限・所有権・拡張属性、展開後の実用性は未検証。
