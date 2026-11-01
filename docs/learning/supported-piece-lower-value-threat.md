@@ -279,4 +279,10 @@ Task 1の根探索テスト初回Greenでは、実合法手一覧すべてを採
 
 Refactor判断では、新しい評価器や探索経路を作らず、V1を既存の制御付き一手選択へ加える範囲が最小と判断し、別のコード整理を追加しなかった。開始HEADとの差分を対象に独立レビューを行い、初回結論はCritical 0 / Important 0 / Minor 1だった。Minorは `CONTROLLED_ONE_PLY_POLICIES` にV1が含まれる一方、停止時の予備手・局面保持テストのdocstringが「旧三方式とU」と書いていた説明の範囲ずれである。該当2つの説明を「制御付き一手方針」に直し、V1を含む実ループと一致させた。製品コード・テスト動作は変えていない。独立レビュアーの差分再確認後はCritical 0 / Important 0 / Minor 0となった。修正後に対象2テストが成功し、Ruff・`git diff --check`も再実行して成功した。説明文だけの修正のため全体回帰は再実行していない。
 
-学習・知識文書は本人確認前の作業ブランチ上にあり、コミットは未実施。本人が内容を確認した後に通常hook付きで作業ブランチへコミットする。main統合・pushは別途承認を待つ。
+### 本人確認・コミット・main統合（事後記録、2026-11-01）
+
+本人は学習・知識文書の内容を確認して承認し、通常hook付きでtopic branchへコミットすることを了承した。コミット `2f49b186ba9b775bebaa4da79381feb721b28b50`（`feat: V評価を通常CLI・USIへ接続`）はbranch `codex/v-supported-threat-normal-cli-usi-connection`に作成した。その後、本人の明示承認を受けてclone内の`main`をGitHubの実測先端 `02f7612a8ac005dbfa79cb079f2ea93303496fd5`からfast-forwardし、同コミットをGitHub `main`へ非強制pushした。push後のfetchでローカルとリモートの先端SHAがともに `2f49b186ba9b775bebaa4da79381feb721b28b50`であることを確認した。
+
+統合後`main`では全体回帰1039件・84モジュールが24.759秒で成功し、Ruff format 142ファイル変更なし、Ruff check、Git差分検査も成功した。元の`/Users/oki2a24/kaname-shogi`は既存C1作業の作業状態を保ち、本テーマでは編集していない。統合差分にも`.agents/tasks/`、`data/comparison/runs/`、C2保護4件は含まれない。
+
+最後の理解確認は未実施である。本記録の更新後に一問だけ提示し、本人回答を待つ。

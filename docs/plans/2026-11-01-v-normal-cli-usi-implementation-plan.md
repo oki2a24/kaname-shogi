@@ -78,7 +78,7 @@
 - [x] Ruff import整理、`.venv/bin/ruff format .`、`.venv/bin/ruff check .`、`git diff --check`を行った。import整理成功、142ファイル整形済み、Ruff全ルール成功。最初の全Ruff checkは追加したloop closureのB023を検出し、ループ変数を明示束縛して解消した。
 - [x] 全体回帰: `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python3 scripts/run_tests_parallel.py`（1039 tests・84 modules・24.987秒、成功）。共有状態・順序依存およびランナー変更がないため逐次全体実行は追加しない。
 - [x] Refactor要否を確認してから独立レビューを行った。初回Critical 0 / Important 0 / Minor 1。MinorはV1を含む共通一手方針ループに対し、二つの停止・予備手テストdocstringが旧三方式+Uと記載する説明範囲ずれで、文言を修正した。製品挙動は変えていない。独立レビューの差分再確認はCritical 0 / Important 0 / Minor 0。修正した2テスト、Ruff、差分検査を再実行して成功。結論と対象範囲を[学習記録](../learning/supported-piece-lower-value-threat.md)に記録した。
-- [ ] 学習記録・知識メモの内容を本人が確認した後、通常hook付きで作業ブランチへ対象差分をコミットする。main統合・pushは別途本人承認を待つ。
+- [x] 学習記録・知識メモの内容を本人が確認した後、通常hook付きでtopic branchへコミットした（`2f49b186ba9b775bebaa4da79381feb721b28b50`）。別途承認を受けてclone内の`main`をGitHubの確認済み先端からfast-forwardし、GitHub`main`へ非強制pushした。push後に両先端のSHA一致を確認した。統合先全体回帰は1039件・84モジュールが24.759秒で成功し、Ruff format/checkと差分検査も成功した。元checkoutは既存作業を保持したまま変更していない。
 
 ## 計画のセルフレビューと未検証事項
 
