@@ -40,7 +40,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 現在の作業場所・承認段階・次の行動は[再開案内](resume.md)を正本とする。元ディレクトリへの移行、退避物と文書整備の経緯は[整理記録](learning/workspace-knowledge-consolidation.md)を参照する。
 
-非駒得評価の主線では、U（支えのない被攻撃駒の枚数差）とV（支えあり低価値駒脅威の枚数差）の通常CLI・USI接続を終えた。今回の価値合計評価は作業branchで実装し、全体テスト1054件・87モジュールとRuffを通過した。独立レビュー最終判定はCritical 0 / Important 0 / Minor 0。branchへのコミットを進めており、main統合・pushは別途承認待ち。比較CLI接続・比較実行は今回の範囲外。背景は[Uの学習記録](learning/undefended-piece-coordination-evaluation.md)と[Vの学習記録](learning/supported-piece-lower-value-threat.md)にある。ShogiHomeでのU候補実践はアクセス可能との本人連絡後に再提案する保留事項である。
+非駒得評価の主線では、U（支えのない被攻撃駒の枚数差）とV（支えあり低価値駒脅威の枚数差）の通常CLI・USI接続を終えた。今回の価値合計評価はtopic commit `23306c01` として作業branchへコミットし、全体テスト1054件・87モジュール、Ruff、独立レビューを完了した。main統合・pushは別途承認待ち。比較CLI接続・比較実行は今回の範囲外。背景は[Uの学習記録](learning/undefended-piece-coordination-evaluation.md)と[Vの学習記録](learning/supported-piece-lower-value-threat.md)にある。ShogiHomeでのU候補実践はアクセス可能との本人連絡後に再提案する保留事項である。
 
 ## よく参照する現行資料
 
@@ -57,7 +57,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
-| 支えのない被攻撃駒の価値合計を評価へ反映する（主線・実装/テスト/独立レビュー完了。branch commit中。main未統合） | [本人の回答・実装・検証](learning/undefended-piece-value.md) | [集計・合成仕様](knowledge/undefended-piece-value.md) | [本人承認済み設計](plans/2026-11-02-undefended-piece-value-design.md) | [本人承認済み計画・進捗](plans/2026-11-02-undefended-piece-value-implementation-plan.md) | [開始時の引き継ぎ](handover-mainline-after-documentation.md) |
+| 支えのない被攻撃駒の価値合計を評価へ反映する（主線・実装/テスト/独立レビュー完了、topic commit `23306c01`。main未統合） | [本人の回答・実装・検証](learning/undefended-piece-value.md) | [集計・合成仕様](knowledge/undefended-piece-value.md) | [本人承認済み設計](plans/2026-11-02-undefended-piece-value-design.md) | [本人承認済み計画・進捗](plans/2026-11-02-undefended-piece-value-implementation-plan.md) | [開始時の引き継ぎ](handover-mainline-after-documentation.md) |
 | 支えのない狙われた駒の評価・比較CLI接続（主線・B実装/理解確認、C比較実装/検証/レビュー・pilot/confirmation/分析完了、最後の理解確認回答済み。main統合・push未承認） | [本人回答・実装・検証・比較結果](learning/undefended-piece-coordination-evaluation.md) | [枚数差・重み付き評価・比較方式](knowledge/undefended-piece-evaluation.md) | [承認済み接続比較設計](plans/2026-10-30-undefended-piece-comparison-design.md) | [承認済み実装計画・進捗](plans/2026-10-30-undefended-piece-comparison-implementation-plan.md) | [開始時の引き継ぎ](handover-undefended-piece-evaluation-comparison.md) |
 | Vの比較CLI接続・二段階比較（予備・確認分析完了、main統合・push・統合先検証・最後の理解確認済み） | [本人回答・承認・実施記録](learning/supported-piece-lower-value-threat.md) | [確定知識](knowledge/supported-piece-lower-value-threat.md) | [承認済み比較設計](plans/2026-10-31-supported-lower-value-threat-comparison-design.md) | [承認済み実装計画](plans/2026-10-31-supported-lower-value-threat-comparison-implementation-plan.md) | [開始時引き継ぎ](handover-supported-lower-value-threat-comparison.md) |
 | Vの通常CLI・USI接続（実装・CVC 2局・検証・独立レビュー・文書確認・topic commit・main統合・push済み、最後の理解確認済み。次の主線テーマを選定済み、具体項目は未選定） | [本人回答・合意・実装・操作実証](learning/supported-piece-lower-value-threat.md) | [確定知識](knowledge/supported-piece-lower-value-threat.md) | [本人承認済み設計](plans/2026-11-01-v-normal-cli-usi-design.md) | [本人承認済み実装計画・結果](plans/2026-11-01-v-normal-cli-usi-implementation-plan.md) | [開始時引き継ぎ](handover-v-normal-cli-usi-connection.md)、[次の主線引き継ぎ](handover-mainline-next-evaluation-item.md) |

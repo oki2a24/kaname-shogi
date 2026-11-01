@@ -4,7 +4,7 @@
 
 ### 最新状態（2026-11-02）
 
-本人は主線の具体項目として「支えのない被攻撃駒の価値を評価へ反映する」を選定。対象一枚一回、従来のU（支えのない被攻撃駒の枚数差）を価値合計差へ置き換え、仮重み1とする設計・実施計画を承認した。新しい価値集計・合成と既存一手選択器への注入確認をbranch `codex/next-evaluation-after-docs` で実装し、全体1054件・87モジュール、Ruff、8種類の代表的な誤り注入を確認済み。独立レビュー最終判定はCritical 0 / Important 0 / Minor 0。最終記録とコミットを進めている。A番号は割り当てない。[学習記録](learning/undefended-piece-value.md)、[確定知識](knowledge/undefended-piece-value.md)、[現在地](resume.md)を参照。比較CLIへの接続・比較実行は未実施で、別途承認を待つ。ShogiHomeでのU候補実践は引き続き保留。
+本人は主線の具体項目として「支えのない被攻撃駒の価値を評価へ反映する」を選定。対象一枚一回、従来のU（支えのない被攻撃駒の枚数差）を価値合計差へ置き換え、仮重み1とする設計・実施計画を承認した。新しい価値集計・合成と既存一手選択器への注入確認をbranch `codex/next-evaluation-after-docs` で実装し、全体1054件・87モジュール、Ruff、8種類の代表的な誤り注入を確認済み。独立レビュー最終判定はCritical 0 / Important 0 / Minor 0。topic commitは `23306c01`。A番号は割り当てない。[学習記録](learning/undefended-piece-value.md)、[確定知識](knowledge/undefended-piece-value.md)、[現在地](resume.md)を参照。比較CLIへの接続・比較実行は未実施で、別途承認を待つ。ShogiHomeでのU候補実践は引き続き保留。
 
 ### 2026-11-01時点の履歴
 

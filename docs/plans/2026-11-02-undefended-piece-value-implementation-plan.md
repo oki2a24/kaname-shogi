@@ -2,7 +2,7 @@
 
 > **AIエージェントへの指示:** タスクごとの実行には `superpowerssuperpowers:executing-plans` または `superpowerssuperpowers:subagent-driven-development` を、本人が選ぶ実行方式に従って使用する。本計画の明示承認前はTDD・製品コード・テスト変更・実装を始めない。追跡用チェックボックスは実施証拠がある場合だけ更新する。
 
-**状態:** 2026-11-02作成。設計全体・本計画・実装開始、推奨されたネイティブ方式を本人の「YES」で承認済み。Task 1〜3の実装・テスト・レビュー・記録が完了し、topic branchへのコミット待ち。main統合・pushは別途承認待ち。
+**状態:** 2026-11-02作成。設計全体・本計画・実装開始、推奨されたネイティブ方式を本人の「YES」で承認済み。Task 1〜3の実装・テスト・レビュー・記録が完了し、topic branchへ `23306c01` としてコミット済み。main統合・pushは別途承認待ち。
 
 **目標:** 支えのない被攻撃駒の価値合計差を実装し、従来の枚数差を置き換えた通常評価を既存の一手選択器へ渡して検証する。
 
@@ -191,7 +191,7 @@ self.assertEqual(selected_move, supported_move)
 - [x] Ruff設定と対象を調べ、未追跡仮想環境バックアップにPythonファイルがあることを確認。保護対象を巻き込まないよう今回の新規6 Pythonファイルを明示して `.venv/bin/ruff check --select I --fix`、`.venv/bin/ruff format`、`.venv/bin/ruff check` を順に実行し成功した。変更後の全体検査 `python3 scripts/run_tests_parallel.py` は1054件・87モジュール・24.620秒で成功し、`git diff --check` も成功。
 - [x] Refactor不要と判断した。独立レビュー初回はCritical 0 / Important 1 / Minor 1で、複数対象の合計テストとV係数0の例外検査を追加。再レビューはCritical 0 / Important 0 / Minor 0。契約・代表ケース・検出対象・既存補完・未検証は学習記録に記録した。
 - [x] 知識メモへ契約・重み・独立期待値・比較CLI未接続と棋力未検証を記載。学習・設計・計画・索引・現在地を更新し、リンクと差分を確認した。今回のファイルだけを明示ステージし、通常hookを通す。`git add .`、`--no-verify`は使わない。
-- [ ] テーマの実装・検証・レビュー・記録がそろったら作業branchにコミットする。main統合・pushはせず、別途承認を待つ。現在ディレクトリが元の作業先であること、mainへの未取り込みを報告する。承認後のmain統合と取り込み先検証、最後の理解確認一問は後続で行う。
+- [x] テーマの実装・検証・レビュー・記録を `23306c01` で作業branchへコミットした。現在ディレクトリは元の `/Users/oki2a24/kaname-shogi`、branchは `codex/next-evaluation-after-docs`。mainには未取り込み。main統合・pushは別途承認待ちで、承認後の統合先検証と最後の理解確認一問は後続で行う。
 
 ## GREEN条件と未検証範囲
 
