@@ -2,15 +2,15 @@
 
 ## 現在地（2026-11-01）
 
-V比較設計と実装計画は本人承認済み。現在の作業場所は `/Users/oki2a24/.codex/worktrees/undefended-piece-integration/kaname-shogi`、branchは `codex/supported-lower-value-threat-comparison`。開始時に指定されたGit確認はbranch・main・HEADを実測して完了している。元の `/Users/oki2a24/kaname-shogi` は変更しない。
+V比較CLI接続・予備比較・確認比較・分析を完了し、本人の明示承認後、topic branch `codex/supported-lower-value-threat-comparison` を `main` へ fast-forward 統合して `origin/main` へ push した。統合先の基点は `5a8395a270bc8c9b308e801b7bc65fa2f9dca072`、統合結果は `7a389a52f0b68a57a68c3bee97b750ae5475858a`。作業branchとworktreeは保持している。
 
-Task 1〜4の比較専用V0/V1実装、二種類の固定局面JSONと独立M/U/V期待値、短いworker 4 pipeline、8種類の代表変異は完了。関連228テスト、全体1031テスト・84モジュール・25.146秒、Ruff import/format/check、差分検査が成功した。独立全体レビューはREADMEのMinor解消後にCritical 0 / Important 0 / Minor 0。確認分析完了後にも全体テストを再実行し、1031件・84モジュールが25.409秒で成功した。実装は `e59c6e3b435a2a8f2c3720e625758fe0b0032069` にコミット済み。
+統合先の確認では、READMEが別worktreeでのsetupを対象外として停止したため、標準clone `/private/tmp/kaname-shogi-main-integration-clone` を用意して `python3 scripts/setup_dev.py` を実行した。Ruff 0.16.10、`.githooks`、Ruff format（142 files already formatted）、Ruff checkが成功し、`PYTHONDONTWRITEBYTECODE=1 python3 scripts/run_tests_parallel.py` は1031テスト・84モジュール・25.565秒で成功した。最初の統合用worktreeでは `.venv` がなくUSI起動テスト3件が失敗したが、製品コードではなく環境不足が原因だった。README非対応のworktree setupは迂回していない。
 
-mainは `5a8395a270bc8c9b308e801b7bc65fa2f9dca072` のまま。本人の別承認がないためmain統合・pushは行っておらず、作業branch `codex/supported-lower-value-threat-comparison` とworktreeは保持する。保護指定された `.agents/tasks/`、`data/comparison/runs/`、C2保護4件、元の `/Users/oki2a24/kaname-shogi` は変更していない。実験成果は `/private/tmp/kaname-shogi-supported-piece-threat-comparison-2026-10-31-4w` に保存した。予備は専用5局面・50組/100局が約30分31秒で完了し、分析区間[0.368, 0.752]は予備のため強さの結論に使わず、確認比較へ加算していない。確認は予備と別の6局面×340組=2040組/4080局、`--max-plies 1024`、`--workers 4`。2026-11-01 15:09 JSTに全4080局・2040組が完了し、summary経過は約19時間31分。結果は詰み4070局、合法手なし1局、手数上限9局、error/interrupted 0。`confirmation-analysis-v1.json`は `purpose=confirmation`、V0対V1、95% Hoeffding paired boundsで、候補側得点平均の範囲[0.535294, 0.537500]、95%区間[0.505225, 0.567569]、判定「改善を支持」。下限は50%境界をわずかに上回る。これは事前固定した6局面・一手選択・条件に限った結果で、一般局面の棋力向上を示さない。条件ファイルは凍結版とバイト単位で一致し、全4080棋譜・summaryのhashも分析JSONと照合済み。予備用と確認用のseed・conditions・出力先は開始前に固定し、実行結果による差替えは行わなかった。詳細・全hash・局面別値は[学習記録](learning/supported-piece-lower-value-threat.md)に記録する。
+確認比較は事前固定した6局面・2040組/4080局・`--workers 4` で完了。候補得点の平均範囲[0.535294, 0.537500]、95% Hoeffding区間[0.505225, 0.567569]で、固定した範囲では改善を支持した。予備5局面・50組/100局の結果は確認へ加算していない。この結論は事前固定の6局面・一手選択・条件に限られ、一般局面の棋力向上を示さない。比較結果・局面別値・hashは[学習記録](learning/supported-piece-lower-value-threat.md)にある。
 
-統計は承認済み条件（95% Hoeffding区間、50%境界、55%効果目標、80%検出力案）を使い、結論は固定局面・一手選択・実行条件に限定する。V比較CLIの仕様とM/U/V局面期待値は[確定知識](knowledge/supported-piece-lower-value-threat.md)および[学習記録](learning/supported-piece-lower-value-threat.md)、計画・承認は[比較設計](plans/2026-10-31-supported-lower-value-threat-comparison-design.md)と[実装計画](plans/2026-10-31-supported-lower-value-threat-comparison-implementation-plan.md)を参照する。
+通常CLI・USI、通常CLIのSFEN入出力、飛車可動性v2、玉安全度との合成、Uの二手・四手適用は今回の対象外。`.agents/tasks/`、`data/comparison/runs/` とC2保護4件、および元の `/Users/oki2a24/kaname-shogi` は変更していない。元checkoutは現在も別branch `codex/c1-analysis-performance-investigation` 上の既存変更・未追跡データを保持する。比較成果は `/private/tmp/kaname-shogi-supported-piece-threat-comparison-2026-10-31-4w` に保存した。
 
-**作業境界：** 通常CLI・USI、通常CLIのSFEN入出力、飛車可動性v2、玉安全度合成、Uの二手・四手適用は追加しない。保護対象の作業ディレクトリ・runs・C2データは変更しない。最終理解確認は統合先の承認済み検証ができるまで保留し、未回答を記録しない。
+統計条件の承認・比較CLIの確定仕様・計画は[確定知識](knowledge/supported-piece-lower-value-threat.md)、[比較設計](plans/2026-10-31-supported-lower-value-threat-comparison-design.md)、[実装計画](plans/2026-10-31-supported-lower-value-threat-comparison-implementation-plan.md)を参照する。最後の理解確認は統合先検証完了後に一問提示し、回答を待つ。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 

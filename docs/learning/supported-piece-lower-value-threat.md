@@ -195,6 +195,14 @@ Task 1は方式名未登録を含むassertion Redから始め、同じ評価器�
 
 分析JSONに記録された条件・summary・全4080棋譜の入力hashを照合し、conditionsは凍結snapshotとバイト単位で一致した。positions SHA-256は`e717298db4f2ae9b078266786fa13cafd267713063b1ee3f6269fe2396c37243`、seed一覧は`b321986cd654dfaf3de01e9e0e402dc3d4f7c8e374748a2889ac2178035d2a93`、conditionsは`29e683dbd8176c4edf26e8b9238c940affd1b217d28016b3ffdb297e163bc397`、freeze manifestは`5aa3dc9c29af1087f882d6f6961df03fbc327680d7cbd4d00c2535d83a8db0a1`。pilotの5局面・50組は確認に含めず、別分析の候補区間[0.368, 0.752]から結論を引いていない。
 
-分析完了後の全体検証`PYTHONDONTWRITEBYTECODE=1 python3 scripts/run_tests_parallel.py`は1031テスト・84モジュールが25.409秒で成功した。独立コードレビュー最終判定はCritical 0 / Important 0 / Minor 0。mainは`5a8395a270bc8c9b308e801b7bc65fa2f9dca072`のままで、本人の別承認がないためmain統合・pushはしていない。比較・分析成果物は上記`/private/tmp`に保持し、保護対象`data/comparison/runs/`、C2保護4件、`.agents/tasks/`、元checkoutには触れていない。
+分析完了後の全体検証`PYTHONDONTWRITEBYTECODE=1 python3 scripts/run_tests_parallel.py`は1031テスト・84モジュールが25.409秒で成功した。独立コードレビュー最終判定はCritical 0 / Important 0 / Minor 0。この分析記録を作成した時点ではmainは`5a8395a270bc8c9b308e801b7bc65fa2f9dca072`で、本人の別承認による統合・pushを待っていた。比較・分析成果物は上記`/private/tmp`に保持し、保護対象`data/comparison/runs/`、C2保護4件、`.agents/tasks/`、元checkoutには触れていない。
 
-最後の理解確認は、本人の別承認によるmain統合と統合先検証が済むまで保留する。未回答の質問・回答・補足は作成していない。
+この時点では最後の理解確認を統合先検証まで保留していた。質問・回答・補足は未作成である。
+
+## main統合・push・統合先検証（2026-11-01、事後記録）
+
+本人の「承認する」を受け、`codex/supported-lower-value-threat-comparison` をmainへfast-forward統合し、結果コミット`7a389a52f0b68a57a68c3bee97b750ae5475858a`をorigin/mainへpushした。topic branchと元の作業worktreeは保持した。統合範囲に保護対象`.agents/tasks/`、`data/comparison/runs/`およびC2保護4件は含まれず、元の`/Users/oki2a24/kaname-shogi`の作業ファイルも編集していない。
+
+統合用worktreeでは`.venv`がなかったため、USI起動テスト3件が環境不足で失敗した。READMEのsetupスクリプトは別worktreeでは実行しないよう停止したため、標準clone`/private/tmp/kaname-shogi-main-integration-clone`で`python3 scripts/setup_dev.py`を実行して検証した。Ruff 0.16.10、`.githooks`、Ruff format（142 files already formatted）、Ruff check、`git diff --check`が成功し、全体テスト`PYTHONDONTWRITEBYTECODE=1 python3 scripts/run_tests_parallel.py`は1031テスト・84モジュール・25.565秒で成功した。後続の再開案内・索引更新は文書だけの変更であり、文書ガイドに従って全体テストは再実行せず、コミットフックと差分・リンク確認で検証する。
+
+統合先検証が終わったため、最後の理解確認を次に一問提示する。本人の回答と補足はまだ記録していない。
