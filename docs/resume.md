@@ -1,8 +1,12 @@
 # 学習・開発の再開案内
 
-## 現在地（2026-11-01）
+## 現在地（2026-11-02）
 
-本人は2026-11-01、文書整理の最後の理解確認後、主線「次の非駒得評価項目を一つ選び、学び、設計する」へ戻ることを選んだ。具体的な評価項目は未選定で、選定理由は聞いていない。新セッションで候補を比較し、本人の選択を待つ。[再開用プロンプトと引き継ぎ](handover-mainline-after-documentation.md#再開用プロンプト)。作業先は `/Users/oki2a24/kaname-shogi`、引き継ぎ作成branchは `codex/next-evaluation-after-docs`。文書整理はmain統合・push・最後の理解確認まで完了し、詳細は[学習記録](learning/workspace-knowledge-consolidation.md)にある。ShogiHomeでのU実践はアクセス可能との本人連絡後に再提案する保留目標。
+主線の具体項目として「支えのない被攻撃駒の価値を評価へ反映する」を本人が選定した。対象一枚は攻撃元の数によらず一度だけ数え、従来のU（支えのない被攻撃駒の枚数差）を価値合計差へ置き換え、M（駒得）とV（支えあり低価値駒脅威）を保つ。価値合計差の仮重みは1。設計・実施計画とネイティブ方式を本人が承認し、集計・合成・既存一手選択器への注入を実装した。全体1054件・87モジュール（24.620秒）、Ruff、独立レビューが成功し、レビュー最終判定はCritical 0 / Important 0 / Minor 0。[本人回答・実装・検証の記録](learning/undefended-piece-value.md)、[確定仕様](knowledge/undefended-piece-value.md)、[設計](plans/2026-11-02-undefended-piece-value-design.md)、[実施計画](plans/2026-11-02-undefended-piece-value-implementation-plan.md)を参照する。branchへのコミット準備中。比較CLI接続・比較実行は別途承認待ちであり、棋力向上は未検証。A番号は割り当てていない。
+
+作業先は `/Users/oki2a24/kaname-shogi`、branchは `codex/next-evaluation-after-docs`、開始HEADは `135976dc`。別worktree・cloneを使用しない。保護対象は保持し、main統合・pushはそれぞれ別承認待ち。開始時の背景は[引き継ぎ](handover-mainline-after-documentation.md)、文書整理の完了事項は[整理記録](learning/workspace-knowledge-consolidation.md)に保存済み。ShogiHomeでのU候補実践は、アクセス可能との本人連絡後に再提案する保留目標。
+
+### 作業場所の整理と前テーマの履歴
 
 2026-11-01、本人は今後ワークツリーを使用しない方針を再確認した。既存9件の調査後、本人承認を得て、変更のない `main` 使用中の一時ワークツリーを削除した。その後、不要と確認した3件、および必要な記録を取り込み全体を退避・照合した4件を削除した。第55回の未コミット学習記録は履歴として取り込んだ。最後の1件はC2保護4件と `.agents/tasks/` を含んでいたため全体を未追跡 `worktree-preservation-2026-11-01/` に退避・照合し、本人が元worktreeの削除を明示承認した後に削除した。Git一覧上、追加worktreeは残っていない。
 
