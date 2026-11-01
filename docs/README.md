@@ -35,6 +35,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
+作業先の元ディレクトリへの移行、退避物と知識メモ更新は[整理記録](learning/workspace-knowledge-consolidation.md)を参照する。現在の作業場所と承認段階は[再開案内](resume.md)を正本とする。
+
 主線「駒得以外の局面評価を一項目ずつ育てる」の「支えのない狙われた駒」Uは、比較CLI・通常CLI・USIへの接続まで完了した。10M対10M+Uのconfirmationは5登録局面・2,035組で候補側平均得点0.908845、95%区間 [0.878739, 0.938951]となり、指定条件で改善を支持した。これは一般的な棋力向上を示さない。通常CLIの先後入れ替え2局は操作確認に限られる。詳細は[Uの学習記録](learning/undefended-piece-coordination-evaluation.md)。
 
 次の主線項目として、本人は「支えがある駒への低価値駒の利き」Vを選び、A/B実装・比較CLI接続・予備比較・確認比較・分析を完了した。確認比較は2026-11-01に4080局・2040組で完了し、候補得点の平均範囲は[0.535294, 0.537500]、95% Hoeffding区間は[0.505225, 0.567569]だった。固定した6局面・一手選択・指定条件の範囲で改善を支持し、一般局面の棋力向上は示さない。比較段階は本人承認後にmainへ統合・push済み。続く派生テーマでV1を通常CLI候補7とUSI `MaterialSupportedPieceThreat` へ接続し、先後を入れ替えた通常CLI CVC 2局を操作確認した。関連185件・統合後全体1039件/84モジュール、Ruff、差分・リンク検査が成功し、独立レビュー最終判定はCritical 0 / Important 0 / Minor 0。topic commit `2f49b186ba9b775bebaa4da79381feb721b28b50`は本人承認後にGitHub `main`へ統合・push済み。理解確認で本人は「前のエンジンと同等に見えるが、棋力向上とは言えない」と回答した。CVC 2局では棋力同等性を判定できず、固定条件比較の改善支持と一般棋力の結論を区別する。2026-11-01に本人は主線へ戻ることを選んだが、次の具体的な評価項目は未選定である。[接続設計](plans/2026-11-01-v-normal-cli-usi-design.md)、[実装計画・結果](plans/2026-11-01-v-normal-cli-usi-implementation-plan.md)、[学習・操作実証記録](learning/supported-piece-lower-value-threat.md)、[次テーマ引き継ぎ](handover-mainline-next-evaluation-item.md)、[再開案内](resume.md)。前比較条件・結果の詳細は[比較記録](learning/supported-piece-lower-value-threat.md)にある。

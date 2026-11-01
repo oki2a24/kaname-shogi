@@ -36,6 +36,6 @@ selected = choose_one_ply_move(
 - この指標は盤上の現在の利きを使う小さな静的指標で、勝敗・王手回避・合法な玉の逃げ先を保証しない。
 - 重みの棋力上の妥当性や一般的な実時間性能は未検証。予備比較の実測と限界は[C2学習記録](../learning/c2-king-safety-evaluation.md)にある。
 - 通常対局CLI・USIへの公開、通常CLIのSFEN入出力、飛車可動性バージョン2、二手・四手への適用は含めない。
-- 確認比較条件は[承認済み設計案](../plans/2026-10-28-c2-king-safety-confirmation-comparison-design.md)で固定済み。比較結果と実際の棋力差は未検証。
+- C2の確認比較は登録4局面・指定条件の範囲で悪化を支持した。一般局面の棋力差は示していない。条件と結果は[C2学習記録](../learning/c2-king-safety-evaluation.md)を参照する。
 
 設計は[承認済み仕様](../plans/2026-10-28-king-safety-design.md)、実装手順と検証は[承認済み計画](../plans/2026-10-28-king-safety-implementation-plan.md)と[学習記録](../learning/king-safety-design.md)を参照する。

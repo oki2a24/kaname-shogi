@@ -38,11 +38,11 @@ undefendedを0にしてもUを計算する。依存先の例外を伝播し、�
 | `material-undefended-piece-material-only` | `material=10`, `undefended=0` | `10M` の対照。Uも計算するが評価値へ加えない |
 | `material-undefended-piece` | `material=10`, `undefended=1` | `10M+U` の候補 |
 
-両方式の接続先は比較CLIに限る。通常CLI・USIの方式選択肢や、保存棋譜の公開形式は変更しない。
+上記の対照方式は比較CLI専用である。候補 `10M+U` は後続テーマで通常CLIとUSIにも接続され、USIでは `MaterialUndefendedPiece` として選べる。通常CLI・USIの接続と操作確認は[学習記録](../learning/undefended-piece-coordination-evaluation.md)を参照する。
 
 ## 境界と未検証事項
 
-- 通常CLI・USI、二手・四手探索、通常利用向け方式には接続しない。通常CLIのSFEN入出力、飛車可動性バージョン2、玉周辺安全度との合成、ShogiHome対局も含めない。
+- 二手・四手探索への適用、通常CLIのSFEN入出力、飛車可動性バージョン2、玉周辺安全度との合成は未接続。ShogiHomeでのU候補実践は保留中である。
 - 固定局面で対象枚数・符号・成駒・玉・ピン・遮蔽・手番/持ち駒の無視、重み境界、例外伝播、選択器への注入と一手詰み優先を確認した。比較CLIの接続・保存・分析は小規模pipelineで確認した。
 - 2026-10-31、比較CLI限定のpilot（50組）と独立confirmation（2035組）を実施した。confirmationは指定5局面で候補 `10M+U` の平均得点0.908845、95%区間 `[0.878739, 0.938951]` となり、今回の固定条件では改善を支持する。これは一般的な棋力向上を示さない。条件・局面別結果・再開経緯は[学習記録](../learning/undefended-piece-coordination-evaluation.md)を参照する。
 

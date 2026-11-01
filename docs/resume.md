@@ -2,19 +2,21 @@
 
 ## 現在地（2026-11-01）
 
+2026-11-01、本人の希望により主線の作業先を `/Users/oki2a24/kaname-shogi` へ戻した。作業branchは `codex/next-non-material-evaluation-item`。元のC1作業の変更文書3件と、同名衝突する未追跡文書3件は内容照合後、元ディレクトリ内の未追跡 `migration-preservation-2026-11-01/original-documents.tar` と差分patchに退避した。元branch `codex/c1-analysis-performance-investigation` も保持する。既存の比較データとC2保護4件は保持し、本人の許可を得て追跡済みC2比較成果物23件を展開した。飛車可動性・玉安全度・Uの知識メモは現行の接続と比較結果に合わせて修正した。具体的な次の評価項目は未選定のままである。移行経緯と文書レビューは[整理記録](learning/workspace-knowledge-consolidation.md)にある。過去の引き継ぎにある作業先は作成時点の情報である。
+
 V比較CLI接続・予備比較・確認比較・分析を完了し、本人承認後にmainへ統合した。確認比較は事前固定6局面・一手選択・指定条件の範囲で改善を支持したが、一般局面の棋力向上を示さない。通常CLI・USI接続の設計案・実装計画は本人が全体承認し、実装も承認した。V1は通常CLI候補7とUSI `MaterialSupportedPieceThreat` に接続済み。通常CLI CVCは先後を入れ替えた2局を既定の10分・30秒で完局し、開始表示・両側の実着手・終局を確認した。詳細は[設計](plans/2026-11-01-v-normal-cli-usi-design.md)、[実装計画](plans/2026-11-01-v-normal-cli-usi-implementation-plan.md)、[学習記録](learning/supported-piece-lower-value-threat.md)にある。
 
-作業・統合先は標準clone `/private/tmp/kaname-shogi-main-integration-clone`。本人確認後にtopic branchへ実装コミット `2f49b186ba9b775bebaa4da79381feb721b28b50`を作成し、明示承認後にclone内の`main`をfast-forwardしてGitHubへpushした。統合記録コミット `86e98980`もpush済みで、この最終理解確認の記録更新開始時点ではローカル`main`とGitHub `main`が一致していた。全体1039件/84モジュール、Ruff、差分検査、レビューが成功。cloneの`origin`は元checkoutを指し`origin/main`が古いため、GitHubの実先端とは区別する。開始時の物理状態は[引き継ぎ](handover-v-normal-cli-usi-connection.md)を参照。
+前テーマの作業・統合先は標準clone `/private/tmp/kaname-shogi-main-integration-clone` だった。本人確認後にtopic branchへ実装コミット `2f49b186ba9b775bebaa4da79381feb721b28b50`を作成し、明示承認後にclone内の`main`をfast-forwardしてGitHubへpushした。統合記録コミット `86e98980`もpush済みで、この最終理解確認の記録更新開始時点ではローカル`main`とGitHub `main`が一致していた。全体1039件/84モジュール、Ruff、差分検査、レビューが成功。cloneの`origin`は元checkoutを指し`origin/main`が古いため、GitHubの実先端とは区別する。開始時の物理状態は[引き継ぎ](handover-v-normal-cli-usi-connection.md)を参照。
 
 前テーマの確認比較は別の6局面・2040組/4080局・`--workers 4` で完了し、候補平均得点の95% Hoeffding区間[0.505225, 0.567569]から、固定した条件下で改善を支持した。一般局面の棋力向上は示さない。結果と本人回答は[学習記録](learning/supported-piece-lower-value-threat.md)に記録した。統合先テストは1031件・84モジュール・25.565秒で成功し、後続の文書コミットはhookと差分・リンク検査を通過した。
 
-元の `/Users/oki2a24/kaname-shogi` はbranch `codex/c1-analysis-performance-investigation` 上の既存変更・未追跡データを保持したまま、本テーマでは変更していない。保護指定 `.agents/tasks/`、`data/comparison/runs/` とC2保護4件も変更していない。
+前テーマ実施時は、元の `/Users/oki2a24/kaname-shogi` と保護指定 `.agents/tasks/`、`data/comparison/runs/`、C2保護4件を変更しなかった。現在の移行状態は冒頭に記す。
 
 Vの通常CLI・USI接続は実装・検証・独立レビュー・main統合・pushと最後の理解確認まで完了した。本人はCVCの印象として「前のエンジンと同等に見える」と答えたが、2局から棋力の同等性は判定できない。固定6局面比較は指定条件下で改善を支持する一方、一般局面での棋力向上は示さない。
 
 本人は2026-11-01、次の非駒得評価項目を一つ選び学ぶ主線を採用した。これは主線テーマの選択であり、具体的な評価項目は未選定。候補の現行評価との重複・独立期待値・確認可能性を照合し、本人が一項目を選ぶところから新セッションで再開する。設計・実装計画・TDD・コード・テスト変更は未着手・未承認である。詳細と再開プロンプトは[新しい引き継ぎ](handover-mainline-next-evaluation-item.md)に記録した。ShogiHomeでのU実践も、遠隔PCへアクセス可能との本人連絡後に再提案する保留目標として残る。
 
-新しい引き継ぎ用branchは `codex/next-non-material-evaluation-item`、作業先は標準clone `/private/tmp/kaname-shogi-main-integration-clone`。基点は `9cad36da20c8fed785bcda8bf4501f96d3aecc95`。文書のみのbranchで、GitHubへpushしていない。`origin` は元checkoutを指し、`origin/main` は古い。元の `/Users/oki2a24/kaname-shogi` と保護対象 `.agents/tasks/`、`data/comparison/runs/`、C2保護4件は変更していない。
+引き継ぎ作成時のbranchは `codex/next-non-material-evaluation-item`、当時の作業先は標準clone `/private/tmp/kaname-shogi-main-integration-clone`。基点は `9cad36da20c8fed785bcda8bf4501f96d3aecc95`。文書のみのbranchで、GitHubへpushしていない。当時のcloneの `origin` は元checkoutを指し、その `origin/main` は古かった。引き継ぎ作成時は元の `/Users/oki2a24/kaname-shogi` と保護対象を変更していなかった。
 
 ### B2統合時点の実績（履歴・2026-10-28）
 
