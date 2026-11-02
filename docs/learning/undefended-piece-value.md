@@ -140,8 +140,16 @@ writing-plansスキルを使用し、価値合計・差、合成、選択器へ�
 
 分析CLIはconditions、summary、4074局すべての保存hashを照合し、同じconfirmation seed一覧の2037組を再集計した。候補側の組得点平均は未決着の幅を含むと `[0.6823, 0.7036]`、95% paired Hoeffding区間は `[0.6522, 0.7337]` で、分析CLIの判定は `improved` だった。これは新規に選んだ7局面を等重みで扱う一手選択・512手上限・当該実行環境の比較である。実戦的な局面全般や通常対局の棋力向上を示すものではなく、pilotは合算していない。保存分析は[confirmation分析結果](../../data/comparison/runs/undefended-piece-value-comparison-confirmation-2026-11-02-analysis.json)、seed一覧は[confirmation seeds](../../data/comparison/runs/undefended-piece-value-comparison-confirmation-2026-11-02-seeds.json)を参照する。
 
-比較CLI接続・pipelineと固定局面の作用確認、pilot・confirmation分析まで完了した。実戦的局面全般の代表性、評価項目の一般的な棋力効果、ShogiHomeでの実践は未検証である。ShogiHomeのU候補実践はPCへアクセス可能との本人連絡後に再提案する保留目標。main統合とpushはそれぞれ別途承認を待つ。A番号は割り当てない。
+比較CLI接続・pipelineと固定局面の作用確認、pilot・confirmation分析まで完了した。実戦的局面全般の代表性、評価項目の一般的な棋力効果、ShogiHomeでの実践は未検証である。ShogiHomeのU候補実践はPCへアクセス可能との本人連絡後に再提案する保留目標。main統合・pushと統合後検証は[最終記録](#main統合後の検証と最後の理解確認2026-11-03)に記録した。A番号は割り当てない。
 
 ### 最終ブランチレビュー（2026-11-03）
 
 独立レビューはCritical 0 / Important 0 / Minor 1。MinorはREADMEの比較方法説明が「今回の6局面」とし、現テーマの7局面と混同し得る点だった。各confirmationが事前固定した局面群を等重みに扱う一般表現に修正した。レビューではtask専用のseed・保存ゲーム・summary・analysisを読み取り照合し、既存保護対象データ、`.agents/tasks/`、C2保護4件と退避物にはアクセスしていない。保存棋譜のhashとseed対応は確認したが、4074局の全合法手再生は独立レビュー範囲外である。Critical/Importantはなく、修正したMinorは追加再レビューを要しない。
+
+## main統合後の検証と最後の理解確認（2026-11-03）
+
+本人の承認後、`21d890a1` までをローカル `main` にfast-forward統合し、`origin/main` へpushした。統合後に `python3 scripts/run_tests_parallel.py` を実行し、1066テスト・92モジュールが28.028秒で成功した。現在の `main` と `origin/main` は `21d890a159d75df3b8e5eb45ddf5220b3f9dbc6d` で一致する。
+
+問い：分析CLIの「improved」は何を比べた結果を示し、その結論をどこまでの範囲として読むべきか。
+
+本人回答：「B」。選択肢Bは、事前に選んだ7局面の2037組で候補方式の得点が上がり、結論は今回の局面群・比較条件に限られるため、将棋全般の強さ向上までは示さない、という内容。正解。アシスタント補足：各組は先後を入れ替えた二局の候補側得点を平均した一つの観測であり、二局を独立標本として数えない。今回の95%区間と `improved` 判定は、当該7局面・一手選択・512手上限・実行環境の条件内で解釈する。
