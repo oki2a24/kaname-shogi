@@ -1,12 +1,18 @@
 # 学習・開発の再開案内
 
-## 現在地（2026-11-02）
+## 現在地（2026-11-03）
 
-主線の具体項目「支えのない被攻撃駒の価値を評価へ反映する」は、集計・合成・既存一手選択器への注入まで実装・検証し、mainへ統合してorigin/mainへpushした。統合後テストは1054件・87モジュール・24.711秒で成功。独立レビュー最終判定はCritical 0 / Important 0 / Minor 0。最後の理解確認では本人が「-14。2枚から狙われていても一回計算するのみ」と回答し、学習記録へ追記した。[回答・実装・検証の記録](learning/undefended-piece-value.md)、[確定仕様](knowledge/undefended-piece-value.md)、[設計](plans/2026-11-02-undefended-piece-value-design.md)、[実施計画](plans/2026-11-02-undefended-piece-value-implementation-plan.md)を参照する。
+主線の具体項目「支えのない被攻撃駒の価値を評価へ反映する」は、対象一枚を一度だけ数え、従来U（支えのない被攻撃駒の枚数差）を価値合計差へ置き換える重み1の方式として実装・検証し、mainへ統合・push済み。統合後テストは1054件・87モジュール・24.711秒で成功。最後の理解確認への回答も記録済み。[回答・実装・検証の記録](learning/undefended-piece-value.md)、[確定仕様](knowledge/undefended-piece-value.md)、[設計](plans/2026-11-02-undefended-piece-value-design.md)、[実施計画](plans/2026-11-02-undefended-piece-value-implementation-plan.md)を参照する。
 
-本人は2026-11-02に「今回の評価を比較CLIへ接続して比較する」主線テーマを選定した。選定は設計・実施計画・実装・対局比較の承認ではない。比較設計も製品変更も未着手であり、承認前にTDD・コード・テスト変更へ進まない。新セッションで読む背景・再開プロンプトは[引き継ぎ](handover-undefended-piece-value-comparison.md)、選定履歴は[学習記録](learning/undefended-piece-value.md)、他候補と位置付けは[次テーマ候補](next-topics.md)、主線全体は[ロードマップ](roadmap-non-material-position-evaluation.md)を参照する。
+本人は比較指標に「組得点＋固定局面の作用確認」を選び、比較設計・実施計画を明示承認しworker 4を指定した。比較専用policy、独立7局面、手計算期待値、pipeline、pilot 14組/28局、別seedのconfirmation 2037組/4074局の分析まで現在branchで完了した。confirmationの候補側組得点平均区間は `[0.6823, 0.7036]`、95% paired Hoeffding区間は `[0.6522, 0.7337]`、分析CLI判定は `improved`。結果は当該7局面・一手選択・512手上限・実行環境に限定し、一般棋力向上とは解釈しない。対局中の捕獲状況は追加指標に含めない。詳細は[比較学習記録](learning/undefended-piece-value.md)、[承認済み比較設計](plans/2026-11-02-undefended-piece-value-comparison-design.md)、[実施計画・結果](plans/2026-11-02-undefended-piece-value-comparison-implementation-plan.md)を参照する。
 
-作業先は `/Users/oki2a24/kaname-shogi`、次テーマ用branchは `codex/undefended-piece-value-comparison`。このブランチは `main` / `origin/main` の `9a44a277` から同じディレクトリ内で作成した。引き継ぎ記録を含むこのブランチのmain統合とpushはそれぞれ別途本人承認を待つ。再開時に `git status --short --branch`、`git log -3 --oneline --decorate`、`git branch --show-current`、`git rev-parse main`、`git rev-parse HEAD`、`git worktree list` を確認する。新評価は比較CLI未接続で棋力向上は未検証。ShogiHomeでのU候補実践はアクセス可能との本人連絡後に再提案する保留目標。文書整理とU/Vの通常CLI・USI接続は完了済みの補助・派生テーマ。保護対象の未追跡比較データ、`.agents/tasks/`、C2保護4件と退避アーカイブを保持する。
+作業先は `/Users/oki2a24/kaname-shogi`、branchは `codex/undefended-piece-value-comparison`。mainは `9a44a277` から変更していない。workerは終了し、summaryは4074/4074局・2037/2037組、未開始・進行中・故障・中断・部分組は0。分析出力と同じseed一覧・conditions・summary・全4074局のhashを照合済みである。Ruff 0.16.10、hooksPath `.githooks`、Python 3.15.2を開始時に確認し、Python 変更後のRuff一式と全体テスト1066件・92モジュール・26.996秒は成功済み。最終独立レビューはCritical 0 / Important 0 / Minor 1で、READMEの局面数の曖昧さを修正した。比較テーマの内容はこのbranchで完了。再開時にGit状態を確認し、未コミットのtask専用ファイルが残っていれば保護対象を除いて明示的にコミットする。main統合・pushはそれぞれ本人の別途承認を待ち、統合後の検証と最後の理解確認を終えるまで次テーマへ進まない。別worktree・別cloneは使わない。既存未追跡比較データ、`.agents/tasks/`、C2保護4件、`.antigravity/tasks/`、`.venv.backup-*`、`migration-preservation-2026-11-01/`、`worktree-preservation-2026-11-01/`は変更しない。ShogiHomeでのU候補実践はPCへアクセス可能との本人連絡後に再提案する保留目標。A番号は割り当てない。
+
+### 次の具体的な行動
+
+1. 再開時にGit状態を確認し、未コミットのtask専用ファイルが残っていれば保護対象を除いて明示的にコミットする。
+2. main統合とpushは別々の本人承認を待つ。
+3. 統合後の検証と最後の理解確認を行う。最後の理解確認が済むまで、次の学習テーマへ進まない。
 
 ### 作業場所の整理と前テーマの履歴
 

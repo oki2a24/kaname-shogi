@@ -1,0 +1,3490 @@
+{
+  "format": "kaname-shogi-comparison-game-v1",
+  "conditions_sha256": "33730fc8e23bdd65cea38cf2b67ae6af0f0b657e145991b0504952fd34ce00de",
+  "game_id": "game-000001",
+  "position_id": "value-neutral",
+  "pair_number": 0,
+  "game_number_in_pair": 1,
+  "baseline_side": "sente",
+  "candidate_side": "gote",
+  "baseline_seed": 102972606944516064560679023285020340758,
+  "candidate_seed": 147701908062791982160212227728782833023,
+  "baseline": "material-piece-threat-v1",
+  "candidate": "material-piece-threat-value-v1",
+  "start_sfen": "1nsgkgsnl/lr5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5RL/LNSGKGSN1 b - 3",
+  "initial_move_number": 3,
+  "plies": 180,
+  "reason": "checkmate",
+  "winner_side": "gote",
+  "winner_policy": "material-piece-threat-value-v1",
+  "record": {
+    "format": "kaname-shogi-game-record-v1",
+    "initial_position": {
+      "side_to_move": "SENTE",
+      "pieces": [
+        {
+          "file": 1,
+          "rank": 1,
+          "piece_type": "LANCE",
+          "side": "GOTE"
+        },
+        {
+          "file": 1,
+          "rank": 3,
+          "piece_type": "PAWN",
+          "side": "GOTE"
+        },
+        {
+          "file": 1,
+          "rank": 7,
+          "piece_type": "PAWN",
+          "side": "SENTE"
+        },
+        {
+          "file": 1,
+          "rank": 8,
+          "piece_type": "LANCE",
+          "side": "SENTE"
+        },
+        {
+          "file": 2,
+          "rank": 1,
+          "piece_type": "KNIGHT",
+          "side": "GOTE"
+        },
+        {
+          "file": 2,
+          "rank": 2,
+          "piece_type": "BISHOP",
+          "side": "GOTE"
+        },
+        {
+          "file": 2,
+          "rank": 3,
+          "piece_type": "PAWN",
+          "side": "GOTE"
+        },
+        {
+          "file": 2,
+          "rank": 7,
+          "piece_type": "PAWN",
+          "side": "SENTE"
+        },
+        {
+          "file": 2,
+          "rank": 8,
+          "piece_type": "ROOK",
+          "side": "SENTE"
+        },
+        {
+          "file": 2,
+          "rank": 9,
+          "piece_type": "KNIGHT",
+          "side": "SENTE"
+        },
+        {
+          "file": 3,
+          "rank": 1,
+          "piece_type": "SILVER",
+          "side": "GOTE"
+        },
+        {
+          "file": 3,
+          "rank": 3,
+          "piece_type": "PAWN",
+          "side": "GOTE"
+        },
+        {
+          "file": 3,
+          "rank": 7,
+          "piece_type": "PAWN",
+          "side": "SENTE"
+        },
+        {
+          "file": 3,
+          "rank": 9,
+          "piece_type": "SILVER",
+          "side": "SENTE"
+        },
+        {
+          "file": 4,
+          "rank": 1,
+          "piece_type": "GOLD",
+          "side": "GOTE"
+        },
+        {
+          "file": 4,
+          "rank": 3,
+          "piece_type": "PAWN",
+          "side": "GOTE"
+        },
+        {
+          "file": 4,
+          "rank": 7,
+          "piece_type": "PAWN",
+          "side": "SENTE"
+        },
+        {
+          "file": 4,
+          "rank": 9,
+          "piece_type": "GOLD",
+          "side": "SENTE"
+        },
+        {
+          "file": 5,
+          "rank": 1,
+          "piece_type": "KING",
+          "side": "GOTE"
+        },
+        {
+          "file": 5,
+          "rank": 3,
+          "piece_type": "PAWN",
+          "side": "GOTE"
+        },
+        {
+          "file": 5,
+          "rank": 7,
+          "piece_type": "PAWN",
+          "side": "SENTE"
+        },
+        {
+          "file": 5,
+          "rank": 9,
+          "piece_type": "KING",
+          "side": "SENTE"
+        },
+        {
+          "file": 6,
+          "rank": 1,
+          "piece_type": "GOLD",
+          "side": "GOTE"
+        },
+        {
+          "file": 6,
+          "rank": 3,
+          "piece_type": "PAWN",
+          "side": "GOTE"
+        },
+        {
+          "file": 6,
+          "rank": 7,
+          "piece_type": "PAWN",
+          "side": "SENTE"
+        },
+        {
+          "file": 6,
+          "rank": 9,
+          "piece_type": "GOLD",
+          "side": "SENTE"
+        },
+        {
+          "file": 7,
+          "rank": 1,
+          "piece_type": "SILVER",
+          "side": "GOTE"
+        },
+        {
+          "file": 7,
+          "rank": 3,
+          "piece_type": "PAWN",
+          "side": "GOTE"
+        },
+        {
+          "file": 7,
+          "rank": 7,
+          "piece_type": "PAWN",
+          "side": "SENTE"
+        },
+        {
+          "file": 7,
+          "rank": 9,
+          "piece_type": "SILVER",
+          "side": "SENTE"
+        },
+        {
+          "file": 8,
+          "rank": 1,
+          "piece_type": "KNIGHT",
+          "side": "GOTE"
+        },
+        {
+          "file": 8,
+          "rank": 2,
+          "piece_type": "ROOK",
+          "side": "GOTE"
+        },
+        {
+          "file": 8,
+          "rank": 3,
+          "piece_type": "PAWN",
+          "side": "GOTE"
+        },
+        {
+          "file": 8,
+          "rank": 7,
+          "piece_type": "PAWN",
+          "side": "SENTE"
+        },
+        {
+          "file": 8,
+          "rank": 8,
+          "piece_type": "BISHOP",
+          "side": "SENTE"
+        },
+        {
+          "file": 8,
+          "rank": 9,
+          "piece_type": "KNIGHT",
+          "side": "SENTE"
+        },
+        {
+          "file": 9,
+          "rank": 2,
+          "piece_type": "LANCE",
+          "side": "GOTE"
+        },
+        {
+          "file": 9,
+          "rank": 3,
+          "piece_type": "PAWN",
+          "side": "GOTE"
+        },
+        {
+          "file": 9,
+          "rank": 7,
+          "piece_type": "PAWN",
+          "side": "SENTE"
+        },
+        {
+          "file": 9,
+          "rank": 9,
+          "piece_type": "LANCE",
+          "side": "SENTE"
+        }
+      ],
+      "hands": {
+        "SENTE": {},
+        "GOTE": {}
+      }
+    },
+    "moves": [
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 8
+        },
+        "destination": {
+          "file": 6,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 1
+        },
+        "destination": {
+          "file": 3,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 6,
+          "rank": 8
+        },
+        "destination": {
+          "file": 2,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 1
+        },
+        "destination": {
+          "file": 6,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 8
+        },
+        "destination": {
+          "file": 5,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 6,
+          "rank": 2
+        },
+        "destination": {
+          "file": 5,
+          "rank": 1
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 8,
+          "rank": 7
+        },
+        "destination": {
+          "file": 8,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 1
+        },
+        "destination": {
+          "file": 4,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 9
+        },
+        "destination": {
+          "file": 2,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 6,
+          "rank": 1
+        },
+        "destination": {
+          "file": 6,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 8
+        },
+        "destination": {
+          "file": 3,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 2
+        },
+        "destination": {
+          "file": 5,
+          "rank": 1
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 9
+        },
+        "destination": {
+          "file": 5,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 7,
+          "rank": 3
+        },
+        "destination": {
+          "file": 7,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 8
+        },
+        "destination": {
+          "file": 3,
+          "rank": 9
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 2
+        },
+        "destination": {
+          "file": 4,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 8
+        },
+        "destination": {
+          "file": 5,
+          "rank": 9
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 3
+        },
+        "destination": {
+          "file": 4,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 7,
+          "rank": 7
+        },
+        "destination": {
+          "file": 7,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 3
+        },
+        "destination": {
+          "file": 3,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 8,
+          "rank": 8
+        },
+        "destination": {
+          "file": 4,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 2
+        },
+        "destination": {
+          "file": 4,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 9,
+          "rank": 9
+        },
+        "destination": {
+          "file": 9,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 4
+        },
+        "destination": {
+          "file": 1,
+          "rank": 7
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 9
+        },
+        "destination": {
+          "file": 1,
+          "rank": 7
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "BISHOP",
+        "destination": {
+          "file": 8,
+          "rank": 7
+        }
+      },
+      {
+        "kind": "drop",
+        "piece_type": "BISHOP",
+        "destination": {
+          "file": 6,
+          "rank": 5
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 8,
+          "rank": 7
+        },
+        "destination": {
+          "file": 6,
+          "rank": 9
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 9
+        },
+        "destination": {
+          "file": 6,
+          "rank": 9
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 5,
+          "rank": 4
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 6,
+          "rank": 5
+        },
+        "destination": {
+          "file": 5,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 3
+        },
+        "destination": {
+          "file": 5,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 2,
+          "rank": 2
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 1
+        },
+        "destination": {
+          "file": 2,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "BISHOP",
+        "destination": {
+          "file": 4,
+          "rank": 5
+        }
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 4,
+          "rank": 4
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 5
+        },
+        "destination": {
+          "file": 5,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 4
+        },
+        "destination": {
+          "file": 5,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 8,
+          "rank": 9
+        },
+        "destination": {
+          "file": 7,
+          "rank": 7
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "BISHOP",
+        "destination": {
+          "file": 3,
+          "rank": 3
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 1,
+          "rank": 7
+        },
+        "destination": {
+          "file": 2,
+          "rank": 5
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 3
+        },
+        "destination": {
+          "file": 7,
+          "rank": 7
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 1,
+          "rank": 8
+        },
+        "destination": {
+          "file": 1,
+          "rank": 3
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 1
+        },
+        "destination": {
+          "file": 1,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 5
+        },
+        "destination": {
+          "file": 1,
+          "rank": 3
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 2
+        },
+        "destination": {
+          "file": 1,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "KNIGHT",
+        "destination": {
+          "file": 4,
+          "rank": 6
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 7,
+          "rank": 7
+        },
+        "destination": {
+          "file": 7,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 6
+        },
+        "destination": {
+          "file": 5,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 7,
+          "rank": 6
+        },
+        "destination": {
+          "file": 5,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 6,
+          "rank": 5
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 4
+        },
+        "destination": {
+          "file": 6,
+          "rank": 5
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 9
+        },
+        "destination": {
+          "file": 4,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 6,
+          "rank": 5
+        },
+        "destination": {
+          "file": 9,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 9,
+          "rank": 7
+        },
+        "destination": {
+          "file": 9,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "KNIGHT",
+        "destination": {
+          "file": 3,
+          "rank": 6
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 7
+        },
+        "destination": {
+          "file": 3,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "BISHOP",
+        "destination": {
+          "file": 6,
+          "rank": 4
+        }
+      },
+      {
+        "kind": "drop",
+        "piece_type": "KNIGHT",
+        "destination": {
+          "file": 4,
+          "rank": 6
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 6,
+          "rank": 4
+        },
+        "destination": {
+          "file": 4,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 7
+        },
+        "destination": {
+          "file": 4,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 3,
+          "rank": 8
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 9
+        },
+        "destination": {
+          "file": 3,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 9,
+          "rank": 8
+        },
+        "destination": {
+          "file": 8,
+          "rank": 7
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 7,
+          "rank": 8
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 8,
+          "rank": 7
+        },
+        "destination": {
+          "file": 7,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 6,
+          "rank": 9
+        },
+        "destination": {
+          "file": 7,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 5,
+          "rank": 5
+        }
+      },
+      {
+        "kind": "drop",
+        "piece_type": "BISHOP",
+        "destination": {
+          "file": 4,
+          "rank": 4
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 5
+        },
+        "destination": {
+          "file": 4,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 4
+        },
+        "destination": {
+          "file": 6,
+          "rank": 2
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 1
+        },
+        "destination": {
+          "file": 6,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "BISHOP",
+        "destination": {
+          "file": 5,
+          "rank": 5
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 6
+        },
+        "destination": {
+          "file": 4,
+          "rank": 5
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 5
+        },
+        "destination": {
+          "file": 8,
+          "rank": 2
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 7,
+          "rank": 1
+        },
+        "destination": {
+          "file": 8,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "ROOK",
+        "destination": {
+          "file": 2,
+          "rank": 1
+        }
+      },
+      {
+        "kind": "drop",
+        "piece_type": "BISHOP",
+        "destination": {
+          "file": 1,
+          "rank": 2
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 1
+        },
+        "destination": {
+          "file": 8,
+          "rank": 1
+        },
+        "promote": true
+      },
+      {
+        "kind": "drop",
+        "piece_type": "BISHOP",
+        "destination": {
+          "file": 7,
+          "rank": 2
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 8,
+          "rank": 1
+        },
+        "destination": {
+          "file": 7,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 6,
+          "rank": 2
+        },
+        "destination": {
+          "file": 7,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "BISHOP",
+        "destination": {
+          "file": 3,
+          "rank": 1
+        }
+      },
+      {
+        "kind": "drop",
+        "piece_type": "ROOK",
+        "destination": {
+          "file": 4,
+          "rank": 1
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 1
+        },
+        "destination": {
+          "file": 4,
+          "rank": 2
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 1
+        },
+        "destination": {
+          "file": 4,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 3,
+          "rank": 3
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 2
+        },
+        "destination": {
+          "file": 4,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 3
+        },
+        "destination": {
+          "file": 2,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 1,
+          "rank": 2
+        },
+        "destination": {
+          "file": 2,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "KNIGHT",
+        "destination": {
+          "file": 1,
+          "rank": 5
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 1,
+          "rank": 3
+        },
+        "destination": {
+          "file": 2,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 1,
+          "rank": 5
+        },
+        "destination": {
+          "file": 2,
+          "rank": 3
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 2
+        },
+        "destination": {
+          "file": 2,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 2,
+          "rank": 2
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 1,
+          "rank": 1
+        },
+        "destination": {
+          "file": 1,
+          "rank": 8
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 2
+        },
+        "destination": {
+          "file": 2,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 1,
+          "rank": 8
+        },
+        "destination": {
+          "file": 2,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 8
+        },
+        "destination": {
+          "file": 2,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 5
+        },
+        "destination": {
+          "file": 3,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "BISHOP",
+        "destination": {
+          "file": 6,
+          "rank": 6
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 4
+        },
+        "destination": {
+          "file": 4,
+          "rank": 8
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 8
+        },
+        "destination": {
+          "file": 4,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 6
+        },
+        "destination": {
+          "file": 2,
+          "rank": 7
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 6,
+          "rank": 6
+        },
+        "destination": {
+          "file": 9,
+          "rank": 3
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 9,
+          "rank": 2
+        },
+        "destination": {
+          "file": 9,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 8
+        },
+        "destination": {
+          "file": 4,
+          "rank": 3
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 9,
+          "rank": 3
+        },
+        "destination": {
+          "file": 9,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 3
+        },
+        "destination": {
+          "file": 3,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 9,
+          "rank": 6
+        },
+        "destination": {
+          "file": 9,
+          "rank": 8
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 4
+        },
+        "destination": {
+          "file": 7,
+          "rank": 4
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "PAWN",
+        "destination": {
+          "file": 7,
+          "rank": 3
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 7,
+          "rank": 4
+        },
+        "destination": {
+          "file": 6,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 7,
+          "rank": 2
+        },
+        "destination": {
+          "file": 6,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "ROOK",
+        "destination": {
+          "file": 9,
+          "rank": 2
+        }
+      },
+      {
+        "kind": "drop",
+        "piece_type": "ROOK",
+        "destination": {
+          "file": 9,
+          "rank": 7
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 9,
+          "rank": 2
+        },
+        "destination": {
+          "file": 9,
+          "rank": 7
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 9,
+          "rank": 8
+        },
+        "destination": {
+          "file": 9,
+          "rank": 7
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "ROOK",
+        "destination": {
+          "file": 9,
+          "rank": 2
+        }
+      },
+      {
+        "kind": "drop",
+        "piece_type": "ROOK",
+        "destination": {
+          "file": 9,
+          "rank": 6
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 9,
+          "rank": 2
+        },
+        "destination": {
+          "file": 9,
+          "rank": 6
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 9,
+          "rank": 7
+        },
+        "destination": {
+          "file": 9,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "SILVER",
+        "destination": {
+          "file": 8,
+          "rank": 7
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 9,
+          "rank": 6
+        },
+        "destination": {
+          "file": 8,
+          "rank": 7
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 7,
+          "rank": 8
+        },
+        "destination": {
+          "file": 8,
+          "rank": 7
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "BISHOP",
+        "destination": {
+          "file": 4,
+          "rank": 5
+        }
+      },
+      {
+        "kind": "drop",
+        "piece_type": "ROOK",
+        "destination": {
+          "file": 4,
+          "rank": 2
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 5
+        },
+        "destination": {
+          "file": 2,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 2
+        },
+        "destination": {
+          "file": 8,
+          "rank": 2
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 3
+        },
+        "destination": {
+          "file": 6,
+          "rank": 7
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 8,
+          "rank": 2
+        },
+        "destination": {
+          "file": 8,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 6,
+          "rank": 7
+        },
+        "destination": {
+          "file": 5,
+          "rank": 7
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 8,
+          "rank": 3
+        },
+        "destination": {
+          "file": 7,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 6,
+          "rank": 3
+        },
+        "destination": {
+          "file": 7,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "SILVER",
+        "destination": {
+          "file": 6,
+          "rank": 8
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 7
+        },
+        "destination": {
+          "file": 6,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 7,
+          "rank": 9
+        },
+        "destination": {
+          "file": 6,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 5,
+          "rank": 8
+        }
+      },
+      {
+        "kind": "drop",
+        "piece_type": "BISHOP",
+        "destination": {
+          "file": 3,
+          "rank": 6
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 8
+        },
+        "destination": {
+          "file": 6,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 6
+        },
+        "destination": {
+          "file": 2,
+          "rank": 7
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 2,
+          "rank": 8
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 7
+        },
+        "destination": {
+          "file": 8,
+          "rank": 1
+        },
+        "promote": true
+      },
+      {
+        "kind": "drop",
+        "piece_type": "ROOK",
+        "destination": {
+          "file": 3,
+          "rank": 1
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 8,
+          "rank": 1
+        },
+        "destination": {
+          "file": 4,
+          "rank": 5
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 1
+        },
+        "destination": {
+          "file": 3,
+          "rank": 8
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 5
+        },
+        "destination": {
+          "file": 5,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 8
+        },
+        "destination": {
+          "file": 3,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 5,
+          "rank": 6
+        },
+        "destination": {
+          "file": 4,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 6
+        },
+        "destination": {
+          "file": 4,
+          "rank": 6
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 8,
+          "rank": 7
+        },
+        "destination": {
+          "file": 7,
+          "rank": 7
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "ROOK",
+        "destination": {
+          "file": 6,
+          "rank": 9
+        }
+      },
+      {
+        "kind": "drop",
+        "piece_type": "LANCE",
+        "destination": {
+          "file": 1,
+          "rank": 5
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 6,
+          "rank": 9
+        },
+        "destination": {
+          "file": 5,
+          "rank": 9
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 1,
+          "rank": 5
+        },
+        "destination": {
+          "file": 1,
+          "rank": 1
+        },
+        "promote": true
+      },
+      {
+        "kind": "drop",
+        "piece_type": "SILVER",
+        "destination": {
+          "file": 2,
+          "rank": 2
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 1,
+          "rank": 1
+        },
+        "destination": {
+          "file": 2,
+          "rank": 1
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 1,
+          "rank": 1
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 1
+        },
+        "destination": {
+          "file": 1,
+          "rank": 1
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 2
+        },
+        "destination": {
+          "file": 1,
+          "rank": 1
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "LANCE",
+        "destination": {
+          "file": 1,
+          "rank": 3
+        }
+      },
+      {
+        "kind": "drop",
+        "piece_type": "PAWN",
+        "destination": {
+          "file": 1,
+          "rank": 2
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 1,
+          "rank": 3
+        },
+        "destination": {
+          "file": 1,
+          "rank": 2
+        },
+        "promote": true
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 1,
+          "rank": 1
+        },
+        "destination": {
+          "file": 1,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 2,
+          "rank": 2
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 1,
+          "rank": 2
+        },
+        "destination": {
+          "file": 1,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 2
+        },
+        "destination": {
+          "file": 2,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "SILVER",
+        "destination": {
+          "file": 2,
+          "rank": 2
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 3
+        },
+        "destination": {
+          "file": 1,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 2
+        },
+        "destination": {
+          "file": 1,
+          "rank": 3
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 2,
+          "rank": 3
+        }
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 2,
+          "rank": 2
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 2,
+          "rank": 3
+        },
+        "destination": {
+          "file": 2,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 1,
+          "rank": 3
+        },
+        "destination": {
+          "file": 2,
+          "rank": 2
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "SILVER",
+        "destination": {
+          "file": 3,
+          "rank": 7
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 4,
+          "rank": 6
+        },
+        "destination": {
+          "file": 3,
+          "rank": 7
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "PAWN",
+        "destination": {
+          "file": 6,
+          "rank": 7
+        }
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 3,
+          "rank": 7
+        },
+        "destination": {
+          "file": 6,
+          "rank": 7
+        },
+        "promote": false
+      },
+      {
+        "kind": "move",
+        "source": {
+          "file": 7,
+          "rank": 7
+        },
+        "destination": {
+          "file": 8,
+          "rank": 8
+        },
+        "promote": false
+      },
+      {
+        "kind": "drop",
+        "piece_type": "GOLD",
+        "destination": {
+          "file": 9,
+          "rank": 7
+        }
+      }
+    ]
+  },
+  "move_times": [
+    {
+      "ply": 1,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "2h6h",
+      "elapsed_ns": 188225000
+    },
+    {
+      "ply": 2,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "4a3b",
+      "elapsed_ns": 190689791
+    },
+    {
+      "ply": 3,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "6h2h",
+      "elapsed_ns": 172071334
+    },
+    {
+      "ply": 4,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "5a6b",
+      "elapsed_ns": 158666750
+    },
+    {
+      "ply": 5,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "2h5h",
+      "elapsed_ns": 176344417
+    },
+    {
+      "ply": 6,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "6b5a",
+      "elapsed_ns": 134320083
+    },
+    {
+      "ply": 7,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "8g8f",
+      "elapsed_ns": 171476291
+    },
+    {
+      "ply": 8,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "5a4b",
+      "elapsed_ns": 163819959
+    },
+    {
+      "ply": 9,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "3i2h",
+      "elapsed_ns": 169313167
+    },
+    {
+      "ply": 10,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "6a6b",
+      "elapsed_ns": 144533083
+    },
+    {
+      "ply": 11,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "5h3h",
+      "elapsed_ns": 162629250
+    },
+    {
+      "ply": 12,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "4b5a",
+      "elapsed_ns": 118299458
+    },
+    {
+      "ply": 13,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "5i5h",
+      "elapsed_ns": 181360125
+    },
+    {
+      "ply": 14,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "7c7d",
+      "elapsed_ns": 135510625
+    },
+    {
+      "ply": 15,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "3h3i",
+      "elapsed_ns": 160992250
+    },
+    {
+      "ply": 16,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "3b4b",
+      "elapsed_ns": 147123125
+    },
+    {
+      "ply": 17,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "5h5i",
+      "elapsed_ns": 148292333
+    },
+    {
+      "ply": 18,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "4c4d",
+      "elapsed_ns": 157243125
+    },
+    {
+      "ply": 19,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "7g7f",
+      "elapsed_ns": 151080792
+    },
+    {
+      "ply": 20,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "3c3d",
+      "elapsed_ns": 167523959
+    },
+    {
+      "ply": 21,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "8h4d",
+      "elapsed_ns": 186926125
+    },
+    {
+      "ply": 22,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "2b4d",
+      "elapsed_ns": 180059458
+    },
+    {
+      "ply": 23,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "9i9h",
+      "elapsed_ns": 158963000
+    },
+    {
+      "ply": 24,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "4d1g+",
+      "elapsed_ns": 547830917
+    },
+    {
+      "ply": 25,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "2i1g",
+      "elapsed_ns": 187868208
+    },
+    {
+      "ply": 26,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "B*8g",
+      "elapsed_ns": 479414917
+    },
+    {
+      "ply": 27,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "B*6e",
+      "elapsed_ns": 476260167
+    },
+    {
+      "ply": 28,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "8g6i+",
+      "elapsed_ns": 277898875
+    },
+    {
+      "ply": 29,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "5i6i",
+      "elapsed_ns": 16465167
+    },
+    {
+      "ply": 30,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "G*5d",
+      "elapsed_ns": 476497750
+    },
+    {
+      "ply": 31,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "6e5d",
+      "elapsed_ns": 480696958
+    },
+    {
+      "ply": 32,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "5c5d",
+      "elapsed_ns": 196781833
+    },
+    {
+      "ply": 33,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "G*2b",
+      "elapsed_ns": 725852250
+    },
+    {
+      "ply": 34,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "3a2b",
+      "elapsed_ns": 487784875
+    },
+    {
+      "ply": 35,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "B*4e",
+      "elapsed_ns": 439603208
+    },
+    {
+      "ply": 36,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "G*4d",
+      "elapsed_ns": 771337417
+    },
+    {
+      "ply": 37,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "4e5d",
+      "elapsed_ns": 209874667
+    },
+    {
+      "ply": 38,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "4d5d",
+      "elapsed_ns": 548988708
+    },
+    {
+      "ply": 39,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "8i7g",
+      "elapsed_ns": 177186667
+    },
+    {
+      "ply": 40,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "B*3c",
+      "elapsed_ns": 543683041
+    },
+    {
+      "ply": 41,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "1g2e",
+      "elapsed_ns": 188358291
+    },
+    {
+      "ply": 42,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "3c7g+",
+      "elapsed_ns": 592986375
+    },
+    {
+      "ply": 43,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "1h1c+",
+      "elapsed_ns": 225042083
+    },
+    {
+      "ply": 44,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "2a1c",
+      "elapsed_ns": 875855000
+    },
+    {
+      "ply": 45,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "2e1c+",
+      "elapsed_ns": 175281166
+    },
+    {
+      "ply": 46,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "2b1c",
+      "elapsed_ns": 1044417958
+    },
+    {
+      "ply": 47,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "N*4f",
+      "elapsed_ns": 358805791
+    },
+    {
+      "ply": 48,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "7g7f",
+      "elapsed_ns": 1054345000
+    },
+    {
+      "ply": 49,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "4f5d",
+      "elapsed_ns": 188844292
+    },
+    {
+      "ply": 50,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "7f5d",
+      "elapsed_ns": 937545500
+    },
+    {
+      "ply": 51,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "G*6e",
+      "elapsed_ns": 426028167
+    },
+    {
+      "ply": 52,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "5d6e",
+      "elapsed_ns": 967089500
+    },
+    {
+      "ply": 53,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "4i4h",
+      "elapsed_ns": 171352667
+    },
+    {
+      "ply": 54,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "6e9h",
+      "elapsed_ns": 1189281084
+    },
+    {
+      "ply": 55,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "9g9f",
+      "elapsed_ns": 167075125
+    },
+    {
+      "ply": 56,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "N*3f",
+      "elapsed_ns": 1151113250
+    },
+    {
+      "ply": 57,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "3g3f",
+      "elapsed_ns": 173382625
+    },
+    {
+      "ply": 58,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "B*6d",
+      "elapsed_ns": 1164263500
+    },
+    {
+      "ply": 59,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "N*4f",
+      "elapsed_ns": 402512250
+    },
+    {
+      "ply": 60,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "6d4f",
+      "elapsed_ns": 996849167
+    },
+    {
+      "ply": 61,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "4g4f",
+      "elapsed_ns": 196181750
+    },
+    {
+      "ply": 62,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "G*3h",
+      "elapsed_ns": 925170375
+    },
+    {
+      "ply": 63,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "3i3h",
+      "elapsed_ns": 451213584
+    },
+    {
+      "ply": 64,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "9h8g",
+      "elapsed_ns": 657588250
+    },
+    {
+      "ply": 65,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "G*7h",
+      "elapsed_ns": 47654375
+    },
+    {
+      "ply": 66,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "8g7h",
+      "elapsed_ns": 694120833
+    },
+    {
+      "ply": 67,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "6i7h",
+      "elapsed_ns": 26201583
+    },
+    {
+      "ply": 68,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "G*5e",
+      "elapsed_ns": 805377750
+    },
+    {
+      "ply": 69,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "B*4d",
+      "elapsed_ns": 412406792
+    },
+    {
+      "ply": 70,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "5e4f",
+      "elapsed_ns": 642661250
+    },
+    {
+      "ply": 71,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "4d6b+",
+      "elapsed_ns": 515767416
+    },
+    {
+      "ply": 72,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "5a6b",
+      "elapsed_ns": 26117833
+    },
+    {
+      "ply": 73,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "B*5e",
+      "elapsed_ns": 638985792
+    },
+    {
+      "ply": 74,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "4f4e",
+      "elapsed_ns": 843470250
+    },
+    {
+      "ply": 75,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "5e8b+",
+      "elapsed_ns": 509023166
+    },
+    {
+      "ply": 76,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "7a8b",
+      "elapsed_ns": 812426333
+    },
+    {
+      "ply": 77,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "R*2a",
+      "elapsed_ns": 614116625
+    },
+    {
+      "ply": 78,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "B*1b",
+      "elapsed_ns": 816677209
+    },
+    {
+      "ply": 79,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "2a8a+",
+      "elapsed_ns": 486554917
+    },
+    {
+      "ply": 80,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "B*7b",
+      "elapsed_ns": 787480708
+    },
+    {
+      "ply": 81,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "8a7b",
+      "elapsed_ns": 654178167
+    },
+    {
+      "ply": 82,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "6b7b",
+      "elapsed_ns": 23188458
+    },
+    {
+      "ply": 83,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "B*3a",
+      "elapsed_ns": 777666167
+    },
+    {
+      "ply": 84,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "R*4a",
+      "elapsed_ns": 792653125
+    },
+    {
+      "ply": 85,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "3a4b+",
+      "elapsed_ns": 621023250
+    },
+    {
+      "ply": 86,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "4a4b",
+      "elapsed_ns": 562867709
+    },
+    {
+      "ply": 87,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "G*3c",
+      "elapsed_ns": 551807916
+    },
+    {
+      "ply": 88,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "4b4d",
+      "elapsed_ns": 790841959
+    },
+    {
+      "ply": 89,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "3c2c",
+      "elapsed_ns": 570122417
+    },
+    {
+      "ply": 90,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "1b2c",
+      "elapsed_ns": 742886125
+    },
+    {
+      "ply": 91,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "N*1e",
+      "elapsed_ns": 515703500
+    },
+    {
+      "ply": 92,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "1c2b",
+      "elapsed_ns": 990546375
+    },
+    {
+      "ply": 93,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "1e2c+",
+      "elapsed_ns": 376034875
+    },
+    {
+      "ply": 94,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "2b2c",
+      "elapsed_ns": 990285583
+    },
+    {
+      "ply": 95,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "G*2b",
+      "elapsed_ns": 567027625
+    },
+    {
+      "ply": 96,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "1a1h+",
+      "elapsed_ns": 1013936542
+    },
+    {
+      "ply": 97,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "2b2c",
+      "elapsed_ns": 386428708
+    },
+    {
+      "ply": 98,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "1h2h",
+      "elapsed_ns": 915101083
+    },
+    {
+      "ply": 99,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "3h2h",
+      "elapsed_ns": 534143708
+    },
+    {
+      "ply": 100,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "4e3f",
+      "elapsed_ns": 1018400291
+    },
+    {
+      "ply": 101,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "B*6f",
+      "elapsed_ns": 674314417
+    },
+    {
+      "ply": 102,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "4d4h+",
+      "elapsed_ns": 1088320917
+    },
+    {
+      "ply": 103,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "2h4h",
+      "elapsed_ns": 42757459
+    },
+    {
+      "ply": 104,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "3f2g",
+      "elapsed_ns": 1053948583
+    },
+    {
+      "ply": 105,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "6f9c+",
+      "elapsed_ns": 742262334
+    },
+    {
+      "ply": 106,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "9b9c",
+      "elapsed_ns": 964332333
+    },
+    {
+      "ply": 107,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "4h4c+",
+      "elapsed_ns": 628714917
+    },
+    {
+      "ply": 108,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "9c9f",
+      "elapsed_ns": 875613917
+    },
+    {
+      "ply": 109,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "4c3d",
+      "elapsed_ns": 586805125
+    },
+    {
+      "ply": 110,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "9f9h+",
+      "elapsed_ns": 817410625
+    },
+    {
+      "ply": 111,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "3d7d",
+      "elapsed_ns": 560597459
+    },
+    {
+      "ply": 112,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "P*7c",
+      "elapsed_ns": 48140583
+    },
+    {
+      "ply": 113,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "7d6c",
+      "elapsed_ns": 550606917
+    },
+    {
+      "ply": 114,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "7b6c",
+      "elapsed_ns": 32267333
+    },
+    {
+      "ply": 115,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "R*9b",
+      "elapsed_ns": 450873792
+    },
+    {
+      "ply": 116,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "R*9g",
+      "elapsed_ns": 882726416
+    },
+    {
+      "ply": 117,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "9b9g+",
+      "elapsed_ns": 411502833
+    },
+    {
+      "ply": 118,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "9h9g",
+      "elapsed_ns": 760456542
+    },
+    {
+      "ply": 119,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "R*9b",
+      "elapsed_ns": 443194750
+    },
+    {
+      "ply": 120,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "R*9f",
+      "elapsed_ns": 878778542
+    },
+    {
+      "ply": 121,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "9b9f+",
+      "elapsed_ns": 404689541
+    },
+    {
+      "ply": 122,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "9g9f",
+      "elapsed_ns": 755966500
+    },
+    {
+      "ply": 123,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "S*8g",
+      "elapsed_ns": 445278375
+    },
+    {
+      "ply": 124,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "9f8g",
+      "elapsed_ns": 875421833
+    },
+    {
+      "ply": 125,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "7h8g",
+      "elapsed_ns": 23452375
+    },
+    {
+      "ply": 126,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "B*4e",
+      "elapsed_ns": 761351584
+    },
+    {
+      "ply": 127,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "R*4b",
+      "elapsed_ns": 337736000
+    },
+    {
+      "ply": 128,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "4e2c",
+      "elapsed_ns": 921992417
+    },
+    {
+      "ply": 129,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "4b8b+",
+      "elapsed_ns": 268486542
+    },
+    {
+      "ply": 130,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "2c6g+",
+      "elapsed_ns": 786228208
+    },
+    {
+      "ply": 131,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "8b8c",
+      "elapsed_ns": 323865417
+    },
+    {
+      "ply": 132,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "6g5g",
+      "elapsed_ns": 696213167
+    },
+    {
+      "ply": 133,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "8c7c",
+      "elapsed_ns": 296212000
+    },
+    {
+      "ply": 134,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "6c7c",
+      "elapsed_ns": 34670417
+    },
+    {
+      "ply": 135,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "S*6h",
+      "elapsed_ns": 230410875
+    },
+    {
+      "ply": 136,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "5g6h",
+      "elapsed_ns": 544601000
+    },
+    {
+      "ply": 137,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "7i6h",
+      "elapsed_ns": 145810917
+    },
+    {
+      "ply": 138,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "G*5h",
+      "elapsed_ns": 435095583
+    },
+    {
+      "ply": 139,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "B*3f",
+      "elapsed_ns": 223987625
+    },
+    {
+      "ply": 140,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "5h6h",
+      "elapsed_ns": 557582666
+    },
+    {
+      "ply": 141,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "3f2g",
+      "elapsed_ns": 157233167
+    },
+    {
+      "ply": 142,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "G*2h",
+      "elapsed_ns": 460021583
+    },
+    {
+      "ply": 143,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "2g8a+",
+      "elapsed_ns": 229649375
+    },
+    {
+      "ply": 144,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "R*3a",
+      "elapsed_ns": 526918042
+    },
+    {
+      "ply": 145,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "8a4e",
+      "elapsed_ns": 295361250
+    },
+    {
+      "ply": 146,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "3a3h+",
+      "elapsed_ns": 659776833
+    },
+    {
+      "ply": 147,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "4e5f",
+      "elapsed_ns": 286666292
+    },
+    {
+      "ply": 148,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "3h3f",
+      "elapsed_ns": 586913750
+    },
+    {
+      "ply": 149,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "5f4f",
+      "elapsed_ns": 304254291
+    },
+    {
+      "ply": 150,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "3f4f",
+      "elapsed_ns": 49824959
+    },
+    {
+      "ply": 151,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "8g7g",
+      "elapsed_ns": 239287166
+    },
+    {
+      "ply": 152,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "R*6i",
+      "elapsed_ns": 517708125
+    },
+    {
+      "ply": 153,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "L*1e",
+      "elapsed_ns": 265137208
+    },
+    {
+      "ply": 154,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "6i5i+",
+      "elapsed_ns": 594860583
+    },
+    {
+      "ply": 155,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "1e1a+",
+      "elapsed_ns": 309579292
+    },
+    {
+      "ply": 156,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "S*2b",
+      "elapsed_ns": 593496125
+    },
+    {
+      "ply": 157,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "1a2a",
+      "elapsed_ns": 331001667
+    },
+    {
+      "ply": 158,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "G*1a",
+      "elapsed_ns": 670833667
+    },
+    {
+      "ply": 159,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "2a1a",
+      "elapsed_ns": 320303625
+    },
+    {
+      "ply": 160,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "2b1a",
+      "elapsed_ns": 556781542
+    },
+    {
+      "ply": 161,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "L*1c",
+      "elapsed_ns": 309439000
+    },
+    {
+      "ply": 162,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "P*1b",
+      "elapsed_ns": 554978292
+    },
+    {
+      "ply": 163,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "1c1b+",
+      "elapsed_ns": 231492750
+    },
+    {
+      "ply": 164,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "1a1b",
+      "elapsed_ns": 538259708
+    },
+    {
+      "ply": 165,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "G*2b",
+      "elapsed_ns": 218681709
+    },
+    {
+      "ply": 166,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "1b1c",
+      "elapsed_ns": 573923250
+    },
+    {
+      "ply": 167,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "2b2c",
+      "elapsed_ns": 238308625
+    },
+    {
+      "ply": 168,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "S*2b",
+      "elapsed_ns": 571367666
+    },
+    {
+      "ply": 169,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "2c1c",
+      "elapsed_ns": 232727583
+    },
+    {
+      "ply": 170,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "2b1c",
+      "elapsed_ns": 545664041
+    },
+    {
+      "ply": 171,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "G*2c",
+      "elapsed_ns": 330299500
+    },
+    {
+      "ply": 172,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "G*2b",
+      "elapsed_ns": 688132167
+    },
+    {
+      "ply": 173,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "2c2b",
+      "elapsed_ns": 226887708
+    },
+    {
+      "ply": 174,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "1c2b",
+      "elapsed_ns": 560026833
+    },
+    {
+      "ply": 175,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "S*3g",
+      "elapsed_ns": 333778750
+    },
+    {
+      "ply": 176,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "4f3g",
+      "elapsed_ns": 652451917
+    },
+    {
+      "ply": 177,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "P*6g",
+      "elapsed_ns": 21226334
+    },
+    {
+      "ply": 178,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "3g6g",
+      "elapsed_ns": 619766417
+    },
+    {
+      "ply": 179,
+      "side": "sente",
+      "policy": "material-piece-threat-v1",
+      "move": "7g8h",
+      "elapsed_ns": 14203916
+    },
+    {
+      "ply": 180,
+      "side": "gote",
+      "policy": "material-piece-threat-value-v1",
+      "move": "G*9g",
+      "elapsed_ns": 676484750
+    }
+  ],
+  "unfinished_calculation": null,
+  "error": null
+}

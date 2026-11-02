@@ -597,6 +597,7 @@ def summarize(
             MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
             MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0,
             MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+            MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
         )
     )
     for policy in (
@@ -607,6 +608,7 @@ def summarize(
         MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
         MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0,
         MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+        MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
     ):
         if policy in {config.baseline, config.candidate}:
             policies += (policy,)
@@ -717,6 +719,7 @@ _POLICY_NAMES = {
     MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE: "material-undefended-piece",
     MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0: "material-piece-threat-v0",
     MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1: "material-piece-threat-v1",
+    MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1: "material-piece-threat-value-v1",
     MoveSelectionPolicy.TWO_PLY_MATERIAL: "two-ply-material",
     MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH: "full-width-4",
     MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA: "alpha-beta-4",

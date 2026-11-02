@@ -42,6 +42,7 @@ class MoveSelectionPolicy(Enum):
     MATERIAL_UNDEFENDED_PIECE = auto()
     MATERIAL_PIECE_THREAT_V0 = auto()
     MATERIAL_PIECE_THREAT_V1 = auto()
+    MATERIAL_PIECE_THREAT_VALUE_V1 = auto()
 
 
 _DROP_PIECE_TYPES = (
@@ -676,7 +677,8 @@ def choose_move(
         position: 合法手の元になった局面。候補評価では変更しない。
         moves: その局面の合法手を表す変更不可タプル。
         policy: 一様ランダム・一手駒得・二手先読み（駒得）・駒得と飛車可動性の
-            一手評価、比較用の玉周辺安全度・未守備駒評価の一手方式のいずれか。
+            一手評価、比較用の玉周辺安全度・未守備駒評価・支えのない被攻撃駒の
+            価値評価の一手方式のいずれか。
         rng: 乱数選択を呼び出し側で再現可能にする生成器。
 
     戻り値:
@@ -685,7 +687,8 @@ def choose_move(
         飛車可動性の合成値を開始側視点で評価し、一手詰みを優先する。
         比較用の玉周辺安全度・未守備駒評価方式は、主評価の駒得重み10と対象重み
         0または1で評価し、同じ一手詰み優先の選択器を使う。V0/V1はM/Uの重みを
-        10/1に固定し、V重みだけを0/1へ切り替える比較専用方式である。
+        10/1に固定し、V重みだけを0/1へ切り替える比較専用方式である。価値V1は
+        駒得10・支えのない被攻撃駒の価値合計1・支えあり低価値駒脅威1で評価する。
         TWO_PLY_MATERIALなら相手の全応手後の最悪評価が最大の手。同点最高候補だけから
         一様に抽選する。
 
@@ -697,8 +700,8 @@ def choose_move(
         適用して局面点を計算し、相手の応手を含む探索をしない。既存選択との互換性
         を保つためRANDOMはchoose_weak_moveへ委譲する。MATERIAL_ROOK_MOBILITYは
         評価関数を差し替えられる既存の一手選択操作へ委譲し、B1の評価部品と
-        一手詰み優先を再利用する。玉周辺安全度・未守備駒評価の比較用二方式も
-        一手詰み優先の一手選択操作へ委譲する。TWO_PLY_MATERIALは
+        一手詰み優先を再利用する。玉周辺安全度・未守備駒評価・駒脅威と価値の
+        比較用方式も一手詰み優先の一手選択操作へ委譲する。TWO_PLY_MATERIALは
         開始側視点のまま自分一手＋相手一手まで読み、詰みの勝ちを通常駒得より
         高く、詰みの負けを低く扱う。詰みでない手なしは静的駒得で比較する。
         勝ち同士・負け同士は同点とし、詰みまでの距離は比較しない。
@@ -782,6 +785,22 @@ def choose_move(
             moves,
             rng,
             evaluate=partial(evaluate_material_piece_threat, weights=weights),
+        )
+    if policy == MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1:
+        from .material_piece_threat_value import (
+            PieceThreatValueWeights,
+            evaluate_material_piece_threat_value,
+        )
+        from .one_ply_selection import choose_one_ply_move
+
+        weights = PieceThreatValueWeights(
+            material=10, undefended_value=1, supported_threat=1
+        )
+        return choose_one_ply_move(
+            position,
+            moves,
+            rng,
+            evaluate=partial(evaluate_material_piece_threat_value, weights=weights),
         )
     if policy != MoveSelectionPolicy.MATERIAL:
         raise ValueError("未知の一手選択方針です")

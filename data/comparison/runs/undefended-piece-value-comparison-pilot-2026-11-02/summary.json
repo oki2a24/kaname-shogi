@@ -1,0 +1,178 @@
+{
+  "format": "kaname-shogi-comparison-summary-v2",
+  "status": "complete",
+  "planned_games": 28,
+  "started_games": 28,
+  "ended_games": 28,
+  "unstarted_games": 0,
+  "completed_pairs": 14,
+  "partial_pairs": 0,
+  "results": {
+    "checkmate": 26,
+    "no_legal_move": 0,
+    "perpetual_check_loss": 0,
+    "repetition": 0,
+    "ply_limit": 2,
+    "interrupted": 0,
+    "error": 0,
+    "unresolved_double_perpetual_check": 0
+  },
+  "perpetual_check_losses": {
+    "sente": 0,
+    "gote": 0
+  },
+  "by_position": {
+    "value-neutral": {
+      "started_games": 4,
+      "results": {
+        "checkmate": 4,
+        "no_legal_move": 0,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    },
+    "value-low-target": {
+      "started_games": 4,
+      "results": {
+        "checkmate": 4,
+        "no_legal_move": 0,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    },
+    "value-high-target": {
+      "started_games": 4,
+      "results": {
+        "checkmate": 4,
+        "no_legal_move": 0,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    },
+    "value-same-count-different-value": {
+      "started_games": 4,
+      "results": {
+        "checkmate": 4,
+        "no_legal_move": 0,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    },
+    "value-rank-reversal": {
+      "started_games": 4,
+      "results": {
+        "checkmate": 2,
+        "no_legal_move": 0,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 2,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    },
+    "value-both-sides-multiple": {
+      "started_games": 4,
+      "results": {
+        "checkmate": 4,
+        "no_legal_move": 0,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    },
+    "value-uv-mixed": {
+      "started_games": 4,
+      "results": {
+        "checkmate": 4,
+        "no_legal_move": 0,
+        "perpetual_check_loss": 0,
+        "repetition": 0,
+        "ply_limit": 0,
+        "interrupted": 0,
+        "error": 0,
+        "unresolved_double_perpetual_check": 0
+      }
+    }
+  },
+  "by_side": {
+    "sente": {
+      "games": 28,
+      "wins": 10,
+      "losses": 16,
+      "no_winner": 2
+    },
+    "gote": {
+      "games": 28,
+      "wins": 16,
+      "losses": 10,
+      "no_winner": 2
+    }
+  },
+  "move_time_by_policy": {
+    "random": {
+      "successful_moves": 0,
+      "total_ns": 0,
+      "average_ns": null,
+      "max_ns": null
+    },
+    "material": {
+      "successful_moves": 0,
+      "total_ns": 0,
+      "average_ns": null,
+      "max_ns": null
+    },
+    "two-ply-material": {
+      "successful_moves": 0,
+      "total_ns": 0,
+      "average_ns": null,
+      "max_ns": null
+    },
+    "full-width-4": {
+      "successful_moves": 0,
+      "total_ns": 0,
+      "average_ns": null,
+      "max_ns": null
+    },
+    "alpha-beta-4": {
+      "successful_moves": 0,
+      "total_ns": 0,
+      "average_ns": null,
+      "max_ns": null
+    },
+    "material-piece-threat-v1": {
+      "successful_moves": 1574,
+      "total_ns": 592866453419,
+      "average_ns": 376662295.6918678,
+      "max_ns": 1354192584
+    },
+    "material-piece-threat-value-v1": {
+      "successful_moves": 1578,
+      "total_ns": 880620780426,
+      "average_ns": 558061331.068441,
+      "max_ns": 1632557917
+    }
+  },
+  "elapsed_ns": 426373417000,
+  "statistical_decision": null,
+  "in_flight_games": 0
+}

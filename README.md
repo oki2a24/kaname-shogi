@@ -118,7 +118,7 @@ python3 -m kaname_shogi.analyze_comparison \
   --input-dir results/c1-pilot --output results/c1-pilot-analysis.json
 ```
 
-準備CLIは各局面・各組・各方式の乱数種を事前保存し、同じ一覧を比較CLIへ渡します。比較CLIは `--seed` または `--seed-list` の一方を必須とし、二局一組の先後を交換します。結果には局ごとの棋譜、条件、進行summaryが保存されます。分析CLIは完了した全局を照合・再集計して候補方式視点の得点区間を出します。`pilot` は時間・未決着率などを見る目的で、改善/悪化判定は行いません。`confirmation` の95%区間も、今回の6局面を均等に扱う一つの総合比較に限り、局面別成績は記述集計です。上限未決着と双方未裁定は得点 `[0,1]` として幅へ残します。
+準備CLIは各局面・各組・各方式の乱数種を事前保存し、同じ一覧を比較CLIへ渡します。比較CLIは `--seed` または `--seed-list` の一方を必須とし、二局一組の先後を交換します。結果には局ごとの棋譜、条件、進行summaryが保存されます。分析CLIは完了した全局を照合・再集計して候補方式視点の得点区間を出します。`pilot` は時間・未決着率などを見る目的で、改善/悪化判定は行いません。`confirmation` の95%区間も、各実験で事前固定した局面群を等重みに扱う一つの総合比較に限り、局面別成績は記述集計です。上限未決着と双方未裁定は得点 `[0,1]` として幅へ残します。
 
 `--workers` は省略時1で、1〜4を指定できます。2〜4ではspawn方式のプロセス並列で局を実行し、条件・局JSON・summaryの書込みは親CLIに集約します。通常実行は逐次時にconditions v1/v2・summary v1、複数worker時にconditions v3・summary v2で保存します。再開後はsummary v3となり、分析CLIは対応する組合せを受け付けます。並列化はCPU負荷や局ごとの長さに左右され、4倍速を保証しません。Ctrl-Cでは親が新規投入を止め、workerは初期化後にSIGINTを無視して実行中局を完了し、親が回収するため、中断応答が遅れる場合があります。worker初期化前の短い起動中における実端末SIGINTは未検証です。局の故障では新規投入を止めて他workerを回収します。強制終了後の棋譜途中復旧はありません。
 
@@ -177,6 +177,16 @@ python3 -m kaname_shogi.analyze_comparison \
 ```
 
 独立confirmationは別の `purpose=confirmation` 種一覧を作り、5局面各407組・計2035組で実施します。予定出力先がすべて未使用であることを確認してから実行してください。承認済み条件、確認方法、未実施の比較は[設計](docs/plans/2026-10-30-undefended-piece-comparison-design.md)と[学習記録](docs/learning/undefended-piece-coordination-evaluation.md)を参照してください。
+
+### 支えのない被攻撃駒の価値合計を比較する
+
+比較CLIでは、従来の `material-piece-threat-v1`（`10 × M（駒得）+ U（支えのない被攻撃駒の枚数差）+ V（支えあり低価値駒脅威の枚数差）`）と、新しい比較専用 `material-piece-threat-value-v1`（`10 × M（駒得）+ 1 × 支えのない被攻撃駒の価値合計差 + V（支えあり低価値駒脅威の枚数差）`）を比較できます。新方式の旧Uは加算せず、価値合計差へ置き換えます。この方式は比較CLIだけに登録し、通常CLI・USIの方式選択には加えません。
+
+局面セットは新規の `data/comparison/undefended-piece-value-positions-v1.json` で、対象なし、低・高価値、同数異価値、枚数と価値の順位逆転、両側複数、U/V混在の7局面です。無対象対照は先後の端香を一手ずつ進めた局面です。標準初期局面は過去のU・C2開始局面にも含まれていたため使わず、回帰テストで追跡済みU/V/C2開始局面とのSFEN非重複を確認します。V-onlyの作用は既存の固定評価テストで確認し、比較局面には足しません。対局は各組で方式の先後を交換します。勝ち1・引き分け0.5・負け0の二局平均は既存CLIの集計契約で、二局を一つの独立観測として扱います。このテーマでは組得点を主判定にし、手の選択や危険駒の捕獲は固定局面の作用確認に限り、対局中の捕獲状況を追加集計しません。
+
+実施計画はpilotが各局面2組、confirmationが各局面291組（計2037組・4074局）、各局512手上限、いずれも `--workers 4` です。二段階は目的別の別seed一覧で実施し、pilotをconfirmationと合算しません。統計・独立期待値・結果の限界は[承認済み設計](docs/plans/2026-11-02-undefended-piece-value-comparison-design.md)、[実施計画](docs/plans/2026-11-02-undefended-piece-value-comparison-implementation-plan.md)、[学習記録](docs/learning/undefended-piece-value.md)を参照してください。
+
+confirmationは完了済みです。analysis CLIの候補側組得点平均区間は `[0.6823, 0.7036]`、95% paired Hoeffding区間は `[0.6522, 0.7337]` で、登録した7局面の比較判定は `improved` でした。この値は当該局面群・一手選択・512手上限・実行環境に限られ、一般局面の棋力向上を意味しません。[保存分析結果](data/comparison/runs/undefended-piece-value-comparison-confirmation-2026-11-02-analysis.json)
 
 反復深化の比較は、次の専用コマンドで実行します。
 

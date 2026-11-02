@@ -1,0 +1,145 @@
+{
+  "format": "kaname-shogi-comparison-positions-v1",
+  "id": "undefended-piece-value-v1",
+  "positions": [
+    {
+      "id": "value-neutral",
+      "setup_moves": [
+        "1i1h",
+        "9a9b"
+      ],
+      "rationale": "先後の端香を一手ずつ進めた独立の無対象対照。M・U・支えのない被攻撃駒の価値差・Vはいずれも0。"
+    },
+    {
+      "id": "value-low-target",
+      "setup_moves": [
+        "1i1h",
+        "4c4d",
+        "7g7f"
+      ],
+      "rationale": "後手の4四歩だけが支えなく狙われる低価値対象。U=+1、価値差=+1、M=V=0。"
+    },
+    {
+      "id": "value-high-target",
+      "setup_moves": [
+        "8g8f",
+        "5a6b",
+        "7g7f",
+        "6a5b",
+        "2g2f",
+        "4a5a",
+        "8h4d"
+      ],
+      "rationale": "先手の4四角だけが支えなく狙われる高価値対象。U=-1、価値差=-13、M=V=0。"
+    },
+    {
+      "id": "value-same-count-different-value",
+      "setup_moves": [
+        "4i5h",
+        "7a6b",
+        "5h6h",
+        "4a3b",
+        "2h3h",
+        "3c3d",
+        "7i7h",
+        "1a1b",
+        "4g4f",
+        "5a4b",
+        "5i4i",
+        "8c8d",
+        "6i5i",
+        "2b6f",
+        "4f4e",
+        "9a9b",
+        "6h6i"
+      ],
+      "rationale": "先手歩一枚と後手角一枚が同数で狙われ、価値は先手側1・後手側13。U=0だが価値差=+12、M=V=0。"
+    },
+    {
+      "id": "value-rank-reversal",
+      "setup_moves": [
+        "7i7h",
+        "4a3b",
+        "3i4h",
+        "4c4d",
+        "4h3i",
+        "3c3d",
+        "9g9f",
+        "9c9d",
+        "2h1h",
+        "6a5b",
+        "5g5f",
+        "9d9e",
+        "5i4h",
+        "5b4c",
+        "3g3f",
+        "9a9d",
+        "1g1f",
+        "8b4b",
+        "4i3h",
+        "1a1b",
+        "8i9g",
+        "4d4e",
+        "2i3g",
+        "4b5b",
+        "6i6h",
+        "5b6b",
+        "3g2e",
+        "5a5b",
+        "3h2h",
+        "2b7g+",
+        "2e3c+",
+        "7g7f",
+        "4h3g",
+        "7f8f"
+      ],
+      "rationale": "先手金・歩（価値計10）と後手馬（15）が支えなく狙われ、枚数差U=-1に対し価値差=+5となる順位逆転。先手3三成桂にはV=1、M=0。"
+    },
+    {
+      "id": "value-both-sides-multiple",
+      "setup_moves": [
+        "2h4h",
+        "5c5d",
+        "7g7f",
+        "5d5e",
+        "6g6f",
+        "6a7b",
+        "8h7g",
+        "4a4b",
+        "7i8h",
+        "7a6b",
+        "3i2h",
+        "6c6d",
+        "6f6e",
+        "4b3b",
+        "7g9e",
+        "1a1b",
+        "1g1f",
+        "5e5f"
+      ],
+      "rationale": "先後それぞれ歩二枚が支えなく狙われ、枚数差・価値合計差とも0。M=V=0。"
+    },
+    {
+      "id": "value-uv-mixed",
+      "setup_moves": [
+        "8g8f",
+        "5a6b",
+        "7g7f",
+        "6a5b",
+        "2g2f",
+        "4a5a",
+        "8h4d",
+        "7c7d",
+        "4i4h",
+        "5a4a",
+        "7i7h",
+        "5b5a",
+        "4d5e",
+        "6b7b",
+        "4g4f",
+        "4c4d"
+      ],
+      "rationale": "後手4四歩のU対象と、先手角5五が狙う後手飛車8二のV対象を併せ持つ。M=0でU=価値差=V=+1。"
+    }
+  ]
+}

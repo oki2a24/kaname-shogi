@@ -69,7 +69,9 @@
 
 ## 対局方式の比較とC1分析
 
-`python -m kaname_shogi.compare_games` は開発用の一手選択方式を指定局面群で比較する。方式名は `random`、`material`、`material-rook-mobility`、`material-king-safety-material-only`、`material-king-safety`、`material-undefended-piece-material-only`、`material-undefended-piece`、`two-ply-material`、`full-width-4`、`alpha-beta-4`。飛車可動性・玉周辺安全度・支えのない駒の比較方式は通常CLI・USIの選択肢には加えていない。C2と支えのない駒の対照/候補は同じ一手選択・詰み優先を使い、それぞれ安全度またはUの重みだけを0と1にする。支えのない駒は `material=10, undefended=0/1`。詳細は[玉周辺安全度メモ](king-safety-evaluation.md)と[支えのない駒の評価メモ](undefended-piece-evaluation.md)を参照する。
+`python -m kaname_shogi.compare_games` は開発用の一手選択方式を指定局面群で比較する。方式名は `random`、`material`、`material-rook-mobility`、`material-king-safety-material-only`、`material-king-safety`、`material-undefended-piece-material-only`、`material-undefended-piece`、`material-piece-threat-v0`、`material-piece-threat-v1`、`material-piece-threat-value-v1`、`two-ply-material`、`full-width-4`、`alpha-beta-4`。飛車可動性・玉周辺安全度の比較専用方式と、新設した `material-piece-threat-value-v1` は通常CLI・USIの選択肢には加えていない。C2と支えのない駒の対照/候補は同じ一手選択・詰み優先を使い、それぞれ安全度またはUの重みだけを0と1にする。支えのない駒は `material=10, undefended=0/1`。詳細は[玉周辺安全度メモ](king-safety-evaluation.md)と[支えのない駒の評価メモ](undefended-piece-evaluation.md)を参照する。
+
+`material-piece-threat-v1` は従来の `10 × M（駒得）+ U（支えのない被攻撃駒の枚数差）+ V（支えあり低価値駒脅威の枚数差）`、`material-piece-threat-value-v1` は `10 × M（駒得）+ 1 × 支えのない被攻撃駒の価値合計差 + V（支えあり低価値駒脅威の枚数差）`。後者は旧Uを加算せず、その項を価値合計差に置き換える比較専用方式である。conditionsでは旧方式の `undefended` と新方式の `undefended_value` を別キーで保存する。V-onlyの対照は固定評価テストで確認し、今回のゲーム局面群は7局面の等重みセットにU/V混在局面を含める。
 
 ### 乱数種一覧と実行
 
@@ -112,7 +114,7 @@ Ctrl-Cでは終了コード130を返し、その時点までに完全検証さ�
 
 候補方式の各局得点は勝ち `[1,1]`、負け `[0,0]`、通常千日手 `[1/2,1/2]`、手数上限の未決着と双方連続王手の未裁定 `[0,1]`。後二者を勝敗や0.5へ決め打ちせず下限・上限の両方へ残す。二局一組内の平均得点を一標本として組間を扱い、区間半径は `sqrt(log(40)/(2*n))`。95%の主区間は平均得点の下限から半径を引いた値と、上限平均に半径を足した値を `[0,1]` に切り詰める。確認比較は区間下端が0.5より大きい場合だけ改善支持、上端が0.5より小さい場合だけ悪化支持、それ以外は判断不能。50%は互角の境目であり、95%ではない。pilotは探索的集計だけで強さ判定をしない。
 
-この区間は組間の独立抽出を仮定し、今回の6局面を均等に扱う一つの総合比較に限る。局面別・先後別は記述集計で、個別の95%保証を持たない。参照値2,035組は、未決着なし・真の得点率55%・検出力80%という仮定下でHoeffding不等式から得る十分条件であり、必要最小値でも棋力向上の保証でもない。未決着のある実験はその組数でも目標検出力を保証しない。時間上限・対局完了時間・局面群の実戦代表性・真の棋力差は別途未検証である。
+この区間は組間の独立抽出を仮定し、各実験で事前固定した局面群を等重みに扱う一つの総合比較に限る。局面別・先後別は記述集計で、個別の95%保証を持たない。組数は実験ごとに設計する。例えば2026-10-31のV比較は6局面各340組・計2040組、2026-10-30の枚数差U比較は5局面各407組・計2035組、2026-11-02の被攻撃駒価値比較は7局面各291組・計2037組である（各テーマの[比較記録](../learning/supported-piece-lower-value-threat.md)、[比較記録](../learning/undefended-piece-coordination-evaluation.md)、[比較設計](../plans/2026-11-02-undefended-piece-value-comparison-design.md)を参照）。これらは未決着なし・真の得点率55%・検出力80%という計画仮定下でHoeffding不等式から置いた設計値で、必要最小値でも棋力向上の保証でもない。未決着のある実験は同じ組数でも目標検出力を保証しない。時間上限・対局完了時間・局面群の実戦代表性・真の棋力差は別途未検証である。
 
 分析・再開readerは、保存棋譜の `GameRecord.from_payload` で全手を既存の合法操作により検証・再生する。続く `_validate_and_replay` は計時・手番・方式・棋譜一致、各手の合法適用・反復・手数上限、末尾SFEN・終局・勝者照合を保持する。次の記録手がある中間局面では、その合法再生済みの一手を合法手存在の根拠にし、存在確認だけの全合法手列挙を省く。末尾は実際に列挙し、反復終局は従来どおり盤面終局判定を行わない。中断・故障局を読む局単位再開も同じreaderを使う。これは保存結果を読む処理の短縮で、対局実行側の探索・時計境界や通常CLI/USIの選択肢を変えない。実装の記録は[C1分析短時間化の学習記録](../learning/c1-analysis-performance-investigation.md)、承認仕様は[設計](../plans/2026-10-25-c1-analysis-legal-witness-design.md)を参照する。全4,080局の旧新版分析JSONは `analyzer` を除く全項目が一致した。統計判定は判断不能で、B1改善の根拠ではない。
 

@@ -1,0 +1,500 @@
+{
+  "format": "kaname-shogi-comparison-conditions-v3",
+  "baseline": "material-piece-threat-v1",
+  "candidate": "material-piece-threat-value-v1",
+  "positions_file": "data/comparison/undefended-piece-value-positions-v1.json",
+  "positions_sha256": "256437ea5e0465f4e1ed777deecf091ef1745bbdbab6b70e805e88685b94ad61",
+  "positions": [
+    {
+      "id": "value-neutral",
+      "setup_moves": [
+        "1i1h",
+        "9a9b"
+      ],
+      "rationale": "先後の端香を一手ずつ進めた独立の無対象対照。M・U・支えのない被攻撃駒の価値差・Vはいずれも0。",
+      "start_sfen": "1nsgkgsnl/lr5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5RL/LNSGKGSN1 b - 3",
+      "initial_move_number": 3
+    },
+    {
+      "id": "value-low-target",
+      "setup_moves": [
+        "1i1h",
+        "4c4d",
+        "7g7f"
+      ],
+      "rationale": "後手の4四歩だけが支えなく狙われる低価値対象。U=+1、価値差=+1、M=V=0。",
+      "start_sfen": "lnsgkgsnl/1r5b1/ppppp1ppp/5p3/9/2P6/PP1PPPPPP/1B5RL/LNSGKGSN1 w - 4",
+      "initial_move_number": 4
+    },
+    {
+      "id": "value-high-target",
+      "setup_moves": [
+        "8g8f",
+        "5a6b",
+        "7g7f",
+        "6a5b",
+        "2g2f",
+        "4a5a",
+        "8h4d"
+      ],
+      "rationale": "先手の4四角だけが支えなく狙われる高価値対象。U=-1、価値差=-13、M=V=0。",
+      "start_sfen": "lns1g1snl/1r1kg2b1/ppppppppp/5B3/9/1PP4P1/P2PPPP1P/7R1/LNSGKGSNL w - 8",
+      "initial_move_number": 8
+    },
+    {
+      "id": "value-same-count-different-value",
+      "setup_moves": [
+        "4i5h",
+        "7a6b",
+        "5h6h",
+        "4a3b",
+        "2h3h",
+        "3c3d",
+        "7i7h",
+        "1a1b",
+        "4g4f",
+        "5a4b",
+        "5i4i",
+        "8c8d",
+        "6i5i",
+        "2b6f",
+        "4f4e",
+        "9a9b",
+        "6h6i"
+      ],
+      "rationale": "先手歩一枚と後手角一枚が同数で狙われ、価値は先手側1・後手側13。U=0だが価値差=+12、M=V=0。",
+      "start_sfen": "1n1g2sn1/lr1s1kg1l/p1pppp1pp/1p4p2/5P3/3b5/PPPPP1PPP/1BS3R2/LN1GGKSNL w - 18",
+      "initial_move_number": 18
+    },
+    {
+      "id": "value-rank-reversal",
+      "setup_moves": [
+        "7i7h",
+        "4a3b",
+        "3i4h",
+        "4c4d",
+        "4h3i",
+        "3c3d",
+        "9g9f",
+        "9c9d",
+        "2h1h",
+        "6a5b",
+        "5g5f",
+        "9d9e",
+        "5i4h",
+        "5b4c",
+        "3g3f",
+        "9a9d",
+        "1g1f",
+        "8b4b",
+        "4i3h",
+        "1a1b",
+        "8i9g",
+        "4d4e",
+        "2i3g",
+        "4b5b",
+        "6i6h",
+        "5b6b",
+        "3g2e",
+        "5a5b",
+        "3h2h",
+        "2b7g+",
+        "2e3c+",
+        "7g7f",
+        "4h3g",
+        "7f8f"
+      ],
+      "rationale": "先手金・歩（価値計10）と後手馬（15）が支えなく狙われ、枚数差U=-1に対し価値差=+5となる順位逆転。先手3三成桂にはV=1、M=0。",
+      "start_sfen": "1ns3sn1/3rk1g1l/1ppppg+Npp/l5p2/p4p3/P+b2P1P1P/NP1P1PKP1/1BSG3GR/L5S1L b p 35",
+      "initial_move_number": 35
+    },
+    {
+      "id": "value-both-sides-multiple",
+      "setup_moves": [
+        "2h4h",
+        "5c5d",
+        "7g7f",
+        "5d5e",
+        "6g6f",
+        "6a7b",
+        "8h7g",
+        "4a4b",
+        "7i8h",
+        "7a6b",
+        "3i2h",
+        "6c6d",
+        "6f6e",
+        "4b3b",
+        "7g9e",
+        "1a1b",
+        "1g1f",
+        "5e5f"
+      ],
+      "rationale": "先後それぞれ歩二枚が支えなく狙われ、枚数差・価値合計差とも0。M=V=0。",
+      "start_sfen": "ln2k1sn1/1rgs2gbl/ppp2pppp/3p5/B2P5/2P1p3P/PP2PPPP1/1S3R1S1/LN1GKG1NL b - 19",
+      "initial_move_number": 19
+    },
+    {
+      "id": "value-uv-mixed",
+      "setup_moves": [
+        "8g8f",
+        "5a6b",
+        "7g7f",
+        "6a5b",
+        "2g2f",
+        "4a5a",
+        "8h4d",
+        "7c7d",
+        "4i4h",
+        "5a4a",
+        "7i7h",
+        "5b5a",
+        "4d5e",
+        "6b7b",
+        "4g4f",
+        "4c4d"
+      ],
+      "rationale": "後手4四歩のU対象と、先手角5五が狙う後手飛車8二のV対象を併せ持つ。M=0でU=価値差=V=+1。",
+      "start_sfen": "lns1ggsnl/1rk4b1/pp1pp1ppp/2p2p3/4B4/1PP2P1P1/P2PP1P1P/2S2G1R1/LN1GK1SNL b - 17",
+      "initial_move_number": 17
+    }
+  ],
+  "pairs_per_position": 2,
+  "seed": null,
+  "max_plies": 512,
+  "schedule": [
+    {
+      "game_id": "game-000001",
+      "position_id": "value-neutral",
+      "pair_number": 0,
+      "game_number_in_pair": 1,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 102972606944516064560679023285020340758,
+      "candidate_seed": 147701908062791982160212227728782833023
+    },
+    {
+      "game_id": "game-000002",
+      "position_id": "value-neutral",
+      "pair_number": 0,
+      "game_number_in_pair": 2,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 102972606944516064560679023285020340758,
+      "candidate_seed": 147701908062791982160212227728782833023
+    },
+    {
+      "game_id": "game-000003",
+      "position_id": "value-neutral",
+      "pair_number": 1,
+      "game_number_in_pair": 1,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 327050568207960467619735010469105810037,
+      "candidate_seed": 49847613320434617922790863910558302425
+    },
+    {
+      "game_id": "game-000004",
+      "position_id": "value-neutral",
+      "pair_number": 1,
+      "game_number_in_pair": 2,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 327050568207960467619735010469105810037,
+      "candidate_seed": 49847613320434617922790863910558302425
+    },
+    {
+      "game_id": "game-000005",
+      "position_id": "value-low-target",
+      "pair_number": 2,
+      "game_number_in_pair": 1,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 201713242011931177110021351154068137058,
+      "candidate_seed": 189242605156747523821014443412455040452
+    },
+    {
+      "game_id": "game-000006",
+      "position_id": "value-low-target",
+      "pair_number": 2,
+      "game_number_in_pair": 2,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 201713242011931177110021351154068137058,
+      "candidate_seed": 189242605156747523821014443412455040452
+    },
+    {
+      "game_id": "game-000007",
+      "position_id": "value-low-target",
+      "pair_number": 3,
+      "game_number_in_pair": 1,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 44750501078885043117417330530987779835,
+      "candidate_seed": 163426027441957217549279573198209517917
+    },
+    {
+      "game_id": "game-000008",
+      "position_id": "value-low-target",
+      "pair_number": 3,
+      "game_number_in_pair": 2,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 44750501078885043117417330530987779835,
+      "candidate_seed": 163426027441957217549279573198209517917
+    },
+    {
+      "game_id": "game-000009",
+      "position_id": "value-high-target",
+      "pair_number": 4,
+      "game_number_in_pair": 1,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 153125453714765476303553533785416926019,
+      "candidate_seed": 91475873501614777794326074740820517359
+    },
+    {
+      "game_id": "game-000010",
+      "position_id": "value-high-target",
+      "pair_number": 4,
+      "game_number_in_pair": 2,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 153125453714765476303553533785416926019,
+      "candidate_seed": 91475873501614777794326074740820517359
+    },
+    {
+      "game_id": "game-000011",
+      "position_id": "value-high-target",
+      "pair_number": 5,
+      "game_number_in_pair": 1,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 96207822946468774921161096896331908188,
+      "candidate_seed": 213622891207064895942136867257492509119
+    },
+    {
+      "game_id": "game-000012",
+      "position_id": "value-high-target",
+      "pair_number": 5,
+      "game_number_in_pair": 2,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 96207822946468774921161096896331908188,
+      "candidate_seed": 213622891207064895942136867257492509119
+    },
+    {
+      "game_id": "game-000013",
+      "position_id": "value-same-count-different-value",
+      "pair_number": 6,
+      "game_number_in_pair": 1,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 67018344661285794333867068195417132022,
+      "candidate_seed": 266638099719874445163803719204569573951
+    },
+    {
+      "game_id": "game-000014",
+      "position_id": "value-same-count-different-value",
+      "pair_number": 6,
+      "game_number_in_pair": 2,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 67018344661285794333867068195417132022,
+      "candidate_seed": 266638099719874445163803719204569573951
+    },
+    {
+      "game_id": "game-000015",
+      "position_id": "value-same-count-different-value",
+      "pair_number": 7,
+      "game_number_in_pair": 1,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 39757339567619306195832064365270158154,
+      "candidate_seed": 13646336705407644696109680941934236089
+    },
+    {
+      "game_id": "game-000016",
+      "position_id": "value-same-count-different-value",
+      "pair_number": 7,
+      "game_number_in_pair": 2,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 39757339567619306195832064365270158154,
+      "candidate_seed": 13646336705407644696109680941934236089
+    },
+    {
+      "game_id": "game-000017",
+      "position_id": "value-rank-reversal",
+      "pair_number": 8,
+      "game_number_in_pair": 1,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 133896833163322314810779011734229695467,
+      "candidate_seed": 191050712057350615509799541431982361988
+    },
+    {
+      "game_id": "game-000018",
+      "position_id": "value-rank-reversal",
+      "pair_number": 8,
+      "game_number_in_pair": 2,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 133896833163322314810779011734229695467,
+      "candidate_seed": 191050712057350615509799541431982361988
+    },
+    {
+      "game_id": "game-000019",
+      "position_id": "value-rank-reversal",
+      "pair_number": 9,
+      "game_number_in_pair": 1,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 125542752554586796477951694560074631338,
+      "candidate_seed": 171235423866565030825980236731568651112
+    },
+    {
+      "game_id": "game-000020",
+      "position_id": "value-rank-reversal",
+      "pair_number": 9,
+      "game_number_in_pair": 2,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 125542752554586796477951694560074631338,
+      "candidate_seed": 171235423866565030825980236731568651112
+    },
+    {
+      "game_id": "game-000021",
+      "position_id": "value-both-sides-multiple",
+      "pair_number": 10,
+      "game_number_in_pair": 1,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 166499406422823558065102766944305198975,
+      "candidate_seed": 175438469758613523786362273692287109154
+    },
+    {
+      "game_id": "game-000022",
+      "position_id": "value-both-sides-multiple",
+      "pair_number": 10,
+      "game_number_in_pair": 2,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 166499406422823558065102766944305198975,
+      "candidate_seed": 175438469758613523786362273692287109154
+    },
+    {
+      "game_id": "game-000023",
+      "position_id": "value-both-sides-multiple",
+      "pair_number": 11,
+      "game_number_in_pair": 1,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 53503734264185958753350774049206447507,
+      "candidate_seed": 180425072956753017143585630971517460328
+    },
+    {
+      "game_id": "game-000024",
+      "position_id": "value-both-sides-multiple",
+      "pair_number": 11,
+      "game_number_in_pair": 2,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 53503734264185958753350774049206447507,
+      "candidate_seed": 180425072956753017143585630971517460328
+    },
+    {
+      "game_id": "game-000025",
+      "position_id": "value-uv-mixed",
+      "pair_number": 12,
+      "game_number_in_pair": 1,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 243924587703524066482479730787981907570,
+      "candidate_seed": 55617973868383191221244612740320632982
+    },
+    {
+      "game_id": "game-000026",
+      "position_id": "value-uv-mixed",
+      "pair_number": 12,
+      "game_number_in_pair": 2,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 243924587703524066482479730787981907570,
+      "candidate_seed": 55617973868383191221244612740320632982
+    },
+    {
+      "game_id": "game-000027",
+      "position_id": "value-uv-mixed",
+      "pair_number": 13,
+      "game_number_in_pair": 1,
+      "baseline_side": "gote",
+      "candidate_side": "sente",
+      "baseline_seed": 75173776831570624303608587907493170612,
+      "candidate_seed": 203490062933729204880195396937055486349
+    },
+    {
+      "game_id": "game-000028",
+      "position_id": "value-uv-mixed",
+      "pair_number": 13,
+      "game_number_in_pair": 2,
+      "baseline_side": "sente",
+      "candidate_side": "gote",
+      "baseline_seed": 75173776831570624303608587907493170612,
+      "candidate_seed": 203490062933729204880195396937055486349
+    }
+  ],
+  "timing": {
+    "source": "time.monotonic_ns",
+    "start": "immediately_before_legal_moves",
+    "end": "immediately_after_choose_move_returns",
+    "unit": "nanoseconds"
+  },
+  "clock": null,
+  "repetition": {
+    "ordinary_fourth_occurrence": "continue",
+    "ordinary_fifth_occurrence": "terminal",
+    "ordinary_rematch": false,
+    "perpetual_check_loss": "opposite_side_wins",
+    "double_perpetual_check": "unresolved_no_winner"
+  },
+  "git": {
+    "head": "4209e284d134a6122087432fbbbb58b74390a2ba",
+    "dirty": true,
+    "diagnostic": null
+  },
+  "runtime": {
+    "python_version": "3.15.2",
+    "python_implementation": "CPython",
+    "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "processor": "arm"
+  },
+  "source_sha256": "cb8674f6eac5e51be32c778f64260b69449aa306da301dcb180d0b3aefd2e1c2",
+  "positions_json": "{\n  \"format\": \"kaname-shogi-comparison-positions-v1\",\n  \"id\": \"undefended-piece-value-v1\",\n  \"positions\": [\n    {\n      \"id\": \"value-neutral\",\n      \"setup_moves\": [\n        \"1i1h\",\n        \"9a9b\"\n      ],\n      \"rationale\": \"先後の端香を一手ずつ進めた独立の無対象対照。M・U・支えのない被攻撃駒の価値差・Vはいずれも0。\"\n    },\n    {\n      \"id\": \"value-low-target\",\n      \"setup_moves\": [\n        \"1i1h\",\n        \"4c4d\",\n        \"7g7f\"\n      ],\n      \"rationale\": \"後手の4四歩だけが支えなく狙われる低価値対象。U=+1、価値差=+1、M=V=0。\"\n    },\n    {\n      \"id\": \"value-high-target\",\n      \"setup_moves\": [\n        \"8g8f\",\n        \"5a6b\",\n        \"7g7f\",\n        \"6a5b\",\n        \"2g2f\",\n        \"4a5a\",\n        \"8h4d\"\n      ],\n      \"rationale\": \"先手の4四角だけが支えなく狙われる高価値対象。U=-1、価値差=-13、M=V=0。\"\n    },\n    {\n      \"id\": \"value-same-count-different-value\",\n      \"setup_moves\": [\n        \"4i5h\",\n        \"7a6b\",\n        \"5h6h\",\n        \"4a3b\",\n        \"2h3h\",\n        \"3c3d\",\n        \"7i7h\",\n        \"1a1b\",\n        \"4g4f\",\n        \"5a4b\",\n        \"5i4i\",\n        \"8c8d\",\n        \"6i5i\",\n        \"2b6f\",\n        \"4f4e\",\n        \"9a9b\",\n        \"6h6i\"\n      ],\n      \"rationale\": \"先手歩一枚と後手角一枚が同数で狙われ、価値は先手側1・後手側13。U=0だが価値差=+12、M=V=0。\"\n    },\n    {\n      \"id\": \"value-rank-reversal\",\n      \"setup_moves\": [\n        \"7i7h\",\n        \"4a3b\",\n        \"3i4h\",\n        \"4c4d\",\n        \"4h3i\",\n        \"3c3d\",\n        \"9g9f\",\n        \"9c9d\",\n        \"2h1h\",\n        \"6a5b\",\n        \"5g5f\",\n        \"9d9e\",\n        \"5i4h\",\n        \"5b4c\",\n        \"3g3f\",\n        \"9a9d\",\n        \"1g1f\",\n        \"8b4b\",\n        \"4i3h\",\n        \"1a1b\",\n        \"8i9g\",\n        \"4d4e\",\n        \"2i3g\",\n        \"4b5b\",\n        \"6i6h\",\n        \"5b6b\",\n        \"3g2e\",\n        \"5a5b\",\n        \"3h2h\",\n        \"2b7g+\",\n        \"2e3c+\",\n        \"7g7f\",\n        \"4h3g\",\n        \"7f8f\"\n      ],\n      \"rationale\": \"先手金・歩（価値計10）と後手馬（15）が支えなく狙われ、枚数差U=-1に対し価値差=+5となる順位逆転。先手3三成桂にはV=1、M=0。\"\n    },\n    {\n      \"id\": \"value-both-sides-multiple\",\n      \"setup_moves\": [\n        \"2h4h\",\n        \"5c5d\",\n        \"7g7f\",\n        \"5d5e\",\n        \"6g6f\",\n        \"6a7b\",\n        \"8h7g\",\n        \"4a4b\",\n        \"7i8h\",\n        \"7a6b\",\n        \"3i2h\",\n        \"6c6d\",\n        \"6f6e\",\n        \"4b3b\",\n        \"7g9e\",\n        \"1a1b\",\n        \"1g1f\",\n        \"5e5f\"\n      ],\n      \"rationale\": \"先後それぞれ歩二枚が支えなく狙われ、枚数差・価値合計差とも0。M=V=0。\"\n    },\n    {\n      \"id\": \"value-uv-mixed\",\n      \"setup_moves\": [\n        \"8g8f\",\n        \"5a6b\",\n        \"7g7f\",\n        \"6a5b\",\n        \"2g2f\",\n        \"4a5a\",\n        \"8h4d\",\n        \"7c7d\",\n        \"4i4h\",\n        \"5a4a\",\n        \"7i7h\",\n        \"5b5a\",\n        \"4d5e\",\n        \"6b7b\",\n        \"4g4f\",\n        \"4c4d\"\n      ],\n      \"rationale\": \"後手4四歩のU対象と、先手角5五が狙う後手飛車8二のV対象を併せ持つ。M=0でU=価値差=V=+1。\"\n    }\n  ]\n}\n",
+  "randomization": {
+    "purpose": "pilot",
+    "source": "os",
+    "bits": 128,
+    "seed_list_sha256": "3f2511751fa7e9e3a5fe4ccb86537f53ea5dec94d54df0f817dfd595b6fb3eb4",
+    "seed_list_json": "{\n  \"format\": \"kaname-shogi-comparison-seeds-v1\",\n  \"purpose\": \"pilot\",\n  \"positions_sha256\": \"256437ea5e0465f4e1ed777deecf091ef1745bbdbab6b70e805e88685b94ad61\",\n  \"position_ids\": [\n    \"value-neutral\",\n    \"value-low-target\",\n    \"value-high-target\",\n    \"value-same-count-different-value\",\n    \"value-rank-reversal\",\n    \"value-both-sides-multiple\",\n    \"value-uv-mixed\"\n  ],\n  \"pairs_per_position\": 2,\n  \"source\": \"os\",\n  \"bits\": 128,\n  \"pairs\": [\n    {\n      \"position_id\": \"value-neutral\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 102972606944516064560679023285020340758,\n      \"candidate_seed\": 147701908062791982160212227728782833023\n    },\n    {\n      \"position_id\": \"value-neutral\",\n      \"repetition_index\": 1,\n      \"baseline_seed\": 327050568207960467619735010469105810037,\n      \"candidate_seed\": 49847613320434617922790863910558302425\n    },\n    {\n      \"position_id\": \"value-low-target\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 201713242011931177110021351154068137058,\n      \"candidate_seed\": 189242605156747523821014443412455040452\n    },\n    {\n      \"position_id\": \"value-low-target\",\n      \"repetition_index\": 1,\n      \"baseline_seed\": 44750501078885043117417330530987779835,\n      \"candidate_seed\": 163426027441957217549279573198209517917\n    },\n    {\n      \"position_id\": \"value-high-target\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 153125453714765476303553533785416926019,\n      \"candidate_seed\": 91475873501614777794326074740820517359\n    },\n    {\n      \"position_id\": \"value-high-target\",\n      \"repetition_index\": 1,\n      \"baseline_seed\": 96207822946468774921161096896331908188,\n      \"candidate_seed\": 213622891207064895942136867257492509119\n    },\n    {\n      \"position_id\": \"value-same-count-different-value\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 67018344661285794333867068195417132022,\n      \"candidate_seed\": 266638099719874445163803719204569573951\n    },\n    {\n      \"position_id\": \"value-same-count-different-value\",\n      \"repetition_index\": 1,\n      \"baseline_seed\": 39757339567619306195832064365270158154,\n      \"candidate_seed\": 13646336705407644696109680941934236089\n    },\n    {\n      \"position_id\": \"value-rank-reversal\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 133896833163322314810779011734229695467,\n      \"candidate_seed\": 191050712057350615509799541431982361988\n    },\n    {\n      \"position_id\": \"value-rank-reversal\",\n      \"repetition_index\": 1,\n      \"baseline_seed\": 125542752554586796477951694560074631338,\n      \"candidate_seed\": 171235423866565030825980236731568651112\n    },\n    {\n      \"position_id\": \"value-both-sides-multiple\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 166499406422823558065102766944305198975,\n      \"candidate_seed\": 175438469758613523786362273692287109154\n    },\n    {\n      \"position_id\": \"value-both-sides-multiple\",\n      \"repetition_index\": 1,\n      \"baseline_seed\": 53503734264185958753350774049206447507,\n      \"candidate_seed\": 180425072956753017143585630971517460328\n    },\n    {\n      \"position_id\": \"value-uv-mixed\",\n      \"repetition_index\": 0,\n      \"baseline_seed\": 243924587703524066482479730787981907570,\n      \"candidate_seed\": 55617973868383191221244612740320632982\n    },\n    {\n      \"position_id\": \"value-uv-mixed\",\n      \"repetition_index\": 1,\n      \"baseline_seed\": 75173776831570624303608587907493170612,\n      \"candidate_seed\": 203490062933729204880195396937055486349\n    }\n  ]\n}\n"
+  },
+  "policy_parameters": {
+    "baseline": {
+      "material": 10,
+      "undefended": 1,
+      "supported_threat": 1,
+      "mate_priority": true
+    },
+    "candidate": {
+      "material": 10,
+      "undefended_value": 1,
+      "supported_threat": 1,
+      "mate_priority": true
+    }
+  },
+  "execution": {
+    "executor": "process-pool",
+    "workers": 4
+  }
+}

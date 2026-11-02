@@ -53,6 +53,7 @@ _POLICIES = {
     "material-undefended-piece": movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
     "material-piece-threat-v0": movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0,
     "material-piece-threat-v1": movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+    "material-piece-threat-value-v1": movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
     "two-ply-material": movegen.MoveSelectionPolicy.TWO_PLY_MATERIAL,
     "full-width-4": movegen.MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
     "alpha-beta-4": movegen.MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
@@ -391,7 +392,7 @@ def conditions_payload(
         POSIX相対パス順にし、4バイトのパス長・パス・8バイトの内容長・内容を連結する。
         Git情報が取れない場合はnull値と診断を記録し、実験条件の他部分は残す。
         v2では検証済み一覧と方式の実効評価重みも保存する。主乱数種を使う
-        条件でも玉周辺安全度方式または支えのない駒方式を含む場合は、baseline/candidate
+        条件でも玉周辺安全度・支えのない駒・駒脅威方式を含む場合は、baseline/candidate
         ごとの実効policy_parametersを記録する。
     """
     if tuple(schedule) != make_schedule(config):
@@ -451,6 +452,7 @@ def conditions_payload(
             movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
             movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0,
             movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+            movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
         } & {config.baseline, config.candidate}:
             payload["policy_parameters"] = {
                 "baseline": _policy_parameters(config.baseline),
@@ -522,6 +524,13 @@ def _policy_parameters(policy: movegen.MoveSelectionPolicy) -> dict[str, object]
         return {
             "material": 10,
             "undefended": 1,
+            "supported_threat": 1,
+            "mate_priority": True,
+        }
+    if policy is movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1:
+        return {
+            "material": 10,
+            "undefended_value": 1,
             "supported_threat": 1,
             "mate_priority": True,
         }

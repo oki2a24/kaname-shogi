@@ -1,0 +1,103 @@
+{
+  "format": "kaname-shogi-comparison-seeds-v1",
+  "purpose": "pilot",
+  "positions_sha256": "256437ea5e0465f4e1ed777deecf091ef1745bbdbab6b70e805e88685b94ad61",
+  "position_ids": [
+    "value-neutral",
+    "value-low-target",
+    "value-high-target",
+    "value-same-count-different-value",
+    "value-rank-reversal",
+    "value-both-sides-multiple",
+    "value-uv-mixed"
+  ],
+  "pairs_per_position": 2,
+  "source": "os",
+  "bits": 128,
+  "pairs": [
+    {
+      "position_id": "value-neutral",
+      "repetition_index": 0,
+      "baseline_seed": 102972606944516064560679023285020340758,
+      "candidate_seed": 147701908062791982160212227728782833023
+    },
+    {
+      "position_id": "value-neutral",
+      "repetition_index": 1,
+      "baseline_seed": 327050568207960467619735010469105810037,
+      "candidate_seed": 49847613320434617922790863910558302425
+    },
+    {
+      "position_id": "value-low-target",
+      "repetition_index": 0,
+      "baseline_seed": 201713242011931177110021351154068137058,
+      "candidate_seed": 189242605156747523821014443412455040452
+    },
+    {
+      "position_id": "value-low-target",
+      "repetition_index": 1,
+      "baseline_seed": 44750501078885043117417330530987779835,
+      "candidate_seed": 163426027441957217549279573198209517917
+    },
+    {
+      "position_id": "value-high-target",
+      "repetition_index": 0,
+      "baseline_seed": 153125453714765476303553533785416926019,
+      "candidate_seed": 91475873501614777794326074740820517359
+    },
+    {
+      "position_id": "value-high-target",
+      "repetition_index": 1,
+      "baseline_seed": 96207822946468774921161096896331908188,
+      "candidate_seed": 213622891207064895942136867257492509119
+    },
+    {
+      "position_id": "value-same-count-different-value",
+      "repetition_index": 0,
+      "baseline_seed": 67018344661285794333867068195417132022,
+      "candidate_seed": 266638099719874445163803719204569573951
+    },
+    {
+      "position_id": "value-same-count-different-value",
+      "repetition_index": 1,
+      "baseline_seed": 39757339567619306195832064365270158154,
+      "candidate_seed": 13646336705407644696109680941934236089
+    },
+    {
+      "position_id": "value-rank-reversal",
+      "repetition_index": 0,
+      "baseline_seed": 133896833163322314810779011734229695467,
+      "candidate_seed": 191050712057350615509799541431982361988
+    },
+    {
+      "position_id": "value-rank-reversal",
+      "repetition_index": 1,
+      "baseline_seed": 125542752554586796477951694560074631338,
+      "candidate_seed": 171235423866565030825980236731568651112
+    },
+    {
+      "position_id": "value-both-sides-multiple",
+      "repetition_index": 0,
+      "baseline_seed": 166499406422823558065102766944305198975,
+      "candidate_seed": 175438469758613523786362273692287109154
+    },
+    {
+      "position_id": "value-both-sides-multiple",
+      "repetition_index": 1,
+      "baseline_seed": 53503734264185958753350774049206447507,
+      "candidate_seed": 180425072956753017143585630971517460328
+    },
+    {
+      "position_id": "value-uv-mixed",
+      "repetition_index": 0,
+      "baseline_seed": 243924587703524066482479730787981907570,
+      "candidate_seed": 55617973868383191221244612740320632982
+    },
+    {
+      "position_id": "value-uv-mixed",
+      "repetition_index": 1,
+      "baseline_seed": 75173776831570624303608587907493170612,
+      "candidate_seed": 203490062933729204880195396937055486349
+    }
+  ]
+}
