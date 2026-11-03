@@ -114,7 +114,7 @@
 
 - 計画: 本人が2026-11-03 12:16:27 JSTに明示承認。
 - Task 1: ステップ1〜5完了。14局profileとB0棋譜一致を確認。
-- Task 2: Square-only B2を関連216 test、変異Red、fresh42局wall500.30秒、42/42棋譜一致・合法再生で検証。B2a Pieceホイスト単独版はwall492.66秒（1.53%）で棄却し、Square-onlyへ戻した。独立再レビューはCritical/Important/Minorなしで採用可。Refactor要否確認済み。B2変更・記録をcommit `8b510a99`として保存した。B3は直接target判定を実装し、14:04と14:10 JSTに承認された例外test各1件を新helper契約へ更新。先後方向・遮蔽変異の検出、関連234件、比較関連60件、全体1080件/92 module、Ruffを成功。fresh42はwall171.41秒、Square-onlyより65.7%短縮。元seed選択42局の手順・終局理由・勝者一致と合法再生42/42。独立再レビューはCritical/Important/Minorなし。性能候補として採用し、refactorは追加しない。B3変更・記録のbranch commitはこれから。
-- Task 3: Task 2の変更対象pipeline/result/resume/analyze60 testを通過。検出力記録を学習記録へ追加し、全体1080 tests/92 module（23.489秒）を実行。独立B3レビューはCritical/Important/Minorなし。実装・測定記録はGOALと学習記録へ追記済み。最終commit前の差分検査・状態確認が残る。
-- Task 4: B3 fresh42 runは完了・照合済み。新規4,074局runは未開始。B3後14局profileで残りの大きな処理時間を測り、次の単一仮説・測定範囲・期限内4,074局実行可能性を判断する。
+- Task 2: Square-only B2を関連216 test、変異Red、fresh42局wall500.30秒、42/42棋譜一致・合法再生で検証。B2a Pieceホイスト単独版はwall492.66秒（1.53%）で棄却。B2はcommit `8b510a99`。B3は直接target判定を実装し、承認された例外testを2ファイル各1件更新。関連234件・pipeline60件・全体1080件/92 module・Ruff成功。fresh42 wall171.41秒、42/42棋譜一致・合法再生、独立review Critical/Important/Minorなし。Refactor不要としてB3変更・記録をcommit `f1fd3544`へ保存。B3後profileとB4票を根拠に、同じ`movegen.py`/`tests/test_movegen.py`範囲でtarget起点ray/knight source探索を実装し、path再読testの前提flag変異を7対4のpiece_at回数で検出した。全体1083件/92 module・pipeline60件・Ruff format/check・diff check成功。B4 fresh42 wall134.95秒・全42局棋譜一致・合法再生、独立review Critical/Importantなし（Minorのtest数記録は更新済み）。B4を検証済み最速候補として採用し、実装・記録commitが残る。
+- Task 3: pipeline/result/resume/analyze60 testを通過。B4後全体test1083/92 module、Ruff、diff check成功。B4独立review完了。fresh42新規出力はB3棋譜と全件一致し、合法再生42/42。記録とB4のstage/commitが残る。
+- Task 4: B3 fresh42 wall171.41秒、B4 fresh42 wall134.95秒。B4と全42局の棋譜一致・合法再生を確認。B4 partial42の速度は34.13手/秒で、全量必要速度との差は約8.64倍。全4,074局新規runは未開始。B4後profileで次の仮説を選び、期限と最後の1時間の検証枠を見て全量実行の可否を再評価する。
 - 現在のbranch: `codex/comparison-cli-performance`、開始HEAD `aa70d1d`。

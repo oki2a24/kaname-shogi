@@ -269,6 +269,90 @@ class DirectTargetAttackTests(unittest.TestCase):
 
         self.assertEqual(candidate_generator.call_count, 0)
 
+    def test_square_attack_queries_skip_unreachable_board_squares(self):
+        """空盤の利き照会は攻撃できないsource候補を全走査しない。
+
+        8方向rayと桂馬源以外のマスをpiece_atで読む回帰を検出する。
+        """
+        board = Board()
+        target = Square(5, 5)
+
+        with patch.object(board, "piece_at", wraps=board.piece_at) as piece_reader:
+            self.assertFalse(movegen.is_square_attacked(board, target, Side.SENTE))
+
+        self.assertLessEqual(
+            piece_reader.call_count,
+            40,
+            "8方向rayと桂馬source候補を越えてマスを調べています",
+        )
+
+    def test_square_attack_does_not_reread_clear_ray_squares(self):
+        """rayで確認済みの遮蔽なし経路を利き判定で再読しない。
+
+        path-clear前提を外してray通過マスを再検査する性能回帰を検出する。
+        """
+        board = Board()
+        target = Square(5, 5)
+        board.set_piece(Square(5, 1), Piece(PieceType.ROOK, Side.SENTE))
+
+        with patch.object(board, "piece_at", wraps=board.piece_at) as piece_reader:
+            self.assertTrue(movegen.is_square_attacked(board, target, Side.SENTE))
+
+        self.assertEqual(
+            piece_reader.call_count,
+            4,
+            "飛車までのrayマス以外を利き判定で再読しています",
+        )
+
+    def test_square_attack_stops_at_the_nearest_blocking_piece(self):
+        """ray上の最初の非攻撃駒で後ろの飛車・角を遮る。
+
+        短い駒を通り抜けてsliderを誤って攻撃元と数える回帰を検出する。
+        """
+        target = Square(5, 5)
+        rays = (
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1),
+        )
+        for side in Side:
+            for file_step, rank_step in rays:
+                blocker = Square(5 + file_step, 5 + rank_step)
+                slider = Square(5 + 2 * file_step, 5 + 2 * rank_step)
+                slider_type = (
+                    PieceType.ROOK
+                    if file_step == 0 or rank_step == 0
+                    else PieceType.BISHOP
+                )
+                blocked_board = Board()
+                blocked_board.set_piece(
+                    blocker,
+                    Piece(PieceType.KNIGHT, movegen._opponent_side(side)),
+                )
+                blocked_board.set_piece(slider, Piece(slider_type, side))
+                open_board = Board()
+                open_board.set_piece(slider, Piece(slider_type, side))
+                with self.subTest(side=side, ray=(file_step, rank_step)):
+                    self.assertEqual(
+                        self._reference_square_attack(blocked_board, target, side),
+                        movegen.is_square_attacked(blocked_board, target, side),
+                    )
+                    self.assertFalse(
+                        movegen.is_square_attacked(blocked_board, target, side)
+                    )
+                    self.assertEqual(
+                        self._reference_square_attack(open_board, target, side),
+                        movegen.is_square_attacked(open_board, target, side),
+                    )
+                    self.assertTrue(
+                        movegen.is_square_attacked(open_board, target, side)
+                    )
+
 
 class PromotedMinorMoveCandidateTests(unittest.TestCase):
     def test_promoted_minor_pieces_move_like_gold_for_sente_and_gote(self):

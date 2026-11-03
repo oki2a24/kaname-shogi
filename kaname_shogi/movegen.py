@@ -59,6 +59,19 @@ _DROP_PIECE_TYPES = (
 _BOARD_SQUARES = tuple(
     Square(file, rank) for file in range(1, 10) for rank in range(1, 10)
 )
+_RAY_DIRECTIONS = (
+    (0, -1),
+    (1, -1),
+    (1, 0),
+    (1, 1),
+    (0, 1),
+    (-1, 1),
+    (-1, 0),
+    (-1, -1),
+)
+_KNIGHT_SOURCE_OFFSETS = tuple(
+    (file_delta, rank_delta) for file_delta in (-1, 1) for rank_delta in (-2, 2)
+) + tuple((file_delta, rank_delta) for file_delta in (-2, 2) for rank_delta in (-1, 1))
 
 
 def move_piece(board: Board, source: Square, destination: Square) -> None:
@@ -139,7 +152,12 @@ def _path_to_target_is_clear(board: Board, source: Square, target: Square) -> bo
 
 
 def _piece_attacks_target(
-    board: Board, piece: Piece, source: Square, target: Square
+    board: Board,
+    piece: Piece,
+    source: Square,
+    target: Square,
+    *,
+    intervening_squares_are_clear: bool = False,
 ) -> bool:
     """候補listを作らず、駒種と遮蔽物からsourceのtargetへの利きを調べる。
 
@@ -147,6 +165,10 @@ def _piece_attacks_target(
     無視し、中間マスの駒は長距離移動の遮蔽物として調べる。合法手生成は
     `_move_candidates_for_piece`を使い続け、真偽だけを必要とする評価・王手照会で
     14項目dictと全候補listを作らない。
+
+    `intervening_squares_are_clear=True`は、呼出し側がtargetからの8方向rayで
+    最初に見つかった駒を渡す場合に限る。そのときだけ途中マスを再走査せず、
+    それ以外の呼出しでは既定値Falseのまま盤面から遮蔽を調べる。
     """
     if source == target:
         return False
@@ -181,26 +203,34 @@ def _piece_attacks_target(
             or (rank_delta == -forward and file_distance == 0)
         )
     if piece_type == PieceType.LANCE:
-        return (
-            file_delta == 0
-            and rank_delta * forward > 0
-            and _path_to_target_is_clear(board, source, target)
+        if file_delta != 0 or rank_delta * forward <= 0:
+            return False
+        return intervening_squares_are_clear or _path_to_target_is_clear(
+            board, source, target
         )
     if piece_type == PieceType.BISHOP:
-        return file_distance == rank_distance and _path_to_target_is_clear(
+        if file_distance != rank_distance:
+            return False
+        return intervening_squares_are_clear or _path_to_target_is_clear(
             board, source, target
         )
     if piece_type == PieceType.ROOK:
-        return (file_delta == 0 or rank_delta == 0) and (
-            _path_to_target_is_clear(board, source, target)
+        if file_delta != 0 and rank_delta != 0:
+            return False
+        return intervening_squares_are_clear or _path_to_target_is_clear(
+            board, source, target
         )
     if piece_type == PieceType.HORSE:
         if file_distance == rank_distance:
-            return _path_to_target_is_clear(board, source, target)
+            return intervening_squares_are_clear or _path_to_target_is_clear(
+                board, source, target
+            )
         return file_distance + rank_distance == 1
     if piece_type == PieceType.DRAGON:
         if file_delta == 0 or rank_delta == 0:
-            return _path_to_target_is_clear(board, source, target)
+            return intervening_squares_are_clear or _path_to_target_is_clear(
+                board, source, target
+            )
         return file_distance == rank_distance == 1
 
     # _move_candidates_for_pieceも未定義の駒種をKeyErrorにする。
@@ -252,16 +282,49 @@ def is_square_attacked(board: Board, target: Square, attacking_side: Side) -> bo
     副作用:
         元の盤面を変更しない。盤面読み取り・直接判定の例外は呼び出し側へ伝える。
 
-    sourceを筋優先順で読み、各駒のtargetへの幾何学的な利きを直接判定する。
-    target上の駒は所有者を問わず占有条件に使わず、中間マスだけを長距離駒の
-    遮蔽物として読む。source==targetは利きに数えず、ピン駒も幾何学的な利きに含める。
-    盤複製や候補listを使わず真偽だけを求めることで、14項目dict構築と候補列挙を省く。
+    targetから8方向のrayを見て最初の駒だけを調べ、桂馬の飛び越しsourceを別に見る。
+    ray上の最初の駒より先はsliderにとって遮られるため、全81マスを走査しない。
+    target上の駒は占有条件に使わず、ピン駒を含む幾何学的な利きを返す。候補listや
+    盤複製を作らず、source候補も到達可能な位置へ絞ってbool判定する。
     """
-    for source in _BOARD_SQUARES:
-        piece = board.piece_at(source)
-        if piece is None or piece.side != attacking_side:
+    return _is_target_attacked_by_side(board, target, attacking_side)
+
+
+def _is_target_attacked_by_side(
+    board: Board, target: Square, attacking_side: Side
+) -> bool:
+    """targetに届きうる最寄りray駒と桂sourceだけを調べる内部照会。"""
+    for file_step, rank_step in _RAY_DIRECTIONS:
+        file = target.file + file_step
+        rank = target.rank + rank_step
+        while 1 <= file <= 9 and 1 <= rank <= 9:
+            source = _BOARD_SQUARES[(file - 1) * 9 + rank - 1]
+            piece = board.piece_at(source)
+            if piece is not None:
+                if piece.side == attacking_side and _piece_attacks_target(
+                    board,
+                    piece,
+                    source,
+                    target,
+                    intervening_squares_are_clear=True,
+                ):
+                    return True
+                break
+            file += file_step
+            rank += rank_step
+
+    for file_step, rank_step in _KNIGHT_SOURCE_OFFSETS:
+        file = target.file + file_step
+        rank = target.rank + rank_step
+        if not (1 <= file <= 9 and 1 <= rank <= 9):
             continue
-        if _piece_attacks_target(board, piece, source, target):
+        source = _BOARD_SQUARES[(file - 1) * 9 + rank - 1]
+        piece = board.piece_at(source)
+        if (
+            piece is not None
+            and piece.side == attacking_side
+            and _piece_attacks_target(board, piece, source, target)
+        ):
             return True
     return False
 
@@ -291,8 +354,8 @@ def is_in_check(board: Board, side: Side) -> bool:
         True。玉がない部分局面、またはどの相手駒からも攻撃されていない場合は
         False。
 
-    玉の位置と相手側の全駒を盤から読み、source-target直接判定を再利用する。
-    長距離駒は中間マスだけを遮蔽物として調べ、桂馬は途中マスを調べずに飛び越す。
+    玉を見つけた後、玉から見た8方向rayの最初の駒と桂馬sourceだけを直接判定する。
+    ray上の最初の駒以遠はsliderを遮るため、他の全駒を盤から読む必要がない。
     ピンや合法性は除外せず、判定だけを行って盤面・手番・持ち駒を変更しない。
     玉がない部分局面をFalseとするのは、候補生成を個別に確認する既存テストとの互換性のため。
     """
@@ -300,14 +363,7 @@ def is_in_check(board: Board, side: Side) -> bool:
     if king_square is None:
         return False
 
-    opponent = _opponent_side(side)
-    for source in _BOARD_SQUARES:
-        piece = board.piece_at(source)
-        if piece is None or piece.side != opponent:
-            continue
-        if _piece_attacks_target(board, piece, source, king_square):
-            return True
-    return False
+    return _is_target_attacked_by_side(board, king_square, _opponent_side(side))
 
 
 def _is_enemy_camp(side: Side, rank: int) -> bool:
