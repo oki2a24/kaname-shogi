@@ -6,14 +6,16 @@
 
 2026-11-03、コミット `21d890a159d75df3b8e5eb45ddf5220b3f9dbc6d` を `main` へfast-forward統合し、`origin/main` へpushした。統合後の `python3 scripts/run_tests_parallel.py` は1066テスト・92モジュール・28.028秒で成功。最後の理解確認に本人は「B」と回答し、対象範囲を7局面・2037組の比較条件に限定し、一般棋力向上とは区別する理解を確認した。[回答・統合後検証の記録](learning/undefended-piece-value.md#main統合後の検証と最後の理解確認2026-11-03)を参照。
 
-本人は2026-11-03、保留していた「ShogiHomeでU候補を実践する」を次テーマとして選んだ。対象は通常CLI・USIに接続済みの枚数差方式 `MaterialUndefendedPiece`（10 × M + U）であり、比較専用の価値合計方式ではない。PC・アプリ・登録エンジン・設定・棋譜・セッションの現状は未確認なので、新セッションで接続スキルと手順書に従い現画面から確認する。先後・局面・時計・対局数・ログの必要を推測しない。設定変更やログ有効化は具体案を示して別途明示承認を得る。[新セッション用引き継ぎ](handover-shogihome-u-candidate-practice.md)を用意する。
+本人は2026-11-03、保留していた「ShogiHomeでU候補を実践する」を選び、合意した条件で一局を実施した。通常CLI・USIに接続済みの枚数差方式 `MaterialUndefendedPiece`（10 × M + U）を使い、比較専用の価値合計方式は対象外とした。人間先手・エンジン後手、平手初期局面、双方10分＋30秒・加算なしで、先手の時間切れにより終局した。自動保存した棋譜は[学習記録](learning/undefended-piece-coordination-evaluation.md#shogihome-u候補の一局実践2026-11-03)に記した。1局から棋力を判定しない。
+
+ShogiHome 1.28.2の登録Difficultyを本人承認後に `MaterialUndefendedPiece` へ変更・保存し、PonderはOFFのまま確認した。終局後は稼働セッションがないことを画面で確認した。USIログは一局の進行を照合したが、日次結合ログの表示で承認範囲外の過去ハンドシェイク行まで画面に出た。過去行は記録・利用せず、この閲覧範囲超過を[学習記録](learning/undefended-piece-coordination-evaluation.md#usi照合限界次の主線)に明記した。最後の理解確認に本人は「追加した将棋エンジンはShogiHomeで動作することが観察できた。棋力向上したかどうかは不明」と回答し、当該環境の接続・操作確認と棋力評価を区別した。[回答と補足](learning/undefended-piece-coordination-evaluation.md#最後の理解確認2026-11-03)を参照。
 
 次の非駒得評価項目を選び、学び・設計する主線は未完了のまま保持する。成りに近づく進行度や、根拠を定めた重要マスへの利きなどを候補として後続で選ぶ。角の可動性は本人希望で後回し。作業先は `/Users/oki2a24/kaname-shogi`、専用ブランチは `codex/shogihome-u-candidate-practice`、handoff準備の基点は `23cf552f`。別worktree・別cloneは使わない。既存未追跡比較データ、`.agents/tasks/`、C2保護4件、退避アーカイブは変更しない。A番号は割り当てない。
 
 ### 次の具体的な行動
 
-1. 本人が[引き継ぎ文書](handover-shogihome-u-candidate-practice.md)の再開プロンプトを新しいセッションへ入力する。
-2. 新セッションでShogiHome接続スキルと手順書を読み、現在のアプリ状態を確認する。条件が曖昧なら一問ずつ確認し、設定変更・ログ採取は別途明示承認を待つ。
+1. [次テーマ候補](next-topics.md)、README、[プロジェクトの方向性](02-project-direction.md)を照合した候補から、本人が次テーマを選ぶ。
+2. 次テーマが選ばれるまで、新しい学習・設計・実装は始めない。主線「次の非駒得評価項目を一つ選び、学ぶ」は未完了として保持する。
 
 ### 作業場所の整理と前テーマの履歴
 
