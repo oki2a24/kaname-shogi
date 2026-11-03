@@ -3807,6 +3807,116 @@ class CheckmateAndGameEndTests(unittest.TestCase):
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         return Position(board, Side.SENTE)
 
+    def test_known_king_checkmate_helper_matches_public_result_without_rescan(self):
+        """既知の玉マスを使う詰み判定は公開判定と同じ結果を返す。
+
+        候補手ごとの初期玉再探索、先後の取り違え、玉なしを詰みにする誤りを
+        検出する。
+        """
+        checkmate_for_known_king = getattr(
+            movegen, "_is_checkmate_for_known_king", None
+        )
+        self.assertTrue(
+            callable(checkmate_for_known_king),
+            "_is_checkmate_for_known_king がまだ実装されていません",
+        )
+
+        mated_sente = self._mated_sente_position()
+        escape = mated_sente.copy()
+        escape.board.set_piece(Square(4, 9), None)
+        rotated_board = Board()
+        for file in range(1, 10):
+            for rank in range(1, 10):
+                piece = mated_sente.board.piece_at(Square(file, rank))
+                if piece is not None:
+                    side = Side.GOTE if piece.side == Side.SENTE else Side.SENTE
+                    rotated_board.set_piece(
+                        Square(10 - file, 10 - rank), Piece(piece.piece_type, side)
+                    )
+        mated_gote = Position(rotated_board, Side.GOTE)
+        missing_king = Position(Board(), Side.SENTE)
+        safe_board = Board()
+        safe_board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
+        safe_board.set_piece(Square(1, 1), Piece(PieceType.KING, Side.GOTE))
+        safe_position = Position(safe_board, Side.SENTE)
+
+        for position, expected in (
+            (mated_sente, True),
+            (escape, False),
+            (mated_gote, True),
+            (missing_king, False),
+            (safe_position, False),
+        ):
+            with self.subTest(side=position.side_to_move, expected=expected):
+                king_square = movegen._find_king_square(
+                    position.board, position.side_to_move
+                )
+                before = _position_snapshot(position)
+                self.assertEqual(movegen.is_checkmate(position), expected)
+                is_check = movegen.is_in_check(position.board, position.side_to_move)
+                if king_square is None or not is_check:
+                    with patch.object(
+                        movegen,
+                        "_find_king_square",
+                        side_effect=AssertionError("known king was rescanned"),
+                    ):
+                        actual = checkmate_for_known_king(position, king_square)
+                else:
+                    with patch.object(
+                        movegen,
+                        "_find_king_square",
+                        wraps=movegen._find_king_square,
+                    ) as find_king:
+                        actual = checkmate_for_known_king(position, king_square)
+                    self.assertFalse(
+                        any(
+                            call.args[0] is position.board
+                            for call in find_king.call_args_list
+                        ),
+                        "既知玉の初期王手判定で元盤面を再走査しています",
+                    )
+                self.assertEqual(actual, expected)
+                self.assertEqual(_position_snapshot(position), before)
+
+    def test_known_king_checkmate_helper_falls_back_for_stale_square(self):
+        """既知マスに手番側の玉がなければ公開判定へ戻る。
+
+        誤った玉位置を受け入れて合法応手探索へ進み、本来の詰み結果を変える
+        回帰を検出する。
+        """
+        checkmate_for_known_king = getattr(
+            movegen, "_is_checkmate_for_known_king", None
+        )
+        self.assertTrue(
+            callable(checkmate_for_known_king),
+            "_is_checkmate_for_known_king がまだ実装されていません",
+        )
+        position = self._mated_sente_position()
+        stale_square = Square(1, 1)
+        with patch.object(
+            movegen, "is_checkmate", wraps=movegen.is_checkmate
+        ) as public_checkmate:
+            self.assertTrue(checkmate_for_known_king(position, stale_square))
+        public_checkmate.assert_called_once_with(position)
+
+    def test_known_king_checkmate_keeps_uchi_fuzume_enabled_for_replies(self):
+        """既知玉の王手判定は打ち歩詰めを除外した応手探索へ渡す。
+
+        応手探索の規則フラグをFalseへ変え、打ち歩詰めの駒打ちを候補に
+        含める回帰を検出する。
+        """
+        position = Position(Board(), Side.SENTE)
+        position.board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
+        position.board.set_piece(Square(5, 1), Piece(PieceType.KING, Side.GOTE))
+        position.board.set_piece(Square(9, 1), Piece(PieceType.ROOK, Side.GOTE))
+        position.sente_hand.add(BasicPieceType.PAWN)
+        king_square = Square(9, 9)
+
+        with patch.object(movegen, "_has_legal_move", return_value=False) as replies:
+            self.assertTrue(movegen._is_checkmate_for_known_king(position, king_square))
+
+        replies.assert_called_once_with(position, check_uchi_fuzume=True)
+
     def test_returns_true_for_checked_king_with_no_legal_move(self):
         """王手を受けた玉に防ぐ合法手がなければ、詰みと終局を返す。
 

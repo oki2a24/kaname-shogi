@@ -35,6 +35,27 @@ class UndefendedPieceValueTests(unittest.TestCase):
         self.assertEqual(self._balance(design_case("A"), Side.SENTE), -15)
         self.assertEqual(self._balance(design_case("A"), Side.GOTE), 15)
 
+    def test_occupied_board_scan_reuses_precomputed_squares(self):
+        """U価値の全盤scanは事前生成Squareを再利用する。
+
+        価値対象を調べるたびに81個のSquareを生成する回帰を検出する。
+        """
+        current = position((PieceType.PAWN, Side.SENTE, Square(5, 5)))
+
+        with patch.object(
+            Square,
+            "__post_init__",
+            autospec=True,
+            side_effect=Square.__post_init__,
+        ) as square_validator:
+            self.assertEqual(self._value(current, Side.SENTE), 0)
+
+        self.assertEqual(
+            square_validator.call_count,
+            0,
+            "U価値の盤scanでSquareを新規生成しています",
+        )
+
     def test_both_sides_nonzero_and_rotated(self):
         """両側の値を集計し、配置反転後も対応側の差を保つ。
 
@@ -220,7 +241,9 @@ class UndefendedPieceValueTests(unittest.TestCase):
         self.assertEqual(snapshot(current), before)
 
         with patch.object(
-            value_module, "is_square_attacked", side_effect=RuntimeError("利き故障")
+            value_module,
+            "is_square_attacked",
+            side_effect=RuntimeError("利き故障"),
         ):
             with self.assertRaisesRegex(RuntimeError, "利き故障"):
                 self._value(design_case("A"), Side.SENTE)

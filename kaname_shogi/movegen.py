@@ -973,6 +973,40 @@ def _is_checkmate(position: Position, *, check_uchi_fuzume: bool) -> bool:
     ).value
 
 
+def _is_checkmate_for_known_king(
+    position: Position, king_square: Square | None
+) -> bool:
+    """事前に分かっている手番側の玉位置から詰みを調べる。
+
+    引数:
+        position: 詰みを調べる局面。合法手を適用した直後の別局面を想定する。
+        king_square: 同じ手番側の玉があると事前に確認したマス。Noneなら玉なしを表す。
+
+    戻り値:
+        既知の玉が王手を受け、打ち歩詰め規則を含む合法応手がなければTrue。
+
+    副作用:
+        positionを変更しない。玉位置が古い場合は公開is_checkmateへfallbackする。
+
+    合法な一手では手番反対側の玉位置は変わらないため、候補ごとの全盤玉探索を
+    繰り返さず、既知マスへの直接利き判定を行う。王手でない場合は合法応手探索も
+    省略し、王手なら既存のfirst-legal-move判定を再利用する。
+    """
+    if king_square is None:
+        return False
+
+    side = position.side_to_move
+    king = position.board.piece_at(king_square)
+    if king is None or king.piece_type != PieceType.KING or king.side != side:
+        return is_checkmate(position)
+
+    if not _is_target_attacked_by_side(
+        position.board, king_square, _opponent_side(side)
+    ):
+        return False
+    return not _has_legal_move(position, check_uchi_fuzume=True)
+
+
 def is_checkmate(position: Position) -> bool:
     """手番側が王手を受け、合法手がなければ詰みかを返す。
 

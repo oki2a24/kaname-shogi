@@ -79,10 +79,10 @@
 
 **対象:** `kaname_shogi/compare_games.py`、`comparison.py`、`comparison_io.py`、`comparison_result_io.py`、`comparison_resume.py`、`analyze_comparison.py` と `tests/test_comparison_pipeline.py`、`tests/test_comparison_result_io.py`、`tests/test_comparison_resume.py`、`tests/test_analyze_comparison.py` の既存契約。Task 2の変更に合わせて対象を絞り、関係しない回帰テストは無用に重ねない。
 
-- [ ] **ステップ1: 比較pipeline/結果reader/再開/analysisの関連テストを実行する。** 条件・出力・原子的保存・summary・既存局保持・再開・合法棋譜照合の該当契約を確認する。
-- [ ] **ステップ2: テスト検出範囲を記録する。** `.codex/observations/test-driven-development.md` と `docs/knowledge/test-coverage-review.md` に従い、対象契約、検出したい誤り、代表ケース、単独と全体の検出範囲、未検証事項を `docs/learning/comparison-cli-performance.md` へ記録する。
-- [ ] **ステップ3: Pythonユニットテスト全体を実行する。** `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python scripts/run_tests_parallel.py` を実行し、全発見モジュールの件数と所要を記録する。逐次実行は共有状態/順序依存を調べる場合またはランナー変更時に限る。
-- [ ] **ステップ4: Refactor要否を判断して独立レビューを受ける。** Critical/Important/Minorを学習記録へ残す。Critical/Importantがあれば修正、全体検証、独立再レビューを行う。
+- [x] **ステップ1: 比較pipeline/結果reader/再開/analysisの関連テストを実行する。** 条件・出力・原子的保存・summary・既存局保持・再開・合法棋譜照合の該当契約を確認する。pipeline/result/resume/analyze 60件成功。後続の全体runnerにも関連契約を含む。
+- [x] **ステップ2: テスト検出範囲を記録する。** `.codex/observations/test-driven-development.md` と `docs/knowledge/test-coverage-review.md` に従い、対象契約、検出したい誤り、代表ケース、単独と全体の検出範囲、未検証事項を `docs/learning/comparison-cli-performance.md` へ記録する。B2/B3/B4/B8について代表変異と未検証範囲を学習記録へ保存した。
+- [x] **ステップ3: Pythonユニットテスト全体を実行する。** `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python scripts/run_tests_parallel.py` を実行し、全発見モジュールの件数と所要を記録する。逐次実行は共有状態/順序依存を調べる場合またはランナー変更時に限る。B8時点で1,088件/92 module/21.018秒成功。
+- [x] **ステップ4: Refactor要否を判断して独立レビューを受ける。** Critical/Important/Minorを学習記録へ残す。B8のRefactorは不要と判断し、独立review Critical/Important/Minor 0/0/0。reviewerはtest・benchmarkを再実行していない。
 - [ ] **ステップ5: 実施記録を保存する。** 承認済み計画との差分、全体検証、独立レビューの結論を文書へ反映し、計画対象ファイルだけをstageしてcommitする。mainへの統合・pushは行わない。
 
 ### Task 4: 最速状態を固定し、新規4,074局を計測
@@ -112,9 +112,51 @@
 
 ## 実行状態
 
-- 計画: 本人が2026-11-03 12:16:27 JSTに明示承認。
-- Task 1: ステップ1〜5完了。14局profileとB0棋譜一致を確認。
-- Task 2: Square-only B2を関連216 test、変異Red、fresh42局wall500.30秒、42/42棋譜一致・合法再生で検証。B2a Pieceホイスト単独版はwall492.66秒（1.53%）で棄却。B2はcommit `8b510a99`。B3は直接target判定を実装し、承認された例外testを2ファイル各1件更新。関連234件・pipeline60件・全体1080件/92 module・Ruff成功。fresh42 wall171.41秒、42/42棋譜一致・合法再生、独立review Critical/Important/Minorなし。Refactor不要としてB3変更・記録をcommit `f1fd3544`へ保存。B3後profileとB4票を根拠に、同じ`movegen.py`/`tests/test_movegen.py`範囲でtarget起点ray/knight source探索を実装し、path再読testの前提flag変異を7対4のpiece_at回数で検出した。全体1083件/92 module・pipeline60件・Ruff format/check・diff check成功。B4 fresh42 wall134.95秒・全42局棋譜一致・合法再生、独立review Critical/Importantなし（Minorのtest数記録は更新済み）。B4を検証済み最速候補として採用し、実装・記録commitが残る。
-- Task 3: pipeline/result/resume/analyze60 testを通過。B4後全体test1083/92 module、Ruff、diff check成功。B4独立review完了。fresh42新規出力はB3棋譜と全件一致し、合法再生42/42。記録とB4のstage/commitが残る。
-- Task 4: B3 fresh42 wall171.41秒、B4 fresh42 wall134.95秒。B4と全42局の棋譜一致・合法再生を確認。B4 partial42の速度は34.13手/秒で、全量必要速度との差は約8.64倍。全4,074局新規runは未開始。B4後profileで次の仮説を選び、期限と最後の1時間の検証枠を見て全量実行の可否を再評価する。
-- 現在のbranch: `codex/comparison-cli-performance`、開始HEAD `aa70d1d`。
+- 計画: 本人が2026-11-03 12:16:27 JSTに明示承認。作業期限は20:16:27 JST。
+- Task 1: 条件・seed・positions hashを照合。B0 fresh42 baselineと14局の初回profileを取得し、B0棋譜との一致を確認。
+- Task 2: B2 Square-only 500.30秒、B3 direct-target 171.41秒、B4 target-ray 134.95秒をそれぞれ42/42棋譜一致・合法再生で確認。B2コードは`8b510a99`、B3は`f1fd3544`にcommit済み。B5 source candidate scan 132.32秒（2.0%）とB7 movegen Square cache 117.68秒（B6比2.15%）は性能差が採用基準未満で棄却。B6局所occupancy map 120.27秒を保持し、B8ではU/VのSquare構築をcached tuple参照へ変更。B8関連250 test、全体1,088 test/92 module/21.018秒、Ruff、独立review Critical/Important/Minor 0/0/0、fresh42 wall95.55秒、42/42棋譜一致・合法再生で確認。B9は内部の合法手適用案を関連214件・全体1,090件・Ruff・独立review 0/0/0・fresh42で検証したが、97.66秒でB8より2.2%遅く棄却し、B9コード/testを戻してB8を維持。B8変更・記録のcommitは未実施。
+- Task 3: pipeline/result/resume/analyze 60件成功。B8後のB9全体test1,090/92 module・23.117秒、Ruff成功。B9独立reviewは初回Minor指摘をtest補強・drop mutationで解消し、再確認Critical/Important/Minor 0/0/0。B9を採用しない理由と失敗からの注意を学習記録へ記載した。最終stage/commitと記録照合は未完了。
+- Task 4: B8後profileとB9〜B15のfresh42で根本処理を調査。B9合法適用fast pathは97.66秒でB8比2.2%遅く棄却。B10既知相手玉helperは初回85.64秒/repeat85.21秒、42/42棋譜一致・合法再生、review0/0/0で最速採用候補。B11 82.89秒（2.7%）、B12 84.51秒（0.8%）、B14 83.51秒（2.0%）は棄却。B15は80.27/82.23秒、fresh42平均81.25秒（4.65%）でB10より速い傾向だったが、5%棄却線との反復判定で不採用としてcode/testを戻した。全fresh42は42/42棋譜一致・合法再生。B10更新profileは14/14棋譜一致。`is_square_attacked`10.31m/56.687累積秒、U呼出し6.58m/35.587秒、V source候補34.0m/20.044秒。これら診断値はwall推定でない。B16案はU/Vに対象別攻撃情報を一回計算して一時handoffする協調変更で、複数moduleをまたぐ。計画変更の必要性・代替・検証範囲を次節に記し、本人の明示承認待ち。全4,074局未開始。現在18:06、期限20:16:27、残り約2時間10分。最後1時間は検証/review/記録を優先。
+- 現在のbranch: `codex/comparison-cli-performance`、開始HEAD `aa70d1d`。main統合・pushは範囲外。
+
+### 計画変更B16（18:20:55 JST承認・実施・棄却）
+
+**観測根拠:** B13 profileはtarget-centricな攻撃判定に`is_square_attacked`10.31m回/56.687 cumulative秒、Vの`_target_source_candidates`34.0m/20.044秒と`is_piece_attacking_square`15.58m/16.630秒を示した。B15ではUの攻撃/支え2 ray queryを1回へまとめたが、同条件fresh42二計測の単純平均は81.25秒、B10比4.65%で5%棄却線に届かなかった。profile累積値はwall予測として用いず、U/V間の重複したtarget/source処理を一度にまとめる仮説を提案する。
+
+**提案範囲:** `movegen.py`に、指定した占有target群から各targetの8方向ray先頭駒と桂sourceを一度ずつ読み、各sourceがtargetへ幾何学的に利くかを既存`_piece_attacks_target`で一度判定し、`target index -> (target Piece, tuple[(source Piece, attacks_target)])`の局所snapshotを返す内部操作を追加する。ray先頭駒はintervening-clearを真、桂sourceは既定の遮蔽判定で扱う。`material_piece_threat_value.py`はM計算後にこのsnapshotを一度作り、U/V専用の内部集計へ同じsnapshotを渡す。`undefended_piece_value.py`は同じsideへの攻撃と支えの有無を、`supported_piece_threat.py`は同side supportと相手のstrict-lower-value attackをsnapshotから計算する。各公開単独APIの引数・戻り値は保つ。単独のbalance APIは一回のsnapshotを両sideの集計で共有し、片sideだけの公開APIは一回snapshotを作る。旧M+V方式のV balanceも、この単独balance経路から一回のsnapshotを使う。対象候補は `movegen.py`, `material_piece_threat_value.py`, `undefended_piece_value.py`, `supported_piece_threat.py` と、それぞれの既存test moduleのみ。新しいmodule・依存・永続cache・Board内部配列への直接アクセスは加えない。
+
+**既存の呼び出し経路と構造への影響:** 現在の合成評価`evaluate_material_piece_threat_value`はMを計算した後、Uのbalance、Vのbalanceを別々に呼ぶ。Uは各対象駒について相手の利きと味方の支えを`is_square_attacked`へ別々に尋ね、視点・反対側の集計でも同じ盤を再走査する。Vは先手・後手のcountを別々に計算し、各countで盤面を読み、対象候補ごとにray/桂sourceと幾何学的な利きを調べる。提案後は複合評価からU/Vの非公開集計helperへ一時snapshotを渡す経路が加わり、両者の内部実装が共通記録を読む。単独で使う既存公開関数は引数・戻り値を変えず、その場でsnapshotを用意して従来どおり使えるようにする。旧方式側の`material_piece_threat.py`もV balanceを利用するため、公開V関数の内部更新によって旧方式でも単独用snapshotを作る。よって両方式の実行時間に影響し得るが、Vの得点と方式の条件は変えず、fresh42を両方式込みで測る。内部モジュール間の依存と局所データの受け渡しは増えるが、`Position`/`Board`のデータ構造、M/U/Vの意味と重み、合法手生成、探索・終局、CLI、棋譜・conditions・summaryの保存形式、再開・分析の流れは変えない。速度上の反対仮説として、現在の`is_square_attacked`は最初の該当攻撃で早期returnし、Vも支えと低価値攻撃がそろうと対象走査を打ち切る。先に全sourceの幾何学判定を作るsnapshotは、現在なら短絡して省ける判定まで行って遅くなる可能性がある。さらに毎評価で一時tuple等を割り当てる。これらの費用が削減分を上回れば、正確性を満たしてもB16を棄却してB10へ戻す。採否は両方式を含む同条件fresh42の実時間と完全照合で決める。
+
+**維持条件:** 幾何学的利き、ピンを除外しない意味、ray遮蔽、target上の駒、桂の飛越し、成駒、先後、U対象/価値/符号、Vのsupportとstrict lower-value attacker、例外伝播、局面不変、評価値、候補順/RNG、終局、同seedの棋譜、保存/再開/analysisを変えない。snapshotはひとつの評価呼出しだけで生存し、局面更新後に再利用しない。
+
+**検証案:** 実装前に独立source-reference testとsnapshot未実装のassertion Redを確認。実装後は全駒種/先後/遮蔽/成駒/target占有を含む代表boardでtarget/source記録と従来の個別公開API結果を独立照合し、両U/V値・例外・盤面/手番/持ち駒のsnapshotを比較する。誤ったsource共有、ray clear誤設定、strict-lower-valueの境界を代表mutationで検出。関連/full test・Ruff・diff・独立review後、profileなしfresh42をB10 seed/conditions・4 worker・新出力で計測し、42/42の棋譜・終局・勝者/合法再生を照合する。15%以上改善はreview後に保持、5%以内は棄却、5〜15%は残り期限に余裕がある場合だけ同コードを一度反復する。新しい全量4,074局は期限内の見込時間と最後の1時間を確保できる場合のみ判断する。
+
+**代替案:** (a) B10を維持し、残り期限を独立review・正しさ確認・記録へ使う。(b) 計画変更をしない。承認済みscope内であってもB11/B12/B14/B15と同じ小幅変更は同じ測定根拠のまま繰り返さない。攻撃snapshotのallocation costが削減分を越えた場合はこの案を棄却し、B10へ戻す。
+
+**承認状態（2026-11-03 18:20:55 JST）:** 本人は既存構造への具体的な影響とsnapshotの意味を確認した上で、B16範囲を明示承認した。snapshotは一評価中だけメモリ上に作り、同じ局面で決定的な内容を持ち、盤面・ファイルを変更しない。一回の複合M+U+V評価でU/Vが共有し、単独balanceは一回だけ作って両side集計へ使う。承認対象は`movegen.py`、`material_piece_threat_value.py`、`undefended_piece_value.py`、`supported_piece_threat.py`と各対応既存test。8時間期限は20:16:27 JSTのまま、追加除外は0分。TDDを開始する。
+
+
+**実施結果・採否:** B16初回fresh42 wall80.86秒、同コードrepeat79.56秒、平均80.21秒でB10 85.21秒比5.87%短縮。42/42棋譜/終局/勝者一致・合法再生、各run lower_bound=false。関連262件/full1100件、Ruff成功、独立review Critical/Important/Minor 0/0/0。事前採用線15%未達のためB16 runtime/test変更を除去。rollback fresh42は97.00秒で棋譜42/42一致だがsource hashがB10既知値と異なるため、byte-identicalなB10復元は未確認。詳細なmutation・失敗した試行・suite結果は[学習記録](../learning/comparison-cli-performance.md)を参照。
+
+
+### 計画変更案B17（2026-11-03 18:52 JST改訂、19:04:34 JST承認）
+
+**観測根拠:** B16の先行全件snapshotはfresh42平均80.21秒、B10の85.21秒比5.87%短縮に留まり、15%採用線を満たさなかった。snapshotはU/Vの早期return・Vのtarget走査short-circuitを外す設計だった。rollback fresh42は97.00秒でB10と同じ棋譜を42/42返したがsource fingerprintが異なる。B10保存patchとHEADからの再構成はsource hash 0899e4c2…でB10記録c58bbfe…と一致せず、Gitのunreachable 16 commits/228 root treesにもhash一致はなかった。B17案のため7開始局面で既存U・Vを個別計測したところ、Uはgeometry query 1,249回、Vは997回、同じ(source,target)の重複候補は996回だった。これは開始局面だけのquery-countで、全局・wall速度の予測ではない。 B10-14 cProfileでも_piece_attacks_targetは37,347,155回/19.204 cumulative秒、うちis_piece_attacking_square callerが15,578,731回/8.781秒、_is_target_attacked_by_side callerが21,768,424回/10.423秒だった。cProfile累積秒はwall予測に使わず、source-target共有候補が多い処理を特定する根拠にだけ使う。
+
+**仮説:** 合成M+U+V評価の同じ不変盤面について、Uのtarget-centric reverse-ray経路とVのsource-candidate経路が共に要求した幾何判定(source,target)のbooleanを、一回のevaluation内で遅延記録して再利用する。7つの開始局面では独立呼出し計2,246件中996件のV queryがUと同じpairを参照した。dict lookup/割当が節約を打ち消す可能性は残るため、実時間で検証する。
+
+**提案範囲と内部経路:** movegen.pyに、board・同じsource Piece・source Square・target Square・一時dict・clear-path証明を受けるprivate geometry helperを置く。keyは(source,target)。cache missでは既存_piece_attacks_targetを呼び、正常return後にだけboolを保存して、例外はそのまま伝える。Uの_is_target_attacked_by_sideとVのsource candidate判定を、複合評価から渡された同じdictを使うprivate helperへ接続する。ray先頭から来たUのclear-path=Trueはray走査が中間空きを証明した場合だけ許し、V側の通常判定と同じ幾何結果となる。material_piece_threat_value.pyは一回のM+U+V評価だけでdictを作り、undefended_piece_value.pyとsupported_piece_threat.pyのprivate集計へ渡す。公開単独APIと旧M+V経路は変更しない。cacheは同じ不変Boardを使う同期評価呼出しの間だけ存在し、別Board/evaluationへ持ち越さない。永続cache、module-global、新module、新依存、Board内部配列参照なし。対象はmovegen.py、material_piece_threat_value.py、undefended_piece_value.py、supported_piece_threat.pyと各既存testのみ。
+
+**維持条件:** U/Vの独立API、評価値・符号・strict value比較、幾何学的利き・遮蔽・成駒・ピン、例外伝播、局面不変、候補手列挙・乱数消費順、終局・棋譜・保存/再開/analysisを変えない。同じ入力/seedの指し手列・終局理由・勝者を一致させる。key省略、誤ったclear-path証明、例外保存、別評価や別盤面へのcache再利用を防ぐ。
+
+**TDD・検出力確認:** 実装前に、(1)同じsource/target二回目がgeometry query一回、(2)別sourceまたはtargetは共有しない、(3)query例外をcacheしない、(4)実測7開始局面でU/Vが重なるsource-target queryを一回にできる、(5)短絡した未到達candidateを先行計算しない、(6)複合評価内だけ共有し単独公開APIは従来経路を通る、を直接検査するtestを追加し、未実装/未共有時のassertion Redを確認する。実装後は独立な従来public API referenceでU/V/複合評価値を照合し、board/手番/持ち駒の前後stateを比較する。想定test名: test_same_source_target_reuses_geometry, test_different_source_or_target_does_not_share, test_failed_geometry_is_not_cached, test_unreached_candidates_remain_unevaluated, test_composite_evaluation_shares_geometry_cache. Mutationはkey target欠落、例外保存、ray clear誤設定、eager化、U/V辞書分離、evaluation間再利用を検出する。局所/関連/full tests、Ruff import sort/format/check、diff、独立Critical/Important/Minor reviewを行う。
+
+**実測と採否:** 元のseed/position/side schedule・方式・512手・4 workerのfresh42を新規出力で実計算し、current rollback(97.00秒、sha f5f6…)とB10歴史値85.21秒(sha c58bb…)の双方に対しconditions差、棋譜42/42、合法再生、終局理由、winner/policyを照合する。fresh42の初回wallがB10歴史値より15%以上短縮（72.43秒以下）なら同コードでもう一度fresh42を実行して平均で採否を判断する。初回が5〜15%短縮でもrepeatは一回だけとし、2-run平均が72.43秒以下の場合のみ採用候補とする。5%以内は棄却し、最後の1時間前にrepeatまで完了できない場合は採用せず検証/記録を優先。少数局で4,074局30分達成とはしない。全量計測は残り時間に実際に完了する見込みがある場合だけ開始する。未達ならB17 runtime/test変更を外す。
+
+**代替案:** B17を行わず、B10相当状態との差分復元調査と検証だけを続ける。B17の実時間が閾値に届かなければコード/testを戻す。B16 snapshotやB11/B12/B14/B15の小幅変更を根拠なく再試行しない。
+
+**承認状態（2026-11-03 19:04:34 JST）:** 本人から「ゴールに沿っているなら承認」と回答を受領した。B17は比較条件・棋力・信頼性を変えずsource-targetの重複geometryだけを削る案で、fresh42の採用線を歴史的B10比15%以上に保ち、最終目標4,074局/30分を緩めないため、条件に合致すると判断して明示承認として扱う。B17のTDDを開始する。元の作業期限20:16:27 JSTは変更せず、独立作業を継続したため承認待ち除外0分。
+
+**実施結果・採否（2026-11-03 19:17 JST）:** 実装前のcache契約4件は未実装helperへのassertionで失敗し、合成評価のRedは公開U/V個別queryで3 unique pairsのところ実装前に5 callsとなることを検出した。実装後、関連232件、全体1098件/92 modules、Ruff check/format・差分検査が成功。5代表mutation（source key欠落、target key欠落、False再計算、ray clear proof欠落、U/V別辞書）はそれぞれ意図したassertionで検出。独立review初回Critical 0・Important 0・Minor 1（従来module alias存在を固定するtest不足）。U/V alias同一性testとalias削除変異の検出を追加し、再reviewでCritical/Important/Minor 0/0/0。
+
+新規出力`comparison-cli-performance-42-B17-lazy-geometry-cache-2026-11-03`で既存21 seed組を再利用入力として全42局を新規計算（棋譜自体は再利用せず）。wall84.79秒、summary84.400539833秒、42/42局・21/21組、成功手4606、詰み42、error/interrupted/unstarted/in-flight 0、`elapsed_lower_bound=false`。歴史的B10 fresh42 repeat 85.21秒との比較では0.49%短縮だけで、事前5%棄却線内、15%採用線にも届かず。B10との差はconditionsの`source_sha256`のみ。seed/side/position schedule、開始局面、moves、終局reason、winner side/policyが42/42一致し、合法再生42/42。測定ぶれを超える根拠がないためrepeatは行わず、計画どおりB17 runtime/test差分を除去した。B17 source fingerprintは`f116cf293cd7070f276edea858d7a8077d56241c35fb4356359e236a7425b81d`。30分目標は未達、4,074局は未計測。

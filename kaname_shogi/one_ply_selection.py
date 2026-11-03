@@ -5,7 +5,11 @@ from collections.abc import Callable
 
 from .model import Position, Side
 from .move import Move
-from .movegen import is_checkmate, position_after_move
+from .movegen import (
+    _find_king_square,
+    _is_checkmate_for_known_king,
+    position_after_move,
+)
 
 
 def choose_one_ply_move(
@@ -36,18 +40,24 @@ def choose_one_ply_move(
         rngはchoiceを持つ乱数生成器である。
 
     候補ごとに既存の複製適用を使い、開始側視点を保持して通常点を比較する。
-    一手詰みだけは `(1, 0)`、通常手は `(0, 評価点)` として順序を分けるため、
-    通常評価がどれほど大きくても詰みを上回らない。最大点の候補を元の順で集めて
-    抽選を一度だけ行う。特定の評価関数をimportせず、別の通常評価へ交換できる。
+    相手玉の位置は候補手で動かないため選択開始時に一度だけ探し、候補後はそのマス
+    への直接利きを調べる。位置が不一致なら公開詰み判定へ戻す。一手詰みだけは
+    `(1, 0)`、通常手は `(0, 評価点)` として順序を分けるため、通常評価がどれほど
+    大きくても詰みを上回らない。最大点の候補を元の順で集めて抽選を一度だけ行う。
+    特定の評価関数をimportせず、別の通常評価へ交換できる。
     """
     if not moves:
         return None
 
     perspective = position.side_to_move
+    opponent = Side.GOTE if perspective == Side.SENTE else Side.SENTE
+    opponent_king_square = _find_king_square(position.board, opponent)
     scored_moves: list[tuple[Move, tuple[int, int]]] = []
     for move in moves:
         after = position_after_move(position, move)
-        if is_checkmate(after):
+        if opponent_king_square is not None and _is_checkmate_for_known_king(
+            after, opponent_king_square
+        ):
             score = (1, 0)
         else:
             score = (0, evaluate(after, perspective))
