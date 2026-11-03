@@ -83,11 +83,11 @@
 - [x] **ステップ2: テスト検出範囲を記録する。** `.codex/observations/test-driven-development.md` と `docs/knowledge/test-coverage-review.md` に従い、対象契約、検出したい誤り、代表ケース、単独と全体の検出範囲、未検証事項を `docs/learning/comparison-cli-performance.md` へ記録する。B2/B3/B4/B8について代表変異と未検証範囲を学習記録へ保存した。
 - [x] **ステップ3: Pythonユニットテスト全体を実行する。** `PYTHONDONTWRITEBYTECODE=1 .venv/bin/python scripts/run_tests_parallel.py` を実行し、全発見モジュールの件数と所要を記録する。逐次実行は共有状態/順序依存を調べる場合またはランナー変更時に限る。B8時点で1,088件/92 module/21.018秒成功。
 - [x] **ステップ4: Refactor要否を判断して独立レビューを受ける。** Critical/Important/Minorを学習記録へ残す。B8のRefactorは不要と判断し、独立review Critical/Important/Minor 0/0/0。reviewerはtest・benchmarkを再実行していない。
-- [ ] **ステップ5: 実施記録を保存する。** 承認済み計画との差分、全体検証、独立レビューの結論を文書へ反映し、計画対象ファイルだけをstageしてcommitする。mainへの統合・pushは行わない。
+- [x] **ステップ5: 実施記録を保存する。** 承認済み計画との差分、全体検証、独立レビューの結論を文書へ反映し、承認済みのコード・test・4文書だけをstageしてcommitした（`d911cc16`）。全体1091 tests/92 modules・19.383秒、Ruff、diff check、文書54リンクの存在を確認。mainへの統合・pushは行っていない。
 
 ### Task 4: 最速状態を固定し、新規4,074局を計測
 
-- [ ] **ステップ1: 8時間の残りと見込時間を照合する。** 8時間期限・最後の1時間の検証時間を確保できる場合のみ全量runを開始する。期限までに終わらない見込みなら起動せず、期限で未達保存する。
+- [x] **ステップ1: 8時間の残りと見込時間を照合する。** 2026-11-03 19:28 JST時点で期限まで約48分。B17 fresh42のwall84.79秒からの単純な局数比例は全量約2時間超となるが、小規模runからの推定であり性能実測としては扱わない。残り時間内の完了見込みを得られないため、全量runを起動しない。
 - [ ] **ステップ2: fresh run条件を再確認する。** 完了比較processなし、指定4 worker、元conditions/seed/positions hash一致、max-plies512、2,037組、空かつ未使用の新しい出力先、`--resume` なしを二重確認する。
 - [ ] **ステップ3: 同条件4,074局を実行し壁時計を測る。** CLIプロセス起動から終了コード取得まで、外部の `time` 実時間を記録する。全局が新規計算される実行のみ有効とする。
 
@@ -160,3 +160,62 @@
 **実施結果・採否（2026-11-03 19:17 JST）:** 実装前のcache契約4件は未実装helperへのassertionで失敗し、合成評価のRedは公開U/V個別queryで3 unique pairsのところ実装前に5 callsとなることを検出した。実装後、関連232件、全体1098件/92 modules、Ruff check/format・差分検査が成功。5代表mutation（source key欠落、target key欠落、False再計算、ray clear proof欠落、U/V別辞書）はそれぞれ意図したassertionで検出。独立review初回Critical 0・Important 0・Minor 1（従来module alias存在を固定するtest不足）。U/V alias同一性testとalias削除変異の検出を追加し、再reviewでCritical/Important/Minor 0/0/0。
 
 新規出力`comparison-cli-performance-42-B17-lazy-geometry-cache-2026-11-03`で既存21 seed組を再利用入力として全42局を新規計算（棋譜自体は再利用せず）。wall84.79秒、summary84.400539833秒、42/42局・21/21組、成功手4606、詰み42、error/interrupted/unstarted/in-flight 0、`elapsed_lower_bound=false`。歴史的B10 fresh42 repeat 85.21秒との比較では0.49%短縮だけで、事前5%棄却線内、15%採用線にも届かず。B10との差はconditionsの`source_sha256`のみ。seed/side/position schedule、開始局面、moves、終局reason、winner side/policyが42/42一致し、合法再生42/42。測定ぶれを超える根拠がないためrepeatは行わず、計画どおりB17 runtime/test差分を除去した。B17 source fingerprintは`f116cf293cd7070f276edea858d7a8077d56241c35fb4356359e236a7425b81d`。30分目標は未達、4,074局は未計測。
+
+
+### 計画変更B18（2026-11-03 19:34 JST、本人の選択委任を受けて決定）
+
+**観測根拠:** B10-14 cProfileで`Square.__post_init__`が55,286,947回/24.635累積秒、その中の`any` generatorが9.923秒。累積profile時間は入れ子を含む診断値でwall予測ではない。fresh42はB17 84.79秒でもB10 85.21秒比0.49%に留まり、必要proxy速度へ約5.43倍不足する。局所Square検証だけでは目標を満たさないが、構造が単純で既存データ契約に触れず、短時間で棄却できるため候補を選んだ。
+
+**仮説と対象:** `Square.__post_init__`のtuple/generator/`any`をfileとrankの明示的な型・範囲条件へ置き換えると、同じ無効値を拒否したまま、Squareを大量生成する探索時のgenerator評価・一時tuple割当を減らせる。対象は`kaname_shogi/model.py`と`tests/test_model.py`だけ。dataclass field、constructor、repr、equality/hash、`Square.to_index`、Board内部表現、既存APIは変えない。
+
+**維持条件・検出力:** file/rankの1〜9境界、bool・float・文字列・Noneを拒否する現行契約、同じValueError型/message、正常Squareの不変性・座標順・indexを維持する。製品コード変更前に、`builtins.any`がSquare検証経路で呼ばれない構造testを足し、現実装ではSquare生成という成功振る舞いに対する意図したRedを確認する。既存の不正座標testとvalid boundary/index/immutability testを利用し、tuple/generator/anyを復活する変異、型条件を落とす変異、境界条件を誤る変異を意図したassertionで検出する。単独/関連/full suite、Ruff import sort/format/check、diff、独立review C/I/Mを実施する。
+
+**実測と採否:** 元のB10 seed/position/side schedule・2方式・512手・4 workerのfresh42を未使用出力先へ全局新規計算する。conditions・seed・初期局面・moves・終局reason・winner/policyを42/42照合し、合法再生42/42を確認する。15%以上は強い採用効果、5%以内/悪化は棄却、5〜15%は同コードで一度repeatする。repeat後、2-run平均で5%以上短縮し、各runの条件・42/42棋譜・合法再生が一致すれば、fastest correct状態として保持して次の仮説へ進む。15%未満の保持は作業完了や目標達成を意味しない。全4,074局/30分はfresh42で代用しない。小標本の単純線形投影は実測値と称さず、期限内に完了見込みがない全量runは開始しない。
+
+**計画判断:** 2026-11-03 19:33 JST、本人は候補選択の質問を避け「ゴールに沿って進めて」と指示した。これは技術候補の選択をアシスタントへ委ねる明示指示として受け取り、profile根拠と影響の小ささから上記B18を選択した。追加承認待ちはなく、元の作業期限20:16:27 JSTは変えない。開始前ソースfingerprintは`f5f6b0ca96e6b489752579502c5dcf3313283be2369db8994f76865ba7b326be`。
+
+**実施結果・採否（2026-11-03 19:41 JST）:** 検証generatorを直接条件式へ変えたfresh42はwall77.36秒/summary77.019177250秒、反復はwall78.05秒/summary77.711795333秒。各42/42局、21組、4606成功手、詰み42、error等0、lower_bound=false。2-run平均wall77.705秒はB10 repeat85.21秒より8.8%短い。同コードrun同士の差は0.9%、既知B8同コード差4.4%より小さい。両runはB10と`git`/`source_sha256`のprovenanceのみ異なり、seed/side/schedule、初期局面、moves/reason/winner side/policy42/42一致、legal replay42/42。既存の採用済みB10もB8同コード2-run平均より8.6%短い状態で保持した先例と一致するため、B18を次の改善の基盤として保持する判断へ更新した。これは中間の再現可能な改善であり、30分目標未達・全4,074局未計測。
+
+**検出力・review:** `test_square_validation_does_not_call_any`は未実装時にSquare生成でmock assertion failureを確認。rank上限を10へ広げる変異は不正座標testの`rank=10` assertionで失敗、ValueError文言変更変異は16 subtestsでregex assertion failure。修正後model module28件と全体1092件/92 modules/18.305秒成功、Ruff import sort/format/check・diff check成功。独立レビューは初回Critical0/Important0/Minor1（文言をtest固定していない）、`assertRaisesRegex`で補強後の再reviewはCritical/Important/Minor 0/0/0。reviewerはtestを再実行していない。
+
+### 計画変更B19（2026-11-03 19:44 JST、候補選択を本人から委任）
+
+**観測根拠:** B10-14の並列cProfileで`Square.to_index`は406,836,055 calls/16.442 cumulative seconds。値は重複する累積profileでありwall予測ではない。B18はfresh42を2回新規実行し平均wall77.705秒、B10 fresh42 repeat85.21秒比8.8%短縮したが、30分目標に必要なproxy速度までは約4.97倍不足する。Squareのdata representationやBoardの格納方式を変える案は等値・hash・メモリ・参照経路へ影響が広く、期限内の確認時間を要するため今回は選ばない。
+
+**仮説と対象:** 現行`Square.to_index`の`(file - 1) * 9 + (rank - 1)`は整数演算を4個実行する。等価式`file * 9 + rank - 10`は算術演算を3個に減らせるため、数億回の呼出し経路で時間を削る可能性がある。対象を`kaname_shogi/model.py`と`tests/test_model.py`に限定する。Squareのfields・constructor・validation・repr・equality/hash、index順、Board格納、候補順、乱数、局面・合法手・棋譜・保存/再開は変更しない。
+
+**テスト契約・検出力:** 81マスを筋優先・段昇順に列挙したとき、`to_index`が0〜80の連番へ各座標を一意に対応させる契約を明示する。既存の「集合が0〜80」というtestだけでは任意の座標入替を検出できないため、列挙順から独立に期待indexを作り、81件すべてを対応づけるtestを先に追加する。これは動作を増やす変更ではないので、現実装でGreenとなる理由を記録し、off-by-one式変異でそのassertionがRedとなることを確かめる。既存の四隅・７六、不正座標/型、immutability、Board初期配置testが補完する。局所test・全体suite・Ruff・diff・独立review C/I/Mを行う。
+
+**fresh42測定・採否:** B18の2-run平均wall77.705秒を比較値とし、元と同じseed/局面/side/policy/512手/4 worker、別の新規出力先で全42局を新規計算する。初回が5%未満の改善なら測定差内として棄却し、5%以上改善なら期限内に同コードを一度再実行し、平均5%以上かつconditions・42/42棋譜・reason/winner・合法再生が一致した場合にだけ保持候補とする。15%以上は強い改善として記録する。初回または平均が5%未満なら元の式へ戻す。全量4074局はfresh42から達成とせず、期限内に実完了見込みがないため開始しない。
+
+**計画判断:** 2026-11-03 19:44 JST、本人から候補選択は人間へ尋ねずゴールに沿って進めるよう明示された。profile上で頻出し、公開データ表現を変えない単一の算術式を選び、上記の限定範囲でTDD・測定・検証を進める。作業開始12:16:27 JSTおよび終了期限20:16:27 JSTを維持し、承認待ち除外時間は0分。
+
+**B19実施結果・採否（2026-11-03 19:50 JST）:** 全81座標対応testは現式でGreen。式の減算を1つ増やすoff-by-one mutationを入れると81 subtests全てが期待値assertionで失敗し、test検出を確認した。候補式`file * 9 + rank - 10`へ一時変更したfresh42は新規出力`comparison-cli-performance-42-B19-to-index-arithmetic-2026-11-03`、CLI起動〜終了wall79.44秒、summary79.104882750秒。42/42局・21/21組・4,606成功手・checkmate42、error/interrupted/unstarted/in-flight0、`elapsed_lower_bound=false`。B18 repeat77.705秒平均より2.2%遅く、5%採用線未達のためrepeatせず候補式をrollback。B19側conditions差は`source_sha256`のみ、開始局面/seed/side/policy/schedule/moves/reason/winner42/42一致、legal replay42/42。独立review C/I/M0/0/0。全体suiteはrollback後1093 tests/92 modules/18.576秒成功。B18のsource fingerprint `32e3686d734e8ebbce9ca78414c4771a842324497b071a6d52174d5c2d77efdc`へ復帰した。B19で明示化した全81 file-major index mapping testは既存の集合0〜80 testが検出しない座標置換誤りを防ぐため保持し、これは性能改善の主張ではない。
+
+### 計画変更B20（2026-11-03 19:51 JST、本人の候補選択委任に基づく）
+
+**観測根拠:** B10-14 aggregate profileで`Board.piece_at`は404,499,935 calls/53.201 cumulative seconds、`Square.to_index`は406,836,055 calls/16.442 cumulative seconds、`Square.__post_init__`は55,286,947 calls/24.635 cumulative seconds。いずれも並列profileの重複累積値でwall時間の予測には使わない。呼出し回数はSquare生成の約7.3倍で、検証済みB18 fresh42平均77.705秒から必要proxyに約4.97倍不足する。
+
+**仮説と範囲:** Squareの筋・段は生成後に変更できない。検証を通過したSquareの`__post_init__`で、その筋・段だけから決まるfile-major indexを非dataclass/private属性へ一度だけ記録し、`to_index()`は保存した整数を返すと、高頻度の4演算とPython method-body実行を減らせる可能性がある。新しい永続cacheやglobal cacheではなく、各不変Square値の寿命だけに閉じる。対象は`kaname_shogi/model.py`と`tests/test_model.py`。コンストラクタ引数、宣言済みdataclass fields、repr、等値・hash、表示、既存API、0〜80 mapping、Board cells、評価式、候補列挙・乱数、局面・合法手・棋譜・終局・保存/再開は変えない。cache依存がfile/rankだけであることを、Squareのstrict validationとfrozen contractに基づいて確認する。余分なinstance-dict entryと初期化費用が利益を上回るriskも測定対象とする。
+
+**TDD・検出力:** 先に`to_index`がprivate computed indexを使い、cacheがdataclass fieldを増やさず、repr/equality/hashとimmutabilityを保つtestを追加する。未実装ではprivate index欠落の対象assertionでRed。既存の全81 file-major mapping testで添字変異を検出する。既存の四隅・７六、invalid coordinate/type、Square immutable、Board初期配置testが補完する。明示的なoff-by-one cache式・declared dataclass fieldへの変異・cache値のstale化などが意図したassertionで失敗するか確認。model suite、full suite、Ruff・diff、独立C/I/M review後にfresh42を計測する。
+
+**fresh42測定・採否:** 4 workers、同じseed-list sha `82b5a5f5...`、7局面/21組/42局、両方式・先後・512手で全局を新規計算。別出力先へ保存し、B18の2-run平均77.705秒と比較する。5%以上短縮した場合のみ同コードfresh42を一度repeatし、平均5%以上短縮かつ条件/初期局面/moves/reason/winner/policy/合法再生42/42なら保持候補とする。5%未満・同等・悪化ならcacheを外しB18へ戻す。余分なinstance stateの影響を含む実時間で判定し、42局から全量達成を宣言しない。
+
+**計画判断:** 本人は候補選択で人間へ質問せず、ゴールに沿って進めるよう指示している。上記のhot path頻度を根拠に、公開Square/Board APIと永続形式を変えず不変座標だけを使う限定案を選択した。作業開始12:16:27 JST・期限20:16:27 JSTを維持し、追加承認待ちによる除外時間なし。
+
+**B20実施結果・採否（2026-11-03 19:56 JST）:** B20 pre-code Redはcacheなしで`_index`期待値59に対してNoneとなるassertion failure。`(file - 1) * 9 + (rank - 1) + 1`の変異は81座標mapping testで81件すべて失敗。候補コードの5,000,000回呼出しmicrobenchmark 5回では既存method body median0.1345秒に対し属性読出しmedian0.0915秒、1.47倍だったが、Square生成時の追加dict entry/演算を含むゲーム計測とは異なる。fresh42新規出力`comparison-cli-performance-42-B20-cached-square-index-2026-11-03`はwall75.86秒/summary75.519626958秒、42/42局・21組・4,606手・checkmate42・error等0・lower_bound=false。B18 repeat条件との差はsource_sha256のみ、seed/side/schedule/初期局面/moves/reason/winner/policy42/42一致、legal replay42/42。B18平均77.705秒より2.37%短いが5%線および観測済み実行差の範囲内であり、repeatせず棄却。runtime cacheとB20専用testを除去し、B18 runtimeへrollback。独立reviewはCritical0/Important0/Minor1（to_indexがcacheを読むことをtest固定していない）。この不足を検出するtestを一時作成したが、閾値未達で候補をrollbackしたため未採用・未実行。詳細は学習記録。
+
+### 計画変更B21（2026-11-03 19:56 JST、候補選択は本人から委任）
+
+**観測根拠:** Board.piece_at 404,499,935 calls/53.201 cumulative secondsとSquare.to_index406,836,055 calls/16.442 secondsの大半が同じ高頻度読み取り経路と見られる。B20はto_index内部の算術を属性取得へ置き換えたがfresh42は2.37%しか短縮しなかった。method call自体をBoardの最頻読取から外す案が異なる部分を狙う。cProfileはwall予測に用いない。
+
+**仮説と範囲:** `Board.piece_at(square)`内で、検証済みSquareの同じfile-major formulaを直接使い、`Square.to_index()`の追加Python呼出しを省けばBoard readを速められる可能性がある。対象は`kaname_shogi/model.py`と`tests/test_model.py`。Boardの内部list・公開piece_at/set_piece契約・Square.to_index・index order・Square equality/hash/immutability・評価値・合法手・move order/RNG・終局・棋譜・保存/再開は維持する。既存の「添字変換をSquareへ集約」の設計には例外を一つ設け、Boardのprofile済みread hotspotだけで式をinlineするため、理由をBoard.piece_at docstring/commentへ説明する。mapping consistency testがSquare.to_index/set_pieceとのズレを検出する。
+
+**TDD・検出力:** 81 Square全てに異なる隣接駒patternをset_pieceで置き、Square.to_indexを例外mockにして全マスpiece_atを読むtestを先に追加。現実装は既存method呼出し時のassertionでRed。変更後は全81のPiece identityが一致する。off-by-one formula mutationで読み取り期待値のassertion失敗、Square.to_index呼出しへの回帰をmockで検出する。既存の空盤、特定マスだけ変更、clear、初期配置、全81 index mapping testと関連/full suiteで補完。Ruff、diff、独立C/I/M review後にfresh42を実測。
+
+**fresh42測定・採否:** B18平均77.705秒、新しい出力先、同じ42 seed sha/7局面/21組/両方式/先後/512手/4 workersで全42局を新規計算。初回5%未満は棄却・rollback、5%以上は同コードを一度repeatし、2-run平均5%以上かつ条件・42/42棋譜/終局・勝者・合法再生一致なら保持候補。15%以上は強い効果として記録。全量実行・達成判定へは置き換えない。
+
+**計画判断:** 本人は「このてのことを人間に聞くことは禁止する。ゴールに沿って進めて」と明示し、候補選択を委任した。B20の範囲を最小化しても必要proxyに約4.97倍不足するため、profileで実測された最頻read pathからmethod-call overheadを狙うB21を選択。8時間期限20:16:27 JSTを維持し、追加承認待ち除外0分。
+
+**B21実施結果・採否（2026-11-03 20:01 JST）:** 初期Redは現Board.piece_atからSquare.to_indexを呼び、mock assertionで全81座標失敗。off-by-one formula mutationは80 assertion failure + index81範囲外1 errorとなり、ずれを検出した。testの初稿はRuff B905 zip(strict=)で止まったため、Python 3.9互換を守ってenumerate + index参照に直した。実装後testは全座標のPiece identityとto_index非呼出しを確認。Ruff import sort/format/check成功。B21 fresh42は新規出力`comparison-cli-performance-42-B21-inline-board-read-2026-11-03` wall74.94秒/summary74.592958500秒、42/42局・21組・4,606手・checkmate42・error等0・lower_bound=false。B18 repeatとsource_sha256以外条件差なし、開始局面/seed/side/schedule/moves/reason/winner/policy42/42一致、legal replay42/42。B18 mean77.705秒より3.56%短いだけで、事前5%線と既知B8同コードばらつき4.4%を超えないためrepeatせず棄却。runtimeと専用testをrollback。実装中はmodel30 test/full1094 tests/92 modules/17.959秒成功。独立レビューC/I/M0/0/0。rollback後はB18 + B19全81 index mapping coverageのみへ戻し、model29 test/full1093 tests/92 modules/18.325秒成功。最終source fingerprintがB18 `32e3686d...`と一致することを確認。

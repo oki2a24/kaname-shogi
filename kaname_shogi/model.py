@@ -80,9 +80,11 @@ class Square:
     def __post_init__(self) -> None:
         """dataclassの生成直後に、筋・段の型と盤内の範囲を検証する。"""
         # boolはintの一種だが、将棋の座標としては受け付けない。
-        if any(
-            type(value) is not int or not 1 <= value <= 9
-            for value in (self.file, self.rank)
+        if (
+            type(self.file) is not int
+            or not 1 <= self.file <= 9
+            or type(self.rank) is not int
+            or not 1 <= self.rank <= 9
         ):
             raise ValueError("筋・段は1〜9の整数で指定してください")
 

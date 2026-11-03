@@ -6,9 +6,9 @@
 
 本人の明示承認を2026-11-03 12:16:27 JSTに受領し、同時刻に8時間の作業期限を開始した。終了予定は20:16:27 JST。承認待ち12:08:38〜12:16:27（7分49秒）は除外する。作業ブランチは`codex/comparison-cli-performance`、開始HEADは`aa70d1d`。環境はPython 3.15.2、Ruff 0.16.10、hooksPath `.githooks`。2026-11-02の全量summaryは`elapsed_lower_bound=true`で、確定wall基準ではない。B0〜B8の根拠と実測は[学習記録](learning/comparison-cli-performance.md)を参照。
 
-現時点の最速reviewed実測はB17 fresh42 wall84.79秒だが、B10 85.21秒比0.49%短縮で事前5%棄却線内のため未採用。B17は42/42棋譜一致・合法再生、conditions差はsource_sha256のみ、C/I/M review 0/0/0。runtime/test差分を除去し、`comparison_io._source_sha256`で現在package hashがB17開始前のrollback `f5f6b0ca96e6b489752579502c5dcf3313283be2369db8994f76865ba7b326be`と一致することを再確認。現状態で全体1091 tests/92 modulesが19.383秒で成功し、Ruff import-sort/format/checkと`git diff --check`も成功した。B17の同じ範囲に対する本人承認が19:26に再度届いたが、B17はすでに実施・棄却・rollback済みのため重複実験しない。基準として採用している最速候補はB10 fresh42 85.21秒。全4,074局未実行・30分未達。B17 detailsは[計画](plans/2026-11-03-comparison-cli-performance-implementation-plan.md)と[学習記録](learning/comparison-cli-performance.md)。
+現時点の最速review済み候補はB18のfresh42 2-run平均wall77.705秒（B10比8.8%短縮）、両runで42/42棋譜・終局・勝者・合法再生一致。B19等価式79.44秒（2.2%遅い）、B20 Square cache75.86秒（2.37%速い）、B21 Board inline read74.94秒（3.56%速い）は、すべて5%採用線未達でruntimeをrollbackした。B21 candidate時full suite1094/92 module/17.959秒・Ruff・独立review C/I/M0/0/0、rollback後full suite1093/92/18.325秒成功。現状態はB18 runtime fingerprint `32e3686d...`+B19 all-81 index mapping coverage。B18変更/記録は未commit、main未統合。全4,074局未計測・30分未達。
 
-7時間点検19:18 JSTで必要速度との差を再計算。B17の4606成功手/84.79秒=54.32手/秒に対し必要294.84手/秒、約5.43倍不足。B10-14 profileではSquare.__post_init__ 55,286,947回/24.635累積秒（内generator9.923秒）、Square.to_index 406,836,055回/16.442秒、Board.piece_at 404,499,935回/53.201秒。14局並列profileの累積時間でwall予測ではない。B18候補の選択回答は未着。Square検証generatorを直接条件式へ置き換える案と添字計算見直し案はB17承認範囲外なので、model.py/tests/test_model.pyを変更していない。最後の1時間は全体検証・レビュー・記録を優先し、追加変更は計画と明示承認後に限る。2026-11-03 19:26 JSTにActivity Monitorで`compare_games`該当なし・CPU idle 84.28%を確認。期限20:16:27 JST、現時点で承認待ちによる作業時間除外は0分。
+必要proxy速度まで約4.97倍不足。profileでは`Board.piece_at`404,499,935 calls/53.201累積秒、`Square.to_index`406,836,055 calls/16.442秒。cProfile累積値はwall予測ではない。B19〜B21のindex局所案は採用線を越えなかったため、期限20:16:27 JSTまでの残時間は正しさ確認・独立レビュー・記録・最速状態の保全を優先する。次の有望な調査は候補評価・合法化・詰み判定間の実際の再計算をprofile/call graphで特定し、比較の信頼性を変えず一箇所減らす案。承認待ち時間除外0分。
 
 主線「次の非駒得評価項目を一つ選び、学ぶ」は未完了で、具体項目も未選定。支えのない被攻撃駒の価値合計比較は指定7局面・2037組/4074局で改善を支持し、main統合・push・統合後検証・最後の理解確認まで完了したが、一般棋力向上は示さない。
 

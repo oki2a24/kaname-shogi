@@ -191,3 +191,46 @@
 - **戻しと注意点:** B17のcache helper、optional cache経路、合成評価の共有、専用testは削除。Ruff import-sort/format/check後のsource fingerprintはB17前と同じf5f6b0ca96e6b489752579502c5dcf3313283be2369db8994f76865ba7b326beとなり、byte-identical rollbackを確認。公開評価経路にcache symbolが残らないこともrgで確認。
 - **実行時のつまずき:** 42 seed planをtemp JSONへ書く初回scriptは改行を文字列\nとして末尾へ書き、再読込でJSON Extra dataとなった。比較CLIを起動する前に検出し、実改行へ直して21組/7局面を再読込した。full test logを読むshell wrapperでzsh予約変数statusへの代入が拒否され wrapperは非zeroとなったが、ログには1097 test successfulが記録され、修正版runner実行では1098 test successfulを確認。
 - **7時間点検と次候補:** 19:18 JST、fresh42の4606成功手/84.79秒=54.32手/秒に対し4,074局/30分のproxy必要量294.84手/秒、約5.43倍不足。B17局所cacheはその全体律速を解消しなかった。B10-14 profileでBoard.piece_at 404,499,935 calls/53.201累積秒、Square.__post_init__ 55,286,947/24.635秒（内generator9.923秒）、Square.to_index 406,836,055/16.442秒を確認。次候補の一つはSquareのfile/rank検証でtuple/generator/anyを直接比較に置き換える小変更だが、model.pyはB17承認外で効果も全体のごく一部に限られる。別案としてto_index/Board index処理をデータ表現から見直す方法は影響が広く、Square equality/hash/immutable semantics/メモリとPython 3.9互換の確認が必要。いずれも未承認・未実施。
+
+
+## B18実施・採否記録（2026-11-03）
+
+- **選択委任と範囲:** 19:33 JST、本人から「このてのことを人間に聞くことは禁止する。ゴールに沿って進めて」と指示を受けた。profileから`Square.__post_init__`のgenerator負担が直接確認でき、データモデル/APIを変えず短時間で検出できる明示条件化を選択した。対象は`kaname_shogi/model.py`と`tests/test_model.py`のみ。元の作業期限20:16:27 JSTを変えず、承認待ち時間の追加除外なし。
+- **仮説・変更:** file/rankの型・1〜9範囲を個別に直接検証し、tuple/generator/`any`を外す。厳密なint判定、bool拒否、同じValueError・文言、Squareのfields/constructor/repr/equality/hash/to_index、Board、合法手・棋譜の意味を保つ。
+- **TDD/検出力:** `test_square_validation_does_not_call_any`を先に追加。未実装時はSquare構築時にmockのself.failが起動し、期待振る舞いのRedを確認。rank上限を10にするmutationは既存の`rank=10` subtestでValueError未送出を検出。例外文言を「座標が不正です」に変えるmutationは`assertRaisesRegex`で16 subtests失敗。修正後、file/rank双方の0/10/-1/float/string/None/bool、全81 index、immutabilityを含むmodel 28 test成功。
+- **独立review:** 初回Critical 0・Important 0・Minor 1（不正座標testがValueError文言を固定していない）。`assertRaisesRegex`で強化し、文言変異でのfailureを確認。再reviewはCritical/Important/Minor 0/0/0。reviewerはテストを再実行していない。
+- **静的/全体検証:** Ruff import sort、format/checkとdiff check成功。全体1092 tests/92 modules/18.305秒成功。Python source fingerprint `32e3686d734e8ebbce9ca78414c4771a842324497b071a6d52174d5c2d77efdc`。
+- **fresh42初回と反復:** B17と同じ21 seed組、7局面、両方式、512手、4 worker。新規出力`comparison-cli-performance-42-B18-square-validation-2026-11-03`はwall77.36秒/summary77.019177250秒。反復の新規出力`comparison-cli-performance-42-B18-square-validation-repeat-2026-11-03`はwall78.05秒/summary77.711795333秒。双方42/42局、21組、4,606成功手、詰み42、error/interrupted/unstarted/in-flight0、elapsed_lower_boundなし。B10 repeat85.21秒比2-run平均77.705秒、8.8%短縮。2 run同士のwall差0.9%、B8同コード既知差4.4%より小さい。
+- **結果一致:** 両B18 runはB10とseed/先後/schedule/開始局面/moves/reason/winner side/policyが42/42一致し、各42棋譜合法再生。B10とのconditions差は`git`と`source_sha256`のみ。反復同士は全conditions一致、棋譜/終局/勝者・合法再生42/42。比較checkerは`/private/tmp/comparison-cli-performance-compare-B18-42.py`、`/private/tmp/comparison-cli-performance-compare-B18-repeat-42.py`、`/private/tmp/comparison-cli-performance-compare-B18-repeat-vs-B10-42.py`。
+- **採否基準を調整した理由:** 事前B18票は平均15%採用線を置いたが、2-run平均8.8%はB10がB8同コード2-run平均から8.6%短縮で保持された実績と同程度で、B18同コードrun間差は0.9%に留まった。5.43倍の全量速度差は残るため、改善を終了条件にはせず、再現性と既存の採用実績に沿ってB18をfastest-correct基盤として保持し次の仮説へ進む。これは4,074局30分達成を意味しない。
+- **実行上の注意:** B18 checkerを`/private/tmp`から単独起動するとcheckoutが`sys.path`にないためModuleNotFoundErrorになった。`PYTHONPATH=.`を設定して再実行した後、git HEADのcommitがB10時点と異なるためconditions差に`git`が含まれた。provenanceの`git`とsource hash以外の比較条件を完全照合し、差分が他にないことを確認した。
+- **残る距離と次:** B18の4,606成功手/77.705秒=59.28手/秒、全量proxy必要速度294.84手/秒に約4.97倍不足。fresh42から全量時間を推定・達成宣言しない。次はB10-14 profileで406,836,055回/16.442累積秒だった`Square.to_index`を、座標順と81 index期待表を保つ単一の低影響変更で軽くできるか検討する。公開Square/data representation変更は避け、まずbytecode上の等価式を評価する。期限20:16:27 JST、全4,074局未実行・30分未達。
+
+## B19: Square.to_indexの演算式（2026-11-03、計画変更）
+
+- **選定理由と範囲:** 本人の「このてのことを人間に聞くことは禁止する。ゴールに沿って進めて」を候補選択の委任として受け、profileで406,836,055回/16.442累積秒だった`Square.to_index`を選んだ。対象は`model.py`と`test_model.py`。Squareの公開値・APIやBoard保存方式は変更せず、演算一つを減らす等価式だけを短時間で測る案とした。
+- **一実験前ticket:** 遅い根拠は上記profile件数・累積時間（wall予測ではない）。仮説は`(file - 1) * 9 + (rank - 1)`を`file * 9 + rank - 10`へ変えると数億回の整数演算を軽くできること。変えてはならない振る舞いは全81マスのfile-major mapping、0〜80、四隅・７六、Squareの値意味、候補順・棋譜・終局。検出方法は列挙順から独立した全81期待値test、off-by-one mutation、model/full suite、Ruff、独立review、B18比較fresh42と42棋譜の完全一致。
+- **TDD/検出力:** 追加した`test_all_squares_use_file_major_index_mapping`は筋優先・段昇順の列挙順から`enumerate`で期待値を作る。元式ではGreen。候補式の減算を一つ誤らせる`file * 9 + rank - 9` mutationでは81 subtests全てのindex assertionが失敗し、読込エラーではなく off-by-one を検出した。最終model suiteは29 tests成功。
+- **実測と正しさ:** 候補式を入れたrunは新規出力`comparison-cli-performance-42-B19-to-index-arithmetic-2026-11-03`へ同じseed-list sha `82b5a5f5...`、7局面・21組/42局・baseline/candidate・先後・512手・4 workersで計算。wall79.44秒、summary79.104882750秒、4,606 successful moves、42/42 checkmate、error/interrupted/unstarted/in-flight0、lower bound false。B18 repeat条件との違いはsource_sha256のみ。初期局面、seed/side schedule、moves、reason、winner policy/side42/42一致し、42局すべて合法再生。
+- **採否とrollback:** B18 fresh42 2-run平均77.705秒に対してB19式は2.2%遅かった。5%改善線に届かないため再runせず棄却し、production式をB18へ戻した。rollback後のpackage source fingerprintはB18の`32e3686d...`と一致。全81 mapping testは添字集合だけを見る既存testを補って座標入替を検出するため保持した。B19はruntime高速化として採用していない。
+- **検証/review:** rollback後の全体suite1093 tests/92 modules/18.576秒成功。変更前後でRuff format/check成功、`git diff --check`確認。独立reviewはCritical/Important/Minorすべて0、reviewerはtestを再実行していない。未検証事項は4,074局実時間、全OS/全Python versionでの性能差。
+- **次:** B18最良状態で77.705秒/42局、必要proxy速度294.84手/秒に約4.97倍不足する。残る根拠上のhot pathは`Board.piece_at` 404,499,935 calls/53.201 cumulative secondsで、`Square.to_index`の呼出し回数も約同数だった。次候補はBoardの読み取り経路にある変換呼出し負担を測り、公開`piece_at(Square)`契約・保存順を保つ最小案を試す。試験計画は次の節に記す。
+
+## B20: Square単位の事前添字保持（2026-11-03、計画変更）
+
+- **選定・ticket:** 候補選択を尋ねずゴールに沿って進める本人指示を受け、profileでBoard.piece_at 404.5m回・Square.to_index 406.8m回・Square生成55.3m回を見たことから、frozen Squareごとに添字を一度計算して後続読み取りで返す仮説を選んだ。cacheはfile/rankにのみ依存し、永続globalやBoard/history依存を作らない。公開dataclass fields/repr/equality/hashとAPIを維持する。
+- **事前小計測:** 5,000,000回の同じmethod callを5回測るmicrobenchmarkで、既存算術式中央値0.1345秒、属性取得を返す模擬method中央値0.0915秒、約1.47倍だった。Square生成時の保存費用や対局分布は含まず、採否指標にしない。
+- **TDD/検出力:** `test_square_index_is_cached_without_changing_dataclass_fields`を先に追加し、未実装では`None != 59`の意図assertion failure。dataclass field一覧、repr/equality/hashを保つ確認と通常代入でcacheを変えられない確認を追加。off-by-one cache式mutationでは全81座標mapping testが81件失敗。追加した`to_index` getter直結testは独立reviewのMinor指摘を受けて用意したが、性能線未達後にruntimeとともに除去し未実行。
+- **fresh42と一致:** 新規出力`comparison-cli-performance-42-B20-cached-square-index-2026-11-03` wall75.86秒/summary75.519626958秒、42/42局・21組・4,606手・詰み42・error等0・lower bound false。B18 repeatとsource_sha256以外は条件一致し、seed/side/schedule/開始局面/moves/reason/winner/policy42/42一致、合法再生42/42。
+- **採否/review:** B18 2-run mean77.705秒比2.37%短縮だが事前5%線未達でrepeatせず棄却。`_index`保存と`to_index` getterを削除してB18へrollback。独立review Critical0/Important0/Minor1（getterの実利用をtestが固定しない点）。test gapはレビューで見つかったが、候補自体を棄却したため最終実装には含めない。microbenchmark結果だけで採用しなかった。
+- **検証:** B20実装中のmodel 31 testsとfull 1095 tests/92 modules/18.975秒成功、Ruff import-sort/format/check成功。rollback後は既存B18とB19 mapping testだけの構成に戻った。B19の式変更同様、Square cacheは保持しない。
+- **次の仮説:** 次は重複する計算ではなく、最頻の`Board.piece_at`経路から`Square.to_index`のmethod call自体を避ける小変更をfresh42で試す。Board read/write mapping一致、候補順、局面・棋譜、全保存を維持し、5%未満はrollbackする。
+
+## B21: Board.piece_atの添字変換呼び出し（2026-11-03、計画変更）
+
+- **選定・ticket:** B10-14 profileの`Board.piece_at`404,499,935 calls/53.201 cumulative secondsと`Square.to_index`406,836,055 calls/16.442 secondsが同じ読取経路に重なると見た。B20のSquare cacheは2.37%短縮で採用線未達だったため、method bodyの算術でなくBoard readからの追加Python method callを省く仮説を一つだけ試す。
+- **意図した設計例外:** 公開Square変換・Board API・内部81-cell listは保持し、`Board.piece_at`だけ同じ式`(file - 1) * 9 + (rank - 1)`をinlineしてhot read callを削る。添字変換をSquareへ集約する既存方針からは例外になるため、profile根拠・速度目的・全81 mapping testをdocstringに記す案。式を重複させるずれはtestで防ぐ。
+- **TDD/検出力:** 全81 squareへPiece identity patternを`set_piece`で配置し、`Square.to_index`をmock failureにして`piece_at`の全読取を確認するtestを追加。旧経路では81箇所でmock assertion Red。inline式でGreen。式を+1ずらすmutationは80の誤読assertionとindex81の1 errorで検出。初稿`zip`はRuff B905に止められ、Python 3.9互換を考慮してenumerate/indexへ置換。既存Boardのempty/setting/clear/initial setupとSquare全81 mappingが補完する。
+- **実測・正しさ:** fresh42新規出力`comparison-cli-performance-42-B21-inline-board-read-2026-11-03`、wall74.94秒/summary74.592958500秒、42/42局・21組・4,606手・詰み42、error等0、lower-bound false。B18 repeatとsource_sha256以外同条件。seed/side/schedule/初期局面/手順/終局reason/winner/policy42/42一致、legal replay42/42。
+- **採否/rollback:** B18 2-run mean77.705秒比3.56%短縮で、事前5%採用線とB8の既知4.4%同コード差を超えないため棄却・repeatなし。inline化と構造testをrollback。全体1094 tests/92 modules/17.959秒・Ruff・C/I/M review 0/0/0は実装候補状態で成功。rollback後はB18 code fingerprintへ戻り、29 model tests・1093全体test/92 modules/18.325秒が成功。Boardの設計例外は採用しない。
+- **残る距離と次:** B18 fastest-correct fresh42 mean77.705秒、4,606/77.705=59.28手/秒、目標proxy294.84手/秒に約4.97倍不足。B18がSquare検証を直接軽減し8.8%改善した以外、B19〜B21の局所index操作は5%採用線を越えず、B20/B21単独値は既知run差程度。次はSquare/Board indexの小手先ではなく、1手選択の候補評価・合法化・詰み確認の重複がどの処理で実際に再計算されるか、profile/call graphで定量し、比較手順を変えずに重複を一箇所取り除く仮説を先に立てる。
