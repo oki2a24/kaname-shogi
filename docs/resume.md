@@ -6,7 +6,7 @@
 
 本人の明示承認を2026-11-03 12:16:27 JSTに受領し、同時刻に8時間の作業期限を開始した。終了予定は20:16:27 JST。承認待ち12:08:38〜12:16:27（7分49秒）は除外する。作業ブランチは`codex/comparison-cli-performance`、開始HEADは`aa70d1d`。環境はPython 3.15.2、Ruff 0.16.10、hooksPath `.githooks`。2026-11-02の全量summaryは`elapsed_lower_bound=true`で、確定wall基準ではない。B0〜B8の根拠と実測は[学習記録](learning/comparison-cli-performance.md)を参照。
 
-現時点の最速review済み候補はB18のfresh42 2-run平均wall77.705秒（B10比8.8%短縮）、両runで42/42棋譜・終局・勝者・合法再生一致。B19等価式79.44秒（2.2%遅い）、B20 Square cache75.86秒（2.37%速い）、B21 Board inline read74.94秒（3.56%速い）は、すべて5%採用線未達でruntimeをrollbackした。B21 candidate時full suite1094/92 module/17.959秒・Ruff・独立review C/I/M0/0/0、rollback後full suite1093/92/18.325秒成功。現状態はB18 runtime fingerprint `32e3686d...`+B19 all-81 index mapping coverage。B18変更/記録は未commit、main未統合。全4,074局未計測・30分未達。
+現時点の最速review済み候補はB18のfresh42 2-run平均wall77.705秒（B10比8.8%短縮）、両runで42/42棋譜・終局・勝者・合法再生一致。B19等価式79.44秒（2.2%遅い）、B20 Square cache75.86秒（2.37%速い）、B21 Board inline read74.94秒（3.56%速い）は、すべて5%採用線未達でruntimeをrollbackした。B21 candidate時full suite1094/92 module/17.959秒・Ruff・独立review C/I/M0/0/0、rollback後full suite1093/92/18.325秒成功。現状態はB18 runtime fingerprint `32e3686d...`+B19 all-81 index mapping coverage。B18+実験記録をcommit `dafa7055`へ保全、main未統合。全4,074局未計測・30分未達。
 
 必要proxy速度まで約4.97倍不足。profileでは`Board.piece_at`404,499,935 calls/53.201累積秒、`Square.to_index`406,836,055 calls/16.442秒。cProfile累積値はwall予測ではない。B19〜B21のindex局所案は採用線を越えなかったため、期限20:16:27 JSTまでの残時間は正しさ確認・独立レビュー・記録・最速状態の保全を優先する。次の有望な調査は候補評価・合法化・詰み判定間の実際の再計算をprofile/call graphで特定し、比較の信頼性を変えず一箇所減らす案。承認待ち時間除外0分。
 

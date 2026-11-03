@@ -234,3 +234,7 @@
 - **実測・正しさ:** fresh42新規出力`comparison-cli-performance-42-B21-inline-board-read-2026-11-03`、wall74.94秒/summary74.592958500秒、42/42局・21組・4,606手・詰み42、error等0、lower-bound false。B18 repeatとsource_sha256以外同条件。seed/side/schedule/初期局面/手順/終局reason/winner/policy42/42一致、legal replay42/42。
 - **採否/rollback:** B18 2-run mean77.705秒比3.56%短縮で、事前5%採用線とB8の既知4.4%同コード差を超えないため棄却・repeatなし。inline化と構造testをrollback。全体1094 tests/92 modules/17.959秒・Ruff・C/I/M review 0/0/0は実装候補状態で成功。rollback後はB18 code fingerprintへ戻り、29 model tests・1093全体test/92 modules/18.325秒が成功。Boardの設計例外は採用しない。
 - **残る距離と次:** B18 fastest-correct fresh42 mean77.705秒、4,606/77.705=59.28手/秒、目標proxy294.84手/秒に約4.97倍不足。B18がSquare検証を直接軽減し8.8%改善した以外、B19〜B21の局所index操作は5%採用線を越えず、B20/B21単独値は既知run差程度。次はSquare/Board indexの小手先ではなく、1手選択の候補評価・合法化・詰み確認の重複がどの処理で実際に再計算されるか、profile/call graphで定量し、比較手順を変えずに重複を一箇所取り除く仮説を先に立てる。
+
+### B18・B19〜B21記録の保全（2026-11-03 20:03 JST）
+
+最速の正しさ確認済みB18 runtimeと全81 index mapping test、B19〜B21実験経緯/棄却/測定/レビュー/テスト記録、GOAL・計画・resume更新を作業branch `codex/comparison-cli-performance`のcommit `dafa7055`へ保存。commit hook format/lint成功。mainには未統合、pushなし。既存未追跡比較出力と保全物は変更・追加せず保持。
