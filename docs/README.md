@@ -41,6 +41,8 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 現在の作業場所・承認段階・次の行動は[再開案内](resume.md)を正本とする。元ディレクトリへの移行、退避物と文書整備の経緯は[整理記録](learning/workspace-knowledge-consolidation.md)を参照する。
 
+期限付きの比較CLI性能目標は[GOAL.md](../GOAL.md)を正本とする。設計・実装計画は2026-11-03に本人承認済みで、8時間の期限内に実行中。試行の経緯は[性能改善の学習記録](learning/comparison-cli-performance.md)に追記する。
+
 非駒得評価の主線では、U（支えのない被攻撃駒の枚数差）とV（支えあり低価値駒脅威の枚数差）の通常CLI・USI接続を終えた。価値合計+Vの接続もmain統合・push・統合後検証まで完了した。ShogiHomeのU枚数候補は一局・理解確認まで完了し、価値合計+VとCountPlusVは一局の途中まで操作を確認した。いずれも棋力比較ではない。次の非駒得評価項目は未選定である。現在地は[再開案内](resume.md)を正本とする。残存未追跡データと退避物の期限付き整理は[再開条件と検証手順](handover-residual-artifact-cleanup.md)を参照する。
 
 ## よく参照する現行資料
@@ -58,6 +60,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 | テーマ | 学習記録 | 確定知識 | 設計仕様 | 実装計画 | 引き継ぎ |
 | --- | --- | --- | --- | --- | --- |
+| 比較CLIの同条件4,074局を30分以内にする（期限付き性能目標・実行中） | [調査・実験記録](learning/comparison-cli-performance.md) | — | [承認済み設計](plans/2026-11-03-comparison-cli-performance-design.md) | [承認済み実装計画](plans/2026-11-03-comparison-cli-performance-implementation-plan.md)、[GOAL](../GOAL.md) | — |
 | 支えのない被攻撃駒の価値評価を比較CLIへ接続・比較する（主線・実装/検証/レビュー/confirmation/main統合・push/統合後検証/理解確認済み） | [選定・設計回答・実装・検証・比較結果](learning/undefended-piece-value.md) | [集計・合成・比較方式](knowledge/undefended-piece-value.md)、[比較方法](knowledge/search-comparison.md) | [承認済み設計](plans/2026-11-02-undefended-piece-value-comparison-design.md) | [承認済み実施計画・結果](plans/2026-11-02-undefended-piece-value-comparison-implementation-plan.md) | [開始時の引き継ぎ](handover-undefended-piece-value-comparison.md) |
 | 支えのない被攻撃駒の価値合計を評価へ反映する（主線・実装/テスト/独立レビュー・理解確認完了、topic commit `23306c01`。main統合・push済み） | [本人の回答・実装・検証](learning/undefended-piece-value.md) | [集計・合成仕様](knowledge/undefended-piece-value.md) | [本人承認済み設計](plans/2026-11-02-undefended-piece-value-design.md) | [本人承認済み計画・進捗](plans/2026-11-02-undefended-piece-value-implementation-plan.md) | [開始時の引き継ぎ](handover-mainline-after-documentation.md) |
 | U二種類を区別する一手評価候補の通常CLI・USI接続（実装・検証・独立レビュー・CVC2局済み、main統合・push・統合後検証済み。ShogiHome新候補一局は途中まで操作確認） | [選定・回答・実施](learning/undefended-piece-coordination-evaluation.md) | [U評価](knowledge/undefended-piece-evaluation.md)、[価値合計](knowledge/undefended-piece-value.md)、[V評価](knowledge/supported-piece-lower-value-threat.md)、[USI応答](knowledge/usi-engine-response.md) | [承認済み設計](plans/2026-11-03-undefended-piece-value-normal-cli-usi-design.md) | [承認済み実装計画](plans/2026-11-03-undefended-piece-value-normal-cli-usi-implementation-plan.md) | — |

@@ -55,6 +55,11 @@ _DROP_PIECE_TYPES = (
     BasicPieceType.PAWN,
 )
 
+# 盤全体の読み取りで同じ不変座標を何度も生成しない。Squareの筋優先順を保つ。
+_BOARD_SQUARES = tuple(
+    Square(file, rank) for file in range(1, 10) for rank in range(1, 10)
+)
+
 
 def move_piece(board: Board, source: Square, destination: Square) -> None:
     """空いている到着マスへ駒を移し、渡された盤面を変更する。
@@ -177,14 +182,12 @@ def is_square_attacked(board: Board, target: Square, attacking_side: Side) -> bo
         query_board = board.copy()
         query_board.set_piece(target, None)
 
-    for file in range(1, 10):
-        for rank in range(1, 10):
-            source = Square(file, rank)
-            piece = query_board.piece_at(source)
-            if piece is None or piece.side != attacking_side:
-                continue
-            if target in _move_candidates_for_piece(query_board, source):
-                return True
+    for source in _BOARD_SQUARES:
+        piece = query_board.piece_at(source)
+        if piece is None or piece.side != attacking_side:
+            continue
+        if target in _move_candidates_for_piece(query_board, source):
+            return True
     return False
 
 
@@ -195,11 +198,9 @@ def _opponent_side(side: Side) -> Side:
 
 def _find_king_square(board: Board, side: Side) -> Square | None:
     """指定側の玉のマスを探し、なければNoneを返す非公開の読み取り操作。"""
-    for file in range(1, 10):
-        for rank in range(1, 10):
-            square = Square(file, rank)
-            if board.piece_at(square) == Piece(PieceType.KING, side):
-                return square
+    for square in _BOARD_SQUARES:
+        if board.piece_at(square) == Piece(PieceType.KING, side):
+            return square
     return None
 
 
@@ -225,14 +226,12 @@ def is_in_check(board: Board, side: Side) -> bool:
         return False
 
     opponent = _opponent_side(side)
-    for file in range(1, 10):
-        for rank in range(1, 10):
-            source = Square(file, rank)
-            piece = board.piece_at(source)
-            if piece is None or piece.side != opponent:
-                continue
-            if king_square in _move_candidates_for_piece(board, source):
-                return True
+    for source in _BOARD_SQUARES:
+        piece = board.piece_at(source)
+        if piece is None or piece.side != opponent:
+            continue
+        if king_square in _move_candidates_for_piece(board, source):
+            return True
     return False
 
 

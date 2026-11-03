@@ -27,6 +27,75 @@ from kaname_shogi.movegen import (
 )
 
 
+class BoardSquareCacheTests(unittest.TestCase):
+    def test_board_square_cache_preserves_file_major_order(self):
+        """走査用のSquareタプルは81マスを筋優先で一度ずつ保持する。
+
+        筋段の順序を入れ替える、マスを飛ばす、重複する、可変な列を返す最適化を検出する。
+        """
+        cached_squares = getattr(movegen, "_BOARD_SQUARES", None)
+        self.assertIsInstance(cached_squares, tuple)
+        self.assertEqual(len(cached_squares), 81)
+        self.assertEqual(
+            tuple((square.file, square.rank) for square in cached_squares),
+            tuple((file, rank) for file in range(1, 10) for rank in range(1, 10)),
+        )
+
+    def test_square_attack_scan_reuses_precomputed_squares(self):
+        """全マスの利き走査でSquare生成を繰り返さない。
+
+        81マスを読むたびに同じ座標を新規生成する回帰を検出し、歩の攻撃結果も確認する。
+        """
+        board = Board()
+        target = Square(9, 8)
+        board.set_piece(target, Piece(PieceType.PAWN, Side.GOTE))
+        board.set_piece(Square(9, 9), Piece(PieceType.PAWN, Side.SENTE))
+
+        with patch.object(movegen, "Square", wraps=Square) as square_factory:
+            self.assertTrue(movegen.is_square_attacked(board, target, Side.SENTE))
+
+        self.assertLess(
+            square_factory.call_count,
+            81,
+            "盤走査のために全81マスを再生成しています",
+        )
+
+    def test_king_scans_reuse_precomputed_squares(self):
+        """玉位置と王手の盤走査でもSquare値を再利用する。
+
+        玉探索または攻撃側走査だけが毎回81個の座標を再生成する回帰を検出する。
+        """
+        board = Board()
+        king_square = Square(5, 5)
+        board.set_piece(king_square, Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 4), Piece(PieceType.PAWN, Side.GOTE))
+
+        with patch.object(movegen, "Square", wraps=Square) as square_factory:
+            self.assertEqual(movegen._find_king_square(board, Side.SENTE), king_square)
+            self.assertEqual(square_factory.call_count, 0)
+
+        check_board = Board()
+        check_king_square = Square(9, 8)
+        check_board.set_piece(check_king_square, Piece(PieceType.KING, Side.GOTE))
+        check_board.set_piece(Square(9, 9), Piece(PieceType.PAWN, Side.SENTE))
+
+        with (
+            patch.object(
+                movegen,
+                "_find_king_square",
+                return_value=check_king_square,
+            ),
+            patch.object(movegen, "Square", wraps=Square) as square_factory,
+        ):
+            self.assertTrue(movegen.is_in_check(check_board, Side.GOTE))
+
+        self.assertLess(
+            square_factory.call_count,
+            81,
+            "王手判定のために全81マスを再生成しています",
+        )
+
+
 class PromotedMinorMoveCandidateTests(unittest.TestCase):
     def test_promoted_minor_pieces_move_like_gold_for_sente_and_gote(self):
         """と金・成香・成桂・成銀は先後とも金と同じ6方向へ進める。

@@ -2,6 +2,10 @@
 
 ## 現在地（2026-11-03、作業中）
 
+### 期限付きの比較CLI性能目標（承認済み・実行中）
+
+本人の明示承認を2026-11-03 12:16:27 JSTに受領し、同時刻に8時間の作業期限を開始した。終了予定は20:16:27 JST。承認待ち12:08:38〜12:16:27（7分49秒）は除外する。作業ブランチは `codex/comparison-cli-performance`、開始HEADは `aa70d1d`。開始環境はPython 3.15.2、Ruff 0.16.10、hooksPath `.githooks`。既存全量summaryは `elapsed_lower_bound=true` のため正確なwall基準にはしない。B0 fresh42局baselineは外部wall730.49秒・元棋譜完全一致。B1の14局cProfileは1,549手・14/14一致で、`is_square_attacked`の反復scanと候補生成が大きい処理と確認。初回B2の458.47秒はSquare cacheに玉`Piece`生成ホイストが混在したため合わせ技候補値。独立レビューでCriticalなし、Important 1件（計測交絡）、Minor 1件（`is_in_check` testが早期returnでscan再生成を見逃す可能性）。是正としてPiece生成頻度を従来へ戻し、末尾攻撃元の王手scan testを補強。関連216 test・Ruff成功、旧scan変異は意図どおり失敗。Square-only fresh42局はwall500.30秒、summary499.759秒、42/42棋譜・合法再生一致。B2a Piece生成ホイスト単独版は492.66秒、Square-only比1.53%短縮で事前基準未達により棄却し、コードはSquare-only版に戻した。B2の独立再レビューはCritical/Important/Minorなしで完了し、Square-only変更・test・記録を作業ブランチへcommitする段階。次はprofileで156,972,383回/1,106秒だった候補一覧生成を避けるB3直接target判定仮説をテスト先行で検証する。Square-only 42局の9.205 moves/secに対し、全量平均の手数で30分達成には約32.03倍の追加速度が必要という粗い試算はGOALに記録した。製品コード/testはSquare cacheと補強testのみ。[GOAL](../GOAL.md)、[承認済み設計](plans/2026-11-03-comparison-cli-performance-design.md)、[承認済み実装計画](plans/2026-11-03-comparison-cli-performance-implementation-plan.md)、[実験記録](learning/comparison-cli-performance.md)を参照する。
+
 主線「次の非駒得評価項目を一つ選び、学ぶ」は未完了で、具体項目も未選定。支えのない被攻撃駒の価値合計比較は指定7局面・2037組/4074局で改善を支持し、main統合・push・統合後検証・最後の理解確認まで完了したが、一般棋力向上は示さない。
 
 本人承認を受け、比較済みの `10M+U価値合計+V` を通常CLI候補8・USI `MaterialUndefendedPieceValuePlusV` に接続する実装を完了した。U枚数とU価値合計の名前を区別し、比較CLI ID `material-piece-threat-value-v1` は比較専用のままにした。1,073テスト・92モジュール、Ruff、代表変異、独立レビュー、通常CLIの先後を入れ替えたCVC 2局を確認し、2026-11-03に `d9a9d8e` としてmainへ統合・pushした。統合後も1,073テスト・92モジュールが成功した。詳細は[学習記録](learning/undefended-piece-coordination-evaluation.md)、[設計](plans/2026-11-03-undefended-piece-value-normal-cli-usi-design.md)、[実装計画](plans/2026-11-03-undefended-piece-value-normal-cli-usi-implementation-plan.md)。
