@@ -118,6 +118,95 @@ def _move_candidates_for_piece(board: Board, source: Square) -> list[Square]:
     return candidate_functions[piece.piece_type](board, source)
 
 
+def _path_to_target_is_clear(board: Board, source: Square, target: Square) -> bool:
+    """sourceとtargetの間に遮蔽物がなければTrueを返す非公開操作。
+
+    呼び出し側が同筋・同段・斜めの位置関係を確認してから使う。target自身は
+    利きの対象なので占有駒を調べず、中間マスだけを近い順に確認する。
+    """
+    file_delta = target.file - source.file
+    rank_delta = target.rank - source.rank
+    file_step = (file_delta > 0) - (file_delta < 0)
+    rank_step = (rank_delta > 0) - (rank_delta < 0)
+    file = source.file + file_step
+    rank = source.rank + rank_step
+    while file != target.file or rank != target.rank:
+        if board.piece_at(Square(file, rank)) is not None:
+            return False
+        file += file_step
+        rank += rank_step
+    return True
+
+
+def _piece_attacks_target(
+    board: Board, piece: Piece, source: Square, target: Square
+) -> bool:
+    """候補listを作らず、駒種と遮蔽物からsourceのtargetへの利きを調べる。
+
+    利きは合法手やピンを判定しない幾何学的な関係なので、targetの占有だけを
+    無視し、中間マスの駒は長距離移動の遮蔽物として調べる。合法手生成は
+    `_move_candidates_for_piece`を使い続け、真偽だけを必要とする評価・王手照会で
+    14項目dictと全候補listを作らない。
+    """
+    if source == target:
+        return False
+
+    file_delta = target.file - source.file
+    rank_delta = target.rank - source.rank
+    file_distance = abs(file_delta)
+    rank_distance = abs(rank_delta)
+    forward = -1 if piece.side == Side.SENTE else 1
+    piece_type = piece.piece_type
+
+    if piece_type == PieceType.KING:
+        return max(file_distance, rank_distance) == 1
+    if piece_type == PieceType.PAWN:
+        return file_delta == 0 and rank_delta == forward
+    if piece_type == PieceType.KNIGHT:
+        return file_distance == 1 and rank_delta == 2 * forward
+    if piece_type == PieceType.SILVER:
+        return (rank_delta == forward and file_distance <= 1) or (
+            rank_delta == -forward and file_distance == 1
+        )
+    if piece_type in (
+        PieceType.GOLD,
+        PieceType.PRO_PAWN,
+        PieceType.PRO_LANCE,
+        PieceType.PRO_KNIGHT,
+        PieceType.PRO_SILVER,
+    ):
+        return (
+            (rank_delta == forward and file_distance <= 1)
+            or (rank_delta == 0 and file_distance == 1)
+            or (rank_delta == -forward and file_distance == 0)
+        )
+    if piece_type == PieceType.LANCE:
+        return (
+            file_delta == 0
+            and rank_delta * forward > 0
+            and _path_to_target_is_clear(board, source, target)
+        )
+    if piece_type == PieceType.BISHOP:
+        return file_distance == rank_distance and _path_to_target_is_clear(
+            board, source, target
+        )
+    if piece_type == PieceType.ROOK:
+        return (file_delta == 0 or rank_delta == 0) and (
+            _path_to_target_is_clear(board, source, target)
+        )
+    if piece_type == PieceType.HORSE:
+        if file_distance == rank_distance:
+            return _path_to_target_is_clear(board, source, target)
+        return file_distance + rank_distance == 1
+    if piece_type == PieceType.DRAGON:
+        if file_delta == 0 or rank_delta == 0:
+            return _path_to_target_is_clear(board, source, target)
+        return file_distance == rank_distance == 1
+
+    # _move_candidates_for_pieceも未定義の駒種をKeyErrorにする。
+    raise KeyError(piece_type)
+
+
 def is_piece_attacking_square(board: Board, source: Square, target: Square) -> bool:
     """指定駒がtargetへ利いているかを返す読み取り操作。
 
@@ -131,28 +220,21 @@ def is_piece_attacking_square(board: Board, source: Square, target: Square) -> b
         targetが同じならFalse。
 
     副作用:
-        なし。味方駒の占有マスを確認するときだけ複製盤を使う。
+        なし。盤面を複製・変更せず、target以外の中間マスだけを遮蔽物として読む。
 
     前提条件:
         board、source、targetが有効な盤面・盤内マスである。手番・合法性・ピンを
         判定せず、既存の候補生成規則による幾何学的な利きを返す。
 
-    対象が味方駒で占有される場合だけ対象マスを複製盤上で空け、他の遮蔽を保って
-    候補生成へ委譲する。対象自身を利きの起点にしない。駒種別の動きを再実装せず、
-    個別の攻撃元を識別するため、攻撃側全体を調べる既存照会と分けている。
-    候補生成中の例外は呼び出し元へ伝播する。
+    対象自身を利きの起点にしない。駒種別ごとの幾何を直接判定し、target上の駒は
+    味方・相手ともに利きの対象として数える。長距離駒ではtargetまでの中間マスだけを
+    調べるため、盤複製と候補list生成を避けられる。合法手生成は既存候補関数を使う。
+    盤面読み取り・直接判定からの例外は呼び出し元へ伝播する。
     """
     piece = board.piece_at(source)
     if piece is None or source == target:
         return False
-
-    query_board = board
-    target_piece = board.piece_at(target)
-    if target_piece is not None and target_piece.side == piece.side:
-        query_board = board.copy()
-        query_board.set_piece(target, None)
-
-    return target in _move_candidates_for_piece(query_board, source)
+    return _piece_attacks_target(board, piece, source, target)
 
 
 def is_square_attacked(board: Board, target: Square, attacking_side: Side) -> bool:
@@ -164,29 +246,22 @@ def is_square_attacked(board: Board, target: Square, attacking_side: Side) -> bo
         attacking_side: 利きを調べる駒の所有者。
 
     戻り値:
-        attacking_sideの盤上駒の既存候補にtargetが含まれる場合はTrue。
+        attacking_sideの盤上駒の幾何学的な利きがtargetへ届く場合はTrue。
         玉・手番・持ち駒・合法性は判定に必要としない。
 
     副作用:
-        元の盤面を変更しない。候補生成中の例外はそのまま呼び出し側へ伝える。
+        元の盤面を変更しない。盤面読み取り・直接判定の例外は呼び出し側へ伝える。
 
-    targetがattacking_sideの駒で占有されている場合だけ盤を複製し、そのマスだけを
-    空にして候補を調べる。移動候補生成は味方駒のマスを除外するためである。
-    相手駒が占めるtargetは既存候補に含まれる。別の駒による遮蔽はそのまま残し、
-    空にしたtarget上の駒自身を攻撃元として数えない。駒種別ごとの移動規則を
-    再実装せず既存候補へ委譲することで、利きの形状と長距離の停止条件を共有する。
+    sourceを筋優先順で読み、各駒のtargetへの幾何学的な利きを直接判定する。
+    target上の駒は所有者を問わず占有条件に使わず、中間マスだけを長距離駒の
+    遮蔽物として読む。source==targetは利きに数えず、ピン駒も幾何学的な利きに含める。
+    盤複製や候補listを使わず真偽だけを求めることで、14項目dict構築と候補列挙を省く。
     """
-    query_board = board
-    target_piece = board.piece_at(target)
-    if target_piece is not None and target_piece.side == attacking_side:
-        query_board = board.copy()
-        query_board.set_piece(target, None)
-
     for source in _BOARD_SQUARES:
-        piece = query_board.piece_at(source)
+        piece = board.piece_at(source)
         if piece is None or piece.side != attacking_side:
             continue
-        if target in _move_candidates_for_piece(query_board, source):
+        if _piece_attacks_target(board, piece, source, target):
             return True
     return False
 
@@ -205,21 +280,21 @@ def _find_king_square(board: Board, side: Side) -> Square | None:
 
 
 def is_in_check(board: Board, side: Side) -> bool:
-    """指定側の玉が相手の駒の移動候補に入っているかを返す。
+    """指定側の玉が相手の駒の幾何学的な利きに入っているかを返す。
 
     引数:
         board: 王手を調べる盤面。盤面は変更しない。
         side: 玉を調べる先手・後手。
 
     戻り値:
-        指定側の玉が盤上にあり、相手側のいずれかの駒の既存候補に含まれれば
+        指定側の玉が盤上にあり、相手側のいずれかの駒が玉へ幾何学的に利けば
         True。玉がない部分局面、またはどの相手駒からも攻撃されていない場合は
         False。
 
-    玉の位置と相手側の全駒を盤から読み、既存の駒種別候補生成を再利用する。
-    候補生成と同じく、相手駒のマスは候補に含め、長距離駒の遮蔽や桂馬の飛び越しも
-    その規則に従う。判定だけを行い、盤面・手番・持ち駒は変更しない。玉がない
-    部分局面をFalseとするのは、候補生成を個別に確認する既存テストとの互換性のため。
+    玉の位置と相手側の全駒を盤から読み、source-target直接判定を再利用する。
+    長距離駒は中間マスだけを遮蔽物として調べ、桂馬は途中マスを調べずに飛び越す。
+    ピンや合法性は除外せず、判定だけを行って盤面・手番・持ち駒を変更しない。
+    玉がない部分局面をFalseとするのは、候補生成を個別に確認する既存テストとの互換性のため。
     """
     king_square = _find_king_square(board, side)
     if king_square is None:
@@ -230,7 +305,7 @@ def is_in_check(board: Board, side: Side) -> bool:
         piece = board.piece_at(source)
         if piece is None or piece.side != opponent:
             continue
-        if king_square in _move_candidates_for_piece(board, source):
+        if _piece_attacks_target(board, piece, source, king_square):
             return True
     return False
 

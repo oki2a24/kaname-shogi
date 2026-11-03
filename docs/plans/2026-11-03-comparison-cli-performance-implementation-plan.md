@@ -58,7 +58,12 @@
 
 ### Task 2: 一つのホットパス仮説をTDDで改善
 
-**対象ファイル:** profile結果に基づき、必要な既存コードと対応テストだけを選ぶ。現時点の候補は `kaname_shogi/one_ply_selection.py`、`kaname_shogi/movegen.py`、`kaname_shogi/undefended_piece_value.py`、`kaname_shogi/supported_piece_threat.py`、`kaname_shogi/material_piece_threat_value.py` と、既存の `tests/test_one_ply_selection.py`、`tests/test_movegen.py`、`tests/test_undefended_piece_value.py`、`tests/test_supported_piece_threat.py`、`tests/test_material_piece_threat_value.py`、`tests/test_piece_threat_selection.py`。profileが示さない候補へは着手しない。これらの範囲外が必要なら計画変更を先に承認してもらう。
+**対象ファイル:** profile結果に基づき、必要な既存コードと対応テストだけを選ぶ。現時点の候補は `kaname_shogi/one_ply_selection.py`、`kaname_shogi/movegen.py`、`kaname_shogi/undefended_piece_value.py`、`kaname_shogi/supported_piece_threat.py`、`kaname_shogi/material_piece_threat_value.py` と、既存の `tests/test_one_ply_selection.py`、`tests/test_movegen.py`、`tests/test_piece_attack.py`、`tests/test_undefended_piece_value.py`、`tests/test_supported_piece_threat.py`、`tests/test_material_piece_threat_value.py`、`tests/test_piece_threat_selection.py`。profileが示さない候補へは着手しない。これらの範囲外が必要なら計画変更を先に承認してもらう。
+
+
+**計画変更（本人承認・2026-11-03 14:04 JST）:** B3のsource-target直接利き判定に伴い、`tests/test_piece_attack.py`を対象へ追加する。同ファイルの`test_candidate_error_propagates`は非公開の`_move_candidates_for_piece`呼出しに結合しているため、新しい内部直接判定helperからの例外伝播を検証するテストへ置換する。この1テスト以外の同ファイル変更、公開API、CLI、データ形式の変更は含めない。
+
+**計画変更（本人承認・2026-11-03 14:10 JST）:** 関連test実行で`tests/test_square_attacks.py::test_preserves_board_on_success_and_failure`も旧`_move_candidates_for_piece`呼出しを前提とすることが判明した。テストの失敗を解消するため、この1件の例外mockだけを`_piece_attacks_target`へ更新する。関係のない同ファイル変更は含めない。
 
 - [x] **ステップ1: `GOAL.md` に実験票を先に作る。** 実験B2として、B1の根拠、事前生成した不変Squareタプルをboard-wide scanで再利用する一つの仮説、維持する振る舞い、42局での採否基準、対象テスト・全量テスト・代表変異をコード変更前に記録した。
 - [x] **ステップ2: profileで選んだ契約のテストを追加する。** `tests/test_movegen.py`へSquareタプルの81マス順、is_square_attackedのboard scan、玉探索/王手scanの再利用を確認する3 testを追加した。変更前、最初の盤面では攻撃元が走査途中にあり生成回数テストは通ってしまったため、最後の走査マスから利く歩へ移し、キャッシュ不存在と81セル再生成のassertion Redを確認した。
@@ -109,6 +114,7 @@
 
 - 計画: 本人が2026-11-03 12:16:27 JSTに明示承認。
 - Task 1: ステップ1〜5完了。14局profileとB0棋譜一致を確認。
-- Task 2: Square-only B2を関連216 test、変異Red、fresh42局wall500.30秒、42/42棋譜一致・合法再生で検証。B2a Pieceホイスト単独版はwall492.66秒（1.53%）で棄却し、Square-onlyへ戻した。独立再レビューはCritical/Important/Minorなしで採用可。Refactor要否確認済み。B2変更・記録をcommit `8b510a99`として保存した。B3票は候補リストを避ける直接target判定として記録済み。
-- Task 3〜4: 未着手。
+- Task 2: Square-only B2を関連216 test、変異Red、fresh42局wall500.30秒、42/42棋譜一致・合法再生で検証。B2a Pieceホイスト単独版はwall492.66秒（1.53%）で棄却し、Square-onlyへ戻した。独立再レビューはCritical/Important/Minorなしで採用可。Refactor要否確認済み。B2変更・記録をcommit `8b510a99`として保存した。B3は直接target判定を実装し、14:04と14:10 JSTに承認された例外test各1件を新helper契約へ更新。先後方向・遮蔽変異の検出、関連234件、比較関連60件、全体1080件/92 module、Ruffを成功。fresh42はwall171.41秒、Square-onlyより65.7%短縮。元seed選択42局の手順・終局理由・勝者一致と合法再生42/42。独立再レビューはCritical/Important/Minorなし。性能候補として採用し、refactorは追加しない。B3変更・記録のbranch commitはこれから。
+- Task 3: Task 2の変更対象pipeline/result/resume/analyze60 testを通過。検出力記録を学習記録へ追加し、全体1080 tests/92 module（23.489秒）を実行。独立B3レビューはCritical/Important/Minorなし。実装・測定記録はGOALと学習記録へ追記済み。最終commit前の差分検査・状態確認が残る。
+- Task 4: B3 fresh42 runは完了・照合済み。新規4,074局runは未開始。B3後14局profileで残りの大きな処理時間を測り、次の単一仮説・測定範囲・期限内4,074局実行可能性を判断する。
 - 現在のbranch: `codex/comparison-cli-performance`、開始HEAD `aa70d1d`。

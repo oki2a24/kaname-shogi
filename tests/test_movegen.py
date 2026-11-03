@@ -96,6 +96,180 @@ class BoardSquareCacheTests(unittest.TestCase):
         )
 
 
+class DirectTargetAttackTests(unittest.TestCase):
+    def _reference_piece_attack(self, board, source, target):
+        """既存候補一覧を使い、指定駒の幾何学的利きを返す。"""
+        piece = board.piece_at(source)
+        if piece is None or source == target:
+            return False
+        query_board = board
+        target_piece = board.piece_at(target)
+        if target_piece is not None and target_piece.side == piece.side:
+            query_board = board.copy()
+            query_board.set_piece(target, None)
+        return target in movegen._move_candidates_for_piece(query_board, source)
+
+    def _reference_square_attack(self, board, target, attacking_side):
+        """既存候補一覧を使い、指定側からの利きを返す。"""
+        query_board = board
+        target_piece = board.piece_at(target)
+        if target_piece is not None and target_piece.side == attacking_side:
+            query_board = board.copy()
+            query_board.set_piece(target, None)
+        for source in movegen._BOARD_SQUARES:
+            piece = query_board.piece_at(source)
+            if piece is None or piece.side != attacking_side:
+                continue
+            if target in movegen._move_candidates_for_piece(query_board, source):
+                return True
+        return False
+
+    def _snapshot(self, board):
+        """盤上81マスを比較し、利き照会が盤を変えないことを調べる。"""
+        return tuple(board.piece_at(square) for square in movegen._BOARD_SQUARES)
+
+    def test_direct_piece_attack_matches_candidates_for_all_pieces(self):
+        """全駒種・先後・端の全targetで候補一覧と同じ利きを返す。
+
+        駒種の分岐、先後の方向、端の盤外、成駒形状が直接判定でずれる誤りを検出する。
+        """
+        sources = (
+            Square(1, 1),
+            Square(1, 9),
+            Square(5, 5),
+            Square(9, 1),
+            Square(9, 9),
+        )
+        for piece_type in PieceType:
+            for side in Side:
+                for source in sources:
+                    board = Board()
+                    board.set_piece(source, Piece(piece_type, side))
+                    expected = set(movegen._move_candidates_for_piece(board, source))
+                    before = self._snapshot(board)
+                    actual = {
+                        target
+                        for target in movegen._BOARD_SQUARES
+                        if movegen.is_piece_attacking_square(board, source, target)
+                    }
+                    square_attacks = {
+                        target
+                        for target in movegen._BOARD_SQUARES
+                        if movegen.is_square_attacked(board, target, side)
+                    }
+                    check_attacks = set()
+                    for target in movegen._BOARD_SQUARES:
+                        if target == source:
+                            continue
+                        check_board = board.copy()
+                        check_board.set_piece(
+                            target,
+                            Piece(
+                                PieceType.KING,
+                                movegen._opponent_side(side),
+                            ),
+                        )
+                        if movegen.is_in_check(
+                            check_board, movegen._opponent_side(side)
+                        ):
+                            check_attacks.add(target)
+                    with self.subTest(piece_type=piece_type, side=side, source=source):
+                        self.assertEqual(expected, actual)
+                        self.assertEqual(expected, square_attacks)
+                        self.assertEqual(expected, check_attacks)
+                        self.assertEqual(before, self._snapshot(board))
+
+    def test_direct_piece_attack_matches_candidates_with_blockers(self):
+        """全マス占有の遮蔽局面で候補一覧と利きを照合する。
+
+        同筋・斜線の途中駒、target自身の占有、桂馬の飛越しを誤って扱う回帰を検出する。
+        """
+        source = Square(5, 5)
+        for piece_type in PieceType:
+            for side in Side:
+                board = Board()
+                for square in movegen._BOARD_SQUARES:
+                    if square == source:
+                        continue
+                    occupant_side = (
+                        Side.SENTE
+                        if (square.file + square.rank) % 2 == 0
+                        else Side.GOTE
+                    )
+                    board.set_piece(square, Piece(PieceType.PAWN, occupant_side))
+                board.set_piece(source, Piece(piece_type, side))
+                before = self._snapshot(board)
+                for target in movegen._BOARD_SQUARES:
+                    with self.subTest(piece_type=piece_type, side=side, target=target):
+                        self.assertEqual(
+                            self._reference_piece_attack(board, source, target),
+                            movegen.is_piece_attacking_square(board, source, target),
+                        )
+                self.assertEqual(before, self._snapshot(board))
+
+    def test_direct_attacks_preserve_occupancy_pins_and_false_cases(self):
+        """味方target・ピン駒・source自身・空sourceを既存利きと揃える。
+
+        target除去時の遮蔽と幾何学的攻撃を混同する誤りや、ピンを合法性へ変える誤りを検出する。
+        """
+        source = Square(5, 9)
+        target = Square(5, 5)
+        for target_side in Side:
+            board = Board()
+            board.set_piece(source, Piece(PieceType.ROOK, Side.SENTE))
+            board.set_piece(target, Piece(PieceType.GOLD, target_side))
+            before = self._snapshot(board)
+            self.assertEqual(
+                self._reference_piece_attack(board, source, target),
+                movegen.is_piece_attacking_square(board, source, target),
+            )
+            self.assertEqual(
+                self._reference_square_attack(board, target, Side.SENTE),
+                movegen.is_square_attacked(board, target, Side.SENTE),
+            )
+            self.assertEqual(before, self._snapshot(board))
+
+        pinned_board = Board()
+        pinned_source = Square(5, 8)
+        pinned_target = Square(4, 7)
+        pinned_board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        pinned_board.set_piece(pinned_source, Piece(PieceType.SILVER, Side.SENTE))
+        pinned_board.set_piece(Square(5, 1), Piece(PieceType.ROOK, Side.GOTE))
+        self.assertTrue(
+            movegen.is_piece_attacking_square(
+                pinned_board, pinned_source, pinned_target
+            )
+        )
+        self.assertFalse(
+            movegen.is_piece_attacking_square(pinned_board, source, source)
+        )
+        self.assertFalse(
+            movegen.is_piece_attacking_square(pinned_board, Square(1, 1), target)
+        )
+
+    def test_attack_queries_do_not_materialize_candidate_lists(self):
+        """利きの真偽照会は合法候補一覧を生成しない。
+
+        `_move_candidates_for_piece`の辞書構築と候補list生成へ戻る性能回帰を検出する。
+        """
+        source = Square(5, 1)
+        target = Square(5, 9)
+        board = Board()
+        board.set_piece(source, Piece(PieceType.ROOK, Side.SENTE))
+        board.set_piece(target, Piece(PieceType.KING, Side.GOTE))
+
+        with patch.object(
+            movegen,
+            "_move_candidates_for_piece",
+            wraps=movegen._move_candidates_for_piece,
+        ) as candidate_generator:
+            self.assertTrue(movegen.is_piece_attacking_square(board, source, target))
+            self.assertTrue(movegen.is_square_attacked(board, target, Side.SENTE))
+            self.assertTrue(movegen.is_in_check(board, Side.GOTE))
+
+        self.assertEqual(candidate_generator.call_count, 0)
+
+
 class PromotedMinorMoveCandidateTests(unittest.TestCase):
     def test_promoted_minor_pieces_move_like_gold_for_sente_and_gote(self):
         """と金・成香・成桂・成銀は先後とも金と同じ6方向へ進める。
