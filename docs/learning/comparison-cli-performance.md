@@ -76,6 +76,6 @@
 ## レビュー・振り返り・次回への問い
 
 - 独立ビルダーチェック: GPT-6 Luna・maxが設計案と実装計画を読み `nothing important left`。重要な未回答事項なし。これは計画文書レビューであり、コードレビューではない。
-- コード独立レビュー（B2、GPT-6 Luna・max）: Criticalなし。Importantは`_find_king_square`内の`Piece(KING, side)`生成をloop外へ移す別最適化が混在し、B2のSquare再利用だけへ効果を帰属できない点。Minorは`is_in_check`の走査再生成testが早期returnで回帰を見逃しうる点。B2分離再測定とtest補強を実施した。結果はwall500.30秒、42/42棋譜一致・合法再生、関連216 test・Ruff成功。B2aの単独Piece生成ホイストはwall492.66秒でSquare-only比1.53%改善、5%未満基準で棄却しSquare-only状態へ復帰した。GPT-6 Luna・maxによるコード再レビューはCritical/Important/MinorなしでB2を採用可と判断。コード・test・関連216件・Ruff・wall・42局照合は再レビュー側では再実行せず、記録と差分で確認。
+- コード独立レビュー（B2、GPT-6 Luna・max）: Criticalなし。Importantは`_find_king_square`内の`Piece(KING, side)`生成をloop外へ移す別最適化が混在し、B2のSquare再利用だけへ効果を帰属できない点。Minorは`is_in_check`の走査再生成testが早期returnで回帰を見逃しうる点。B2分離再測定とtest補強を実施した。結果はwall500.30秒、42/42棋譜一致・合法再生、関連216 test・Ruff成功。B2aの単独Piece生成ホイストはwall492.66秒でSquare-only比1.53%改善、5%未満基準で棄却しSquare-only状態へ復帰した。GPT-6 Luna・maxによるコード再レビューはCritical/Important/MinorなしでB2を採用可と判断。コード・test・関連216件・Ruff・wall・42局照合は再レビュー側では再実行せず、記録と差分で確認。B2 Square-only実装と検証記録はcommit `8b510a99`で保存。
 - 学習者の振り返り: 未聴取。
 - 次回への問い: 繰り返す盤走査を減らす変更は、正しさを保ったまま42局wallと一手計時をどれだけ変えるか。残り時間の主要部分へ何倍の改善が必要か。

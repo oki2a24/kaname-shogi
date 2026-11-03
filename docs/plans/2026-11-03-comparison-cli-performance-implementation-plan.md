@@ -109,6 +109,6 @@
 
 - 計画: 本人が2026-11-03 12:16:27 JSTに明示承認。
 - Task 1: ステップ1〜5完了。14局profileとB0棋譜一致を確認。
-- Task 2: Square-only B2を関連216 test、変異Red、fresh42局wall500.30秒、42/42棋譜一致・合法再生で検証。B2a Pieceホイスト単独版はwall492.66秒（1.53%）で棄却し、Square-onlyへ戻した。独立再レビューはCritical/Important/Minorなしで採用可。Refactor要否確認済み。B2変更・記録をcommitした。B3票は候補リストを避ける直接target判定として記録済み。
+- Task 2: Square-only B2を関連216 test、変異Red、fresh42局wall500.30秒、42/42棋譜一致・合法再生で検証。B2a Pieceホイスト単独版はwall492.66秒（1.53%）で棄却し、Square-onlyへ戻した。独立再レビューはCritical/Important/Minorなしで採用可。Refactor要否確認済み。B2変更・記録をcommit `8b510a99`として保存した。B3票は候補リストを避ける直接target判定として記録済み。
 - Task 3〜4: 未着手。
 - 現在のbranch: `codex/comparison-cli-performance`、開始HEAD `aa70d1d`。
