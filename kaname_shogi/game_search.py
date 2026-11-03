@@ -18,6 +18,7 @@ _CONTROLLED_ONE_PLY_POLICIES = (
     *_LEGACY_POLICIES,
     movegen.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
     movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+    movegen.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
 )
 _ONE_PLY_POLICIES = (
     *_LEGACY_POLICIES,
@@ -52,14 +53,15 @@ def choose_move(
     """選択方式に応じて、現在局面からコンピュータの一手を返す。
 
     引数: positionは開始局面、movesは同局面の全合法手、policyは既存三方式・
-    駒得と飛車可動性・玉周辺安全度・未守備駒評価・比較専用V0/V1/価値V1の一手方式・四手探索方式のいずれか、
-    rngは一手方式の抽選に使う生成器。
+    駒得/各種評価の一手方式・四手探索方式を表す内部値、rngは一手方式の抽選に使う生成器。
     戻り値: 選択した合法手。合法手なしならNone。
     副作用: 一手方式はmovegen.choose_moveと同じ副作用を持つ。四手探索方式は
     開始側を視点とする探索を行い、rng・position・movesを変更しない。
-    前提・設計理由: movesはCLIが従来どおり生成した全合法手。新方式の探索は
-    独立した将棋操作セットから深さ1→4で開始するため、根候補の再生成を許容する。
-    深さごとの反復・前回最善手は共通探索へ委譲し、新二方式は抽選しない。
+    前提・設計理由: movesは呼出し側が生成した全合法手。比較専用V0も内部値として
+    受け取るため、通常CLI/USIでの公開可否は各入口の選択表で制限する。価値合計V1は
+    比較CLIと通常CLI/USIで内部policyを共有し、比較用識別文字列はUSIへ公開しない。
+    四手探索は独立した将棋操作セットから深さ1→4で開始し、深さごとの反復・前回最善手を
+    共通探索へ委譲する。四手探索では抽選しない。
     時間制御や応答期限は担当しない。
     """
     if policy in _ONE_PLY_POLICIES:
@@ -84,13 +86,14 @@ def search_move(
 ) -> movegen.SearchResult:
     """制御付き方式から既存のUSI向け完了・中断・抑制結果を返す。
 
-    引数: positionは開始局面、policyは既存三方式・制御付き一手10M+U/V1方式・四手探索方式。
+    引数: positionは開始局面、policyは既存三方式・制御付き一手10M+U枚数+V1・
+    10M+U価値合計+V1方式・四手探索方式。
     比較専用V0は通常の時計付き入口で受け付けない。
     通常で使うV1は既存の制御付き一手候補経路へ登録する。
     rngは既存方式用、controlは呼出し元が所有する一探索分の制御。
     戻り値: 既存のmovegen.SearchResult。新方式のSTOPPEDはINTERRUPTED、
     SUPPRESSEDは手なしのSUPPRESSED、手なし確定は手なしのCOMPLETEへ対応する。
-    副作用: 既存三方式と一手10M+U/V1はmovegen.search_moveと同じ。四手探索方式は同じ
+    副作用: 既存三方式と一手10M+U枚数+V1・10M+U価値合計+V1はmovegen.search_moveと同じ。四手探索方式は同じ
     controlで反復探索し、rngを使わない。送信・時計原点・予算生成を行わない。
     前提・設計理由: 対局層の送信責務を既存USI側に保つため、新しい探索結果を
     既存応答型へ変換する。抑制時に診断用の最終完了手を応答として復活させない。

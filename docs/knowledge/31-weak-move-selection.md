@@ -49,7 +49,9 @@
 
 `MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1` は既存の `10M+U+V` 評価を使う一手選択方針データ。各候補を着手後の複製局面で、開始手番側の視点から採点し、最高点の手を選ぶ。重みは `M=10`、`U=1`、`V=1` に固定し、一手詰みを通常点より優先する。同点は注入乱数器で選ぶ。停止・合法な予備手・局面保護は制御付き一手選択の共通契約に従う。
 
-通常CLIは選択肢7、USIは `Difficulty` の `MaterialSupportedPieceThreat` から選べる。通常CLIのCVCは先手・後手に別の方針を指定し、対局前に双方の表示を確認できる。USI未設定時とCLIの空入力は従来どおりRandom。`MATERIAL_PIECE_THREAT_V0`（`10M+U+0V`）は比較CLI専用のままである。比較の結果は事前固定6局面・一手選択・指定条件下で改善を支持した範囲に限られ、一般局面の棋力向上は示さない。
+通常CLIは選択肢7、USIは `Difficulty` の `MaterialUndefendedPieceCountPlusV` から選べる（旧設定名 `MaterialSupportedPieceThreat` も受信別名として受け付ける）。通常CLIのCVCは先手・後手に別の方針を指定し、対局前に双方の表示を確認できる。USI未設定時とCLIの空入力は従来どおりRandom。`MATERIAL_PIECE_THREAT_V0`（`10M+U+0V`）は比較CLI専用のままである。比較の結果は事前固定6局面・一手選択・指定条件下で改善を支持した範囲に限られ、一般局面の棋力向上は示さない。
+
+`MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1` はU価値合計+Vを使う固定一手方針データ。重みは `M=10`、U価値合計=1、`V=1`。U枚数は加算せず、U枚数版と同様に一手詰み優先を行う。通常CLI候補8に追加され、開始前表示に `10M+U価値合計+V` と出る。USIでは `MaterialUndefendedPieceValuePlusV` を広告Difficulty値として使う。比較CLIの識別子 `material-piece-threat-value-v1` 自体は比較CLIに限るが、内部評価policyと固定評価は再利用する。これは選択名の違いを表すもので強さの順位ではない。
 
 実装時の探索経路、先後を入れ替えた通常CLI CVCの2局、検出範囲と未検証事項は[通常CLI・USI接続の学習記録](../learning/supported-piece-lower-value-threat.md)と[承認済み実装計画](../plans/2026-11-01-v-normal-cli-usi-implementation-plan.md)を参照する。ShogiHome実機でのV選択・対局は未確認。
 
@@ -63,9 +65,9 @@
 
 ## 利用面
 
-- CLIは対局形式に応じてコンピュータ側の方針を尋ねる。CVCは先手、後手の順に別々に選択する。空入力はそれぞれランダム。候補はランダム、一手駒得、二手先読み（駒得）、全幅読み（最大4手）、αβ枝刈り（最大4手）、一手駒得＋支えのない狙われた駒、一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）。選択は一局中固定する。
-- USIは `Difficulty` comboを通知し、`Random` / `Material` / `TwoPlyMaterial` / `FullWidth4` / `AlphaBeta4` / `MaterialUndefendedPiece` / `MaterialSupportedPieceThreat` を受け付ける。未設定時はRandom。設定はプロセス中に保持し、局の最初のgoから `usinewgame` まで局内固定する。新値固有の局中固定・次局継承、未知値保持、応答範囲は[USIエンジン応答](usi-engine-response.md)と[今回の学習記録](../learning/undefended-piece-coordination-evaluation.md)、[V接続記録](../learning/supported-piece-lower-value-threat.md)を参照する。先行する三択やUSI各境界の実施記録はそれぞれのリンク先の歴史的検証範囲を示す。
-- ShogiHome画面でのこの設定や実対局は、この実装テーマでは確認していない。
+- CLIは対局形式に応じてコンピュータ側の方針を尋ねる。CVCは先手、後手の順に別々に選択する。空入力はそれぞれランダム。方針はランダム・一手評価・探索手数に分類して表示し、候補6 `10M+U枚数`、候補7 `10M+U枚数+V`、候補8 `10M+U価値合計+V` を見分けられるようにする。選択は一局中固定する。
+- USIは `Difficulty` comboを通知し、`Random` / `Material` / `TwoPlyMaterial` / `FullWidth4` / `AlphaBeta4` / `MaterialUndefendedPieceCount` / `MaterialUndefendedPieceCountPlusV` / `MaterialUndefendedPieceValuePlusV` を広告する。旧設定名 `MaterialUndefendedPiece` と `MaterialSupportedPieceThreat` は受信別名として受け付ける。未設定時はRandom。設定はプロセス中に保持し、局の最初のgoから `usinewgame` まで局内固定する。新候補の契約・検証範囲とShogiHomeの現行確認は[今回の学習記録](../learning/undefended-piece-coordination-evaluation.md)と[実装計画](../plans/2026-11-03-undefended-piece-value-normal-cli-usi-implementation-plan.md)を参照する。先行方式の歴史的な接続範囲はそれぞれの記録に残す。
+- ShogiHome 1.28.2のDifficultyには自由入力欄が表示される。新しい明示名の選択表示・応答・対局は現在の条件を一局ずつ確認し、実施記録に追記する。以前のU枚数方式の一局を新名称や別方式の実機確認として流用しない。
 
 ## 対象外
 

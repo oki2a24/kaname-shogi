@@ -183,17 +183,30 @@ class PieceThreatValueComparisonPolicyTests(unittest.TestCase):
                     self.assertEqual(selected, mate_move)
                     evaluator.assert_called_once()
 
-    def test_value_policy_is_not_exposed_to_controlled_search(self):
-        """比較用価値方式を通常の時計付き探索から拒否する。
+    def test_value_policy_uses_normal_route_without_exposing_comparison_slug(self):
+        """内部policyを通常探索で使い、比較用識別文字列はDifficultyへ出さない。
 
-        比較用policyが通常CLI・USIの制御付き方式一覧へ誤登録されるのを検出する。
+        同じ内部評価の再利用と、比較CLI識別子の誤広告・誤受付を区別して検出する。
         """
+        from kaname_shogi import usi_engine
+
         policy = self._policy("MATERIAL_PIECE_THREAT_VALUE_V1")
         start = parse_sfen("8k/9/9/9/9/9/9/9/K8 b - 1").position
-        with self.assertRaisesRegex(ValueError, "未知の一手選択方針"):
-            game_search.search_move(
-                start, policy, random.Random(20261102), SearchControl(None, 0)
-            )
+        result = game_search.search_move(
+            start, policy, random.Random(20261102), SearchControl(None, 0)
+        )
+
+        self.assertEqual(
+            result.completion, game_search.movegen.SearchCompletion.COMPLETE
+        )
+        self.assertIn(result.move, legal_moves(start))
+        self.assertNotIn(
+            "material-piece-threat-value-v1", usi_engine._USI_DIFFICULTY_VALUES
+        )
+        self.assertIs(
+            usi_engine._USI_DIFFICULTY_VALUES["materialundefendedpiecevalueplusv"],
+            policy,
+        )
 
 
 if __name__ == "__main__":

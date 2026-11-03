@@ -43,13 +43,19 @@ FORMAT_ERROR = "入力形式が正しくありません。"
 
 _MOVE_SELECTION_POLICY_NAMES = {
     MoveSelectionPolicy.RANDOM: "ランダム",
-    MoveSelectionPolicy.MATERIAL: "一手駒得",
-    MoveSelectionPolicy.TWO_PLY_MATERIAL: "二手先読み（駒得）",
-    MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH: "全幅読み（最大4手）",
-    MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA: "αβ枝刈り（最大4手）",
-    MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE: "一手駒得＋支えのない狙われた駒",
+    MoveSelectionPolicy.MATERIAL: "一手評価：駒得のみ（10M）",
+    MoveSelectionPolicy.TWO_PLY_MATERIAL: "探索手数：二手先読み（駒得）",
+    MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH: "探索手数：全幅読み（最大4手）",
+    MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA: "探索手数：αβ枝刈り（最大4手）",
+    MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE: (
+        "一手評価：駒得＋狙われ駒の枚数（10M+U枚数）"
+    ),
     MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1: (
-        "一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）"
+        "一手評価：駒得＋U枚数＋支えあり駒への低価値駒の利き（10M+U枚数+V）"
+    ),
+    MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1: (
+        "一手評価：駒得＋狙われ駒の価値合計＋支えあり駒への低価値駒の利き"
+        "（10M+U価値合計+V）"
     ),
 }
 
@@ -146,11 +152,10 @@ def choose_move_selection_policy(
         side: 先後別選択なら質問対象の側。省略時は一般向けの質問にする。
 
     戻り値:
-        1なら既存一様ランダムのRANDOM、2なら一手後の駒得比較のMATERIAL、
-        3なら二手駒得のTWO_PLY_MATERIAL、4なら全幅四手のFOUR_PLY_FULL_WIDTH、
-        5ならαβ四手のFOUR_PLY_ALPHA_BETA、6なら一手駒得と支えのない狙われた駒の
-        MATERIAL_UNDEFENDED_PIECE、7なら一手駒得と支えがある駒への低価値駒の利きの
-        MATERIAL_PIECE_THREAT_V1。
+        1ならRANDOM、2なら一手評価10MのMATERIAL、3ならTWO_PLY_MATERIAL、
+        4なら全幅四手、5ならαβ四手、6ならU枚数差を使う
+        MATERIAL_UNDEFENDED_PIECE、7ならU枚数差+VのMATERIAL_PIECE_THREAT_V1、
+        8ならU価値合計差+VのMATERIAL_PIECE_THREAT_VALUE_V1。
         空入力はRANDOMを返す。不正入力では返さず再入力する。
 
     副作用:
@@ -169,18 +174,19 @@ def choose_move_selection_policy(
         "5": MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
         "6": MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
         "7": MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+        "8": MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
     }
     side_prefix = (
         "先手の" if side is Side.SENTE else "後手の" if side is Side.GOTE else ""
     )
     while True:
+        choices = "、".join(
+            f"{number}: {_MOVE_SELECTION_POLICY_NAMES[policy]}"
+            for number, policy in policies.items()
+        )
         output_fn(
-            side_prefix + "一手選択方針を選んでください（1: ランダム、2: 一手駒得、"
-            "3: 二手先読み（駒得）、4: 全幅読み（最大4手）、"
-            "5: αβ枝刈り（最大4手）、"
-            "6: 一手駒得＋支えのない狙われた駒、"
-            "7: 一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）、"
-            "空入力: ランダム）:"
+            side_prefix
+            + f"一手選択方針を選んでください（{choices}、空入力: ランダム）:"
         )
         choice = input_fn().strip()
         if choice == "":
@@ -188,7 +194,7 @@ def choose_move_selection_policy(
         try:
             return policies[choice]
         except KeyError:
-            output_fn("エラー：一手選択方針を1〜7で選んでください。")
+            output_fn("エラー：一手選択方針を1〜8で選んでください。")
 
 
 def _format_move_selection_policy_name(policy: MoveSelectionPolicy) -> str:

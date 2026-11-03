@@ -200,7 +200,7 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         return choose(**kwargs)
 
     def test_choose_move_selection_policy_maps_choices(self):
-        """番号1〜7を既存方式とV1へ対応付ける。
+        """番号1〜8を分類ごとの既存方式と価値合計V1へ対応付ける。
 
         表示値と内部方針を取り違える誤りや、利用者向けの合意済み名称を欠かす
         誤りを検出する。
@@ -213,6 +213,7 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
             ("5", MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA),
             ("6", MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE),
             ("7", MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1),
+            ("8", MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1),
         )
         for value, expected in cases:
             outputs = []
@@ -226,17 +227,20 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
                 self.assertEqual(
                     outputs,
                     [
-                        "一手選択方針を選んでください（1: ランダム、2: 一手駒得、"
-                        "3: 二手先読み（駒得）、4: 全幅読み（最大4手）、"
-                        "5: αβ枝刈り（最大4手）、"
-                        "6: 一手駒得＋支えのない狙われた駒、"
-                        "7: 一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）、"
+                        "一手選択方針を選んでください（1: ランダム、"
+                        "2: 一手評価：駒得のみ（10M）、"
+                        "3: 探索手数：二手先読み（駒得）、"
+                        "4: 探索手数：全幅読み（最大4手）、"
+                        "5: 探索手数：αβ枝刈り（最大4手）、"
+                        "6: 一手評価：駒得＋狙われ駒の枚数（10M+U枚数）、"
+                        "7: 一手評価：駒得＋U枚数＋支えあり駒への低価値駒の利き（10M+U枚数+V）、"
+                        "8: 一手評価：駒得＋狙われ駒の価値合計＋支えあり駒への低価値駒の利き（10M+U価値合計+V）、"
                         "空入力: ランダム）:"
                     ],
                 )
 
     def test_choose_move_selection_policy_prompts_for_side(self):
-        """先後別の選択メニューは対象側と6・7番の候補名を案内する。
+        """先後別の選択メニューは対象側とU枚数・U価値合計の違いを案内する。
 
         CVCの同じ選択表を先後別に使うとき、無標識の質問や別の側の選択と
         誤認される表示を検出する。
@@ -249,12 +253,17 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
             (
                 "6",
                 MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
-                "6: 一手駒得＋支えのない狙われた駒",
+                "6: 一手評価：駒得＋狙われ駒の枚数（10M+U枚数）",
             ),
             (
                 "7",
                 MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
-                "7: 一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）",
+                "7: 一手評価：駒得＋U枚数＋支えあり駒への低価値駒の利き（10M+U枚数+V）",
+            ),
+            (
+                "8",
+                MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
+                "8: 一手評価：駒得＋狙われ駒の価値合計＋支えあり駒への低価値駒の利き（10M+U価値合計+V）",
             ),
         )
         for side, side_name in ((Side.SENTE, "先手"), (Side.GOTE, "後手")):
@@ -309,14 +318,14 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         """
         outputs = []
         policy = self._choose_policy(
-            input_fn=ScriptedInput(["8", "2"]), output_fn=outputs.append
+            input_fn=ScriptedInput(["9", "2"]), output_fn=outputs.append
         )
 
         self.assertEqual(policy, MoveSelectionPolicy.MATERIAL)
         self.assertEqual(
             sum("一手選択方針を選んでください" in line for line in outputs), 2
         )
-        self.assertIn("エラー：一手選択方針を1〜7で選んでください。", outputs)
+        self.assertIn("エラー：一手選択方針を1〜8で選んでください。", outputs)
 
     def test_v0_stays_outside_normal_cli_choices(self):
         """V0を通常CLIへ公開せず、選択肢外の番号を拒否する。
@@ -325,10 +334,10 @@ class MoveSelectionPolicyMenuTests(unittest.TestCase):
         """
         outputs = []
         policy = self._choose_policy(
-            input_fn=ScriptedInput(["8", "1"]), output_fn=outputs.append
+            input_fn=ScriptedInput(["9", "1"]), output_fn=outputs.append
         )
         self.assertIs(policy, MoveSelectionPolicy.RANDOM)
-        self.assertIn("エラー：一手選択方針を1〜7で選んでください。", outputs)
+        self.assertIn("エラー：一手選択方針を1〜8で選んでください。", outputs)
         self.assertNotIn("10M+U+0V", "".join(outputs))
 
 

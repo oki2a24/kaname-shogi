@@ -1,6 +1,6 @@
 # USIエンジンの一手応答
 
-更新日：2026-10-31
+更新日：2026-11-03
 
 ## 境界
 
@@ -18,10 +18,10 @@
 `usi` には次のcombo行を `usiok` より前に出す。
 
 ```text
-option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece var MaterialSupportedPieceThreat
+option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPieceCount var MaterialUndefendedPieceCountPlusV var MaterialUndefendedPieceValuePlusV
 ```
 
-`setoption name Difficulty value Random` は一様ランダム、`value Material` は一手後の駒得比較、`value TwoPlyMaterial` は二手先読み（駒得）の方針を選択境界へ渡す。`value FullWidth4` は枝を省略しない最大4手の反復深化、`value AlphaBeta4` はαβ枝刈り付き最大4手の反復深化を選ぶ。`value MaterialUndefendedPiece` は既存の `10M+U`、`value MaterialSupportedPieceThreat` は `10M+U+V` 評価を使う制御付き一手選択を選ぶ。どちらも一手詰み優先と既存の停止制御を使い、二手・四手探索には切り替えない。四手の二方式は各 `go` で深さ1から4へ進む。設定がない場合は `Random`。USI仕様に従い、受信時のoption名と値は大文字小文字を区別せずに比較する。[USI仕様 §5.3 `setoption`](https://hgm.nubati.net/usi.html)はnameとvalueをcase-insensitiveとしている。未知の設定名は読み飛ばし、既知の `Difficulty` に不正値が届いた場合は最後の有効値を保つ。
+`setoption name Difficulty value Random` は一様ランダム、`value Material` は一手後の駒得比較、`value TwoPlyMaterial` は二手先読み（駒得）の方針を選択境界へ渡す。`value FullWidth4` は枝を省略しない最大4手の反復深化、`value AlphaBeta4` はαβ枝刈り付き最大4手の反復深化を選ぶ。`value MaterialUndefendedPieceCount` は `10M+U枚数`、`value MaterialUndefendedPieceCountPlusV` は `10M+U枚数+V`、`value MaterialUndefendedPieceValuePlusV` は `10M+U価値合計+V` の制御付き一手選択を選ぶ。いずれも一手詰み優先と既存の停止制御を使い、二手・四手探索には切り替えない。旧設定値 `MaterialUndefendedPiece` と `MaterialSupportedPieceThreat` はそれぞれU枚数とU枚数+Vの受信別名として受け付け、Difficulty comboには重複表示しない。比較CLIの識別子 `material-piece-threat-value-v1` はDifficulty値ではない。設定がない場合は `Random`。USI仕様に従い、受信時のoption名と値は大文字小文字を区別せずに比較する。[USI仕様 §5.3 `setoption`](https://hgm.nubati.net/usi.html)はnameとvalueをcase-insensitiveとしている。未知の設定名は読み飛ばし、既知の `Difficulty` に不正値が届いた場合は最後の有効値を保つ。
 
 設定値は `run_usi_engine` 内で `_UsiEngineState` と別に保持する。局の最初の `go` で有効値を局内方針として固定するため、後から届いた `setoption` は現在局の後続 `go` には影響しない。`usinewgame` は局面を消し、局内固定だけを解除して、設定値を次局へ残す。乱数器も設定・局面状態と別にし、一回のエンジン実行中で共有する。
 
@@ -43,6 +43,8 @@ option name Difficulty type combo default Random var Random var Material var Two
 第59〜62回にShogiHome 1.28.1で平手対局・観察を行った記録は[ShogiHome対局の知識メモ](usi-shogihome-gameplay.md)を参照する。第65回はDifficulty選択画面とMaterial設定のUSI送信を確認し、第66回は同じ7手局面でRandomの☖９四歩、Materialの☖８八角成を実機観察し、両方の設定と着手をUSIログで確認した。これは一局面・各設定一局の実例であり、他局面に対する一般性は示さない。詳細は[第66回学習記録](../learning/66-shogihome-material-move-effect.md)を参照する。
 
 第67回で追加した `position sfen` のコード対応は、第69回にShogiHome 1.28.1からの実通信でも確認した。4欄SFENを画面へ貼り付けた後、時計あり（持ち時間10分・秒読み30秒）の一局で `position sfen ...`、時間付き `go`、`bestmove 9a9b` がログに記録され、盤面にも後手の合法手が反映された。画面貼り付けだけでは通信確認にならない。ShogiHomeは持ち時間と秒読みが両方0の設定を「持ち時間と秒読みが両方とも0です」と拒否したため、時計なし対局はこの版・画面では開始できなかった。実測の範囲と後片付けの制約は[第69回学習記録](../learning/69-shogihome-sfen-engine.md)を参照する。
+
+2026-11-03、ShogiHome 1.28.2で `MaterialUndefendedPieceValuePlusV` を保存選択した一局を操作確認した。SID 8の許可されたUSI行ではDifficulty `setoption`、平手初手後の `position startpos moves 7g7f`、時間付き `go` と `bestmove 7c7d` を確認し、画面には応答手が反映された。棋譜上は42手の後、人間先手側の投了で終了した。同日、`MaterialUndefendedPieceCountPlusV` もDifficulty選択・保存後に一局を開始し、盤面上で後手の15応答を確認したが、先手の盤上入力が継続できず投了した。この二局目のUSIログは閲覧しておらず、通信上のDifficulty設定と応答の照合はしていない。終了後に監視欄からSID 12が消え、USI/CSA稼働数0を確認した。これらは一つの登録環境・局面・時計における部分的な接続例であり、方式の強さや全局面互換性を示さない。盤上操作の継続不能と最初の局でのログ照合範囲の逸脱を含む詳細は[U接続学習記録](../learning/undefended-piece-coordination-evaluation.md)にある。
 
 ## 時計受付と設定の寿命
 

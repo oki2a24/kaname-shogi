@@ -26,6 +26,7 @@ CONTROLLED_ONE_PLY_POLICIES = (
     *LEGACY_POLICIES,
     mg.MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
     mg.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+    mg.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
 )
 
 
@@ -485,7 +486,153 @@ def supported_piece_threat_case(side):
     return position, escape, preserve
 
 
+def value_sum_choice_case(side):
+    """高価値駒か歩のどちらか一方だけを露出する先後局面を返す。"""
+    board = Board()
+    for square, piece_type, owner in (
+        (Square(9, 9), PieceType.KING, Side.SENTE),
+        (Square(9, 1), PieceType.KING, Side.GOTE),
+        (Square(2, 1), PieceType.ROOK, Side.GOTE),
+        (Square(7, 1), PieceType.ROOK, Side.GOTE),
+        (Square(2, 5), PieceType.GOLD, Side.SENTE),
+        (Square(7, 5), PieceType.PAWN, Side.SENTE),
+        (Square(2, 4), PieceType.GOLD, Side.SENTE),
+        (Square(7, 4), PieceType.GOLD, Side.SENTE),
+    ):
+        board.set_piece(square, Piece(piece_type, owner))
+    position = Position(board, Side.SENTE)
+    expose_gold = BoardMove(Square(2, 4), Square(3, 4), False)
+    expose_pawn = BoardMove(Square(7, 4), Square(8, 4), False)
+    if side is Side.SENTE:
+        return position, expose_gold, expose_pawn
+
+    rotated = Board()
+    for file in range(1, 10):
+        for rank in range(1, 10):
+            piece = board.piece_at(Square(file, rank))
+            if piece is not None:
+                owner = Side.GOTE if piece.side is Side.SENTE else Side.SENTE
+                rotated.set_piece(
+                    Square(10 - file, 10 - rank), Piece(piece.piece_type, owner)
+                )
+
+    def rotate_move(move):
+        return BoardMove(
+            Square(10 - move.source.file, 10 - move.source.rank),
+            Square(10 - move.destination.file, 10 - move.destination.rank),
+            move.promote,
+        )
+
+    return (
+        Position(rotated, Side.GOTE),
+        rotate_move(expose_gold),
+        rotate_move(expose_pawn),
+    )
+
+
 class ControlledEvaluationTests(unittest.TestCase):
+    def test_value_v1_uses_post_move_position_and_turn_perspective(self):
+        """価値合計V1は着手後局面を開始側視点と固定重みで一度採点する。
+
+        未対応方針、着手前局面、手番反転、評価器・重みの取り違えを検出する。
+        """
+        from kaname_shogi.material_piece_threat_value import PieceThreatValueWeights
+
+        policy = mg.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1
+        for side in Side:
+            with self.subTest(side=side):
+                position = kings_and_pawns(side)
+                move = mg.legal_moves(position)[0]
+                before = snapshot(position)
+                expected_after = position.copy()
+                mg.apply_move(
+                    expected_after, move.source, move.destination, promote=move.promote
+                )
+
+                with patch(
+                    "kaname_shogi.material_piece_threat_value.evaluate_material_piece_threat_value",
+                    return_value=123,
+                ) as evaluate:
+                    try:
+                        result = mg._evaluate_candidate(
+                            position,
+                            move,
+                            policy,
+                            control=SearchControl(None, 0),
+                        )
+                    except ValueError as error:
+                        self.fail(
+                            f"制御付き候補評価が価値合計V1を拒否しました: {error}"
+                        )
+
+                self.assertEqual(result, mg.CandidateEvaluation(True, (0, 123)))
+                evaluate.assert_called_once()
+                self.assertEqual(
+                    snapshot(evaluate.call_args.args[0]), snapshot(expected_after)
+                )
+                self.assertIs(evaluate.call_args.args[1], side)
+                self.assertEqual(
+                    evaluate.call_args.kwargs["weights"],
+                    PieceThreatValueWeights(
+                        material=10, undefended_value=1, supported_threat=1
+                    ),
+                )
+                self.assertEqual(snapshot(position), before)
+
+    def test_value_v1_prioritizes_mate(self):
+        """価値合計V1は通常評価より先後とも一手詰みを優先する。
+
+        価値点を詰み点に混ぜたり、詰み確認を省いて通常採点する誤りを検出する。
+        """
+        policy = mg.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1
+        for side in Side:
+            with self.subTest(side=side):
+                position, move = mating(side)
+                self.assertIn(move, mg.legal_moves(position))
+                with patch(
+                    "kaname_shogi.material_piece_threat_value.evaluate_material_piece_threat_value",
+                    return_value=999,
+                ) as evaluate:
+                    try:
+                        result = mg._evaluate_candidate(
+                            position,
+                            move,
+                            policy,
+                            control=SearchControl(None, 0),
+                        )
+                    except ValueError as error:
+                        self.fail(
+                            f"制御付き候補評価が価値合計V1を拒否しました: {error}"
+                        )
+                self.assertEqual(result, mg.CandidateEvaluation(True, (1, 0)))
+                evaluate.assert_not_called()
+
+    def test_value_v1_discards_stopped_evaluation(self):
+        """価値合計V1は採点中に停止した候補を未完了として返す。
+
+        評価復帰後に停止状態を確認せず、途中の点を確定する誤りを検出する。
+        """
+        policy = mg.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1
+        position = kings_and_pawns(Side.SENTE)
+        move = mg.legal_moves(position)[0]
+        control = SearchControl(None, 0)
+
+        def stop_after_evaluation(*args, **kwargs):
+            del args, kwargs
+            control.request_stop()
+            return 999
+
+        with patch(
+            "kaname_shogi.material_piece_threat_value.evaluate_material_piece_threat_value",
+            side_effect=stop_after_evaluation,
+        ):
+            try:
+                result = mg._evaluate_candidate(position, move, policy, control=control)
+            except ValueError as error:
+                self.fail(f"制御付き候補評価が価値合計V1を拒否しました: {error}")
+
+        self.assertEqual(result, mg.CandidateEvaluation(False, None))
+
     def test_supported_piece_threat_v1_uses_post_move_position_and_turn_perspective(
         self,
     ):
@@ -858,6 +1005,76 @@ class ControlledEvaluationTests(unittest.TestCase):
 
 
 class RootSearchTests(unittest.TestCase):
+    def test_value_v1_selects_value_sum_candidate_for_both_sides_and_orders(self):
+        """価値合計V1は枚数差が同じなら高価値駒を守る手を先後とも選ぶ。
+
+        U枚数評価への置換、視点固定、候補順依存を検出する。
+        """
+        from kaname_shogi.material_piece_threat import evaluate_material_piece_threat
+        from kaname_shogi.material_piece_threat_value import (
+            PieceThreatValueWeights,
+            evaluate_material_piece_threat_value,
+        )
+
+        policy = mg.MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1
+        weights = PieceThreatValueWeights(
+            material=10, undefended_value=1, supported_threat=1
+        )
+        for side in Side:
+            position, expose_gold, expose_pawn = value_sum_choice_case(side)
+            self.assertIn(expose_gold, mg.legal_moves(position))
+            self.assertIn(expose_pawn, mg.legal_moves(position))
+            post_gold = position.copy()
+            mg.apply_move(
+                post_gold,
+                expose_gold.source,
+                expose_gold.destination,
+                promote=expose_gold.promote,
+            )
+            post_pawn = position.copy()
+            mg.apply_move(
+                post_pawn,
+                expose_pawn.source,
+                expose_pawn.destination,
+                promote=expose_pawn.promote,
+            )
+            self.assertEqual(
+                evaluate_material_piece_threat(post_gold, side),
+                evaluate_material_piece_threat(post_pawn, side),
+            )
+            gold_score = evaluate_material_piece_threat_value(
+                post_gold, side, weights=weights
+            )
+            pawn_score = evaluate_material_piece_threat_value(
+                post_pawn, side, weights=weights
+            )
+            self.assertGreater(pawn_score, gold_score)
+
+            for reverse in (False, True):
+                with self.subTest(side=side, reverse=reverse):
+                    ordered = (
+                        (expose_pawn, expose_gold)
+                        if reverse
+                        else (expose_gold, expose_pawn)
+                    )
+                    rng = RecordingChoice()
+                    with patch.object(
+                        mg,
+                        "_legal_moves_controlled",
+                        return_value=mg.LegalMovesResult(True, ordered),
+                    ):
+                        try:
+                            result = mg.search_move(
+                                position, policy, rng, SearchControl(None, 0)
+                            )
+                        except ValueError as error:
+                            self.fail(
+                                f"制御付き根探索が価値合計V1を拒否しました: {error}"
+                            )
+                    self.assertEqual(result.completion, mg.SearchCompletion.COMPLETE)
+                    self.assertEqual(result.move, expose_pawn)
+                    self.assertEqual(len(rng.calls), 1)
+
     def test_v1_selects_v_move_for_both_sides_and_orders(self):
         """V1は先後と候補順に依存せず、Vの逃げ手を合法な最善手にする。
 

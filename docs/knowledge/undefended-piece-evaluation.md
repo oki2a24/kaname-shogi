@@ -4,6 +4,8 @@
 
 盤上の非玉駒を、相手の利きが1つ以上あり、味方の支えが0なら一枚として数える。対象が占有するマスへの利きも含める。複数の攻撃元でも対象一枚は1であり、支えが一つでもあれば対象にしない。
 
+この文書の `U` は対象の**枚数差**である。同じ対象の参考価値を合計する方式は[U価値合計](undefended-piece-value.md)に記録し、枚数差へ重ねて加えない。
+
 `attacked_undefended_piece_count(position, side)` は指定側の対象枚数を返す読み取り操作である。玉は枚数の対象外だが、攻撃元と支え役に含める。成駒は成った後の動きで判定し、遮蔽も現在の盤面のとおりに扱う。ピンされた駒も既存利き操作の定義により利きへ含める。
 
 `attacked_undefended_piece_balance(position, perspective)` は指定視点の相手側枚数から自分側枚数を引いた符号付き整数 `U` を返す。
@@ -38,11 +40,23 @@ undefendedを0にしてもUを計算する。依存先の例外を伝播し、�
 | `material-undefended-piece-material-only` | `material=10`, `undefended=0` | `10M` の対照。Uも計算するが評価値へ加えない |
 | `material-undefended-piece` | `material=10`, `undefended=1` | `10M+U` の候補 |
 
-上記の対照方式は比較CLI専用である。候補 `10M+U` は後続テーマで通常CLIとUSIにも接続され、USIでは `MaterialUndefendedPiece` として選べる。通常CLI・USIの接続と操作確認は[学習記録](../learning/undefended-piece-coordination-evaluation.md)を参照する。
+上記の対照方式は比較CLI専用である。候補 `10M+U枚数` は通常CLI候補6・USI `MaterialUndefendedPieceCount` で選べる。以前の設定値 `MaterialUndefendedPiece` はUSIの受信別名として残る。
+
+## 通常CLI・USIで選ぶU方式
+
+Uを含む一手評価候補では、Uの集計方法が選択名と式に現れる。
+
+| 評価式 | 通常CLI | USI `Difficulty` | 内容 |
+| --- | --- | --- | --- |
+| `10M+U枚数` | 候補6 | `MaterialUndefendedPieceCount` | 支えのない狙われ駒を一枚ずつ数えた差 |
+| `10M+U枚数+V` | 候補7 | `MaterialUndefendedPieceCountPlusV` | U枚数差とVの枚数差 |
+| `10M+U価値合計+V` | 候補8 | `MaterialUndefendedPieceValuePlusV` | 支えのない狙われ駒の参考価値合計差とVの枚数差。U枚数は加算しない |
+
+USIは旧設定との互換のため `MaterialUndefendedPiece` を候補6の受信別名、`MaterialSupportedPieceThreat` を候補7の受信別名として受け付ける。広告するDifficulty値は上表の明示名で、旧名を選択肢として重複表示しない。比較CLIの識別子 `material-piece-threat-value-v1` は比較CLI専用のままであるが、同じ固定評価を通常CLI候補8・USIの明示Difficulty名から選択できる。識別子とShogiHomeの選択名を混同しない。
 
 ## 境界と未検証事項
 
-- 二手・四手探索への適用、通常CLIのSFEN入出力、飛車可動性バージョン2、玉周辺安全度との合成は未接続。ShogiHomeでのU候補実践は保留中である。
+- 二手・四手探索への適用、通常CLIのSFEN入出力、飛車可動性バージョン2、玉周辺安全度との合成は未接続。ShogiHomeでは2026-11-03にU枚数（旧Difficulty名）、U価値合計+V、U枚数+Vを各一局の一部として操作確認した。後二局は盤上入力を最後まで続けられず先手投了で終了した。U枚数+Vでは新Difficulty名の選択・保存、画面上の15回のエンジン後手応答、終了後のセッション解放を観察したが、USIログ照合は行っていない。どの方式も優劣や棋力向上は判定していない。条件・入力上の制限・最初の局のログ範囲逸脱は[学習記録](../learning/undefended-piece-coordination-evaluation.md)を参照する。
 - 固定局面で対象枚数・符号・成駒・玉・ピン・遮蔽・手番/持ち駒の無視、重み境界、例外伝播、選択器への注入と一手詰み優先を確認した。比較CLIの接続・保存・分析は小規模pipelineで確認した。
 - 2026-10-31、比較CLI限定のpilot（50組）と独立confirmation（2035組）を実施した。confirmationは指定5局面で候補 `10M+U` の平均得点0.908845、95%区間 `[0.878739, 0.938951]` となり、今回の固定条件では改善を支持する。これは一般的な棋力向上を示さない。条件・局面別結果・再開経緯は[学習記録](../learning/undefended-piece-coordination-evaluation.md)を参照する。
 

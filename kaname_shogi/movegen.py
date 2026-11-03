@@ -1698,6 +1698,7 @@ def _evaluate_candidate(
         MoveSelectionPolicy.TWO_PLY_MATERIAL,
         MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
         MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+        MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
     ):
         raise ValueError("候補評価に対応していない方針です")
     if control is None:
@@ -1711,6 +1712,7 @@ def _evaluate_candidate(
     if policy in (
         MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
         MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+        MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
     ):
         mate = (
             CheckmateResult(True, is_checkmate(after))
@@ -1729,7 +1731,7 @@ def _evaluate_candidate(
             normal_score = evaluate_material_undefended_piece(
                 after, position.side_to_move
             )
-        else:
+        elif policy == MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1:
             from .material_piece_threat import (
                 PieceThreatWeights,
                 evaluate_material_piece_threat,
@@ -1740,6 +1742,19 @@ def _evaluate_candidate(
                 position.side_to_move,
                 weights=PieceThreatWeights(
                     material=10, undefended=1, supported_threat=1
+                ),
+            )
+        else:
+            from .material_piece_threat_value import (
+                PieceThreatValueWeights,
+                evaluate_material_piece_threat_value,
+            )
+
+            normal_score = evaluate_material_piece_threat_value(
+                after,
+                position.side_to_move,
+                weights=PieceThreatValueWeights(
+                    material=10, undefended_value=1, supported_threat=1
                 ),
             )
         score = (0, normal_score)
@@ -1785,7 +1800,8 @@ def search_move(
 
     引数:
         position: 探索開始局面。盤面・両持駒・手番を変更しない。
-        policy: RANDOM/一手駒得/二手駒得/10M+U/V1の方針データ。V0は比較専用。
+        policy: RANDOM/一手駒得/二手駒得/10M+U枚数+V1/10M+U価値合計+V1の方針データ。
+            V0は比較専用。
         rng: 全完了ランダムまたは完了最高同点の一回抽選に使う生成器。
         control: 読取り原点と予算を持つ一探索専用制御。
     戻り値:
@@ -1805,6 +1821,7 @@ def search_move(
         MoveSelectionPolicy.TWO_PLY_MATERIAL,
         MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
         MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+        MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
     ):
         raise ValueError("未知の一手選択方針です")
     generated = _legal_moves_controlled(

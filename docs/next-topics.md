@@ -10,7 +10,7 @@
 
 従来方式は `10 × M（駒得）+ U（支えのない被攻撃駒の枚数差）+ V（支えあり低価値駒脅威の枚数差）`、今回方式は `10 × M（駒得）+ 1 × 支えのない被攻撃駒の価値合計差 + V（支えあり低価値駒脅威の枚数差）`。既存比較条件は自動流用せず、比較設計で同条件・独立期待値・測定対象を決める。
 
-後続には、次の非駒得評価項目を選び学ぶ主線が残り、具体項目は未選定である。成りに近づく進行度や、根拠を定めた重要マスへの利きなどが候補で、角の可動性は本人希望で後回し。ShogiHomeでのU候補実践は補助の帰還目標として一局を実施し、最後の理解確認と回答記録まで完了した。本人は次テーマをまだ選んでいない。文書整理、U/V接続、ShogiHome実践は完了済みの補助・派生テーマ。[現在地](resume.md)、[主線ロードマップ](roadmap-non-material-position-evaluation.md)、[U実践の回答・観察記録](learning/undefended-piece-coordination-evaluation.md)、[価値比較の記録](learning/undefended-piece-value.md)を参照する。
+後続には、次の非駒得評価項目を選び学ぶ主線が残り、具体項目は未選定である。成りに近づく進行度や、根拠を定めた重要マスへの利きなどが候補で、角の可動性は本人希望で後回し。U価値合計+Vを通常CLI・USIへ接続する補助テーマは実装・検証・独立レビュー・CVC2局まで完了した。ShogiHomeでは `MaterialUndefendedPieceValuePlusV` と `MaterialUndefendedPieceCountPlusV` を各一局開始し、設定の選択・保存後に複数回の応答を観察したが、両方とも盤上操作を継続できず先手投了で終わった。CountPlusVは15回の後手応答を画面で確認したがUSIログ照合はしていない。実装・記録は同じbranchのtopic commitとして保存済み。main統合・push前。過去の実機記録がある他方式は重ねて実施していない。新名のU枚数単独（MaterialUndefendedPieceCount）は直接選択していないが、同じ方式は旧名で実践済み。主線の具体項目は未選定のまま保持する。詳細は[現在地](resume.md)、[主線ロードマップ](roadmap-non-material-position-evaluation.md)、[U実践記録](learning/undefended-piece-coordination-evaluation.md)、[承認済み設計](plans/2026-11-03-undefended-piece-value-normal-cli-usi-design.md)、[実装計画](plans/2026-11-03-undefended-piece-value-normal-cli-usi-implementation-plan.md)を参照する。
 
 ## 主線に戻ることを選んだ時点の記録（履歴・2026-11-01）
 

@@ -128,9 +128,9 @@ class CliEntrypointTests(unittest.TestCase):
                     )
 
     def test_main_prompts_sente_then_gote_for_computer_vs_computer(self):
-        """CVCは先手を選んだ後に後手を選び、割当名を開始前に表示する。
+        """CVCは先後別のU枚数・価値合計候補を受け開始前に表示する。
 
-        V1と10M+Uを先後逆順でも正しく割り当て、表示とrun_gameの方針を食い違わせる誤りを検出する。
+        U枚数・U価値合計の先後割当と表示を取り違える誤りを検出する。
         """
         config = TimeManagementConfig(20, Fraction(2), Fraction(3, 4), 2000)
         cases = (
@@ -139,14 +139,28 @@ class CliEntrypointTests(unittest.TestCase):
                     Side.SENTE: MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
                     Side.GOTE: MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
                 },
-                "選択方針：先手=一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）、後手=一手駒得＋支えのない狙われた駒",
+                "選択方針：先手=一手評価：駒得＋U枚数＋支えあり駒への低価値駒の利き（10M+U枚数+V）、後手=一手評価：駒得＋狙われ駒の枚数（10M+U枚数）",
             ),
             (
                 {
                     Side.SENTE: MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
                     Side.GOTE: MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
                 },
-                "選択方針：先手=一手駒得＋支えのない狙われた駒、後手=一手駒得＋支えがある駒への低価値駒の利き（10M+U+V）",
+                "選択方針：先手=一手評価：駒得＋狙われ駒の枚数（10M+U枚数）、後手=一手評価：駒得＋U枚数＋支えあり駒への低価値駒の利き（10M+U枚数+V）",
+            ),
+            (
+                {
+                    Side.SENTE: MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
+                    Side.GOTE: MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+                },
+                "選択方針：先手=一手評価：駒得＋狙われ駒の価値合計＋支えあり駒への低価値駒の利き（10M+U価値合計+V）、後手=一手評価：駒得＋狙われ駒の枚数（10M+U枚数）",
+            ),
+            (
+                {
+                    Side.SENTE: MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+                    Side.GOTE: MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
+                },
+                "選択方針：先手=一手評価：駒得＋狙われ駒の枚数（10M+U枚数）、後手=一手評価：駒得＋狙われ駒の価値合計＋支えあり駒への低価値駒の利き（10M+U価値合計+V）",
             ),
         )
         for policies, expected_display in cases:
@@ -238,7 +252,7 @@ class CliEntrypointTests(unittest.TestCase):
         )
         self.assertEqual(
             outputs,
-            ["選択方針：先手=人間、後手=一手駒得＋支えのない狙われた駒"],
+            ["選択方針：先手=人間、後手=一手評価：駒得＋狙われ駒の枚数（10M+U枚数）"],
         )
 
     def test_config_failure_is_stderr_exit_one_before_game(self):

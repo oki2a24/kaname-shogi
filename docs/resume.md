@@ -1,21 +1,21 @@
 # 学習・開発の再開案内
 
-## 現在地（2026-11-03）
+## 現在地（2026-11-03、作業中）
 
-支えのない被攻撃駒の価値を比較CLIへ接続するテーマは完了した。従来 `10 × M（駒得）+ U（支えのない被攻撃駒の枚数差）+ V（支えあり低価値駒脅威の枚数差）` と、今回 `10 × M（駒得）+ 1 × 支えのない被攻撃駒の価値合計差 + V（支えあり低価値駒脅威の枚数差）` を比較した。confirmationは事前固定7局面・2037組/4074局で完了し、分析CLIは候補平均得点区間 `[0.6823, 0.7036]`、95% paired Hoeffding区間 `[0.6522, 0.7337]`、判定 `improved` を出した。これは当該局面群・一手選択・512手上限・実行環境に限り、一般棋力向上を示さない。詳細は[学習記録](learning/undefended-piece-value.md)と[承認済み設計](plans/2026-11-02-undefended-piece-value-comparison-design.md)を参照する。
+主線「次の非駒得評価項目を一つ選び、学ぶ」は未完了で、具体項目も未選定。支えのない被攻撃駒の価値合計比較は指定7局面・2037組/4074局で改善を支持し、main統合・push・統合後検証・最後の理解確認まで完了したが、一般棋力向上は示さない。
 
-2026-11-03、コミット `21d890a159d75df3b8e5eb45ddf5220b3f9dbc6d` を `main` へfast-forward統合し、`origin/main` へpushした。統合後の `python3 scripts/run_tests_parallel.py` は1066テスト・92モジュール・28.028秒で成功。最後の理解確認に本人は「B」と回答し、対象範囲を7局面・2037組の比較条件に限定し、一般棋力向上とは区別する理解を確認した。[回答・統合後検証の記録](learning/undefended-piece-value.md#main統合後の検証と最後の理解確認2026-11-03)を参照。
+本人承認を受け、比較済みの `10M+U価値合計+V` を通常CLI候補8・USI `MaterialUndefendedPieceValuePlusV` に接続する実装を同じcheckoutで完了した。U枚数とU価値合計の名前を区別し、比較CLI ID `material-piece-threat-value-v1` は比較専用のままにした。実装後は1,073テスト・92モジュール、Ruff、7件の代表変異、独立レビュー（最終Critical 0 / Important 0 / Minor 0）、通常CLIの先後を入れ替えたCVC 2局を確認済み。topic commitを作成済み。main統合・pushはしていない。詳細は[学習記録](learning/undefended-piece-coordination-evaluation.md)、[設計](plans/2026-11-03-undefended-piece-value-normal-cli-usi-design.md)、[実装計画](plans/2026-11-03-undefended-piece-value-normal-cli-usi-implementation-plan.md)。
 
-本人は2026-11-03、保留していた「ShogiHomeでU候補を実践する」を選び、合意した条件で一局を実施した。通常CLI・USIに接続済みの枚数差方式 `MaterialUndefendedPiece`（10 × M + U）を使い、比較専用の価値合計方式は対象外とした。人間先手・エンジン後手、平手初期局面、双方10分＋30秒・加算なしで、先手の時間切れにより終局した。自動保存した棋譜は[学習記録](learning/undefended-piece-coordination-evaluation.md#shogihome-u候補の一局実践2026-11-03)に記した。1局から棋力を判定しない。
+ShogiHome 1.28.2で `MaterialUndefendedPieceValuePlusV` を一局選択・保存し、盤面上で42手分の応答を観察した。盤上入力が反映されなくなったため先手投了で終了し、棋譜は `/Users/oki2a24/Documents/20261103_101001_人_kaname-shogi.kif` に自動保存された。指定されたSID 8のUSI行を照合したが、最初の検索では許可外行も表示されたため、その行を使用しない逸脱を記録した。次候補 `MaterialUndefendedPieceCountPlusV` については一度停止判断があった後、本人の「変更して続行」の指示と設定変更承認を受けて一局実施した。Difficultyを同名に変更・保存し再表示で確認。人間先手・エンジン後手、平手、双方10分＋30秒・加算なしの局で、画面上15回のエンジン応答後に盤上入力が反映されなくなり、先手投了で終了した。棋譜は `/Users/oki2a24/Documents/20261103_104906_人_kaname-shogi.kif` に自動保存され、投了後にSID 12が監視一覧から消え、USI/CSA稼働数0を確認した。この二局目のUSIログは閲覧していない。いずれも完局・方式比較ではなく、棋力や息子が感じる差は不明。`MaterialUndefendedPieceCount` の新しい明示名は未選択だが、同じU枚数動作は旧名で実機確認済み。
 
-ShogiHome 1.28.2の登録Difficultyを本人承認後に `MaterialUndefendedPiece` へ変更・保存し、PonderはOFFのまま確認した。終局後は稼働セッションがないことを画面で確認した。USIログは一局の進行を照合したが、日次結合ログの表示で承認範囲外の過去ハンドシェイク行まで画面に出た。過去行は記録・利用せず、この閲覧範囲超過を[学習記録](learning/undefended-piece-coordination-evaluation.md#usi照合限界次の主線)に明記した。最後の理解確認に本人は「追加した将棋エンジンはShogiHomeで動作することが観察できた。棋力向上したかどうかは不明」と回答し、当該環境の接続・操作確認と棋力評価を区別した。[回答と補足](learning/undefended-piece-coordination-evaluation.md#最後の理解確認2026-11-03)を参照。
-
-次の非駒得評価項目を選び、学び・設計する主線は未完了のまま保持する。成りに近づく進行度や、根拠を定めた重要マスへの利きなどを候補として後続で選ぶ。角の可動性は本人希望で後回し。作業先は `/Users/oki2a24/kaname-shogi`、専用ブランチは `codex/shogihome-u-candidate-practice`、handoff準備の基点は `23cf552f`。別worktree・別cloneは使わない。既存未追跡比較データ、`.agents/tasks/`、C2保護4件、退避アーカイブは変更しない。A番号は割り当てない。
+現在のcheckoutは `/Users/oki2a24/kaname-shogi`、branch `codex/shogihome-u-candidate-practice`、開始時HEAD `675056b3`からtopic commitを作成。main `23cf552f`へ統合・pushしていない。`.agents/tasks/`、未追跡比較データ、C2保護4件、退避アーカイブ、`.venv.backup-*` は変更せず、別worktree・別cloneも使わない。
 
 ### 次の具体的な行動
 
-1. [次テーマ候補](next-topics.md)、README、[プロジェクトの方向性](02-project-direction.md)を照合した候補から、本人が次テーマを選ぶ。
-2. 次テーマが選ばれるまで、新しい学習・設計・実装は始めない。主線「次の非駒得評価項目を一つ選び、学ぶ」は未完了として保持する。
+1. 本人は2026-11-03に学習記録・知識文書を確認し、対象ファイルをtopic commitへ進めることを承認済み。
+2. `MaterialUndefendedPieceCountPlusV` はShogiHomeで選択・保存し一局を開始、15回の後手応答を観察したが、盤上入力不調により投了で終了した。USIログ照合は未実施。実機確認は部分的な操作観察として記録し、完局や棋力の判断へ広げない。他の未確認方式へ進む場合は、対象・現画面・条件を改めて確認し、一局ごとに合意する。
+3. topic commitは通常hook付きで作成済み。main統合・pushは別途承認を待つ。
+4. 次の非駒得評価項目を選ぶ主線は未完了として保持する。
 
 ### 作業場所の整理と前テーマの履歴
 

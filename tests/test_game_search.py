@@ -568,6 +568,34 @@ class GameSearchTests(unittest.TestCase):
                 controlled.assert_called_once_with(position, policy, rng, control)
                 four_ply.assert_not_called()
 
+    def test_value_v1_uses_controlled_one_ply_search(self):
+        """価値合計V1を先後とも制御付き一手探索へ一度だけ渡す。
+
+        値合計V1を未知方式扱いや四手探索へ誤配送する変更を検出する。
+        """
+        adapter = game_search
+        policy = self.new_policy("MATERIAL_PIECE_THREAT_VALUE_V1")
+        for side in Side:
+            with self.subTest(side=side):
+                position = kings_only(side)
+                rng = random.Random(0)
+                control = SearchControl(None, 0, now_ns=lambda: 0)
+                with (
+                    patch.object(mg, "search_move", wraps=mg.search_move) as controlled,
+                    patch.object(
+                        adapter.iterative_deepening, "search_controlled"
+                    ) as four_ply,
+                ):
+                    try:
+                        result = adapter.search_move(position, policy, rng, control)
+                    except ValueError as error:
+                        self.fail(f"制御付き探索が価値合計V1を拒否しました: {error}")
+
+                self.assertEqual(result.completion, mg.SearchCompletion.COMPLETE)
+                self.assertIn(result.move, mg.legal_moves(position))
+                controlled.assert_called_once_with(position, policy, rng, control)
+                four_ply.assert_not_called()
+
     def test_unknown_policy_fails_before_search(self):
         """未知値やNoneは探索操作を作る前に両対局入口で拒否する。
 

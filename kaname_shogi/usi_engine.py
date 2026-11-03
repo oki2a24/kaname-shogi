@@ -33,8 +33,12 @@ _USI_DIFFICULTY_VALUES = {
     "twoplymaterial": MoveSelectionPolicy.TWO_PLY_MATERIAL,
     "fullwidth4": MoveSelectionPolicy.FOUR_PLY_FULL_WIDTH,
     "alphabeta4": MoveSelectionPolicy.FOUR_PLY_ALPHA_BETA,
+    # 旧設定名を受け入れながら、選択欄はUの集計方法が分かる名称にする。
     "materialundefendedpiece": MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+    "materialundefendedpiececount": MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+    "materialundefendedpiececountplusv": MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
     "materialsupportedpiecethreat": MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+    "materialundefendedpiecevalueplusv": MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
 }
 
 
@@ -400,8 +404,9 @@ def _run_session(read_line, output_fn, rng, config, cancel_input) -> None:
                     "option name Difficulty type combo default Random "
                     "var Random var Material var TwoPlyMaterial "
                     "var FullWidth4 var AlphaBeta4 "
-                    "var MaterialUndefendedPiece "
-                    "var MaterialSupportedPieceThreat",
+                    "var MaterialUndefendedPieceCount "
+                    "var MaterialUndefendedPieceCountPlusV "
+                    "var MaterialUndefendedPieceValuePlusV",
                     "usiok",
                 ):
                     emit(response)

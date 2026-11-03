@@ -194,7 +194,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             [
                 "id name kaname-shogi",
                 "id author kaname-shogi project",
-                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece var MaterialSupportedPieceThreat",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPieceCount var MaterialUndefendedPieceCountPlusV var MaterialUndefendedPieceValuePlusV",
                 "usiok",
                 "readyok",
             ],
@@ -225,7 +225,7 @@ class UsiEngineFunctionTests(unittest.TestCase):
             [
                 "id name kaname-shogi",
                 "id author kaname-shogi project",
-                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece var MaterialSupportedPieceThreat",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPieceCount var MaterialUndefendedPieceCountPlusV var MaterialUndefendedPieceValuePlusV",
                 "usiok",
             ],
         )
@@ -246,7 +246,9 @@ class UsiEngineFunctionTests(unittest.TestCase):
         option = next(
             line for line in outputs if line.startswith("option name Difficulty")
         )
-        self.assertIn("var MaterialSupportedPieceThreat", option)
+        self.assertIn("var MaterialUndefendedPieceCountPlusV", option)
+        self.assertNotIn("MaterialUndefendedPiece ", option)
+        self.assertNotIn("MaterialSupportedPieceThreat", option)
         self.assertNotIn("MaterialPieceThreatV0", option)
         self.assertEqual(calls[0][2], MoveSelectionPolicy.RANDOM)
 
@@ -302,6 +304,50 @@ class UsiEngineFunctionTests(unittest.TestCase):
 
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0][2], MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE)
+
+    def test_applies_explicit_undefended_piece_difficulty_values(self):
+        """新しい明示Difficulty名はU枚数と価値合計の内部方式へ対応する。
+
+        Uの二種類を取り違えたり、大文字小文字の違いで受信を落とす誤りを検出する。
+        """
+        cases = (
+            (
+                "MaterialUndefendedPieceCount",
+                MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+            ),
+            (
+                "mAtErIaLuNdEfEnDeDpIeCeCoUnT",
+                MoveSelectionPolicy.MATERIAL_UNDEFENDED_PIECE,
+            ),
+            (
+                "MaterialUndefendedPieceCountPlusV",
+                MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+            ),
+            (
+                "mAtErIaLuNdEfEnDeDpIeCeCoUnTpLuSv",
+                MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
+            ),
+            (
+                "MaterialUndefendedPieceValuePlusV",
+                MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
+            ),
+            (
+                "mAtErIaLuNdEfEnDeDpIeCeVaLuEpLuSv",
+                MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
+            ),
+        )
+        for value, expected in cases:
+            with self.subTest(value=value):
+                calls, _ = self._run_with_policy_spy(
+                    [
+                        f"setoption name Difficulty value {value}",
+                        "position startpos moves 7g7f",
+                        "go",
+                        "quit",
+                    ]
+                )
+                self.assertEqual(len(calls), 1)
+                self.assertEqual(calls[0][2], expected)
 
     def test_applies_material_supported_piece_threat_at_first_go(self):
         """最初のgoはMaterialSupportedPieceThreatをV1方針へ対応付ける。
@@ -520,6 +566,34 @@ class UsiEngineFunctionTests(unittest.TestCase):
                 MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
                 MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
                 MoveSelectionPolicy.MATERIAL,
+            ],
+        )
+
+    def test_material_piece_threat_value_is_fixed_until_next_game(self):
+        """価値合計+Vは局中固定し、未知値を保留せず次局で明示値へ切り替える。
+
+        価値合計方式の即時変更、未知値による設定消去、usinewgame後の切替漏れを検出する。
+        """
+        calls, _ = self._run_with_policy_spy(
+            [
+                "setoption name Difficulty value MaterialUndefendedPieceValuePlusV",
+                "position startpos moves 7g7f",
+                "go",
+                "setoption name Difficulty value Unknown",
+                "setoption name Difficulty value MaterialUndefendedPieceCountPlusV",
+                "go",
+                "usinewgame",
+                "position startpos moves 2g2f",
+                "go",
+                "quit",
+            ]
+        )
+        self.assertEqual(
+            [call[2] for call in calls],
+            [
+                MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
+                MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1,
+                MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V1,
             ],
         )
 
@@ -1048,7 +1122,7 @@ class UsiEngineProcessTests(unittest.TestCase):
             self.assertEqual(reader.read_line(), "id author kaname-shogi project")
             self.assertEqual(
                 reader.read_line(),
-                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPiece var MaterialSupportedPieceThreat",
+                "option name Difficulty type combo default Random var Random var Material var TwoPlyMaterial var FullWidth4 var AlphaBeta4 var MaterialUndefendedPieceCount var MaterialUndefendedPieceCountPlusV var MaterialUndefendedPieceValuePlusV",
             )
             self.assertEqual(reader.read_line(), "usiok")
 
@@ -1056,7 +1130,8 @@ class UsiEngineProcessTests(unittest.TestCase):
             self.assertEqual(reader.read_line(), "readyok")
 
             self.send_line(
-                process, "setoption name Difficulty value MaterialSupportedPieceThreat"
+                process,
+                "setoption name Difficulty value MaterialUndefendedPieceValuePlusV",
             )
             position_command = "position startpos moves 7g7f"
             self.send_line(process, position_command)
