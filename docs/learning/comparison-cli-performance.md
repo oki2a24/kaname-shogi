@@ -287,3 +287,11 @@
 - **独立結果照合と検出範囲:** `load_completed_comparison`で保存済み旧4,074局と今回の新規4,074局を両方読込み、合法再生・summary検証を実行した。条件と全schedule、開始局面、全指し手列、手数、終局理由、winner side/policyを4,074/4,074照合し、一致した。これは当該seed・局面・方式・PC・実装の出力一致を示す。別OS・別ハードウェアや、一般局面での強さ、通常CLI/USIの速度を評価したものではない。
 - **性能結論:** 30分に対して4,787.24秒超過、所要時間は目標の3.66倍。現状態から72.67%の短縮がさらに必要で、最終目標は未達。旧4,074局summaryは再開runのelapsed lower boundなので全量同士の厳密倍率を出せない。同条件fresh42ではB0 wall730.49秒、B24二回平均wall64.585秒で11.31倍/91.16%短縮したが、これは42局での値であり全量倍率ではない。
 - **既存検証との関係:** B24 source SHAは既に全体1,101 tests/92 modules、Ruff、独立review C/I/M 0/0/0を完了した候補と一致した。今回のコード変更・ユニットテスト再実行はなく、新規全量実行と保存結果の全件照合を行った。次候補B25は未実装・未承認のまま保留する。
+
+## 2026-11-04 mainへのno-fast-forward統合
+
+本人の明示指示を受け、`codex/comparison-cli-performance`のHEAD `300d2f7a2ebdad2e4fd744ec30c5a1f0052b9afd`を、開始時のmain `aa70d1de`へローカルでno-fast-forward統合した。merge commitは`e51b2c788f97f876c92df8f0de99a2dec6194b73`。履歴で性能ブランチの形を保つためブランチは残し、pushはしていない。
+
+- **保護確認:** main切替前にtracked差分がないこと、untracked 17,998ファイルとignored 1,411ファイルを確認し、mainの追跡pathとの衝突が0件であることを照合した。既存の比較出力・保全物は変更せず保持した。
+- **統合後検証:** main上で`.venv/bin/python scripts/run_tests_parallel.py`を実行し、1,101 tests/92 modulesが17.955秒で成功。`.venv/bin/ruff format --check .`（154 files）、`.venv/bin/ruff check .`、`git diff --check`も成功した。
+- **現在状態:** mainは`origin/main`より10コミット先行し、未push。性能目標は同条件4,074局/30分を未達のまま維持し、今回の統合を達成扱いにしない。新しい最適化や時間枠は開始していない。本人は次にエンジン開発を一テーマ進める意向だが、具体テーマは未選定。
