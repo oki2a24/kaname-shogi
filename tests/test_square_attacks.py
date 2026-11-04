@@ -268,9 +268,9 @@ class SquareAttacksTests(unittest.TestCase):
                 self.assertTrue(_query(board, Square(6, rank), side))
 
     def test_preserves_board_on_success_and_failure(self):
-        """成功時と候補照会の例外時に元盤を変更しない。
+        """成功時と直接利き判定の例外時に元盤を変更しない。
 
-        味方占有targetを照会盤から取り除く際に、元盤を直接変更する誤りを検出する。
+        味方targetを利きとして調べても元盤を直接変更せず、直接判定の例外を隠さないことを検出する。
         """
         board = Board()
         source = Square(5, 5)
@@ -283,7 +283,7 @@ class SquareAttacksTests(unittest.TestCase):
         self.assertEqual(_board_contents(board), before)
 
         with patch.object(
-            movegen, "_move_candidates_for_piece", side_effect=RuntimeError("照会失敗")
+            movegen, "_piece_attacks_target", side_effect=RuntimeError("照会失敗")
         ):
             with self.assertRaisesRegex(RuntimeError, "照会失敗"):
                 _query(board, target, Side.SENTE)

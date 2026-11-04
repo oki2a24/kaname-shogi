@@ -2,6 +2,7 @@
 
 import unittest
 from dataclasses import FrozenInstanceError
+from unittest.mock import patch
 
 from kaname_shogi import model
 from kaname_shogi.model import (
@@ -44,6 +45,16 @@ class SquareTests(unittest.TestCase):
         ]
         self.assertEqual(sorted(indices), list(range(81)))
 
+    def test_all_squares_use_file_major_index_mapping(self):
+        """筋優先・段昇順の全81マスが列挙順の添字へ対応する。
+
+        添字の集合だけ合っていて筋と段の対応が入れ替わる誤りを検出する。
+        """
+        squares = [Square(file, rank) for file in range(1, 10) for rank in range(1, 10)]
+        for expected_index, square in enumerate(squares):
+            with self.subTest(square=square):
+                self.assertEqual(square.to_index(), expected_index)
+
     def test_invalid_coordinates_are_rejected(self):
         """範囲外・非整数・真偽値の筋段を拒否する。
 
@@ -52,8 +63,21 @@ class SquareTests(unittest.TestCase):
         for value in [0, 10, -1, 1.0, "1", None, True, False]:
             for file, rank in [(value, 1), (1, value)]:
                 with self.subTest(file=file, rank=rank):
-                    with self.assertRaises(ValueError):
+                    with self.assertRaisesRegex(
+                        ValueError, "筋・段は1〜9の整数で指定してください"
+                    ):
                         Square(file, rank)
+
+    def test_square_validation_does_not_call_any(self):
+        """筋段の検証はgeneratorをanyへ渡さず完了する。
+
+        Squareを探索内で大量生成するたびtuple・generatorを作る実装へ戻る回帰を
+        検出する。
+        """
+        with patch("builtins.any", side_effect=self.fail):
+            square = Square(1, 1)
+
+        self.assertEqual((square.file, square.rank), (1, 1))
 
     def test_square_cannot_change_after_creation(self):
         """生成した座標の筋と段は後から変更できない。

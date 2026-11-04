@@ -2,8 +2,10 @@
 
 import random
 import unittest
+from inspect import signature
 from unittest.mock import Mock, patch
 
+from kaname_shogi import movegen, one_ply_selection
 from kaname_shogi.evaluation import material_balance
 from kaname_shogi.material_rook_mobility import evaluate_material_rook_mobility
 from kaname_shogi.model import (
@@ -149,6 +151,48 @@ class OnePlySelectionTests(unittest.TestCase):
                 self._sfen(position_after_move(position, move)),
             )
 
+    def test_move_aware_evaluator_preserves_tie_order_and_rng(self):
+        """手情報付き評価は候補順・同点抽選を従来経路と一致させる。
+
+        手情報の取り違え、既存評価の余分な呼出し、callback経路だけ乱数順を変える誤りを検出する。
+        """
+        self.assertIn(
+            "evaluate_with_move",
+            signature(choose_one_ply_move).parameters,
+            "手情報付き評価callbackを追加してください",
+        )
+        position, first, second = self._open_rook_case(Side.SENTE)
+        moves = (first, second)
+        ordinary_rng = random.Random(20261103)
+        move_aware_rng = random.Random(20261103)
+        ordinary = choose_one_ply_move(
+            position, moves, ordinary_rng, evaluate=Mock(return_value=0)
+        )
+        fallback = Mock(return_value=0)
+        callback = Mock(return_value=0)
+        with patch.object(
+            move_aware_rng, "choice", wraps=move_aware_rng.choice
+        ) as choice:
+            move_aware = choose_one_ply_move(
+                position,
+                moves,
+                move_aware_rng,
+                evaluate=fallback,
+                evaluate_with_move=callback,
+            )
+
+        self.assertEqual(move_aware, ordinary)
+        fallback.assert_not_called()
+        choice.assert_called_once_with(moves)
+        self.assertEqual(callback.call_count, len(moves))
+        for index, move in enumerate(moves):
+            call = callback.call_args_list[index]
+            self.assertEqual(call.args[1:], (move, Side.SENTE))
+            self.assertEqual(
+                self._sfen(call.args[0]),
+                self._sfen(position_after_move(position, move)),
+            )
+
     def test_selects_best_ties_once(self):
         """同点最高の候補だけを元の順序で一度抽選する。
 
@@ -263,6 +307,55 @@ class OnePlySelectionTests(unittest.TestCase):
                     self.assertEqual(evaluator.call_args.args[1], perspective)
                     choice.assert_called_once_with((mate,))
 
+    def test_reuses_opponent_king_square_for_candidate_mate_checks(self):
+        """候補の詰み判定で相手玉の位置を一度だけ探索する。
+
+        各候補の後に玉を全盤から探し直す回帰と、候補の先後に応じた玉を
+        helperへ渡さない誤りを検出する。
+        """
+        self.assertTrue(
+            callable(getattr(one_ply_selection, "_find_king_square", None)),
+            "selector が相手玉を事前に探索していません",
+        )
+        self.assertTrue(
+            callable(getattr(one_ply_selection, "_is_checkmate_for_known_king", None)),
+            "selector が既知玉マスの詰み判定を使用していません",
+        )
+
+        for perspective in (Side.SENTE, Side.GOTE):
+            with self.subTest(perspective=perspective):
+                position, mate, normal = self._mate_case(perspective)
+                opponent = Side.GOTE if perspective == Side.SENTE else Side.SENTE
+                expected_king = movegen._find_king_square(position.board, opponent)
+                with (
+                    patch.object(
+                        one_ply_selection,
+                        "_find_king_square",
+                        wraps=movegen._find_king_square,
+                    ) as find_king,
+                    patch.object(
+                        one_ply_selection,
+                        "_is_checkmate_for_known_king",
+                        wraps=movegen._is_checkmate_for_known_king,
+                    ) as checkmate,
+                ):
+                    selected = choose_one_ply_move(
+                        position,
+                        (mate, normal),
+                        random.Random(20261103),
+                        evaluate=lambda _position, _side: 0,
+                    )
+
+                self.assertEqual(selected, mate)
+                find_king.assert_called_once_with(position.board, opponent)
+                self.assertEqual(checkmate.call_count, 2)
+                self.assertTrue(
+                    all(
+                        call.args[1] == expected_king
+                        for call in checkmate.call_args_list
+                    )
+                )
+
     def test_selects_all_mating_ties_once(self):
         """成・不成の詰み候補を両方残し、最高同点として一度抽選する。
 
@@ -297,7 +390,9 @@ class OnePlySelectionTests(unittest.TestCase):
         evaluator = Mock()
         with (
             patch("kaname_shogi.one_ply_selection.position_after_move") as apply,
-            patch("kaname_shogi.one_ply_selection.is_checkmate") as checkmate,
+            patch(
+                "kaname_shogi.one_ply_selection._is_checkmate_for_known_king"
+            ) as checkmate,
             patch.object(rng, "choice", wraps=rng.choice) as choice,
         ):
             result = choose_one_ply_move(position, (), rng, evaluate=evaluator)

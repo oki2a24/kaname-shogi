@@ -27,6 +27,393 @@ from kaname_shogi.movegen import (
 )
 
 
+class BoardSquareCacheTests(unittest.TestCase):
+    def test_board_square_cache_preserves_file_major_order(self):
+        """走査用のSquareタプルは81マスを筋優先で一度ずつ保持する。
+
+        筋段の順序を入れ替える、マスを飛ばす、重複する、可変な列を返す最適化を検出する。
+        """
+        cached_squares = getattr(movegen, "_BOARD_SQUARES", None)
+        self.assertIsInstance(cached_squares, tuple)
+        self.assertEqual(len(cached_squares), 81)
+        self.assertEqual(
+            tuple((square.file, square.rank) for square in cached_squares),
+            tuple((file, rank) for file in range(1, 10) for rank in range(1, 10)),
+        )
+
+    def test_square_attack_scan_reuses_precomputed_squares(self):
+        """全マスの利き走査でSquare生成を繰り返さない。
+
+        81マスを読むたびに同じ座標を新規生成する回帰を検出し、歩の攻撃結果も確認する。
+        """
+        board = Board()
+        target = Square(9, 8)
+        board.set_piece(target, Piece(PieceType.PAWN, Side.GOTE))
+        board.set_piece(Square(9, 9), Piece(PieceType.PAWN, Side.SENTE))
+
+        with patch.object(movegen, "Square", wraps=Square) as square_factory:
+            self.assertTrue(movegen.is_square_attacked(board, target, Side.SENTE))
+
+        self.assertLess(
+            square_factory.call_count,
+            81,
+            "盤走査のために全81マスを再生成しています",
+        )
+
+    def test_king_scans_reuse_precomputed_squares(self):
+        """玉位置と王手の盤走査でもSquare値を再利用する。
+
+        玉探索または攻撃側走査だけが毎回81個の座標を再生成する回帰を検出する。
+        """
+        board = Board()
+        king_square = Square(5, 5)
+        board.set_piece(king_square, Piece(PieceType.KING, Side.SENTE))
+        board.set_piece(Square(5, 4), Piece(PieceType.PAWN, Side.GOTE))
+
+        with patch.object(movegen, "Square", wraps=Square) as square_factory:
+            self.assertEqual(movegen._find_king_square(board, Side.SENTE), king_square)
+            self.assertEqual(square_factory.call_count, 0)
+
+        check_board = Board()
+        check_king_square = Square(9, 8)
+        check_board.set_piece(check_king_square, Piece(PieceType.KING, Side.GOTE))
+        check_board.set_piece(Square(9, 9), Piece(PieceType.PAWN, Side.SENTE))
+
+        with (
+            patch.object(
+                movegen,
+                "_find_king_square",
+                return_value=check_king_square,
+            ),
+            patch.object(movegen, "Square", wraps=Square) as square_factory,
+        ):
+            self.assertTrue(movegen.is_in_check(check_board, Side.GOTE))
+
+        self.assertLess(
+            square_factory.call_count,
+            81,
+            "王手判定のために全81マスを再生成しています",
+        )
+
+
+class DirectTargetAttackTests(unittest.TestCase):
+    def _reference_piece_attack(self, board, source, target):
+        """既存候補一覧を使い、指定駒の幾何学的利きを返す。"""
+        piece = board.piece_at(source)
+        if piece is None or source == target:
+            return False
+        query_board = board
+        target_piece = board.piece_at(target)
+        if target_piece is not None and target_piece.side == piece.side:
+            query_board = board.copy()
+            query_board.set_piece(target, None)
+        return target in movegen._move_candidates_for_piece(query_board, source)
+
+    def _reference_square_attack(self, board, target, attacking_side):
+        """既存候補一覧を使い、指定側からの利きを返す。"""
+        query_board = board
+        target_piece = board.piece_at(target)
+        if target_piece is not None and target_piece.side == attacking_side:
+            query_board = board.copy()
+            query_board.set_piece(target, None)
+        for source in movegen._BOARD_SQUARES:
+            piece = query_board.piece_at(source)
+            if piece is None or piece.side != attacking_side:
+                continue
+            if target in movegen._move_candidates_for_piece(query_board, source):
+                return True
+        return False
+
+    def test_attacked_sides_helper_matches_public_queries_for_all_targets(self):
+        """両側利きhelperは全targetで既存片側判定を保つ。
+
+        先後の並び替え、ray遮蔽、桂source、成駒、占有target、盤面変更の誤りを検出する。
+        """
+        helper = getattr(movegen, "_attacked_sides_for_target", None)
+        self.assertTrue(callable(helper), "両側利きhelperがありません")
+        board = Board()
+        for piece_type, side, square in (
+            (PieceType.KING, Side.SENTE, Square(9, 9)),
+            (PieceType.KING, Side.GOTE, Square(1, 1)),
+            (PieceType.ROOK, Side.SENTE, Square(5, 9)),
+            (PieceType.SILVER, Side.GOTE, Square(5, 7)),
+            (PieceType.BISHOP, Side.GOTE, Square(8, 5)),
+            (PieceType.KNIGHT, Side.SENTE, Square(4, 4)),
+            (PieceType.PRO_PAWN, Side.GOTE, Square(2, 4)),
+            (PieceType.DRAGON, Side.SENTE, Square(3, 3)),
+        ):
+            board.set_piece(square, Piece(piece_type, side))
+        before = self._snapshot(board)
+
+        for target in movegen._BOARD_SQUARES:
+            with self.subTest(target=target):
+                self.assertEqual(
+                    helper(board, target),
+                    (
+                        movegen.is_square_attacked(board, target, Side.SENTE),
+                        movegen.is_square_attacked(board, target, Side.GOTE),
+                    ),
+                )
+        self.assertEqual(before, self._snapshot(board))
+
+    def test_attacked_sides_helper_stops_at_first_ray_blocker(self):
+        """両側ray判定は最初の占有駒より先を数えない。
+
+        遮蔽駒の後ろにある相手飛車を攻撃元へ誤って加える回帰を検出する。
+        """
+        board = Board()
+        target = Square(5, 5)
+        board.set_piece(Square(5, 6), Piece(PieceType.SILVER, Side.SENTE))
+        board.set_piece(Square(5, 9), Piece(PieceType.ROOK, Side.GOTE))
+
+        self.assertEqual(
+            movegen._attacked_sides_for_target(board, target), (True, False)
+        )
+
+    def test_attacked_sides_helper_counts_knight_sources_for_both_sides(self):
+        """両側ray判定は先後双方の桂sourceも調べる。
+
+        rayだけを調べて飛び越す桂の攻撃を落とす回帰を検出する。
+        """
+        board = Board()
+        target = Square(5, 5)
+        board.set_piece(Square(4, 7), Piece(PieceType.KNIGHT, Side.SENTE))
+        board.set_piece(Square(6, 3), Piece(PieceType.KNIGHT, Side.GOTE))
+
+        self.assertEqual(
+            movegen._attacked_sides_for_target(board, target), (True, True)
+        )
+
+    def _snapshot(self, board):
+        """盤上81マスを比較し、利き照会が盤を変えないことを調べる。"""
+        return tuple(board.piece_at(square) for square in movegen._BOARD_SQUARES)
+
+    def test_direct_piece_attack_matches_candidates_for_all_pieces(self):
+        """全駒種・先後・端の全targetで候補一覧と同じ利きを返す。
+
+        駒種の分岐、先後の方向、端の盤外、成駒形状が直接判定でずれる誤りを検出する。
+        """
+        sources = (
+            Square(1, 1),
+            Square(1, 9),
+            Square(5, 5),
+            Square(9, 1),
+            Square(9, 9),
+        )
+        for piece_type in PieceType:
+            for side in Side:
+                for source in sources:
+                    board = Board()
+                    board.set_piece(source, Piece(piece_type, side))
+                    expected = set(movegen._move_candidates_for_piece(board, source))
+                    before = self._snapshot(board)
+                    actual = {
+                        target
+                        for target in movegen._BOARD_SQUARES
+                        if movegen.is_piece_attacking_square(board, source, target)
+                    }
+                    square_attacks = {
+                        target
+                        for target in movegen._BOARD_SQUARES
+                        if movegen.is_square_attacked(board, target, side)
+                    }
+                    check_attacks = set()
+                    for target in movegen._BOARD_SQUARES:
+                        if target == source:
+                            continue
+                        check_board = board.copy()
+                        check_board.set_piece(
+                            target,
+                            Piece(
+                                PieceType.KING,
+                                movegen._opponent_side(side),
+                            ),
+                        )
+                        if movegen.is_in_check(
+                            check_board, movegen._opponent_side(side)
+                        ):
+                            check_attacks.add(target)
+                    with self.subTest(piece_type=piece_type, side=side, source=source):
+                        self.assertEqual(expected, actual)
+                        self.assertEqual(expected, square_attacks)
+                        self.assertEqual(expected, check_attacks)
+                        self.assertEqual(before, self._snapshot(board))
+
+    def test_direct_piece_attack_matches_candidates_with_blockers(self):
+        """全マス占有の遮蔽局面で候補一覧と利きを照合する。
+
+        同筋・斜線の途中駒、target自身の占有、桂馬の飛越しを誤って扱う回帰を検出する。
+        """
+        source = Square(5, 5)
+        for piece_type in PieceType:
+            for side in Side:
+                board = Board()
+                for square in movegen._BOARD_SQUARES:
+                    if square == source:
+                        continue
+                    occupant_side = (
+                        Side.SENTE
+                        if (square.file + square.rank) % 2 == 0
+                        else Side.GOTE
+                    )
+                    board.set_piece(square, Piece(PieceType.PAWN, occupant_side))
+                board.set_piece(source, Piece(piece_type, side))
+                before = self._snapshot(board)
+                for target in movegen._BOARD_SQUARES:
+                    with self.subTest(piece_type=piece_type, side=side, target=target):
+                        self.assertEqual(
+                            self._reference_piece_attack(board, source, target),
+                            movegen.is_piece_attacking_square(board, source, target),
+                        )
+                self.assertEqual(before, self._snapshot(board))
+
+    def test_direct_attacks_preserve_occupancy_pins_and_false_cases(self):
+        """味方target・ピン駒・source自身・空sourceを既存利きと揃える。
+
+        target除去時の遮蔽と幾何学的攻撃を混同する誤りや、ピンを合法性へ変える誤りを検出する。
+        """
+        source = Square(5, 9)
+        target = Square(5, 5)
+        for target_side in Side:
+            board = Board()
+            board.set_piece(source, Piece(PieceType.ROOK, Side.SENTE))
+            board.set_piece(target, Piece(PieceType.GOLD, target_side))
+            before = self._snapshot(board)
+            self.assertEqual(
+                self._reference_piece_attack(board, source, target),
+                movegen.is_piece_attacking_square(board, source, target),
+            )
+            self.assertEqual(
+                self._reference_square_attack(board, target, Side.SENTE),
+                movegen.is_square_attacked(board, target, Side.SENTE),
+            )
+            self.assertEqual(before, self._snapshot(board))
+
+        pinned_board = Board()
+        pinned_source = Square(5, 8)
+        pinned_target = Square(4, 7)
+        pinned_board.set_piece(Square(5, 9), Piece(PieceType.KING, Side.SENTE))
+        pinned_board.set_piece(pinned_source, Piece(PieceType.SILVER, Side.SENTE))
+        pinned_board.set_piece(Square(5, 1), Piece(PieceType.ROOK, Side.GOTE))
+        self.assertTrue(
+            movegen.is_piece_attacking_square(
+                pinned_board, pinned_source, pinned_target
+            )
+        )
+        self.assertFalse(
+            movegen.is_piece_attacking_square(pinned_board, source, source)
+        )
+        self.assertFalse(
+            movegen.is_piece_attacking_square(pinned_board, Square(1, 1), target)
+        )
+
+    def test_attack_queries_do_not_materialize_candidate_lists(self):
+        """利きの真偽照会は合法候補一覧を生成しない。
+
+        `_move_candidates_for_piece`の辞書構築と候補list生成へ戻る性能回帰を検出する。
+        """
+        source = Square(5, 1)
+        target = Square(5, 9)
+        board = Board()
+        board.set_piece(source, Piece(PieceType.ROOK, Side.SENTE))
+        board.set_piece(target, Piece(PieceType.KING, Side.GOTE))
+
+        with patch.object(
+            movegen,
+            "_move_candidates_for_piece",
+            wraps=movegen._move_candidates_for_piece,
+        ) as candidate_generator:
+            self.assertTrue(movegen.is_piece_attacking_square(board, source, target))
+            self.assertTrue(movegen.is_square_attacked(board, target, Side.SENTE))
+            self.assertTrue(movegen.is_in_check(board, Side.GOTE))
+
+        self.assertEqual(candidate_generator.call_count, 0)
+
+    def test_square_attack_queries_skip_unreachable_board_squares(self):
+        """空盤の利き照会は攻撃できないsource候補を全走査しない。
+
+        8方向rayと桂馬源以外のマスをpiece_atで読む回帰を検出する。
+        """
+        board = Board()
+        target = Square(5, 5)
+
+        with patch.object(board, "piece_at", wraps=board.piece_at) as piece_reader:
+            self.assertFalse(movegen.is_square_attacked(board, target, Side.SENTE))
+
+        self.assertLessEqual(
+            piece_reader.call_count,
+            40,
+            "8方向rayと桂馬source候補を越えてマスを調べています",
+        )
+
+    def test_square_attack_does_not_reread_clear_ray_squares(self):
+        """rayで確認済みの遮蔽なし経路を利き判定で再読しない。
+
+        path-clear前提を外してray通過マスを再検査する性能回帰を検出する。
+        """
+        board = Board()
+        target = Square(5, 5)
+        board.set_piece(Square(5, 1), Piece(PieceType.ROOK, Side.SENTE))
+
+        with patch.object(board, "piece_at", wraps=board.piece_at) as piece_reader:
+            self.assertTrue(movegen.is_square_attacked(board, target, Side.SENTE))
+
+        self.assertEqual(
+            piece_reader.call_count,
+            4,
+            "飛車までのrayマス以外を利き判定で再読しています",
+        )
+
+    def test_square_attack_stops_at_the_nearest_blocking_piece(self):
+        """ray上の最初の非攻撃駒で後ろの飛車・角を遮る。
+
+        短い駒を通り抜けてsliderを誤って攻撃元と数える回帰を検出する。
+        """
+        target = Square(5, 5)
+        rays = (
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1),
+        )
+        for side in Side:
+            for file_step, rank_step in rays:
+                blocker = Square(5 + file_step, 5 + rank_step)
+                slider = Square(5 + 2 * file_step, 5 + 2 * rank_step)
+                slider_type = (
+                    PieceType.ROOK
+                    if file_step == 0 or rank_step == 0
+                    else PieceType.BISHOP
+                )
+                blocked_board = Board()
+                blocked_board.set_piece(
+                    blocker,
+                    Piece(PieceType.KNIGHT, movegen._opponent_side(side)),
+                )
+                blocked_board.set_piece(slider, Piece(slider_type, side))
+                open_board = Board()
+                open_board.set_piece(slider, Piece(slider_type, side))
+                with self.subTest(side=side, ray=(file_step, rank_step)):
+                    self.assertEqual(
+                        self._reference_square_attack(blocked_board, target, side),
+                        movegen.is_square_attacked(blocked_board, target, side),
+                    )
+                    self.assertFalse(
+                        movegen.is_square_attacked(blocked_board, target, side)
+                    )
+                    self.assertEqual(
+                        self._reference_square_attack(open_board, target, side),
+                        movegen.is_square_attacked(open_board, target, side),
+                    )
+                    self.assertTrue(
+                        movegen.is_square_attacked(open_board, target, side)
+                    )
+
+
 class PromotedMinorMoveCandidateTests(unittest.TestCase):
     def test_promoted_minor_pieces_move_like_gold_for_sente_and_gote(self):
         """と金・成香・成桂・成銀は先後とも金と同じ6方向へ進める。
@@ -3479,6 +3866,116 @@ class CheckmateAndGameEndTests(unittest.TestCase):
         board.set_piece(Square(6, 9), Piece(PieceType.PAWN, Side.SENTE))
         board.set_piece(Square(9, 1), Piece(PieceType.KING, Side.GOTE))
         return Position(board, Side.SENTE)
+
+    def test_known_king_checkmate_helper_matches_public_result_without_rescan(self):
+        """既知の玉マスを使う詰み判定は公開判定と同じ結果を返す。
+
+        候補手ごとの初期玉再探索、先後の取り違え、玉なしを詰みにする誤りを
+        検出する。
+        """
+        checkmate_for_known_king = getattr(
+            movegen, "_is_checkmate_for_known_king", None
+        )
+        self.assertTrue(
+            callable(checkmate_for_known_king),
+            "_is_checkmate_for_known_king がまだ実装されていません",
+        )
+
+        mated_sente = self._mated_sente_position()
+        escape = mated_sente.copy()
+        escape.board.set_piece(Square(4, 9), None)
+        rotated_board = Board()
+        for file in range(1, 10):
+            for rank in range(1, 10):
+                piece = mated_sente.board.piece_at(Square(file, rank))
+                if piece is not None:
+                    side = Side.GOTE if piece.side == Side.SENTE else Side.SENTE
+                    rotated_board.set_piece(
+                        Square(10 - file, 10 - rank), Piece(piece.piece_type, side)
+                    )
+        mated_gote = Position(rotated_board, Side.GOTE)
+        missing_king = Position(Board(), Side.SENTE)
+        safe_board = Board()
+        safe_board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
+        safe_board.set_piece(Square(1, 1), Piece(PieceType.KING, Side.GOTE))
+        safe_position = Position(safe_board, Side.SENTE)
+
+        for position, expected in (
+            (mated_sente, True),
+            (escape, False),
+            (mated_gote, True),
+            (missing_king, False),
+            (safe_position, False),
+        ):
+            with self.subTest(side=position.side_to_move, expected=expected):
+                king_square = movegen._find_king_square(
+                    position.board, position.side_to_move
+                )
+                before = _position_snapshot(position)
+                self.assertEqual(movegen.is_checkmate(position), expected)
+                is_check = movegen.is_in_check(position.board, position.side_to_move)
+                if king_square is None or not is_check:
+                    with patch.object(
+                        movegen,
+                        "_find_king_square",
+                        side_effect=AssertionError("known king was rescanned"),
+                    ):
+                        actual = checkmate_for_known_king(position, king_square)
+                else:
+                    with patch.object(
+                        movegen,
+                        "_find_king_square",
+                        wraps=movegen._find_king_square,
+                    ) as find_king:
+                        actual = checkmate_for_known_king(position, king_square)
+                    self.assertFalse(
+                        any(
+                            call.args[0] is position.board
+                            for call in find_king.call_args_list
+                        ),
+                        "既知玉の初期王手判定で元盤面を再走査しています",
+                    )
+                self.assertEqual(actual, expected)
+                self.assertEqual(_position_snapshot(position), before)
+
+    def test_known_king_checkmate_helper_falls_back_for_stale_square(self):
+        """既知マスに手番側の玉がなければ公開判定へ戻る。
+
+        誤った玉位置を受け入れて合法応手探索へ進み、本来の詰み結果を変える
+        回帰を検出する。
+        """
+        checkmate_for_known_king = getattr(
+            movegen, "_is_checkmate_for_known_king", None
+        )
+        self.assertTrue(
+            callable(checkmate_for_known_king),
+            "_is_checkmate_for_known_king がまだ実装されていません",
+        )
+        position = self._mated_sente_position()
+        stale_square = Square(1, 1)
+        with patch.object(
+            movegen, "is_checkmate", wraps=movegen.is_checkmate
+        ) as public_checkmate:
+            self.assertTrue(checkmate_for_known_king(position, stale_square))
+        public_checkmate.assert_called_once_with(position)
+
+    def test_known_king_checkmate_keeps_uchi_fuzume_enabled_for_replies(self):
+        """既知玉の王手判定は打ち歩詰めを除外した応手探索へ渡す。
+
+        応手探索の規則フラグをFalseへ変え、打ち歩詰めの駒打ちを候補に
+        含める回帰を検出する。
+        """
+        position = Position(Board(), Side.SENTE)
+        position.board.set_piece(Square(9, 9), Piece(PieceType.KING, Side.SENTE))
+        position.board.set_piece(Square(5, 1), Piece(PieceType.KING, Side.GOTE))
+        position.board.set_piece(Square(9, 1), Piece(PieceType.ROOK, Side.GOTE))
+        position.sente_hand.add(BasicPieceType.PAWN)
+        king_square = Square(9, 9)
+
+        with patch.object(movegen, "_has_legal_move", return_value=False) as replies:
+            self.assertTrue(movegen._is_checkmate_for_known_king(position, king_square))
+
+        replies.assert_called_once_with(position, check_uchi_fuzume=True)
 
     def test_returns_true_for_checked_king_with_no_legal_move(self):
         """王手を受けた玉に防ぐ合法手がなければ、詰みと終局を返す。

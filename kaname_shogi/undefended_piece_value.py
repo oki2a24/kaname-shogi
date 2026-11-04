@@ -1,8 +1,8 @@
 """支えのない被攻撃駒の価値合計を計算する。"""
 
 from .evaluation import piece_reference_value
-from .model import PieceType, Position, Side, Square
-from .movegen import is_square_attacked
+from .model import PieceType, Position, Side
+from .movegen import _BOARD_SQUARES, _attacked_sides_for_target
 
 
 def _opponent_side(side: Side) -> Side:
@@ -12,22 +12,20 @@ def _opponent_side(side: Side) -> Side:
 
 def _value_for_side(position: Position, side: Side) -> int:
     """指定側の支えのない被攻撃非玉駒の参考価値を合計する。"""
-    opponent = _opponent_side(side)
     total = 0
-    for file in range(1, 10):
-        for rank in range(1, 10):
-            square = Square(file, rank)
-            piece = position.board.piece_at(square)
-            if (
-                piece is None
-                or piece.side != side
-                or piece.piece_type == PieceType.KING
-            ):
-                continue
-            attacked = is_square_attacked(position.board, square, opponent)
-            supported = is_square_attacked(position.board, square, side)
-            if attacked and not supported:
-                total += piece_reference_value(piece.piece_type)
+    for square in _BOARD_SQUARES:
+        piece = position.board.piece_at(square)
+        if piece is None or piece.side != side or piece.piece_type == PieceType.KING:
+            continue
+        sente_attacked, gote_attacked = _attacked_sides_for_target(
+            position.board, square
+        )
+        if side == Side.SENTE:
+            attacked, supported = gote_attacked, sente_attacked
+        else:
+            attacked, supported = sente_attacked, gote_attacked
+        if attacked and not supported:
+            total += piece_reference_value(piece.piece_type)
     return total
 
 

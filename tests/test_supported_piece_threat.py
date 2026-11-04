@@ -11,11 +11,48 @@ from supported_piece_threat_support import (
 )
 from undefended_piece_support import position, rotate_and_swap, snapshot
 
-from kaname_shogi import supported_piece_threat
+from kaname_shogi import movegen, supported_piece_threat
+from kaname_shogi.evaluation import piece_reference_value
 from kaname_shogi.model import BasicPieceType, PieceType, Side, Square
 
 
 class SupportedPieceThreatTests(unittest.TestCase):
+    def _reference_count(self, current, side):
+        """全占有駒を走査する独立参照で対象枚数を返す。"""
+        opponent = Side.GOTE if side is Side.SENTE else Side.SENTE
+        occupied_squares = []
+        for file in range(1, 10):
+            for rank in range(1, 10):
+                square = Square(file, rank)
+                piece = current.board.piece_at(square)
+                if piece is not None:
+                    occupied_squares.append((square, piece))
+
+        count = 0
+        for target, target_piece in occupied_squares:
+            if target_piece.side != side or target_piece.piece_type == PieceType.KING:
+                continue
+            target_value = piece_reference_value(target_piece.piece_type)
+            is_supported = any(
+                source_piece.side == side
+                and supported_piece_threat.is_piece_attacking_square(
+                    current.board, source, target
+                )
+                for source, source_piece in occupied_squares
+            )
+            has_lower_attacker = is_supported and any(
+                source_piece.side == opponent
+                and source_piece.piece_type != PieceType.KING
+                and piece_reference_value(source_piece.piece_type) < target_value
+                and supported_piece_threat.is_piece_attacking_square(
+                    current.board, source, target
+                )
+                for source, source_piece in occupied_squares
+            )
+            if has_lower_attacker:
+                count += 1
+        return count
+
     def _count(self, current, side):
         """指定側の対象枚数を公開操作へ渡す。"""
         count = getattr(
@@ -181,17 +218,125 @@ class SupportedPieceThreatTests(unittest.TestCase):
                 )
                 self.assertEqual(self._count(current, Side.SENTE), expected)
 
-    def test_multiple_and_mixed_attackers(self):
-        """価値の高い攻撃元の後にある安い攻撃元も見つけ、対象を一度だけ数える。
+    def test_attack_queries_check_only_reachable_source_candidates(self):
+        """V対象ごとの利き照会は到達可能なsource候補だけを調べる。
 
-        盤面走査の先頭の高価値駒で探索を止める誤りと、安い攻撃元ごとの重複加算を検出
-        する。独立に回転・先後交換した配置でも対象側の枚数を保つ。
+        対象駒ごとに全81駒を支え候補として再走査する性能回帰を検出する。
+        """
+        target = Square(5, 5)
+        current = position(
+            *(
+                (
+                    PieceType.ROOK if square == target else PieceType.KING,
+                    Side.SENTE,
+                    square,
+                )
+                for square in (
+                    Square(file, rank) for file in range(1, 10) for rank in range(1, 10)
+                )
+            )
+        )
+
+        with patch.object(
+            movegen,
+            "_piece_attacks_target",
+            return_value=False,
+        ) as attack_query:
+            self.assertEqual(self._count(current, Side.SENTE), 0)
+
+        self.assertLessEqual(
+            attack_query.call_count,
+            16,
+            "対象の8 ray先頭駒と8桂source以外も調べています",
+        )
+
+    def test_occupied_board_scan_reuses_precomputed_squares(self):
+        """V件数の全盤scanは事前生成Squareを再利用する。
+
+        一件のV対象を調べるたびに81個のSquareを生成する回帰を検出する。
+        """
+        current = position((PieceType.ROOK, Side.SENTE, Square(5, 5)))
+
+        with patch.object(
+            supported_piece_threat, "Square", wraps=Square
+        ) as square_factory:
+            self.assertEqual(self._count(current, Side.SENTE), 0)
+
+        self.assertEqual(
+            square_factory.call_count,
+            0,
+            "V対象の盤scanでSquareを新規生成しています",
+        )
+
+    def test_target_source_scan_matches_full_scan_reference(self):
+        """ray・桂sourceの各位置を全駒種・先後で全走査参照と照合する。
+
+        source候補の方向・駒種・先後を落としてV対象の数を誤る回帰を検出する。
+        """
+        target = Square(5, 5)
+        source_offsets = (
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1),
+            (-1, -2),
+            (1, -2),
+            (-1, 2),
+            (1, 2),
+            (-2, -1),
+            (-2, 1),
+            (2, -1),
+            (2, 1),
+        )
+        support_offsets = (
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1),
+        )
+        attackers = tuple(
+            piece_type for piece_type in PieceType if piece_type != PieceType.KING
+        )
+        for side in Side:
+            opponent = Side.GOTE if side is Side.SENTE else Side.SENTE
+            for attacker_type in attackers:
+                for file_step, rank_step in source_offsets:
+                    source = Square(target.file + file_step, target.rank + rank_step)
+                    support = next(
+                        Square(target.file + support_file, target.rank + support_rank)
+                        for support_file, support_rank in support_offsets
+                        if (support_file, support_rank) != (file_step, rank_step)
+                    )
+                    current = position(
+                        (PieceType.ROOK, side, target),
+                        (PieceType.KING, side, support),
+                        (attacker_type, opponent, source),
+                    )
+                    with self.subTest(side=side, attacker=attacker_type, source=source):
+                        self.assertEqual(
+                            self._reference_count(current, side),
+                            self._count(current, side),
+                        )
+
+    def test_multiple_and_mixed_attackers(self):
+        """最初のrayの高価値攻撃元の後から安い攻撃元を見つける。
+
+        ray順の最初の高価値駒で探索を止める誤りと、複数攻撃元による対象の重複加算を
+        検出する。独立に回転・先後交換した配置でも対象側の枚数を保つ。
         """
         pieces = (
             (PieceType.BISHOP, Side.SENTE, Square(5, 5)),
             (PieceType.GOLD, Side.SENTE, Square(4, 6)),
             (PieceType.ROOK, Side.GOTE, Square(1, 5)),
-            (PieceType.PAWN, Side.GOTE, Square(5, 4)),
+            (PieceType.ROOK, Side.GOTE, Square(5, 4)),
             (PieceType.SILVER, Side.GOTE, Square(6, 4)),
         )
         current = position(*pieces)
@@ -299,6 +444,8 @@ class SupportedPieceThreatTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(RuntimeError, "利き照会"):
                 self._count(current, Side.SENTE)
+            with self.assertRaisesRegex(RuntimeError, "利き照会"):
+                self._balance(current, Side.SENTE)
 
         with patch.object(
             supported_piece_threat,
@@ -307,6 +454,8 @@ class SupportedPieceThreatTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(RuntimeError, "参考価値"):
                 self._count(current, Side.SENTE)
+            with self.assertRaisesRegex(RuntimeError, "参考価値"):
+                self._balance(current, Side.SENTE)
 
 
 if __name__ == "__main__":

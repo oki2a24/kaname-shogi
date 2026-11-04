@@ -144,10 +144,14 @@ class PieceThreatComparisonPolicyTests(unittest.TestCase):
             normal_snapshot = snapshot(normal_position)
 
             def favor_non_mate(
-                after, perspective, *, weights, normal_snapshot=normal_snapshot
+                after,
+                perspective,
+                *material_args,
+                weights,
+                normal_snapshot=normal_snapshot,
             ):
                 """通常評価で非詰み手を詰み手より極端に高くする。"""
-                del perspective, weights
+                del perspective, material_args, weights
                 return 10**30 if snapshot(after) == normal_snapshot else -(10**30)
 
             for name in (
@@ -157,10 +161,16 @@ class PieceThreatComparisonPolicyTests(unittest.TestCase):
                 for moves in ((mate, normal), (normal, mate)):
                     with self.subTest(side=side, policy=name, moves=moves):
                         policy = self._policy(name)
-                        with patch(
-                            "kaname_shogi.material_piece_threat.evaluate_material_piece_threat",
-                            side_effect=favor_non_mate,
-                        ) as evaluator:
+                        with (
+                            patch(
+                                "kaname_shogi.material_piece_threat.evaluate_material_piece_threat",
+                                side_effect=favor_non_mate,
+                            ) as evaluator,
+                            patch(
+                                "kaname_shogi.material_piece_threat._evaluate_material_piece_threat_with_material",
+                                side_effect=favor_non_mate,
+                            ) as optimized_evaluator,
+                        ):
                             selected = game_search.choose_move(
                                 current,
                                 moves,
@@ -168,7 +178,13 @@ class PieceThreatComparisonPolicyTests(unittest.TestCase):
                                 random.Random(20261031),
                             )
                         self.assertEqual(selected, mate)
-                        evaluator.assert_called_once()
+                        expected_calls = (
+                            (1, 0) if name == "MATERIAL_PIECE_THREAT_V0" else (0, 1)
+                        )
+                        self.assertEqual(
+                            (evaluator.call_count, optimized_evaluator.call_count),
+                            expected_calls,
+                        )
                         self.assertEqual(snapshot(current), before)
 
     def test_unselected_v_policies_keep_legacy_summary_timing_order(self):

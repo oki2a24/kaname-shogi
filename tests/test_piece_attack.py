@@ -102,13 +102,18 @@ class PieceAttackTests(unittest.TestCase):
         )
         self.assertTrue(self._attack(current, Square(5, 8), Square(4, 7)))
 
-    def test_candidate_error_propagates(self):
-        """委譲先の候補生成エラーを隠さず呼び出し元へ伝える。"""
+    def test_direct_attack_error_propagates(self):
+        """直接利き判定のエラーを隠さず呼び出し元へ伝える。
+
+        利き判定の故障を通常の「利きなし」に置き換えて隠す回帰を検出する。
+        """
         current = position((PieceType.ROOK, Side.SENTE, Square(5, 9)))
         with patch.object(
-            movegen, "_move_candidates_for_piece", side_effect=RuntimeError("候補生成")
+            movegen,
+            "_piece_attacks_target",
+            side_effect=RuntimeError("直接利き判定"),
         ):
-            with self.assertRaisesRegex(RuntimeError, "候補生成"):
+            with self.assertRaisesRegex(RuntimeError, "直接利き判定"):
                 self._attack(current, Square(5, 9), Square(5, 8))
 
 

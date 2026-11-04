@@ -4,7 +4,9 @@ import importlib.util
 import unittest
 
 from kaname_shogi import evaluation, movegen
+from kaname_shogi.evaluation import material_balance
 from kaname_shogi.model import BasicPieceType, PieceType, Side, Square
+from kaname_shogi.move import DropMove
 from kaname_shogi.sfen import format_sfen, parse_sfen
 from kaname_shogi.usi_move import parse_usi_move
 
@@ -58,6 +60,65 @@ class EvaluationTests(unittest.TestCase):
         self.assertEqual(material_balance(p, Side.SENTE), 13)
         self.assertEqual(material_balance(p, Side.GOTE), -13)
         self.assertEqual(movegen.material_balance(p, Side.SENTE), 13)
+
+    def test_incremental_material_balance_matches_full_scan_for_legal_moves(self):
+        """合法一手のM差分は適用後の全盤面計算と一致する。
+
+        視点符号、成り、盤上駒の捕獲と成駒の基本駒復元、全7種の駒打ちに対する
+        差分の欠落を検出する。期待値は既存の独立した全盤面評価から得る。
+        """
+        incremental = getattr(evaluation, "_material_balance_after_move", None)
+        self.assertTrue(callable(incremental), "合法一手のM差分helperが必要")
+        cases = (
+            "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5RL/LNSGKGSNL b - 1",
+            "8k/4+p4/4R4/9/9/9/9/9/K8 b RBGSNLP 1",
+            "k8/9/9/9/9/9/4r4/4+P4/8K w rbgsnlp 1",
+        )
+        observed_promote = False
+        observed_capture = False
+        observed_promoted_capture = False
+        observed_drops: set[BasicPieceType] = set()
+
+        for sfen in cases:
+            position = parse_sfen(sfen).position
+            moves = movegen.legal_moves(position)
+            self.assertTrue(moves)
+            base_values = {
+                perspective: material_balance(position, perspective)
+                for perspective in Side
+            }
+            for move in moves:
+                after = movegen.position_after_move(position, move)
+                if isinstance(move, DropMove):
+                    observed_drops.add(move.piece_type)
+                else:
+                    observed_promote |= move.promote
+                    captured = position.board.piece_at(move.destination)
+                    observed_capture |= captured is not None
+                    observed_promoted_capture |= (
+                        captured is not None and captured.is_promoted
+                    )
+
+                for perspective in Side:
+                    with self.subTest(sfen=sfen, move=move, perspective=perspective):
+                        self.assertEqual(
+                            incremental(
+                                position,
+                                after,
+                                move,
+                                perspective,
+                                base_values[perspective],
+                            ),
+                            material_balance(after, perspective),
+                        )
+
+        self.assertTrue(observed_promote)
+        self.assertTrue(observed_capture)
+        self.assertTrue(observed_promoted_capture)
+        self.assertEqual(
+            observed_drops,
+            set(BasicPieceType) - {BasicPieceType.KING},
+        )
 
     def test_position_after_move_preserves_source_and_hands(self):
         """公開適用は歩取りを独立した局面へ適用する。
