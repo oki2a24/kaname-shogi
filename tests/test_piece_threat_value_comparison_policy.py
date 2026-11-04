@@ -90,6 +90,30 @@ class PieceThreatValueComparisonPolicyTests(unittest.TestCase):
                     self.assertIs(evaluator.func, evaluator_function)
                     self.assertEqual(evaluator.keywords["weights"], expected_weights)
 
+    def test_comparison_policies_scan_root_material_once(self):
+        """旧M+U+Vと価値+Vは各選択で基準Mを一度だけ全走査する。
+
+        候補ごとの公開全盤面M再計算や、差分callback未接続を検出する。
+        """
+        policies = (
+            self._policy("MATERIAL_PIECE_THREAT_V1"),
+            self._policy("MATERIAL_PIECE_THREAT_VALUE_V1"),
+        )
+        for side in (Side.SENTE, Side.GOTE):
+            current, supported, unsupported = rook_support_case(side)
+            moves = (supported, unsupported)
+            self.assertTrue(all(move in legal_moves(current) for move in moves))
+            for policy in policies:
+                with self.subTest(side=side, policy=policy):
+                    scan = game_search.movegen.material_balance
+                    with patch.object(
+                        game_search.movegen, "material_balance", wraps=scan
+                    ) as material_scan:
+                        game_search.choose_move(
+                            current, moves, policy, random.Random(20261103)
+                        )
+                    material_scan.assert_called_once_with(current, side)
+
     def test_value_policy_changes_choice_only_for_value_difference(self):
         """旧方式は同点、新方式は飛車を支える候補を選ぶ。
 
@@ -165,16 +189,21 @@ class PieceThreatValueComparisonPolicyTests(unittest.TestCase):
             normal_snapshot = snapshot(position_after_move(current, normal_move))
 
             def favor_non_mate(
-                after, perspective, *, weights, expected_snapshot=normal_snapshot
+                after,
+                perspective,
+                material,
+                *,
+                weights,
+                expected_snapshot=normal_snapshot,
             ):
                 """通常評価で非詰み手を詰み手より極端に高くする。"""
-                del perspective, weights
+                del perspective, material, weights
                 return 10**30 if snapshot(after) == expected_snapshot else -(10**30)
 
             for moves in ((mate_move, normal_move), (normal_move, mate_move)):
                 with self.subTest(side=side, moves=moves):
                     with patch(
-                        "kaname_shogi.material_piece_threat_value.evaluate_material_piece_threat_value",
+                        "kaname_shogi.material_piece_threat_value._evaluate_material_piece_threat_value_with_material",
                         side_effect=favor_non_mate,
                     ) as evaluator:
                         selected = game_search.choose_move(

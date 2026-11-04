@@ -1,14 +1,12 @@
 # 学習・開発の再開案内
 
-## 現在地（2026-11-03、作業中）
+## 現在地（2026-11-04、期限後の単発全量実測済み・目標未達）
 
-### 期限付きの比較CLI性能目標（承認済み・実行中）
+### 期限付きの比較CLI性能目標（全量実測済み・30分未達・次はエンジン開発1テーマ）
 
-本人の明示承認を2026-11-03 12:16:27 JSTに受領し、同時刻に8時間の作業期限を開始した。終了予定は20:16:27 JST。承認待ち12:08:38〜12:16:27（7分49秒）は除外する。作業ブランチは`codex/comparison-cli-performance`、開始HEADは`aa70d1d`。環境はPython 3.15.2、Ruff 0.16.10、hooksPath `.githooks`。2026-11-02の全量summaryは`elapsed_lower_bound=true`で、確定wall基準ではない。B0〜B8の根拠と実測は[学習記録](learning/comparison-cli-performance.md)を参照。
+最初の計画は2026-11-03 12:16:27 JSTに明示承認された。最初の8時間枠は2026-11-03 21:35:22 JSTに稼働タイマー28,803秒で終了（3秒超過）した。壁時計経過9時間18分55秒のうち1時間18分52秒はタスク非稼働/応答待ちとして除外。個別区間・理由内訳は復元不能。2026-11-04、本人承認を受けてB24の同条件fresh4,074局を一回だけ新規実行した。開始08:37:34 JST、外部wall6,587.24秒（約1時間49分47秒）。4,074局・2,037組をすべて完了し、保存済み旧全量runと条件・schedule・初期局面・指し手列・終局理由・勝者を4,074/4,074照合、両runの合法再生も通過した。30分目標は未達で、現状から72.67%の追加短縮が必要。旧全量runは`elapsed_lower_bound=true`のため全量同士の厳密な速度比は未確定。別のfresh42ではB0 730.49秒対B24平均64.585秒、11.31倍（91.16%短縮）だが、この倍率は42局だけの結果。新しい8時間枠や最適化作業は開始していない。B25は未実装のまま。詳細は[GOAL.md](../GOAL.md)、[実装計画](plans/2026-11-03-comparison-cli-performance-implementation-plan.md)、[学習記録](learning/comparison-cli-performance.md)。
 
-現時点の最速review済み候補はB18のfresh42 2-run平均wall77.705秒（B10比8.8%短縮）、両runで42/42棋譜・終局・勝者・合法再生一致。B19等価式79.44秒（2.2%遅い）、B20 Square cache75.86秒（2.37%速い）、B21 Board inline read74.94秒（3.56%速い）は、すべて5%採用線未達でruntimeをrollbackした。B21 candidate時full suite1094/92 module/17.959秒・Ruff・独立review C/I/M0/0/0、rollback後full suite1093/92/18.325秒成功。現状態はB18 runtime fingerprint `32e3686d...`+B19 all-81 index mapping coverage。B18+実験記録をcommit `dafa7055`へ保全、main未統合。全4,074局未計測・30分未達。
-
-必要proxy速度まで約4.97倍不足。profileでは`Board.piece_at`404,499,935 calls/53.201累積秒、`Square.to_index`406,836,055 calls/16.442秒。cProfile累積値はwall予測ではない。B19〜B21のindex局所案は採用線を越えなかったため、期限20:16:27 JSTまでの残時間は正しさ確認・独立レビュー・記録・最速状態の保全を優先する。次の有望な調査は候補評価・合法化・詰み判定間の実際の再計算をprofile/call graphで特定し、比較の信頼性を変えず一箇所減らす案。承認待ち時間除外0分。
+branch `codex/comparison-cli-performance`、HEAD `b8b1bc7f`、Python 3.15.2、Ruff 0.16.10、hooksPath `.githooks`。B23/B24 runtime/test・文書のtracked差分は未commit、main未統合（`.git`はread-only）。今回の全量出力は新規未追跡成果物として保持する。比較CLIはexit 0で完了し、実行中processはない。Activity Monitorの事前`compare_games`検索結果は空、シェルの全process一覧取得はOS権限で拒否された。B24のsource SHAは既存テスト・独立review対象と一致し、全体1,101 tests/92 modules、Ruff成功、独立review C/I/M 0/0/0は既存記録を参照。今回コード変更はない。本人は今回の性能成果を保存した後、将棋エンジン開発を一テーマ進める意向を示した。具体テーマは未選定で、保存完了後に選ぶ。比較CLI性能目標は未達のまま保留し、新たな最適化・時間枠は開始しない。
 
 主線「次の非駒得評価項目を一つ選び、学ぶ」は未完了で、具体項目も未選定。支えのない被攻撃駒の価値合計比較は指定7局面・2037組/4074局で改善を支持し、main統合・push・統合後検証・最後の理解確認まで完了したが、一般棋力向上は示さない。
 

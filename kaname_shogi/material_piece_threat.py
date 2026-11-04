@@ -69,6 +69,23 @@ def evaluate_material_piece_threat(
     既存の差替式選択器へ任せ、他の選択方式を変更しない。
     """
     material = material_balance(position, perspective)
+    return _evaluate_material_piece_threat_with_material(
+        position, perspective, material, weights=weights
+    )
+
+
+def _evaluate_material_piece_threat_with_material(
+    position: Position,
+    perspective: Side,
+    material: int,
+    *,
+    weights: PieceThreatWeights = _DEFAULT_PIECE_THREAT_WEIGHTS,
+) -> int:
+    """既知のMと既存U/Vから、旧M+U+Vの通常評価点を返す非公開操作。
+
+    比較policyの一手選択が合法手差分から得たMを渡し、候補ごとの全盤面走査を
+    繰り返さずに済むようにする。公開評価器は従来どおりMを一度全盤面計算して委譲する。
+    """
     undefended = attacked_undefended_piece_balance(position, perspective)
     supported_threat = supported_lower_value_threat_balance(position, perspective)
     return (

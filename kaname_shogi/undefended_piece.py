@@ -1,7 +1,7 @@
 """相手の利きがあり味方の支えがない盤上駒を読み取る。"""
 
 from .model import PieceType, Position, Side, Square
-from .movegen import is_square_attacked
+from .movegen import _attacked_sides_for_target
 
 
 def _opponent_side(side: Side) -> Side:
@@ -11,7 +11,6 @@ def _opponent_side(side: Side) -> Side:
 
 def _count_for_side(position: Position, side: Side) -> int:
     """指定側の攻撃され支えのない盤上非玉駒を走査して数える。"""
-    opponent = _opponent_side(side)
     count = 0
     for file in range(1, 10):
         for rank in range(1, 10):
@@ -23,8 +22,13 @@ def _count_for_side(position: Position, side: Side) -> int:
                 or piece.piece_type == PieceType.KING
             ):
                 continue
-            is_attacked = is_square_attacked(position.board, square, opponent)
-            is_supported = is_square_attacked(position.board, square, side)
+            sente_attacked, gote_attacked = _attacked_sides_for_target(
+                position.board, square
+            )
+            if side == Side.SENTE:
+                is_attacked, is_supported = gote_attacked, sente_attacked
+            else:
+                is_attacked, is_supported = sente_attacked, gote_attacked
             if is_attacked and not is_supported:
                 count += 1
     return count

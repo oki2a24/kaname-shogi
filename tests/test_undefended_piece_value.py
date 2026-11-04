@@ -24,6 +24,22 @@ class UndefendedPieceValueTests(unittest.TestCase):
         """指定視点の価値合計差を公開操作へ渡す。"""
         return value_module.attacked_undefended_piece_value_balance(current, side)
 
+    def test_combines_both_side_queries_once_for_each_piece(self):
+        """U価値は対象駒ごとに両側の利きを一度で調べる。
+
+        攻撃と支えで同じtargetのrayを二重走査する回帰を検出する。
+        """
+        helper = getattr(value_module, "_attacked_sides_for_target", None)
+        self.assertTrue(callable(helper), "両側利きhelperがありません")
+        current = position((PieceType.PAWN, Side.SENTE, Square(5, 5)))
+
+        with patch.object(
+            value_module, "_attacked_sides_for_target", wraps=helper
+        ) as probe:
+            self.assertEqual(self._value(current, Side.SENTE), 0)
+
+        probe.assert_called_once_with(current.board, Square(5, 5))
+
     def test_design_values_and_balances(self):
         """対象駒の価値を一度加え、先後視点の差を返す。
 
@@ -242,7 +258,7 @@ class UndefendedPieceValueTests(unittest.TestCase):
 
         with patch.object(
             value_module,
-            "is_square_attacked",
+            "_attacked_sides_for_target",
             side_effect=RuntimeError("利き故障"),
         ):
             with self.assertRaisesRegex(RuntimeError, "利き故障"):

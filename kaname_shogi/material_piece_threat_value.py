@@ -73,6 +73,23 @@ def evaluate_material_piece_threat_value(
     既存のM・Vと価値合計差を一回ずつ計算し、名前付き係数で合成する。
     """
     material = material_balance(position, perspective)
+    return _evaluate_material_piece_threat_value_with_material(
+        position, perspective, material, weights=weights
+    )
+
+
+def _evaluate_material_piece_threat_value_with_material(
+    position: Position,
+    perspective: Side,
+    material: int,
+    *,
+    weights: PieceThreatValueWeights = _DEFAULT_PIECE_THREAT_VALUE_WEIGHTS,
+) -> int:
+    """既知のMと既存価値合計/Vから、価値+V通常評価点を返す非公開操作。
+
+    比較policyの一手選択が合法手差分から得たMを渡し、候補ごとの全盤面走査を
+    繰り返さずに済むようにする。公開評価器は従来どおりMを一度全盤面計算して委譲する。
+    """
     undefended_value = attacked_undefended_piece_value_balance(position, perspective)
     supported_threat = supported_lower_value_threat_balance(position, perspective)
     return (

@@ -87,7 +87,7 @@
 
 ### Task 4: 最速状態を固定し、新規4,074局を計測
 
-- [x] **ステップ1: 8時間の残りと見込時間を照合する。** 2026-11-03 19:28 JST時点で期限まで約48分。B17 fresh42のwall84.79秒からの単純な局数比例は全量約2時間超となるが、小規模runからの推定であり性能実測としては扱わない。残り時間内の完了見込みを得られないため、全量runを起動しない。
+- [x] **ステップ1: 8時間の残りと見込時間を照合する。** B24後のゴール稼働タイマー28,159/28,800秒時点で残り641秒。fresh42 summary平均64.241秒から局数比例は約1時間44分、確認比較の既知全量手数へ比例すると約2時間03分で、両方とも残りを大きく超える参考値（実測でない）。B24保存conditionsをB23と再比較し、`source_sha256`だけが異なることを確認。Activity Monitorは`compare_games`検索で該当行なし、シェルの全process一覧はOS権限で拒否。新規全量runの完了見込みがないため起動しない。
 - [ ] **ステップ2: fresh run条件を再確認する。** 完了比較processなし、指定4 worker、元conditions/seed/positions hash一致、max-plies512、2,037組、空かつ未使用の新しい出力先、`--resume` なしを二重確認する。
 - [ ] **ステップ3: 同条件4,074局を実行し壁時計を測る。** CLIプロセス起動から終了コード取得まで、外部の `time` 実時間を記録する。全局が新規計算される実行のみ有効とする。
 
@@ -221,3 +221,80 @@
 **B21実施結果・採否（2026-11-03 20:01 JST）:** 初期Redは現Board.piece_atからSquare.to_indexを呼び、mock assertionで全81座標失敗。off-by-one formula mutationは80 assertion failure + index81範囲外1 errorとなり、ずれを検出した。testの初稿はRuff B905 zip(strict=)で止まったため、Python 3.9互換を守ってenumerate + index参照に直した。実装後testは全座標のPiece identityとto_index非呼出しを確認。Ruff import sort/format/check成功。B21 fresh42は新規出力`comparison-cli-performance-42-B21-inline-board-read-2026-11-03` wall74.94秒/summary74.592958500秒、42/42局・21組・4,606手・checkmate42・error等0・lower_bound=false。B18 repeatとsource_sha256以外条件差なし、開始局面/seed/side/schedule/moves/reason/winner/policy42/42一致、legal replay42/42。B18 mean77.705秒より3.56%短いだけで、事前5%線と既知B8同コードばらつき4.4%を超えないためrepeatせず棄却。runtimeと専用testをrollback。実装中はmodel30 test/full1094 tests/92 modules/17.959秒成功。独立レビューC/I/M0/0/0。rollback後はB18 + B19全81 index mapping coverageのみへ戻し、model29 test/full1093 tests/92 modules/18.325秒成功。最終source fingerprintがB18 `32e3686d...`と一致することを確認。
 
 **作業ブランチ保全（2026-11-03 20:03 JST）:** B18最速状態、B19 all-81 mapping coverage test、B19〜B21の実験ticket/採否、GOAL/learning/resume更新をcommit `dafa7055`（`Optimize Square validation for comparison runs`）へ保存。main統合なし。commit hookのformat/lintは成功し、rollback後全体1093 tests/92 modules/18.325秒が成功済み。比較runの新規出力はrepo内未追跡で保持し、このcommitへ含めていない。
+
+### 計画変更B22（2026-11-03 20:07 JST、候補選択は本人から委任）
+
+**観測根拠:** B10-14 cProfileの`is_square_attacked`10,308,672 calls/56.687 cumulative secondsのうち、U価値`_value_for_side`が6,581,138 calls/35.587秒、旧U枚数`_count_for_side`が3,727,534 calls/21.100秒。どちらも各対象駒ごとに対象側の利きと反対側の利きを別々に問い合わせる。`_is_target_attacked_by_side`は11,676,573 calls/64.034秒、`Board.piece_at`呼出元の最上位でもある。cProfile cumulativeは重複する診断値でwall予測ではない。この二重ray traversalを対象にする。
+
+**仮説と対象:** movegenにprivate `_attacked_sides_for_target(board,target)`を追加し、8方向の最初の駒と桂sourceを一度走査して、先手・後手それぞれの幾何学的利きを一回のtupleで返す。rayの最初の占有駒、target上駒無視、桂の飛び越し、成駒、ピンを含む幾何学的定義は既存`is_square_attacked`と同じ。U価値・U枚数の各対象ではhelperを一度呼び、攻撃側/支え側のboolを使う。`is_square_attacked`と単独評価API、基準/候補評価値、合法手、手順、seed/RNG、棋譜・終局・保存/再開を変えない。対象はmovegen.py、undefended_piece_value.py、undefended_piece.pyと各関連test。
+
+**TDD・検出力:** helperのtestは期待queryが未実装であることを`callable` assertion Redとして確認し、実装後は初期局面と遮蔽/slider/桂/成駒を含む代表盤面の全81 targetについて、(SENTE,GOTE)結果を既存public `is_square_attacked` 2回の独立結果と比較する。U価値/U枚数にそれぞれ「1 eligible targetでcombined helper 1回」をspyして二回のside queryへ戻る回帰を検出する。例外伝播testは旧aliasのmockからcombined helperへ更新し同じ例外を確認。既存のU/value/attack代表test、model/module関連・full suite、Ruff、差分、独立review C/I/Mを行う。意図したmaskの先後交換、ray遮蔽漏れ、桂源漏れの代表変異を確認する。
+
+**fresh42測定・採否:** B18 2-run mean77.705秒を比較値に、同じ21 seed組/7局面/両方式/先後/512手/4 workersの42局を新規出力へ計算。初回5%未満は棄却・rollback、5%以上は同コードfresh42をrepeatし、2-run平均5%以上短縮かつ両runでconditions・42/42棋譜/終局・勝者・合法再生一致なら保持候補。15%以上なら強い改善として記録。期限内にrepeat/検証が終わらなければ採用せずrollback/記録を優先し、全4,074局を新規実時間で完了できないので全量測定しない。
+
+**計画判断:** 本人は候補選択を人間へ求めずゴールに沿って進めるよう指示している。Square/Board単一添字操作B19〜B21はいずれも5%未満だったため、profileで二重照会として直接観測した評価内ray重複を選択する。期限20:16:27 JSTを維持、追加承認待ち時間0分。
+
+**実施結果・採否（2026-11-03 20:12 JST）:** 変更前Redは未実装helper/単一probe契約のassertionで計3件失敗。実装後、対象test群28件とfull suite1096 tests/92 modules/18.427秒が成功し、Ruffとdiff checkも成功。戻りtupleの先後を逆転するmutationは代表盤面の81 target中35 targetで独立public queryとのassertion failureになり検出、正しい順序へ復元した。独立reviewはCritical 0 / Important 0 / Minor 0。reviewerはコードとテスト差分を確認し、テスト実行はしていない（全体検証は実装者実行）。
+
+新規出力`data/comparison/runs/comparison-cli-performance-42-B22-combined-target-attacks-2026-11-03`で42局/21組/4,606成功手を新規計算し、`/usr/bin/time -p` wall73.83秒、summary elapsed73.485355833秒、lower_bound=false。B18 2-run平均77.705秒から4.9868%短縮で、5%線の73.81975秒より0.01025秒遅く、事前基準未達のためrepeatせず棄却。B18 repeatに対しseed・side・position schedule、開始SFEN、moves、終局理由、winner side/policyは42/42一致し、`load_completed_comparison`の合法再生も42/42成功。条件差はsource_sha256とgit provenanceのみ（双方dirty=true、B18側HEAD `d911cc16`・B22側HEAD `b8b1bc7f`、B22側はB18後の記録commit）。B22 source fingerprintは`575a5880a023a90ee401ceb84c586503a40e22d80417625c71e553d39c72a9b7`。B22 runtimeと専用testをHEADのB18へ戻し、rollback後全体1093 tests/92 modules/18.811秒、Ruffとdiff check成功。fresh出力は再利用せず保全する。
+
+**検出範囲と未確認:** helper単独testは、targetからのray先頭・桂sourceを一巡する契約を、slider遮蔽・桂・成駒を含む代表盤面の全81 targetについて2つの既存public queryと比較する。U枚数・U価値それぞれ1 eligible target=1 combined probeをspyで確認し、side swap mutationを検出した。既存`test_movegen`およびU/V評価群が各駒の幾何・視点条件を補完する。ray遮蔽漏れ・桂source漏れの独立mutationは今回期限内に実施せず、helperを全ての盤面/駒配置で証明したわけではない。新規42局の棋譜一致・合法再生とfull suiteで今回条件に対する回帰を補った。
+
+**次に残る課題:** 採用・review済み最速はB18 fresh42平均77.705秒のまま。全量必要proxyには約4.97倍不足し、4,074局fresh実測も30分達成も未確認。B19〜B22の小さい局所変更は5%線を越えなかった。次の調査では、profile/call graphから比較1手あたりの合法候補生成・評価・終局判定の重複箇所を実測して、広い処理時間を減らせる単独仮説を立てる。8時間期限20:16:27 JSTは延長しない。
+
+### B23 M差分計算（最初の8時間枠内、本人のゴール沿いに進める指示を適用）
+
+**観測根拠:** B10〜B14の14局cProfileで`material_balance`は313,279回/35.348累積秒。呼出元はM+U+V旧方式120,591回/13.430秒、M+被攻撃価値+V方式192,688回/21.918秒。候補評価ごとにMが全81マスを走査している。これらはprofileの累積値でwall予測ではない。
+
+**仮説と変更範囲:** ルート局面のMを一度だけ計算し、合法な`BoardMove`では移動駒・成り・取った駒と持ち駒への追加、`DropMove`では盤上価値と持ち駒価値の差だけを反映すれば、候補単位の全盤面走査を削減し、評価値と選択を保てる。対象は`evaluation.py`（非公開差分helper）、`one_ply_selection.py`（後方互換な任意手付き評価callback）、`material_piece_threat.py`と`material_piece_threat_value.py`（既存U/V合成と事前計算Mを共有）、`movegen.py`（比較対象のM+U+V二方式だけ接続）、対応する既存test3件。別policy、評価式、合法手・終局・mate優先、候補順・乱数消費、公開評価値、棋譜/保存/分析/再開、CLI条件は変更しない。永続cache・新依存・大規模変更はしない。
+
+**TDD・検出力:** helperは未実装を契約assertionでRedにし、基準M+差分と既存`material_balance(after)`を独立照合する。初期局面、非成り移動、成り、非成駒/成駒の取り、先後双方の手番/視点、持駒7種類の駒打ちを合法手列から検査する。比較policy2方式は選択ごとの全走査を1回、候補ごとの公開全盤面評価は0回とspyで確認。one-ply callbackが各候補に元順で呼ばれ、mateでは呼ばれず、既存evaluate経路と固定seed tie/RNG結果が一致することを確認。符号反転、成り加算漏れ、捕獲した成駒の価値/基本駒種誤り、打ちで手駒価値を引き忘れる変異を隔離して検出する。既存合法手/mate/policy testが回帰を補完し、fixture外の全状態を証明したとは扱わない。
+
+**fresh42採否:** B18の正しさ確認済み2-run mean77.705秒を参考基準にする。candidateは元seed一覧の同じ21組/7局面/両方式/先後/512手/4 workerを未使用出力`comparison-cli-performance-42-B23-incremental-material-2026-11-03`へ新規計算する。前回中断・resumeしたB23 baselineは再利用せず、速度基準に使わない。初回5%未満はrollback、5%以上なら同コード別新規出力でrepeatし、2-run平均5%以上短縮かつ両runのconditions/seed/side/position schedule/start SFEN/moves/reason/winner一致・42/42合法再生なら保持候補。時刻残りに全4,074局の見込み実行時間が収まらない限り全量runしない。42局から30分達成を推定しない。
+
+**承認・期限:** 本人の「ゴールに沿うなら承認し、人間に確認せず進める」という既存の明示的な条件付き承認と、今回の「最初の8時間をやりきる」という実行指示をこの限定変更に適用する。これは新しい時間枠を作らず、最初の承認済み8時間枠の残時間だけを使う。ゴール稼働タイマーでは計画時点で約55分40秒残り。期限到達までに実装・検証・review・記録を閉じ、目標未達ならGOAL条件に従って安全に停止する。
+
+**B23実施結果・採用候補（2026-11-03、最初の8時間枠）:** TDD Redは差分helperの契約assertionと任意callback signature assertionで確認。実装後は対象22 test、全体1,096 tests/92 modules/18.653秒、Ruff成功。M符号反転・成り価値欠落・成駒捕獲後の手駒価値誤り・駒打ち手駒価値控除漏れの4変異がすべて意図した独立全走査比較assertionで検出された。独立reviewはCritical 0 / Important 0 / Minor 0。
+
+新規出力`comparison-cli-performance-42-B23-incremental-material-2026-11-03`で外部wall70.74秒/summary70.397746084秒、同コードrepeat出力`comparison-cli-performance-42-B23-incremental-material-repeat-2026-11-03`で外部wall71.80秒/summary71.456820584秒。両runは42/42局・21組・4,606手・checkmate42、error/interruption/unstarted/in-flightなし、elapsed lower boundなし。B18 fresh42 reference repeatとsource_sha256/git以外の条件差はなく、seed/side/position schedule/start SFEN/moves/reason/winner side/policy各42/42一致、`load_completed_comparison`合法再生も各42/42。summary平均70.927283334秒、B18平均77.705秒より8.72%短縮のためB23を現時点の正しさ確認済み最速として保持する。線形換算約6,879.95秒は参考proxyに限り、全4,074局の実時間・30分達成ではない。全量は未実測。
+
+**B23後の診断結果:** 14局/1,549手のmoves/reason/winner/policyはB23 fresh42と14/14一致。新規pstats `/private/tmp/comparison-cli-performance-B23-14-2026-11-03.pstats` は1,283,703,429 calls、profile cumulative186.613秒、diagnostic wall209.196秒。測定結果としては使わない。`_is_target_attacked_by_side`11,676,573 calls/62.847 cum sec、`is_square_attacked`10,308,672/55.536秒、`supported_lower_value_threat_balance`313,279/58.939秒、`supported_lower_value_threat_count`626,558/58.705秒が上位。`material_balance`の候補ごとの全盤面呼び出しは消えた。profile後も残る評価側ray queryの重複を候補にする。
+
+### 計画変更B24（2026-11-03、B23の最初の8時間枠内で検証）
+
+**観測根拠・以前の実験からの差:** B23 fresh42で旧B18と同じ42局・4,606手の棋譜が一致し、summary mean70.927秒、B18 mean77.705秒から8.72%短縮。現行14局profileはU枚数/価値が別々に`is_square_attacked`を呼び、`_is_target_attacked_by_side`11.68m回/62.847 cumulative秒、`is_square_attacked`10.31m/55.536秒を記録。profile累積値は重複する診断値でwall予測に使わない。過去B22の両側query統合はB18比4.9868%で5%線を0.01025秒下回ったため棄却されたが、B23はM全盤面走査を削減した別の速い基準であり、攻撃判定の絶対query数と棋譜は同じ。この変更後基準でのみ効果量と採否線を新規測定する。
+
+**仮説・影響範囲:** targetから最初のray駒と桂sourceを一巡し、先手・後手の幾何学的利きを一回の内部tupleに記録すれば、U枚数とU価値の対象駒ごとにある二度のray queryを一度にできる。対象は`movegen.py`、`undefended_piece.py`、`undefended_piece_value.py`と各対応test。公開`is_square_attacked`の片側照会は維持し、両側helperはUの集計だけから使う。ray最初の占有駒、target上駒、桂の飛越し、成駒、ピン、先後、例外伝播、評価値、順序/RNG、合法手/終局、棋譜、保存/再開とCLI条件は維持し、永続cache・外部依存を追加しない。
+
+**TDD・検出力:** helper未実装時にcallable/契約assertionが失敗するRedを確認。現行二つの公開`is_square_attacked`を独立期待値として、代表盤面の全81 targetについてside pairを照合し、ray遮蔽・桂source・成駒・target上駒を含める。U枚数とU価値それぞれ1 eligible targetに対し両側combined helper 1回だけ呼ぶことをspyする。side swap、ray遮蔽漏れ、桂source漏れの代表変異を意図したassertionで検出し、全体suiteで他policy/既存合法性を補完。Ruff、`git diff --check`、独立review Critical/Important/Minor、B23との新規fresh42全42棋譜/合法再生一致を確認する。
+
+**測定・採否・期限:** B23 summary 2-run mean70.927秒を参考基準に、同じ7局面/21 seed組/両方式/先後/512手/4 workerの42局を新しい出力へ実計算。初回が5%以上短縮なら同じコードでfresh42を一回repeatし、2-run meanが5%以上短縮かつ両出力の条件/棋譜/終局/勝者/合法再生一致なら最速の正しさ確認済み候補として保持。5%未満/悪化はrollback。42局から全量30分を判定しない。B23 meanからの単純換算でも全量は残り期限を超えるため全4,074局を開始しない。期限20:16:27 JSTを延長せず、期限到達時は状態・記録を安全に保存する。
+
+**計画判断:** 本人はゴールに沿う改善なら人間への追加確認なしに進めるよう条件付きで指示している。本B24はprofileに直接現れた最上位のU attack-query重複を狙い、過去案をB23で速くなった基準へ組合せ再測定する限定変更であり、その条件に合う。追加質問待ちは設けず、現在残っている最初の8時間枠だけで実施する。
+
+**B24実施結果・採用候補:** helperのcallable/契約test、両U集計の1対象1query test、例外伝播testの未実装時Redを機能不足由来assertion failureで確認。実装後関連30 tests、全体1,101 tests/92 modules/18.295秒、Ruff import-sort/format/check、diff checkが成功。representative 81-target reference、ray遮蔽/先後桂、盤面不変、U両集計1 query、例外伝播を確認。side tuple反転、ray遮蔽漏れ、先手/後手桂source欠落の4 mutationは狙いのassertionで検出。mutation runnerは初回、side swap subTestの複数failを単一failと仮定した検査条件ミスで停止したが、判定条件を修正して4 mutation全てを再実行・検出した。独立review Critical/Important/Minor 0/0/0。reviewerはテスト実行なし。
+
+fresh42一回目は新規`comparison-cli-performance-42-B24-combined-target-attacks-2026-11-03`、外部wall63.75秒/summary63.403406458秒。repeatも未使用の別出力`comparison-cli-performance-42-B24-combined-target-attacks-repeat-2026-11-03`、wall65.42秒/summary65.079017542秒。両方42/42局・21組・4,606手・checkmate42、error/interruption/unstarted/in-flightなし、lower-bound false。B23 fresh42 referenceに対してconditionsの`source_sha256`だけ異なり、HEAD/git provenanceと全条件は同一。両runでseed/side/schedule/start SFEN/moves/end reason/winner side/policy42/42一致し、合法再生42/42。
+
+B24 summary平均64.241212秒はB23 mean70.927283334秒比9.43%短く、B18 mean77.705秒比17.33%短い。外部wall平均64.585秒。B24を最速の正しさ確認済み候補として保持する。4,074局の線形proxyは6,231.40秒・約1時間44分で30分の約3.46倍不足するが、推定にすぎない。全4,074局実測なし、30分未達。残り期限ではruntime変更を追加せず、最終テスト/Ruff/diff/記録を確認する。最初の期限20:16:27 JSTを変更しない。
+
+**期限前B24後診断（コード変更なし）:** B23後profileはB24統合前の状態で、現行hot pathを直接示さない。B24新規fresh42の実装を固定し、元seed一覧・7局面・各局面の最初の組から14局を`run_game`でcProfileする。B24 fresh42とmoves/reason/winner/policy14/14一致、profile呼出数と累積時間でhot path更新を成功条件とし、累積値は速度実測に使用しない。pstatsを`/private/tmp/comparison-cli-performance-B24-14-2026-11-03.pstats`へ新規保存する。診断完了後はコード検査・文書/状態の最終確認を優先し、8時間期限20:16:27 JSTを延長しない。
+
+**診断結果・次候補（未実装）:** 14局/1,549手のmoves/reason/winner/policyはB24 fresh42と14/14一致。pstatsは1,162,516,770 calls、累積172.253秒、診断wall194.904秒。上位は`_attacked_sides_for_target`5.154m/42.367累積秒、`Board.piece_at`315.116m/41.230秒、`_legal_moves_controlled`22,072/40.610秒、`_apply_drop_controlled`1.214m/38.063秒、`is_in_check`1.055m/35.296秒、Vの`supported_lower_value_threat_balance`313,279/58.813秒と`supported_lower_value_threat_count`626,558/58.586秒。cumulativeは重複する診断値でwall予測に使わない。B23の`is_square_attacked`10.309m/55.536秒はB24上位から消えた。
+
+次の候補B25は、V balanceが各評価で先後別のcountを2回呼び、各countが`_BOARD_SQUARES`全81マスを`piece_at`して`occupied_squares`と`pieces_by_index`を作り直す重複を一回のscan/局所dictionaryへまとめる案。profile上balance313,279回なので、1回統合で減り得る読み取りは81×313,279=25,375,599回（当該14局profileの`Board.piece_at`315,116,174回の約8.05%）という構造上限の参考値。累積profile/call countからwall短縮率は推定しない。対象を`supported_piece_threat.py`と`tests/test_supported_piece_threat.py`に絞り、両側countと両視点balanceを既存の独立全盤走査参照と照合、balanceの一回scan spy、単独countの片側契約、例外伝播、盤面不変、source候補順と評価結果を確認する。代表mutationで先後tuple・対象条件・攻撃判定漏れを検出し、関連/full test・Ruff・diff check・独立review後、B24 fresh42と同じ条件で新しい出力先へ実測し、棋譜・終局・勝者・合法再生を42/42照合する。未実装。最後の1時間のため今回の枠では開始しない。
+
+
+### 最初の8時間期限での実施状態
+
+期限は2026-11-03 21:35:22 JST、ゴール稼働タイマー28,803秒で到達した。全4,074局のfresh runは起動していない。Task 4 step 1の時間・見込み照合は完了し、残り時間に対して局数proxy約1時間44分/既知手数proxy約2時間03分だったため全量計測を行わなかった。step 2の全量向け新規出力・seed等最終二重確認、step 3/4の全量実行・結果照合は未実施。step 5のB24/未達/次候補・文書記録と差分/リンク確認は実施したが、全量成果の記録・reviewは未完了。B24候補・dataを保持し、tracked変更は未commit・main未統合。期限到達・目標未達として停止し、新しい枠は設けない。
+
+### 期限後の単発全量計測（2026-11-04、本人承認後）
+
+**計画・承認:** 最初の8時間枠が期限到達した後、本人から「最終的にどれだけ性能向上したか、テストしてほしい。計画を出して」と依頼を受けた。計画はB24で同条件fresh4,074局を新しい出力先へ一度だけ実行し、外部wall time・完了状態・全件の合法性と旧4,074局との結果一致を確認する範囲に限定した。新しい8時間枠、追加最適化、旧方式の全量再実行は含めず、旧summaryの`elapsed_lower_bound=true`を厳密な全量baselineに使わないと提示した。本人は「承認する、開始して」と承認した。
+
+**開始前確認・実行:** 2026-11-04 08:37:34 JSTに開始。同一PC・process-pool 4 worker、baseline `material-piece-threat-v1`、candidate `material-piece-threat-value-v1`、position sha `256437ea5e0465f4e1ed777deecf091ef1745bbdbab6b70e805e88685b94ad61`、seed-list sha `a05675f3ee352596822286d8a101be481421322cf4aa5f82edcc5e32329bd8fc`、7局面×291組=2,037組/4,074局、先後交換、512手上限。Activity Monitorの`compare_games`検索は空、未使用の新規出力先を確認し、現source SHAがB24検証時と同じ`e2d243d4ff5ad47bff9ed07842d40c2386e64e92af52da18ce0505a782ef3aec`であることを照合した。`--resume`は使わない。出力は`data/comparison/runs/comparison-cli-performance-4074-B24-final-2026-11-04`。
+
+**結果・全件検証:** CLIはexit 0。外部`/usr/bin/time -p` real 6,587.24秒（1時間49分47.24秒）、summary `elapsed_ns=6586632689000`（6,586.632689秒）。status complete、4,074/4,074局・2,037/2,037組、unstarted/partial/in-flight/error/interruptedは0。終局内訳はcheckmate 3,976、no_legal_move 1、perpetual_check_loss 1、repetition 9、ply_limit 87。保存済み旧4,074局と今回の新規4,074局を両方`load_completed_comparison`で読込み、合法再生とsummary検証を実行。conditionsの比較対象・position hash・組数・手数上限、全schedule、start SFEN、指し手列、終局reason、winner side/policy、ply数が4,074/4,074で一致した。
+
+**結論:** 30分に対し4,787.24秒超過し、実時間は3.66倍、現実装からさらに72.67%短縮が必要。目標未達である。旧全量summaryは再開によるlower boundのため、厳密な全量同士倍率は確定しない。参考として、同条件fresh42ではB0 wall730.49秒、B24二回平均64.585秒、11.31倍/91.16%短縮だが、これは42局だけの倍率である。新しい8時間枠・最適化作業は開始しておらず、B25は未実装・保留。

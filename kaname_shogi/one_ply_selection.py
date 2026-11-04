@@ -18,6 +18,7 @@ def choose_one_ply_move(
     rng: random.Random,
     *,
     evaluate: Callable[[Position, Side], int],
+    evaluate_with_move: Callable[[Position, Move, Side], int] | None = None,
 ) -> Move | None:
     """指定側視点の評価と一手詰み優先で候補から一手を選ぶ。
 
@@ -26,18 +27,22 @@ def choose_one_ply_move(
         moves: positionの合法手を表すタプル。空でもよい。
         rng: 同点候補から一手だけを選ぶ呼出側の乱数生成器。
         evaluate: 適用後の局面と開始側を受け、通常評価の整数を返す読み取り操作。
+        evaluate_with_move: 指定時は適用後局面・候補手・開始側を受ける評価操作。
+            省略時は従来どおりevaluateを使う。
 
     戻り値:
         movesが空ならNone。それ以外は、相手を即詰みにする候補を通常点より優先し、
         残る場合はevaluateの値が最大の候補から選んだ一手。
 
     副作用:
-        positionとmovesを変更しない。rngが選択時に一度進み、evaluateが呼ばれる。
+        positionとmovesを変更しない。rngが選択時に一度進む。通常候補では
+        evaluate_with_moveを指定した場合はそれを、それ以外はevaluateを呼ぶ。
         評価例外、未知の手型、不合法手の例外を捕捉せず伝える。
 
     前提条件:
-        movesはpositionの合法手タプル、evaluateは整数を返す読み取り専用操作、
-        rngはchoiceを持つ乱数生成器である。
+        movesはpositionの合法手タプル、評価callbackはいずれも整数を返す読み取り専用
+        操作、rngはchoiceを持つ乱数生成器である。evaluate_with_moveはevaluateより
+        優先し、両方指定しても通常候補でevaluateは呼ばない。
 
     候補ごとに既存の複製適用を使い、開始側視点を保持して通常点を比較する。
     相手玉の位置は候補手で動かないため選択開始時に一度だけ探し、候補後はそのマス
@@ -59,6 +64,8 @@ def choose_one_ply_move(
             after, opponent_king_square
         ):
             score = (1, 0)
+        elif evaluate_with_move is not None:
+            score = (0, evaluate_with_move(after, move, perspective))
         else:
             score = (0, evaluate(after, perspective))
         scored_moves.append((move, score))

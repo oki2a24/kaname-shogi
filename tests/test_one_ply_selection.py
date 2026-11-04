@@ -2,6 +2,7 @@
 
 import random
 import unittest
+from inspect import signature
 from unittest.mock import Mock, patch
 
 from kaname_shogi import movegen, one_ply_selection
@@ -147,6 +148,48 @@ class OnePlySelectionTests(unittest.TestCase):
             self.assertEqual(perspective, Side.SENTE)
             self.assertEqual(
                 self._sfen(evaluated_position),
+                self._sfen(position_after_move(position, move)),
+            )
+
+    def test_move_aware_evaluator_preserves_tie_order_and_rng(self):
+        """手情報付き評価は候補順・同点抽選を従来経路と一致させる。
+
+        手情報の取り違え、既存評価の余分な呼出し、callback経路だけ乱数順を変える誤りを検出する。
+        """
+        self.assertIn(
+            "evaluate_with_move",
+            signature(choose_one_ply_move).parameters,
+            "手情報付き評価callbackを追加してください",
+        )
+        position, first, second = self._open_rook_case(Side.SENTE)
+        moves = (first, second)
+        ordinary_rng = random.Random(20261103)
+        move_aware_rng = random.Random(20261103)
+        ordinary = choose_one_ply_move(
+            position, moves, ordinary_rng, evaluate=Mock(return_value=0)
+        )
+        fallback = Mock(return_value=0)
+        callback = Mock(return_value=0)
+        with patch.object(
+            move_aware_rng, "choice", wraps=move_aware_rng.choice
+        ) as choice:
+            move_aware = choose_one_ply_move(
+                position,
+                moves,
+                move_aware_rng,
+                evaluate=fallback,
+                evaluate_with_move=callback,
+            )
+
+        self.assertEqual(move_aware, ordinary)
+        fallback.assert_not_called()
+        choice.assert_called_once_with(moves)
+        self.assertEqual(callback.call_count, len(moves))
+        for index, move in enumerate(moves):
+            call = callback.call_args_list[index]
+            self.assertEqual(call.args[1:], (move, Side.SENTE))
+            self.assertEqual(
+                self._sfen(call.args[0]),
                 self._sfen(position_after_move(position, move)),
             )
 

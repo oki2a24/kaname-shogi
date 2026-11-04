@@ -21,7 +21,12 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from functools import partial
 
-from .evaluation import material_balance as _material_balance
+from .evaluation import (
+    _material_balance_after_move,
+)
+from .evaluation import (
+    material_balance as _material_balance,
+)
 from .model import BasicPieceType, Board, Piece, PieceType, Position, Side, Square
 from .move import BoardMove, DropMove, Move
 from .search_control import SearchControl, SearchSignal
@@ -288,6 +293,57 @@ def is_square_attacked(board: Board, target: Square, attacking_side: Side) -> bo
     盤複製を作らず、source候補も到達可能な位置へ絞ってbool判定する。
     """
     return _is_target_attacked_by_side(board, target, attacking_side)
+
+
+def _attacked_sides_for_target(board: Board, target: Square) -> tuple[bool, bool]:
+    """targetを先手・後手が幾何学的に攻撃しているか、一巡して返す。
+
+    戻り値の先頭は先手、二番目は後手の攻撃を表す。両側を評価するU集計が
+    同じtargetへ二度rayをたどらずに済むよう、各方向の最初の駒と桂sourceを
+    一回ずつ調べる。候補列挙順や合法性、ピン判定は行わず、盤面は変更しない。
+    盤面読み取りと駒の幾何判定が送出する例外は呼出し元へ伝える。
+    """
+    sente_attacked = False
+    gote_attacked = False
+    for file_step, rank_step in _RAY_DIRECTIONS:
+        file = target.file + file_step
+        rank = target.rank + rank_step
+        while 1 <= file <= 9 and 1 <= rank <= 9:
+            source = _BOARD_SQUARES[(file - 1) * 9 + rank - 1]
+            piece = board.piece_at(source)
+            if piece is not None:
+                if _piece_attacks_target(
+                    board,
+                    piece,
+                    source,
+                    target,
+                    intervening_squares_are_clear=True,
+                ):
+                    if piece.side == Side.SENTE:
+                        sente_attacked = True
+                    else:
+                        gote_attacked = True
+                    if sente_attacked and gote_attacked:
+                        return True, True
+                break
+            file += file_step
+            rank += rank_step
+
+    for file_step, rank_step in _KNIGHT_SOURCE_OFFSETS:
+        file = target.file + file_step
+        rank = target.rank + rank_step
+        if not (1 <= file <= 9 and 1 <= rank <= 9):
+            continue
+        source = _BOARD_SQUARES[(file - 1) * 9 + rank - 1]
+        piece = board.piece_at(source)
+        if piece is not None and _piece_attacks_target(board, piece, source, target):
+            if piece.side == Side.SENTE:
+                sente_attacked = True
+            else:
+                gote_attacked = True
+            if sente_attacked and gote_attacked:
+                return True, True
+    return sente_attacked, gote_attacked
 
 
 def _is_target_attacked_by_side(
@@ -900,6 +956,7 @@ def choose_move(
     ):
         from .material_piece_threat import (
             PieceThreatWeights,
+            _evaluate_material_piece_threat_with_material,
             evaluate_material_piece_threat,
         )
         from .one_ply_selection import choose_one_ply_move
@@ -910,15 +967,36 @@ def choose_move(
         weights = PieceThreatWeights(
             material=10, undefended=1, supported_threat=supported_weight
         )
+        if policy == MoveSelectionPolicy.MATERIAL_PIECE_THREAT_V0:
+            return choose_one_ply_move(
+                position,
+                moves,
+                rng,
+                evaluate=partial(evaluate_material_piece_threat, weights=weights),
+            )
+
+        perspective = position.side_to_move
+        base_material = material_balance(position, perspective)
+
+        def evaluate_with_move(after: Position, move: Move, side: Side) -> int:
+            material = _material_balance_after_move(
+                position, after, move, side, base_material
+            )
+            return _evaluate_material_piece_threat_with_material(
+                after, side, material, weights=weights
+            )
+
         return choose_one_ply_move(
             position,
             moves,
             rng,
             evaluate=partial(evaluate_material_piece_threat, weights=weights),
+            evaluate_with_move=evaluate_with_move,
         )
     if policy == MoveSelectionPolicy.MATERIAL_PIECE_THREAT_VALUE_V1:
         from .material_piece_threat_value import (
             PieceThreatValueWeights,
+            _evaluate_material_piece_threat_value_with_material,
             evaluate_material_piece_threat_value,
         )
         from .one_ply_selection import choose_one_ply_move
@@ -926,11 +1004,24 @@ def choose_move(
         weights = PieceThreatValueWeights(
             material=10, undefended_value=1, supported_threat=1
         )
+
+        perspective = position.side_to_move
+        base_material = material_balance(position, perspective)
+
+        def evaluate_with_move(after: Position, move: Move, side: Side) -> int:
+            material = _material_balance_after_move(
+                position, after, move, side, base_material
+            )
+            return _evaluate_material_piece_threat_value_with_material(
+                after, side, material, weights=weights
+            )
+
         return choose_one_ply_move(
             position,
             moves,
             rng,
             evaluate=partial(evaluate_material_piece_threat_value, weights=weights),
+            evaluate_with_move=evaluate_with_move,
         )
     if policy != MoveSelectionPolicy.MATERIAL:
         raise ValueError("未知の一手選択方針です")

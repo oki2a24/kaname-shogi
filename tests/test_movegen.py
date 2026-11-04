@@ -124,6 +124,66 @@ class DirectTargetAttackTests(unittest.TestCase):
                 return True
         return False
 
+    def test_attacked_sides_helper_matches_public_queries_for_all_targets(self):
+        """両側利きhelperは全targetで既存片側判定を保つ。
+
+        先後の並び替え、ray遮蔽、桂source、成駒、占有target、盤面変更の誤りを検出する。
+        """
+        helper = getattr(movegen, "_attacked_sides_for_target", None)
+        self.assertTrue(callable(helper), "両側利きhelperがありません")
+        board = Board()
+        for piece_type, side, square in (
+            (PieceType.KING, Side.SENTE, Square(9, 9)),
+            (PieceType.KING, Side.GOTE, Square(1, 1)),
+            (PieceType.ROOK, Side.SENTE, Square(5, 9)),
+            (PieceType.SILVER, Side.GOTE, Square(5, 7)),
+            (PieceType.BISHOP, Side.GOTE, Square(8, 5)),
+            (PieceType.KNIGHT, Side.SENTE, Square(4, 4)),
+            (PieceType.PRO_PAWN, Side.GOTE, Square(2, 4)),
+            (PieceType.DRAGON, Side.SENTE, Square(3, 3)),
+        ):
+            board.set_piece(square, Piece(piece_type, side))
+        before = self._snapshot(board)
+
+        for target in movegen._BOARD_SQUARES:
+            with self.subTest(target=target):
+                self.assertEqual(
+                    helper(board, target),
+                    (
+                        movegen.is_square_attacked(board, target, Side.SENTE),
+                        movegen.is_square_attacked(board, target, Side.GOTE),
+                    ),
+                )
+        self.assertEqual(before, self._snapshot(board))
+
+    def test_attacked_sides_helper_stops_at_first_ray_blocker(self):
+        """両側ray判定は最初の占有駒より先を数えない。
+
+        遮蔽駒の後ろにある相手飛車を攻撃元へ誤って加える回帰を検出する。
+        """
+        board = Board()
+        target = Square(5, 5)
+        board.set_piece(Square(5, 6), Piece(PieceType.SILVER, Side.SENTE))
+        board.set_piece(Square(5, 9), Piece(PieceType.ROOK, Side.GOTE))
+
+        self.assertEqual(
+            movegen._attacked_sides_for_target(board, target), (True, False)
+        )
+
+    def test_attacked_sides_helper_counts_knight_sources_for_both_sides(self):
+        """両側ray判定は先後双方の桂sourceも調べる。
+
+        rayだけを調べて飛び越す桂の攻撃を落とす回帰を検出する。
+        """
+        board = Board()
+        target = Square(5, 5)
+        board.set_piece(Square(4, 7), Piece(PieceType.KNIGHT, Side.SENTE))
+        board.set_piece(Square(6, 3), Piece(PieceType.KNIGHT, Side.GOTE))
+
+        self.assertEqual(
+            movegen._attacked_sides_for_target(board, target), (True, True)
+        )
+
     def _snapshot(self, board):
         """盤上81マスを比較し、利き照会が盤を変えないことを調べる。"""
         return tuple(board.piece_at(square) for square in movegen._BOARD_SQUARES)

@@ -21,6 +21,22 @@ from kaname_shogi.undefended_piece import (
 
 
 class UndefendedPieceTests(unittest.TestCase):
+    def test_combines_both_side_queries_once_for_each_piece(self):
+        """U枚数は対象駒ごとに両側の利きを一度で調べる。
+
+        攻撃と支えで同じtargetのrayを二重走査する回帰を検出する。
+        """
+        helper = getattr(undefended_piece, "_attacked_sides_for_target", None)
+        self.assertTrue(callable(helper), "両側利きhelperがありません")
+        current = position((PieceType.PAWN, Side.SENTE, Square(5, 5)))
+
+        with patch.object(
+            undefended_piece, "_attacked_sides_for_target", wraps=helper
+        ) as probe:
+            self.assertEqual(attacked_undefended_piece_count(current, Side.SENTE), 0)
+
+        probe.assert_called_once_with(current.board, Square(5, 5))
+
     def test_counts_four_attack_defense_combinations(self):
         """攻撃と支えの四条件から対象枚数と差を計算する。
 
@@ -292,7 +308,7 @@ class UndefendedPieceTests(unittest.TestCase):
         before = snapshot(current)
         with patch.object(
             undefended_piece,
-            "is_square_attacked",
+            "_attacked_sides_for_target",
             side_effect=RuntimeError("利き照会失敗"),
         ):
             with self.assertRaisesRegex(RuntimeError, "利き照会失敗"):
