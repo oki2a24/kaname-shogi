@@ -43,6 +43,9 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 期限付きの比較CLI性能目標は[GOAL.md](../GOAL.md)を正本とする。最初の8時間枠は2026-11-03 21:35:22 JSTに終了。その後、2026-11-04にB24の同条件fresh4,074局を6,587.24秒で新規実測したが、30分目標は未達。42局のB0対B24比較は11.31倍短縮だが、全量倍率とは区別する。承認・全件照合・未達理由は[性能改善の学習記録](learning/comparison-cli-performance.md)と[実装計画](plans/2026-11-03-comparison-cli-performance-implementation-plan.md)、現在状態は[再開案内](resume.md)を参照。
 
+次に性能改善へ戻るときは、[開始プロンプト](handover-comparison-cli-performance.md)の一文を新しいセッションに入力する。
+
+
 非駒得評価の主線では、U（支えのない被攻撃駒の枚数差）とV（支えあり低価値駒脅威の枚数差）の通常CLI・USI接続を終えた。価値合計+Vの接続もmain統合・push・統合後検証まで完了した。ShogiHomeのU枚数候補は一局・理解確認まで完了し、価値合計+VとCountPlusVは一局の途中まで操作を確認した。いずれも棋力比較ではない。次の非駒得評価項目は未選定である。現在地は[再開案内](resume.md)を正本とする。残存未追跡データと退避物の期限付き整理は[再開条件と検証手順](handover-residual-artifact-cleanup.md)を参照する。
 
 ## よく参照する現行資料
