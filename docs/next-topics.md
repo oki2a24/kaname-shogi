@@ -1,5 +1,9 @@
 # 次テーマの候補と選定
 
+## 最新の選定（2026-11-04）
+
+本人は次の主線テーマとして「成りに近づく進行度」を選定した。これは非駒得評価を一項目ずつ学ぶ主線の次段階である。選定理由は本人から聞いていない。対象駒、進行度の尺度、評価式、係数、代表局面、実装・比較の承認は未決定である。前日の候補比較では、一段進めたときの独立期待値を手計算しやすい点からアシスタントが推薦した。次の新しいセッションでは[引き継ぎ](handover-promotion-progress-evaluation.md)から学習を始める。
+
 ## 現在地（2026-11-03）
 
 主線の具体項目「支えのない被攻撃駒の価値を評価へ反映する」と、比較CLIへの接続・confirmationは完了した。対象一枚を一度だけ数え、従来のU（支えのない被攻撃駒の枚数差）を価値合計差へ置き換える方式を実装・検証し、mainへ統合・pushした。統合後の全体テストは1066件・92モジュール・28.028秒で成功。最後の理解確認への本人回答は[学習記録](learning/undefended-piece-value.md)に記録した。M（駒得）・U（支えのない被攻撃駒の枚数差）・V（支えあり低価値駒脅威の枚数差）には日本語の意味を添える。A番号は割り当てない。
@@ -10,7 +14,7 @@
 
 従来方式は `10 × M（駒得）+ U（支えのない被攻撃駒の枚数差）+ V（支えあり低価値駒脅威の枚数差）`、今回方式は `10 × M（駒得）+ 1 × 支えのない被攻撃駒の価値合計差 + V（支えあり低価値駒脅威の枚数差）`。既存比較条件は自動流用せず、比較設計で同条件・独立期待値・測定対象を決める。
 
-後続には、次の非駒得評価項目を選び学ぶ主線が残り、具体項目は未選定である。成りに近づく進行度や、根拠を定めた重要マスへの利きなどが候補で、角の可動性は本人希望で後回し。U価値合計+Vを通常CLI・USIへ接続する補助テーマは実装・検証・独立レビュー・CVC2局まで完了し、2026-11-03に `d9a9d8e` としてmainへ統合・push済み。統合後の全体テスト1,073件・92モジュールも成功した。ShogiHomeでは `MaterialUndefendedPieceValuePlusV` と `MaterialUndefendedPieceCountPlusV` を各一局開始し、設定の選択・保存後に複数回の応答を観察したが、両方とも盤上操作を継続できず先手投了で終わった。CountPlusVは15回の後手応答を画面で確認したがUSIログ照合はしていない。過去の実機記録がある他方式は重ねて実施していない。新名のU枚数単独（MaterialUndefendedPieceCount）は直接選択していないが、同じ方式は旧名で実践済み。主線の具体項目は未選定のまま保持する。詳細は[現在地](resume.md)、[主線ロードマップ](roadmap-non-material-position-evaluation.md)、[U実践記録](learning/undefended-piece-coordination-evaluation.md)、[承認済み設計](plans/2026-11-03-undefended-piece-value-normal-cli-usi-design.md)、[実装計画](plans/2026-11-03-undefended-piece-value-normal-cli-usi-implementation-plan.md)を参照する。
+U価値合計+Vを通常CLI・USIへ接続する補助テーマは実装・検証・独立レビュー・CVC2局まで完了し、2026-11-03に `d9a9d8e` としてmainへ統合・push済み。統合後の全体テスト1,073件・92モジュールも成功した。ShogiHomeでは `MaterialUndefendedPieceValuePlusV` と `MaterialUndefendedPieceCountPlusV` を各一局開始し、設定の選択・保存後に複数回の応答を観察したが、両方とも盤上操作を継続できず先手投了で終わった。CountPlusVは15回の後手応答を画面で確認したがUSIログ照合はしていない。過去の実機記録がある他方式は重ねて実施していない。新名のU枚数単独（MaterialUndefendedPieceCount）は直接選択していないが、同じ方式は旧名で実践済み。次の主線テーマは冒頭のとおり「成りに近づく進行度」に選定済みで、学習・設計は未開始。詳細は[現在地](resume.md)、[主線ロードマップ](roadmap-non-material-position-evaluation.md)、[U実践記録](learning/undefended-piece-coordination-evaluation.md)、[承認済み設計](plans/2026-11-03-undefended-piece-value-normal-cli-usi-design.md)、[実装計画](plans/2026-11-03-undefended-piece-value-normal-cli-usi-implementation-plan.md)を参照する。
 
 ## 主線に戻ることを選んだ時点の記録（履歴・2026-11-01）
 
