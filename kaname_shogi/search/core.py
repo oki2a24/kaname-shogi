@@ -7,7 +7,7 @@ from .contracts import (
     PreparedRoot,
     SearchOperations,
 )
-from .result import Score, SearchInterrupted, SearchResult
+from .result import QuiescenceLimit, Score, SearchInterrupted, SearchResult
 
 
 def search[N, M](
@@ -50,7 +50,7 @@ def search_controlled[N, M](
     *,
     pruning: bool,
     preferred_move: M | None = None,
-) -> SearchResult[M] | SearchInterrupted:
+) -> SearchResult[M] | SearchInterrupted | QuiescenceLimit:
     """同じ再帰本体で制御付き指定深さ探索を行う内部操作。
 
     深さはboolを除く0以上、制御は呼出し元の一回分。目標・初手保護を適用しない。
@@ -69,7 +69,7 @@ def _search[N, M](
     *,
     pruning: bool,
     preferred_move: M | None = None,
-) -> SearchResult[M] | SearchInterrupted:
+) -> SearchResult[M] | SearchInterrupted | QuiescenceLimit:
     """停止なし／制御付きを共有する唯一の再帰・採点・枝刈り本体。"""
     if type(depth) is not int or depth < 0:
         raise ValueError("深さは0以上の整数で指定してください")
@@ -89,7 +89,7 @@ def _search[N, M](
         upper: Score | None = None,
         *,
         root: bool = False,
-    ) -> tuple[Score, M | None] | SearchInterrupted:
+    ) -> tuple[Score, M | None] | SearchInterrupted | QuiescenceLimit:
         nonlocal visits
         visits += 1
         if stopped := interrupted():
@@ -109,6 +109,17 @@ def _search[N, M](
         if remaining == 0:
             if stopped := interrupted():
                 return stopped
+            if operations.search_leaf is not None:
+                if control is None:
+                    raise ValueError("末端追加探索には停止制御が必要です")
+                leaf_result = operations.search_leaf(
+                    current, inspected, lower, upper, control
+                )
+                if stopped := interrupted():
+                    return stopped
+                if isinstance(leaf_result, (SearchInterrupted, QuiescenceLimit)):
+                    return leaf_result
+                return leaf_result, None
             score = operations.evaluate(current)
             if stopped := interrupted():
                 return stopped
@@ -124,7 +135,7 @@ def _search[N, M](
             if stopped := interrupted():
                 return stopped
             child = visit(advanced.node, remaining - 1, lower, upper)
-            if isinstance(child, SearchInterrupted):
+            if isinstance(child, (SearchInterrupted, QuiescenceLimit)):
                 return child
             if stopped := interrupted():
                 return stopped
@@ -144,7 +155,7 @@ def _search[N, M](
         return best, selected
 
     result = visit(node, depth, root=True)
-    if isinstance(result, SearchInterrupted):
+    if isinstance(result, (SearchInterrupted, QuiescenceLimit)):
         return result
     if stopped := interrupted():
         return stopped

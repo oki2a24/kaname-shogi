@@ -3,7 +3,7 @@
 from ..search_control import SearchControl
 from . import core
 from .contracts import ControlledSearchOperations, SearchOperations
-from .result import SearchInterrupted, SearchResult
+from .result import QuiescenceLimit, SearchInterrupted, SearchResult
 
 
 def search[N, M](
@@ -32,8 +32,8 @@ def search_controlled[N, M](
     control: SearchControl,
     *,
     preferred_move: M | None = None,
-) -> SearchResult[M] | SearchInterrupted:
-    """指定深さのαβ完了結果または中断を返す同期操作。
+) -> SearchResult[M] | SearchInterrupted | QuiescenceLimit:
+    """指定深さのαβ完了結果、通常中断、静止探索上限未完了を返す同期操作。
 
     depthはbool以外の0以上。優先手は根の調査完了後に照合する。
     同一制御で上限・通常停止・抑制だけを確認し、目標と予備手保護は使わない。

@@ -18,8 +18,8 @@ class ControlledResultTests(unittest.TestCase):
             with self.subTest(reason=reason), self.assertRaises(ValueError):
                 SearchInterrupted(reason)
 
-    def test_four_completion_states_and_invalid_combinations(self):
-        """四状態ごとの手と記録の組合せを構築時に検査する。
+    def test_completion_states_and_invalid_combinations(self):
+        """全状態ごとの手と記録の組合せを構築時に検査する。
 
         未確定投了、完了記録と異なる手、抑制時の手の漏出を検出する。
         """
@@ -41,6 +41,8 @@ class ControlledResultTests(unittest.TestCase):
             (C.NO_LEGAL_MOVE, None, None),
             (C.STOPPED, "A", None),
             (C.STOPPED, "B", record),
+            (C.QUIESCENCE_LIMIT, "A", None),
+            (C.QUIESCENCE_LIMIT, "B", record),
             (C.SUPPRESSED, None, None),
             (C.SUPPRESSED, None, record),
         ):
@@ -53,6 +55,12 @@ class ControlledResultTests(unittest.TestCase):
             (C.COMPLETE, None, empty),
             (C.STOPPED, None, None),
             (C.STOPPED, "A", record),
+            (C.QUIESCENCE_LIMIT, None, None),
+            (
+                C.QUIESCENCE_LIMIT,
+                "A",
+                IterationResult(2, SearchResult((0, 1), "B", 7, None), 10),
+            ),
             (C.NO_LEGAL_MOVE, "A", None),
             (C.NO_LEGAL_MOVE, None, record),
             (C.SUPPRESSED, "B", record),

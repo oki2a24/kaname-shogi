@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from ..search_control import SearchControl
-from .result import Score, SearchInterrupted
+from .result import QuiescenceLimit, Score, SearchInterrupted
 
 
 @dataclass(frozen=True)
@@ -59,11 +59,20 @@ class ControlledSearchOperations[N, M]:
 
     prepareは最初の手確保/手なし確定まで通常停止を保護し、抑制だけ中断する。
     inspect/advanceは目標を適用せず保護もしない。同一の制御を毎回明示して渡す。
-    evaluateは開始側視点のScoreを返す。操作は元局面を変えず故障を例外で伝える。
-    データ構築自体に副作用はない。Noneを手の値としては使わない。
+    evaluateは開始側視点のScoreを返す。search_leafは終端判定後の通常深さ0でだけ
+    呼ばれ、Score・SearchInterrupted・QuiescenceLimitを返す。Noneならevaluateを使う。
+    操作は元局面を変えず故障を例外で伝える。データ構築自体に副作用はない。
+    Noneを手の値としては使わない。
     """
 
     prepare: Callable[[N, SearchControl], PreparedRoot[M] | SearchInterrupted]
     inspect: Callable[[N, SearchControl], NodeInspection[M] | SearchInterrupted]
     advance: Callable[[N, M, SearchControl], AdvancedNode[N] | SearchInterrupted]
     evaluate: Callable[[N], Score]
+    search_leaf: (
+        Callable[
+            [N, NodeInspection[M], Score | None, Score | None, SearchControl],
+            Score | SearchInterrupted | QuiescenceLimit,
+        ]
+        | None
+    ) = None

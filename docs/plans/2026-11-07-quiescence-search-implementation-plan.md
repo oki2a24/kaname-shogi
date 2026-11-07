@@ -49,12 +49,12 @@
 
 **テスト** `tests/test_search_quiescence_boundary.py`を新規作成。既存の制御付き結果・αβ・minimax・反復深化テストを併用する。将棋に依存しない小さい手作り木を使う。
 
-- [ ] 葉の採点が誤った手を選ぶ木を作り、`search_leaf`による独立な期待値で手が変わるテストを作る。初期木は根のA葉が(0, 1)、B葉が(0, 2)、追加操作はAを(0, 4)、Bを(0, 2)とする。既定はB、追加ありはAを期待する。終端葉には追加操作を呼ばないassertも設ける。
-- [ ] 読み込み可能な接続の最小外枠を作った後、未接続での手選択assertion failureを確認する。読み込み失敗は準備段階として区別する。
-- [ ] 末端委譲とQuiescenceLimitの上位伝播を最小実装する。一つの枝だけが未完了でも全体を未完了にする。`SearchInterrupted`と同じ扱いにまとめて理由を失わない。
-- [ ] 偽時計と手作り木で深さ1だけ完了、深さ2途中でQuiescenceLimitとなる例を作り、`completion == QUIESCENCE_LIMIT`、`last_completed.depth == 1`、`move == last_completed.result.move`をassertする。初回未完了では合法予備手、同時抑制ではSUPPRESSEDとNoneを期待する。各振る舞いのRed→Greenを行う。
-- [ ] 未完了マーカーにスコアを載せないこと、停止要求を書き換えないこと、終端優先、既定Noneの旧結果、on_iterationの回数・順序・例外伝播を確認する。
-- [ ] `PYTHONPATH=tests .venv/bin/python3 -m unittest test_search_quiescence_boundary test_search_alpha_beta_controlled test_search_minimax_controlled test_search_controlled_result test_search_iterative_deepening_controlled -v`を実行。Refactorの要否確認、独立レビュー、記録、整形・検査後に当該変更をコミットする。
+- [x] A/Bの独立評価木で既定B・追加末端ありA `(0, 4)` をαβ・minimax双方で確認。終端葉にはhookを呼ばない。非None下限・上限と同一SearchControlの受渡しも検証。
+- [x] 新しい型を参照するテスト外枠を作り、読み込みエラーではなく、未接続時に期待手Aを得られないAssertionErrorを確認してから最小実装。
+- [x] `QuiescenceLimit`を両固定深さ方式・反復へ伝播。深さ2はB枝を完了した後にA枝だけを未完了にし、状態・完了深さ1・前回評価`(0, 5)`・前回手Bを保持。予備手Aと区別する。`SearchInterrupted`と上限未完了を同じ理由へ潰さない。
+- [x] 制御付きテスト木で初回未完了は合法予備手A、上限結果は共有停止状態を変えない、返却境界の抑制は手を隠すことを確認。時計は時刻0を返す制御を使用。
+- [x] マーカーの不変・値/手なし、終端優先、既定Noneの旧結果、観測の完了/通常中断/上限未完了の回数と順序、開始前停止での非呼出し、例外伝播を確認。
+- [x] 関連46テスト成功。Refactor不要と判断。独立レビュー2回でCritical 0・最終Important 0。初回Importantのケース不足を修正し、上限境界とテスト説明も補強。全体1,115 tests/93 modules成功。整形・check・差分確認後、学習記録へ追記してコミット。
 
 Task 1の主要なassertの形は次のとおり。`baseline`と`extended`は本文のA/B木を深さ1で探索した結果、`limited`は深さ2の枝だけを未完了にする反復結果である。
 

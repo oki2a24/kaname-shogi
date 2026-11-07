@@ -9,6 +9,7 @@ from .result import (
     ControlledCompletion,
     ControlledSearchResult,
     IterationResult,
+    QuiescenceLimit,
     SearchInterrupted,
     SearchResult,
 )
@@ -28,9 +29,15 @@ def _validate_pruning(pruning: bool) -> None:
 
 def _iterations[M](
     max_depth: int,
-    search_depth: Callable[[int, M | None], SearchResult[M] | SearchInterrupted],
+    search_depth: Callable[
+        [int, M | None], SearchResult[M] | SearchInterrupted | QuiescenceLimit
+    ],
     before_depth: Callable[[], SearchInterrupted | None],
-) -> Iterator[IterationResult[M] | SearchInterrupted]:
+    on_iteration: (
+        Callable[[int, IterationResult[M] | SearchInterrupted | QuiescenceLimit], None]
+        | None
+    ) = None,
+) -> Iterator[IterationResult[M] | SearchInterrupted | QuiescenceLimit]:
     """深さ・前回手・完了累計を所有する共通反復。準備や応答選択は行わない。"""
     total = 0
     preferred = None
@@ -39,12 +46,17 @@ def _iterations[M](
             yield stopped
             return
         result = search_depth(depth, preferred)
-        if isinstance(result, SearchInterrupted):
+        if isinstance(result, (SearchInterrupted, QuiescenceLimit)):
+            if on_iteration is not None:
+                on_iteration(depth, result)
             yield result
             return
         preferred = result.move
         total += result.visited_nodes
-        yield IterationResult(depth, result, total)
+        record = IterationResult(depth, result, total)
+        if on_iteration is not None:
+            on_iteration(depth, record)
+        yield record
         if result.move is None:
             return
 
@@ -96,20 +108,26 @@ def search_controlled[N, M](
     control: SearchControl,
     *,
     pruning: bool = True,
+    on_iteration: (
+        Callable[[int, IterationResult[M] | SearchInterrupted | QuiescenceLimit], None]
+        | None
+    ) = None,
 ) -> ControlledSearchResult[M]:
     """予備手を一度準備し、制御付き反復探索の最終結果を一件返す同期操作。
 
     引数: nodeは開始局面、max_depthはboolを除く1以上の上限、operationsはprepareを
     含む非破壊な操作、controlは呼出し元が所有する一局分の停止制御、pruningはboolで
-    Trueが既定のαβ、Falseが全幅探索を選ぶ。上限と方式は準備前に検査する。
-    戻り値: 完了・停止・抑制・合法手なしの状態、選ばれた手、最新完了記録。
+    Trueが既定のαβ、Falseが全幅探索を選ぶ。on_iterationは開始した反復の終了結果を
+    受ける任意の観測操作。上限と方式は準備前に検査する。
+    戻り値: 完了・停止・抑制・上限未完了・合法手なしの状態、選ばれた手、最新完了記録。
     副作用: 同じ開始局面とcontrolでoperationsを呼ぶ。操作例外はそのまま伝播する。
     前提・設計理由: operationsは元局面を変更せず、準備と再調査の合法手が一致する。
     反復・予備手・停止結果の組み立ては共通化し、指定深さ探索の方式だけを切り替える。
     目標で次の深さを始めず、上限・stop中断は最新完了手または予備手を返す。
     完了確定後の通常停止で記録を取り消さず、返却直前の抑制では手をなしにする。
     準備のSTOPや手あり準備後の根の手なしは契約違反としてValueError。
-    送信や制御生成は行わず、故障はそのまま伝播する。時間内応答は保証しない。
+    on_iterationは開始した各反復の終了結果を一度受ける観測操作。開始前停止には呼ばず、
+    例外は伝播する。送信や制御生成は行わず、時間内応答は保証しない。
     """
     _validate_max_depth(max_depth)
     _validate_pruning(pruning)
@@ -147,6 +165,7 @@ def search_controlled[N, M](
             node, depth, operations, control, preferred_move=preferred
         ),
         before_depth,
+        on_iteration,
     ):
         if isinstance(record, SearchInterrupted):
             completion = (
@@ -154,6 +173,9 @@ def search_controlled[N, M](
                 if record.reason is SearchSignal.SUPPRESS
                 else ControlledCompletion.STOPPED
             )
+            break
+        if isinstance(record, QuiescenceLimit):
+            completion = ControlledCompletion.QUIESCENCE_LIMIT
             break
         if record.result.move is None:
             raise ValueError("手あり準備後の根の完了結果には合法手が必要です")
