@@ -155,4 +155,10 @@ Task 1〜3で作った探索部品を、単一局面から比較する開発用�
 
 TDDでは新規モジュールがまだない初回はimport errorで、振る舞いRedとは数えなかった。実装後の初回テストにあった表示fixtureの不整合はテスト期待値側を修正した。混合王手回避ケースを足した上で、TemporaryDirectoryのコピーに6つの変異を一つずつ注入し、stand pat除去、最小側を最大化、王手回避を捕獲限定、追加上限を一手早める、上限未完了をCOMPLETE扱い、未完了反復の計数記録を省略、の各対象assertion failureを確認した。単純にstand patを`None`にした最初の変異はassertion前に契約外の例外となったので、stand patを選択候補から外して捕獲を強制する値へ置き換える、現実的な誤りに修正して検出した。変異は全て一時コピー内のみで、作業ソースへの適用・復元作業は発生していない。
 
-Refactorは不要と判断した。薄い診断オーケストレーションを一つの開発用モジュールに置き、探索・時計・表示整形を既存APIへ委譲できている。独立レビュー（base `97a2fd0a`、未コミットTask 4差分）はCritical 0・Important 0・Minor 0で、計画との不一致や修正依頼はなかった。レビュアーはファイル・差分と`git diff --check`のみ確認し、テストは実行していない。レビュー対象外はShogiHome接続、長時間比較、main統合、棋力・任意局面の期限内応答。Task 4変更はこの作業ブランチにコミットした。対局接続・長時間比較・main統合は今回の範囲外として実施していない。
+Refactorは不要と判断した。薄い診断オーケストレーションを一つの開発用モジュールに置き、探索・時計・表示整形を既存APIへ委譲できている。独立レビュー（base `97a2fd0a`、未コミットTask 4差分）はCritical 0・Important 0・Minor 0で、計画との不一致や修正依頼はなかった。レビュアーはファイル・差分と`git diff --check`のみ確認し、テストは実行していない。レビュー対象外はShogiHome接続、長時間比較、main統合、棋力・任意局面の期限内応答。Task 4変更はこの作業ブランチにコミットした。Task 4完了時点では対局接続・長時間比較・main統合は今回の範囲外で未実施だった。
+
+## main統合と取り込み先検証
+
+全体レビューはCritical 0・Important 0・Minor 1。Minorはこの学習記録冒頭がTask 1〜3完了・Task 4未着手とする古い状態だったため、Task 1〜4完了・統合後の理解確認待ちへ修正した。2026-11-07、本人の承認に基づいて `codex/quiescence-search-design` をmainへno-fast-forward統合し、merge commit `c9be5bb8a80684c08ada026d642a70da9d55c04f` を作成した。作業ブランチのTask 4成果 `71adbae2` と記録修正 `d6110c57` を含む。統合先で `.venv/bin/python3 scripts/run_tests_parallel.py` を実行し、1,152 tests/95 modulesが36.088秒で成功。`.venv/bin/ruff check .`、`.venv/bin/ruff format --check .`（160 files already formatted）、`git diff --check origin/main..HEAD` も成功した。
+
+`git push origin main` は成功し、push後の `git ls-remote origin refs/heads/main` はローカルmainと同じ `c9be5bb8a80684c08ada026d642a70da9d55c04f` を示した。push範囲には統合前にローカルmainだけにあった文書コミット2件も含まれた。既存の未追跡データは変更していない。最後の理解確認は未回答で、本人の回答後に学習記録へ追記する。

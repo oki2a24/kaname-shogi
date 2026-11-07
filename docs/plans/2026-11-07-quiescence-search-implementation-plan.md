@@ -125,7 +125,7 @@ self.assertEqual(snapshot(position), before_snapshot)
 - [x] 代表変異としてstand patの候補除外、min側でmax使用、王手回避を捕獲限定、上限を一手早める、未完了を完了扱い、中断反復の計数記録を省く変異を隔離コピーで一件ずつ試し、各対象assertion failureを確認した。変異は全て一時コピーだけに置き、製品ソースは変更していない。
 - [x] Refactorの要否を確認後、独立した最終コードレビューを行いCritical・Important・Minorと対応を学習記録へ残す。Critical／Importantは解消して再検証・再レビューする。Refactor不要、Critical 0・Important 0・Minor 0。
 - [x] 知識メモは追加不要と判断した。README・索引・学習記録・再開案内を更新し、文書リンク・差分確認後にコミットした。
-- [ ] main統合は別途承認後に行い、取り込み先検証と最後の理解確認を実施する。今回の実装範囲には含めず、次の判断待ち。
+- [x] 本人承認後、2026-11-07にmainへno-fast-forward統合・pushした。merge commitは`c9be5bb8a80684c08ada026d642a70da9d55c04f`。取り込み先で全1,152 tests/95 modulesが36.088秒で成功し、Ruff check・format確認・差分確認も成功。`origin/main`とローカルmainの一致を確認した。最後の理解確認は回答待ちである。
 
 ## 実施前の点検と未検証範囲
 

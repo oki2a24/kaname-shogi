@@ -1,10 +1,10 @@
 # 学習・開発の再開案内
 
-## 現在地（2026-11-07、静止探索Task 1〜4を作業ブランチで完了）
+## 現在地（2026-11-07、静止探索テーマはmainへ統合・push済み、理解確認待ち）
 
-本人は研究を起点に棋力向上を狙う方針を選び、論文全体と静止探索の手順を学んだ。同じ持ち時間で取り合いの見落としを減らす探索を設計する。王手なしでは駒取りに絞るB案の具体化まで合意済み。[設計](plans/2026-11-07-quiescence-search-design.md)と探索部品・小局面診断までの範囲を含む[4Taskの実装計画](plans/2026-11-07-quiescence-search-implementation-plan.md)を本人が全体承認し、Task 1〜4の実装・検証・独立レビュー・記録・コミットを作業ブランチで完了した。対局接続・長時間比較・main統合は今回の範囲外で未実施。詳細は[学習記録](learning/quiescence-search.md)を参照する。
+本人は研究を起点に棋力向上を狙う方針を選び、論文全体と静止探索の手順を学んだ。同じ持ち時間で取り合いの見落としを減らす探索を設計し、Task 1〜4の実装・検証・独立レビュー・記録を完了した。本人承認後、merge commit `c9be5bb8a80684c08ada026d642a70da9d55c04f` でmainへ統合し、`origin/main`へpushした。統合先でも全1,152 tests/95 modulesが36.088秒で成功し、Ruff check・format確認・差分確認が成功した。最後の理解確認への本人回答を待っている。詳細は[設計](plans/2026-11-07-quiescence-search-design.md)、[実装計画](plans/2026-11-07-quiescence-search-implementation-plan.md)、[学習記録](learning/quiescence-search.md)を参照する。
 
-作業先は`/Users/oki2a24/kaname-shogi`、作業ブランチは`codex/quiescence-search-design`。Task 4開始HEADは`97a2fd0ab858e36410aed4588d4b4ea95932c56a`。製品変更前baselineは1,137 tests/94 modulesが30.168秒、変更後の全体は1,152 tests/95 modulesが27.914秒で成功。診断コマンドの固定局面12プロセスがすべて90秒以内に正常終了した。Ruff check成功。独立レビューはCritical 0・Important 0・Minor 0。通常CLIをαβ四手・10分30秒で20手観察し、残り先手4分9秒・後手3分44秒。別の6手診断では深さ4完了3手、深さ3で停止3手だった。ShogiHome当該局の再現・棋力効果・任意局面の期限内応答は未確認。main統合は今回未実施。
+作業先は`/Users/oki2a24/kaname-shogi`。現在`main`と`origin/main`は上記コミットで一致する。ローカルmainに先行していた文書コミット2件も今回のpushに含まれる。追跡ファイルの変更はなく、既存未追跡データは保持した。feature branch `codex/quiescence-search-design` は保持している。製品変更前baselineは1,137 tests/94 modulesが30.168秒、実装branchでの全体は1,152 tests/95 modulesが27.914秒で成功。診断コマンドの固定局面12プロセスがすべて90秒以内に正常終了した。全体レビューはCritical 0・Important 0・Minor 1で、学習記録冒頭の古いTask状態を修正した。通常CLIをαβ四手・10分30秒で20手観察し、残り先手4分9秒・後手3分44秒。別の6手診断では深さ4完了3手、深さ3で停止3手だった。ShogiHome当該局の再現・棋力効果・任意局面の期限内応答は未確認。対局接続と長時間比較は今回の範囲外。
 
 旧主線「駒得以外の局面評価を育てる」は本人判断で一区切り。成りに近づく進行度と比較CLI全量30分目標は保留。期限付き保全の次の判定は2026-12-03、比較データ保管先の相談は2027-02-01以降。既存の未追跡比較・退避物を保持する。以下の旧現在地と旧主線未完了表記は当時の履歴であり、現行の選択は本節を参照する。
 
