@@ -3,12 +3,22 @@
 import inspect
 import unittest
 from dataclasses import replace
+from unittest.mock import patch
 
 from search_tree_support import TreeNode, controlled_operations
 
-from kaname_shogi.search import alpha_beta, iterative_deepening, minimax
+from kaname_shogi.model import Side
+from kaname_shogi.movegen import is_in_check
+from kaname_shogi.search import (
+    alpha_beta,
+    iterative_deepening,
+    minimax,
+    quiescence,
+    shogi,
+)
 from kaname_shogi.search import result as search_result
 from kaname_shogi.search.contracts import ControlledSearchOperations
+from kaname_shogi.search.diagnostics import SearchCounters
 from kaname_shogi.search.result import (
     ControlledCompletion,
     ControlledSearchResult,
@@ -17,6 +27,13 @@ from kaname_shogi.search.result import (
     SearchResult,
 )
 from kaname_shogi.search_control import SearchControl, SearchSignal
+from kaname_shogi.sfen import parse_sfen
+from kaname_shogi.usi_move import format_usi_move
+
+KINGS = "8k/9/9/9/9/9/9/9/K8 b - 1"
+LOSING_RECAPTURE = "8k/9/9/9/4g4/4P4/9/9/4R3K w - 1"
+OTHER_SQUARE_CAPTURES = "k8/9/9/9/2g1p4/9/9/9/2R1R3K b - 1"
+ESCAPE = "8k/9/4gs3/9/4R4/9/9/9/K8 b - 1"
 
 
 def leaf_hook_operations(operations, callback):
@@ -70,6 +87,342 @@ def two_nonterminal_leaves():
 
 
 class QuiescenceBoundaryTests(unittest.TestCase):
+    def test_real_position_comparison_distinguishes_capture_tactics_and_quiet_kings(
+        self,
+    ):
+        """同一実局面で追加探索が手と値を変え、玉だけなら基準と一致する。
+
+        静止探索の未接続、捕獲以外の枝への漏れ、玉だけの評価変化を検出する。
+        """
+        cases = (
+            (
+                "losing_recapture",
+                LOSING_RECAPTURE,
+                (
+                    (None, "5e5f", (0, 5)),
+                    (2, "5e6f", (0, 7)),
+                    (4, "5e6f", (0, 7)),
+                ),
+            ),
+            (
+                "kings_only",
+                KINGS,
+                (
+                    (None, "9i9h", (0, 0)),
+                    (2, "9i9h", (0, 0)),
+                    (4, "9i9h", (0, 0)),
+                ),
+            ),
+        )
+        for label, sfen, expected in cases:
+            with self.subTest(position=label):
+                position = parse_sfen(sfen).position
+                actual = []
+                for additional_depth in (None, 2, 4):
+                    counters = SearchCounters()
+                    operations = (
+                        shogi.make_controlled_operations(Side.SENTE, counters=counters)
+                        if additional_depth is None
+                        else shogi.make_quiescence_operations(
+                            Side.SENTE, additional_depth, counters=counters
+                        )
+                    )
+                    observed = []
+                    result = iterative_deepening.search_controlled(
+                        position,
+                        1,
+                        operations,
+                        SearchControl(None, 0, now_ns=lambda: 0),
+                        on_iteration=lambda depth, item, observed=observed: (
+                            observed.append((depth, item))
+                        ),
+                    )
+
+                    self.assertEqual(result.completion, ControlledCompletion.COMPLETE)
+                    self.assertIsNotNone(result.move)
+                    self.assertIsNotNone(result.last_completed)
+                    actual.append(
+                        (
+                            format_usi_move(result.move),
+                            result.last_completed.result.score,
+                        )
+                    )
+                    self.assertEqual(result.last_completed.depth, 1)
+                    self.assertEqual([depth for depth, _ in observed], [1])
+                    self.assertIsInstance(observed[0][1], IterationResult)
+                    self.assertEqual(
+                        counters.normal_nodes,
+                        result.last_completed.result.visited_nodes,
+                    )
+                    if additional_depth is None:
+                        self.assertEqual(counters.quiescence_calls, 0)
+                    else:
+                        self.assertGreater(counters.quiescence_calls, 0)
+
+                self.assertEqual(
+                    tuple((move, score) for move, score in actual),
+                    tuple((move, score) for _, move, score in expected),
+                )
+
+    def test_quiescence_runs_at_each_completed_normal_depth_one_through_three(self):
+        """追加2・4手を通常深さ1〜3の各反復末端で行う。
+
+        深さ4後にだけ拡張する実装と、反復ごとの追加計算を落とす表示を検出する。
+        """
+        position = parse_sfen(LOSING_RECAPTURE).position
+        for additional_depth in (2, 4):
+            with self.subTest(additional_depth=additional_depth):
+                counters = SearchCounters()
+                operations = shogi.make_quiescence_operations(
+                    Side.SENTE, additional_depth, counters=counters
+                )
+                observed = []
+                result = iterative_deepening.search_controlled(
+                    position,
+                    3,
+                    operations,
+                    SearchControl(None, 0, now_ns=lambda: 0),
+                    on_iteration=lambda depth, item, observed=observed, counters=counters: (
+                        observed.append(
+                            (
+                                depth,
+                                item,
+                                counters.normal_nodes,
+                                counters.quiescence_calls,
+                            )
+                        )
+                    ),
+                )
+
+                self.assertEqual(result.completion, ControlledCompletion.COMPLETE)
+                self.assertEqual([depth for depth, _, _, _ in observed], [1, 2, 3])
+                self.assertTrue(
+                    all(isinstance(item, IterationResult) for _, item, _, _ in observed)
+                )
+                previous_normal = 0
+                previous_quiescence = 0
+                normal_deltas = []
+                quiescence_deltas = []
+                for _, item, normal_total, quiescence_total in observed:
+                    normal_deltas.append(normal_total - previous_normal)
+                    quiescence_deltas.append(quiescence_total - previous_quiescence)
+                    self.assertEqual(
+                        normal_total - previous_normal, item.result.visited_nodes
+                    )
+                    previous_normal = normal_total
+                    previous_quiescence = quiescence_total
+
+                self.assertTrue(all(delta > 0 for delta in quiescence_deltas))
+                self.assertEqual(counters.normal_nodes, sum(normal_deltas))
+                self.assertEqual(counters.quiescence_calls, sum(quiescence_deltas))
+                self.assertEqual(
+                    result.last_completed.total_visited_nodes,
+                    sum(item.result.visited_nodes for _, item, _, _ in observed),
+                )
+
+    def test_iteration_counters_report_three_then_five_and_total_eight(self):
+        """手作り木の各反復を3・5回、累計を8回と記録する。
+
+        各反復値を累計として表示する誤り、二回目の訪問を落とす誤りを検出する。
+        """
+        tree = TreeNode(
+            "root",
+            children=(
+                (
+                    "A",
+                    TreeNode("A", (0, 3), children=(("end", TreeNode("A2", (0, 3))),)),
+                ),
+                (
+                    "B",
+                    TreeNode("B", (0, 5), children=(("end", TreeNode("B2", (0, 5))),)),
+                ),
+            ),
+        )
+        counters = SearchCounters()
+        actual_inspections = []
+        actual_quiescence_calls = []
+        base = controlled_operations()
+
+        def inspect(node, control):
+            counters.normal_nodes += 1
+            actual_inspections.append(node)
+            return base.inspect(node, control)
+
+        def search_leaf(node, inspected, lower, upper, control):
+            counters.quiescence_calls += 1
+            actual_quiescence_calls.append(node)
+            return node.score
+
+        operations = replace(base, inspect=inspect, search_leaf=search_leaf)
+        observed = []
+        result = iterative_deepening.search_controlled(
+            tree,
+            2,
+            operations,
+            SearchControl(None, 0, now_ns=lambda: 0),
+            pruning=False,
+            on_iteration=lambda depth, item: observed.append(
+                (
+                    depth,
+                    item,
+                    counters.normal_nodes,
+                    len(actual_inspections),
+                    counters.quiescence_calls,
+                    len(actual_quiescence_calls),
+                )
+            ),
+        )
+
+        self.assertEqual(result.completion, ControlledCompletion.COMPLETE)
+        self.assertEqual([depth for depth, *_ in observed], [1, 2])
+        normal_totals = [normal for _, _, normal, _, _, _ in observed]
+        self.assertEqual(normal_totals, [3, 8])
+        self.assertEqual([actual for _, _, _, actual, _, _ in observed], [3, 8])
+        self.assertEqual(
+            (normal_totals[0], normal_totals[1] - normal_totals[0]), (3, 5)
+        )
+        self.assertEqual(counters.normal_nodes, 8)
+        self.assertEqual(counters.normal_nodes, len(actual_inspections))
+        self.assertEqual(counters.quiescence_calls, len(actual_quiescence_calls))
+        self.assertEqual(result.last_completed.total_visited_nodes, 8)
+
+    def test_real_quiescence_limit_keeps_completed_counts_and_incomplete_work(self):
+        """実捕獲局面の上限未完了を記録し、完了累計と実計数を分ける。
+
+        未完了をCOMPLETEに誤報すること、最終未完了反復の計数を落とすことを検出する。
+        """
+        position = parse_sfen(OTHER_SQUARE_CAPTURES).position
+        counters = SearchCounters()
+        base = shogi.make_quiescence_operations(Side.SENTE, 2, counters=counters)
+        actual_inspections = []
+        actual_quiescence_calls = []
+        inspect = base.inspect
+        real_quiescence_search = quiescence.search
+
+        def count_inspections(node, control):
+            actual_inspections.append(node)
+            return inspect(node, control)
+
+        def count_quiescence_calls(*args, **kwargs):
+            actual_quiescence_calls.append(args[0])
+            return real_quiescence_search(*args, **kwargs)
+
+        operations = replace(base, inspect=count_inspections)
+        observed = []
+        with (
+            patch.object(quiescence, "search", new=count_quiescence_calls),
+            patch.object(shogi, "quiescence_search", new=count_quiescence_calls),
+        ):
+            result = iterative_deepening.search_controlled(
+                position,
+                3,
+                operations,
+                SearchControl(None, 0, now_ns=lambda: 0),
+                on_iteration=lambda depth, item: observed.append(
+                    (
+                        depth,
+                        item,
+                        counters.normal_nodes,
+                        counters.quiescence_calls,
+                        len(actual_inspections),
+                        len(actual_quiescence_calls),
+                    )
+                ),
+            )
+
+        self.assertEqual(result.completion, ControlledCompletion.QUIESCENCE_LIMIT)
+        self.assertIsNotNone(result.last_completed)
+        self.assertEqual(result.last_completed.depth, 2)
+        self.assertEqual([depth for depth, *_ in observed], [1, 2, 3])
+        self.assertIsInstance(observed[0][1], IterationResult)
+        self.assertIsInstance(observed[1][1], IterationResult)
+        self.assertIsInstance(observed[2][1], search_result.QuiescenceLimit)
+        self.assertEqual(result.last_completed, observed[1][1])
+        self.assertEqual(result.move, observed[1][1].result.move)
+
+        previous_normal = 0
+        previous_quiescence = 0
+        normal_deltas = []
+        quiescence_deltas = []
+        actual_normal_snapshots = []
+        actual_quiescence_snapshots = []
+        for (
+            _,
+            _,
+            normal_total,
+            quiescence_total,
+            actual_normal,
+            actual_quiet,
+        ) in observed:
+            normal_deltas.append(normal_total - previous_normal)
+            quiescence_deltas.append(quiescence_total - previous_quiescence)
+            previous_normal = normal_total
+            previous_quiescence = quiescence_total
+            actual_normal_snapshots.append(actual_normal)
+            actual_quiescence_snapshots.append(actual_quiet)
+
+        self.assertEqual(
+            actual_normal_snapshots,
+            [normal_total for _, _, normal_total, _, _, _ in observed],
+        )
+        self.assertEqual(
+            actual_quiescence_snapshots,
+            [quiet_total for _, _, _, quiet_total, _, _ in observed],
+        )
+        self.assertEqual(counters.normal_nodes, len(actual_inspections))
+        self.assertEqual(counters.quiescence_calls, len(actual_quiescence_calls))
+        self.assertEqual(
+            actual_quiescence_snapshots,
+            [sum(quiescence_deltas[: index + 1]) for index in range(3)],
+        )
+        self.assertEqual(counters.normal_nodes, sum(normal_deltas))
+        self.assertEqual(counters.quiescence_calls, sum(quiescence_deltas))
+        self.assertGreater(normal_deltas[-1], 0)
+        self.assertGreater(quiescence_deltas[-1], 0)
+        self.assertEqual(normal_deltas[0], observed[0][1].result.visited_nodes)
+        self.assertEqual(normal_deltas[1], observed[1][1].result.visited_nodes)
+        self.assertEqual(
+            result.last_completed.total_visited_nodes,
+            sum(item.result.visited_nodes for _, item, *_ in observed[:2]),
+        )
+        self.assertLess(
+            result.last_completed.total_visited_nodes, counters.normal_nodes
+        )
+
+    def test_first_real_check_extension_limit_has_no_completed_iteration(self):
+        """初回の王手局面上限では合法予備手だけを返し、完了記録を作らない。
+
+        深さ1の未完了を評価済みの反復として公開する誤りを検出する。
+        """
+        position = parse_sfen(ESCAPE).position
+        base = shogi.make_controlled_operations(Side.SENTE)
+        control = SearchControl(None, 0, now_ns=lambda: 0)
+        inspected = base.inspect(position, control)
+        checking_move = next(
+            move for move in inspected.moves if format_usi_move(move) == "5e1e"
+        )
+        after_check = base.advance(position, checking_move, control)
+        self.assertTrue(
+            is_in_check(after_check.node.board, after_check.node.side_to_move)
+        )
+
+        operations = shogi.make_quiescence_operations(Side.SENTE, 0)
+        prepared = operations.prepare(position, control)
+        observed = []
+        result = iterative_deepening.search_controlled(
+            position,
+            2,
+            operations,
+            control,
+            on_iteration=lambda depth, item: observed.append((depth, item)),
+        )
+
+        self.assertEqual(result.completion, ControlledCompletion.QUIESCENCE_LIMIT)
+        self.assertEqual((result.move, result.last_completed), (prepared.move, None))
+        self.assertEqual(len(observed), 1)
+        self.assertEqual(observed[0][0], 1)
+        self.assertIsInstance(observed[0][1], search_result.QuiescenceLimit)
+
     def test_leaf_hook_changes_move_and_preserves_default_for_both_methods(self):
         """末端操作が静的値を置き換え、既定探索は従来の手を選ぶ。
 

@@ -8,7 +8,13 @@ from inspect import signature
 from kaname_shogi.model import Board, Piece, Position, Side, Square
 from kaname_shogi.move import BoardMove
 from kaname_shogi.movegen import is_in_check
-from kaname_shogi.search import alpha_beta, minimax, quiescence, shogi
+from kaname_shogi.search import (
+    alpha_beta,
+    iterative_deepening,
+    minimax,
+    quiescence,
+    shogi,
+)
 from kaname_shogi.search.result import QuiescenceLimit, SearchInterrupted
 from kaname_shogi.search_control import SearchControl, SearchSignal
 from kaname_shogi.sfen import format_sfen, parse_sfen
@@ -386,6 +392,30 @@ class QuiescenceSearchTests(unittest.TestCase):
                 self.control(),
                 replace(base, advance=broken_advance),
             )
+        self.assertIs(caught.exception, failure)
+
+    def test_leaf_operation_failure_propagates_through_iterative_deepening(self):
+        """静止探索の操作故障を反復深化が停止や上限へ置き換えない。
+
+        診断結果を作る途中の例外を完了・中断・上限未完了へ誤分類する実装を検出する。
+        """
+        operations = self.quiescence_operations(Side.SENTE, 2)
+        if operations is None:
+            return
+        failure = RuntimeError("静止探索の操作に失敗")
+
+        def broken_leaf(position, inspected, lower, upper, control):
+            raise failure
+
+        operations = replace(operations, search_leaf=broken_leaf)
+        with self.assertRaises(RuntimeError) as caught:
+            iterative_deepening.search_controlled(
+                parse_sfen(LOSING_RECAPTURE).position,
+                1,
+                operations,
+                self.control(),
+            )
+
         self.assertIs(caught.exception, failure)
 
     def test_search_stops_during_real_controlled_legal_move_generation(self):
