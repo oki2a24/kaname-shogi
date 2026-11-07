@@ -37,7 +37,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 
 ## 現在の作業入口
 
-直近の主線テーマ「支えのない被攻撃駒の価値を比較CLIへ接続して比較する」は、比較専用policy、独立7局面、pipeline、pilot、confirmation分析、最終独立レビュー、main統合・push、統合後検証、最後の理解確認まで完了した。confirmationでは登録7局面の比較判定が `improved` となったが、一般棋力向上とは解釈しない。ShogiHomeでのU枚数候補実践も一局・理解確認まで完了した。続くU価値合計+Vの通常CLI・USI接続は実装・検証・独立レビュー・CVC2局まで完了し、`d9a9d8e` として2026-11-03にmainへ統合・push済み。統合後の全体検証は1,073テスト・92モジュール成功。ShogiHomeでは価値合計+Vに続いて `MaterialUndefendedPieceCountPlusV` も一局を開始し、15回の後手応答を観察したが、盤上操作が継続できず投了で終わった。二局目のUSIログは閲覧していない。最初の局のログ検索では許可外行も表示されたため、観察と制限を学習記録へ残した。次の主線テーマ「成りに近づく進行度」を本人が2026-11-04に選定し、具体的な学習・設計は新セッション開始待ちである。経緯は[学習記録](learning/undefended-piece-coordination-evaluation.md)、[承認済み設計](plans/2026-11-03-undefended-piece-value-normal-cli-usi-design.md)、[実装計画](plans/2026-11-03-undefended-piece-value-normal-cli-usi-implementation-plan.md)、[次テーマ引き継ぎ](handover-promotion-progress-evaluation.md)、現在地は[再開案内](resume.md)を参照する。
+直近の主線テーマ「支えのない被攻撃駒の価値を比較CLIへ接続して比較する」は、比較専用policy、独立7局面、pipeline、pilot、confirmation分析、最終独立レビュー、main統合・push、統合後検証、最後の理解確認まで完了した。confirmationでは登録7局面の比較判定が `improved` となったが、一般棋力向上とは解釈しない。ShogiHomeでのU枚数候補実践も一局・理解確認まで完了した。続くU価値合計+Vの通常CLI・USI接続は実装・検証・独立レビュー・CVC2局まで完了し、`d9a9d8e` として2026-11-03にmainへ統合・push済み。統合後の全体検証は1,073テスト・92モジュール成功。ShogiHomeでは価値合計+Vに続いて `MaterialUndefendedPieceCountPlusV` も一局を開始し、15回の後手応答を観察したが、盤上操作が継続できず投了で終わった。二局目のUSIログは閲覧していない。最初の局のログ検索では許可外行も表示されたため、観察と制限を学習記録へ残した。次の主線テーマ「成りに近づく進行度」を本人が2026-11-04に選定し、成りのルールと候補となる尺度を[学習](learning/promotion-progress-evaluation.md)し、本人判断で候補を保留した。経緯は[学習記録](learning/undefended-piece-coordination-evaluation.md)、[承認済み設計](plans/2026-11-03-undefended-piece-value-normal-cli-usi-design.md)、[実装計画](plans/2026-11-03-undefended-piece-value-normal-cli-usi-implementation-plan.md)、[次テーマ引き継ぎ](handover-promotion-progress-evaluation.md)、現在地は[再開案内](resume.md)を参照する。
 
 現在の作業場所・承認段階・次の行動は[再開案内](resume.md)を正本とする。元ディレクトリへの移行、退避物と文書整備の経緯は[整理記録](learning/workspace-knowledge-consolidation.md)を参照する。
 
@@ -46,7 +46,7 @@ AIは最初からすべての学習記録、設計書、実装計画、引き継
 次に性能改善へ戻るときは、[開始プロンプト](handover-comparison-cli-performance.md)の一文を新しいセッションに入力する。
 
 
-非駒得評価の主線では、U（支えのない被攻撃駒の枚数差）とV（支えあり低価値駒脅威の枚数差）の通常CLI・USI接続を終えた。価値合計+Vの接続もmain統合・push・統合後検証まで完了した。ShogiHomeのU枚数候補は一局・理解確認まで完了し、価値合計+VとCountPlusVは一局の途中まで操作を確認した。いずれも棋力比較ではない。次の主線テーマは「成りに近づく進行度」として選定済みで、学び・設計は新セッション待ち。現在地は[再開案内](resume.md)を正本とする。残存未追跡データと退避物の期限付き整理は[再開条件と検証手順](handover-residual-artifact-cleanup.md)を参照する。
+非駒得評価の主線では、U（支えのない被攻撃駒の枚数差）とV（支えあり低価値駒脅威の枚数差）の通常CLI・USI接続を終えた。価値合計+Vの接続もmain統合・push・統合後検証まで完了した。ShogiHomeのU枚数候補は一局・理解確認まで完了し、価値合計+VとCountPlusVは一局の途中まで操作を確認した。いずれも棋力比較ではない。主線の候補「成りに近づく進行度」は学習後に保留した。現在地は[再開案内](resume.md)を正本とする。残存未追跡データと退避物の期限付き整理は[再開条件と検証手順](handover-residual-artifact-cleanup.md)を参照する。
 
 ## よく参照する現行資料
 
