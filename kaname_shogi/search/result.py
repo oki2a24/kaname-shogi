@@ -54,12 +54,22 @@ class SearchInterrupted:
             raise ValueError("中断理由はSTOPまたはSUPPRESSが必要です")
 
 
+@dataclass(frozen=True)
+class QuiescenceLimit:
+    """静止探索の上限で未完了となったことだけを示す不変マーカー。
+
+    引数・評価・手・停止要求を持たず、通常停止とは別の未完了理由を伝える。
+    探索制御や局面に副作用を与えない。
+    """
+
+
 class ControlledCompletion(Enum):
-    """要求完了・手なし・通常停止・応答抑制の状態データ。"""
+    """要求完了・手なし・停止・上限未完了・応答抑制の状態データ。"""
 
     COMPLETE = auto()
     NO_LEGAL_MOVE = auto()
     STOPPED = auto()
+    QUIESCENCE_LIMIT = auto()
     SUPPRESSED = auto()
 
 
@@ -67,8 +77,8 @@ class ControlledCompletion(Enum):
 class ControlledSearchResult[M]:
     """終了状態・応答候補・最後の完了記録を保持する不変データ。
 
-    引数は四状態と手、IterationResultまたはNone。組合せ不正はValueError。
-    COMPLETE/STOPPEDの手は記録があれば一致し、SUPPRESSEDの手は常にNone。
+    引数は終了状態と手、IterationResultまたはNone。組合せ不正はValueError。
+    完了・停止・静止探索上限の手は記録があれば一致し、SUPPRESSEDは手なし。
     副作用なし。合法性と要求深さの一致は探索側の前提であり、ここでは検査しない。
     """
 

@@ -3,7 +3,7 @@
 from ..search_control import SearchControl
 from . import core
 from .contracts import ControlledSearchOperations, SearchOperations
-from .result import SearchInterrupted, SearchResult
+from .result import QuiescenceLimit, SearchInterrupted, SearchResult
 
 
 def search[N, M](
@@ -34,12 +34,12 @@ def search_controlled[N, M](
     control: SearchControl,
     *,
     preferred_move: M | None = None,
-) -> SearchResult[M] | SearchInterrupted:
-    """同じ共有本体で全幅指定深さ探索を行い、完了値か中断理由を返す。
+) -> SearchResult[M] | SearchInterrupted | QuiescenceLimit:
+    """同じ共有本体で全幅指定深さ探索を行い、完了値か未完了理由を返す。
 
     引数: nodeとdepthはsearchと同じ契約、operationsはprepareを含む制御付き操作、
     controlは呼出し元が所有する一回分の停止制御、preferred_moveは任意の合法な根の手。
-    戻り値: 完了時はSearchResult、中断時は評価や途中候補を持たないSearchInterrupted。
+    戻り値: 完了時はSearchResult。通常中断または静止探索上限時は、評価や手のない専用値。
     副作用: nodeを変更せず、operationsを呼ぶ。停止確認・時計確認はcontrolへ委譲し、
     操作例外を変換せず伝える。prepareは呼ばない。
     前提・設計理由: depthはboolを除く0以上の整数。全幅探索では根候補を刈らないため、
