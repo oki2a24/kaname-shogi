@@ -2,7 +2,7 @@
 
 ## 記録の状態と目的
 
-2026-11-07の対話と実装を記録する。論文の全体像、具体的な静止探索、時間制約を理解し、説明可能な規模で実装・実戦比較へ進む。[承認済み設計](../plans/2026-11-07-quiescence-search-design.md)と[承認済み実装計画](../plans/2026-11-07-quiescence-search-implementation-plan.md)に従い、Task 1〜3の実装と統合検証を完了した。次は一局面の診断コマンド（Task 4）。
+2026-11-07の対話と実装を記録する。論文の全体像、具体的な静止探索、時間制約を理解し、説明可能な規模で実装・実戦比較へ進む。[承認済み設計](../plans/2026-11-07-quiescence-search-design.md)と[承認済み実装計画](../plans/2026-11-07-quiescence-search-implementation-plan.md)に従い、Task 1〜4の実装・検証を完了した。通常CLIで一局を観察したが、ShogiHomeでの再現や棋力効果は未確認である。main統合・pushと統合先検証後、最後の理解確認を行う。
 
 ## 主線と選定の背景
 
