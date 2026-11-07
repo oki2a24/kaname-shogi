@@ -101,11 +101,11 @@ self.assertEqual(snapshot(position), before_snapshot)
 
 **消費** `iterative_deepening.search_controlled(position, 4, operations, control, on_iteration=...)`。基準はmake_controlled_operations、候補はmake_quiescence_operationsの2・4。
 
-- [ ] 同じ実局面で、基準／2／4の手・評価・完了反復を比較する。差が出る例と、差が出ない玉だけの例を両方用意する。通常深さ1・2・3にも末端探索が適用され、4手完了まで待って追加するだけの実装を検出する。
-- [ ] QuiescenceLimitで最後の完了反復へ戻る実局面を作り、結果由来と観測記録をassertする。未完了をCOMPLETEと誤報する変異を検出する。深さ0の元局面で完了反復なしも直接検査する。
-- [ ] 完了反復の累計と全反復の実計数を区別する。例えば2反復の通常調査差分が3・5なら表示用の各反復は3・5、全体8になることを手作り操作で確認し、未完了分5を落とす誤りを検出する。
-- [ ] 呼出し例外を上限未完了や通常停止へ変換しないことを確認する。既存game_search・USI・CLIは既定経路で従来の結果型を受け取ることを関連テストで確認する。
-- [ ] `PYTHONPATH=tests .venv/bin/python3 -m unittest test_search_quiescence_boundary test_search_quiescence test_game_search test_search_iterative_deepening_controlled -v`。Refactor確認、独立レビュー、記録、整形・検査後にコミットする。
+- [x] 同じ実局面で、基準／2／4の手・評価・完了反復を比較する。差が出る例と、差が出ない玉だけの例を両方用意する。通常深さ1・2・3にも末端探索が適用され、4手完了まで待って追加するだけの実装を検出する。
+- [x] QuiescenceLimitで最後の完了反復へ戻る実局面を作り、結果由来と観測記録をassertする。未完了をCOMPLETEと誤報する変異を検出する。追加深さ0を使い、初回反復が未完了の実局面で完了反復がないことも直接検査する。
+- [x] 完了反復の累計と全反復の実計数を区別する。手作り木で通常調査の反復差分3・5、累計8を操作呼出し回数と照合する。実局面では未完了反復分も含む計数を検証し、未完了計数を落とす誤りを変異で検出する。
+- [x] 呼出し例外を上限未完了や通常停止へ変換しないことを確認する。既存game_search・USI・CLIは既定経路で従来の結果型を受け取ることを関連テストで確認する。
+- [x] `PYTHONPATH=tests .venv/bin/python3 -m unittest test_search_quiescence_boundary test_search_quiescence test_game_search test_search_iterative_deepening_controlled test_cli test_usi_engine -v`。Refactor確認、独立レビュー、記録、整形・検査後にコミットする。
 
 ## Task 4　一局面の診断コマンドと利用案内を追加する
 
