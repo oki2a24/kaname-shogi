@@ -261,6 +261,10 @@ class QuiescenceSearchTests(unittest.TestCase):
         """
         cases = (
             (
+                MIXED_CHECK_EVASIONS,
+                ("5f5e", "5f4f", "5f4g", "5f6g", "5f6f", "6d5e"),
+            ),
+            (
                 KING_ESCAPE_CHECK,
                 ("5a4a", "5a4b", "5a6b", "5a6a"),
             ),

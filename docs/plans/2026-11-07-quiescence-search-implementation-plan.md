@@ -116,15 +116,16 @@ self.assertEqual(snapshot(position), before_snapshot)
 
 **内部境界** `_prepare_inputs(sfen: str, variant: str, remaining_ms: int, byoyomi_ms: int, config: TimeManagementConfig) -> tuple[Position, SearchBudget]`、`_run_search(position: Position, variant: str, budget: SearchBudget, *, now_ns: Callable[[], int] = time.monotonic_ns) -> DiagnosticResult`。DiagnosticResultは同ファイルの不変データで、制御付き結果・経過ns・各反復の計数差分と結果・全体計数を保持する。操作セット構築後から予備手準備・反復・観測記録保存まで計時し、結果文字列の整形とstdoutは計時外。
 
-- [ ] パーサの必須・負数・bool相当の直接呼出し・未知variant・不正SFEN・不正時計設定をテストし、入力失敗2／正常0／SIGINT130の契約を固定する。設定故障はstderrと非0にし、内部探索のValueError等は入力エラー境界で握りつぶさない。
-- [ ] 基準の実探索結果を既存反復深化と一致させ、候補2／4の接続が正しい値で一回呼ばれることを確認する。偽時計で経過nsの範囲、抑制・追加上限・停止・完了・合法手なしの表示、手の由来と完了記録なしをassertする。
-- [ ] 日本語表示は「方式」「目標期間(ms)」「上限期間(ms)」「消費時間(ms)」「終了状態」「選択手」「手の由来」「完了した通常深さ」「各反復の通常調査回数」「各反復の静止探索呼出し回数」「全体の各計数」を含める。追加上限未完了を時間切れ負けと表示しない。
-- [ ] 実プロセスで玉だけのSFEN `8k/9/9/9/9/9/9/9/K8 b - 1` を3方式各1回、`--remaining-ms 600000 --byoyomi-ms 30000`で実行する。同じ3方式を残り0・秒読み30000でも各1回実行する。いずれも深さ4完了を期待するが、環境により時間中断なら実測として記録し、期限内応答の保証とはしない。各プロセスの外側タイムアウトは90秒、超過時はSIGINTで終了確認し、続行前に診断する。
-- [ ] Task 2で用意した捕獲小局面から1例を固定し、同じ2時計条件・3方式を各1回だけ実行する。候補の上限未完了・完了深さ・時間負担を記録する。長時間の対局や追加の大局面実験はこの計画に含めない。
-- [ ] `PYTHONPATH=tests .venv/bin/python3 -m unittest test_search_diagnose_quiescence test_search_run_controlled_iterative -v`、Ruff import整理・format・check、差分検査、`.venv/bin/python3 scripts/run_tests_parallel.py`を実行する。失敗・追加変更がなければ同じ全体テストを理由なく繰り返さない。
-- [ ] 代表変異としてstand pat削除、min側でmax使用、王手回避を捕獲限定、上限を一手ずらす、未完了を完了扱い、中断反復の計数欠落を隔離コピーで一件ずつ試し、対象assertion failureと復元後成功を記録する。製品ソースの復元状態を確認する。
-- [ ] Refactorの要否を確認後、独立した最終コードレビューを行いCritical・Important・Minorと対応を学習記録へ残す。Critical／Importantは解消して再検証・再レビューする。
-- [ ] 知識メモは実装で確定した契約のみ必要な範囲で追加し、設計・学習・README・索引・再開案内の参照を更新する。文書リンク・差分確認後に内容を提示してコミットする。main統合の承認を別途求め、取り込み先検証と最後の理解確認を行う。
+- [x] パーサの必須・負数・bool相当の直接呼出し・未知variant・不正SFEN・不正時計設定をテストし、入力失敗2／正常0／SIGINT130の契約を固定する。設定故障はstderrと非0にし、内部探索のValueError等は入力エラー境界で握りつぶさない。
+- [x] 基準の実探索結果を既存反復深化と一致させ、候補2／4の接続が正しい値で一回呼ばれることを確認する。偽時計で経過ns、抑制・追加上限・停止・完了・合法手なしの表示、手の由来と完了記録なしをassertする。
+- [x] 日本語表示は「方式」「目標期間(ms)」「上限期間(ms)」「消費時間(ms)」「終了状態」「選択手」「手の由来」「完了した通常深さ」「各反復の通常調査回数」「各反復の静止探索呼出し回数」「全体の各計数」を含む。追加上限未完了を時間切れ負けと表示しない。
+- [x] 実プロセスで玉だけのSFEN `8k/9/9/9/9/9/9/9/K8 b - 1` を3方式各1回、`--remaining-ms 600000 --byoyomi-ms 30000`で実行する。同じ3方式を残り0・秒読み30000でも各1回実行する。6プロセス全て深さ4完了。各プロセスの外側タイムアウト90秒内、終了コード0。
+- [x] Task 2で用意した捕獲小局面から1例を固定し、同じ2時計条件・3方式を各1回だけ実行した。6プロセス全て90秒以内・終了コード0。q2は深さ1・2完了後に深さ3の静止探索上限、baselineとq4は深さ4完了。時間・計数の実測は学習記録に記載した。
+- [x] `PYTHONPATH=tests .venv/bin/python3 -m unittest test_search_diagnose_quiescence test_search_run_controlled_iterative -v`は29件成功。Ruff import整理・format・check、`git diff --check`、全体1,152 tests/95 modulesが27.914秒で成功。
+- [x] 代表変異としてstand patの候補除外、min側でmax使用、王手回避を捕獲限定、上限を一手早める、未完了を完了扱い、中断反復の計数記録を省く変異を隔離コピーで一件ずつ試し、各対象assertion failureを確認した。変異は全て一時コピーだけに置き、製品ソースは変更していない。
+- [x] Refactorの要否を確認後、独立した最終コードレビューを行いCritical・Important・Minorと対応を学習記録へ残す。Critical／Importantは解消して再検証・再レビューする。Refactor不要、Critical 0・Important 0・Minor 0。
+- [x] 知識メモは追加不要と判断した。README・索引・学習記録・再開案内を更新し、文書リンク・差分確認後にコミットした。
+- [ ] main統合は別途承認後に行い、取り込み先検証と最後の理解確認を実施する。今回の実装範囲には含めず、次の判断待ち。
 
 ## 実施前の点検と未検証範囲
 
