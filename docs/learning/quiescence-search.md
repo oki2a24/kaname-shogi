@@ -42,6 +42,7 @@ A「直前のマスの取り返し」とB「駒取りを調べる」はアシス
 | 追加手数上限で残る不確かさ | 「探索が完了できていないという不確かさが残る」 | 決めた範囲の完了と、取り合いが落ち着いたことは異なる |
 | 追加手数を増やせば必ず強いか | 「言えないが、強くなる傾向はありそう」 | 先の取り返しを発見できても、同時間での棋力向上傾向は未実測 |
 | 例題改善・対局悪化の設定を採用するか | 「no.」 | 対局数とばらつきも含め判断 |
+| 一局面診断だけで対局上の効果を結論できない理由 | 「今回作ったやつに十分な時間が当てられるかどうか不明なため」 | 診断局面での実行結果だけでは、実戦で各手に必要な時間を使えるか、全局を通じて成績が変わるかは分からない。通常対局に接続し、同じ時計条件で複数局を比較する必要がある |
 
 参考例は王手なし・合法な捕獲を仮定した説明で、実局面未検証。歩1・銀5・角8・飛車10の仮の点数で、後手に歩を取られた差−2から銀を取れば+8、飛車を取って角を失えば+2と手計算した。
 
@@ -161,4 +162,4 @@ Refactorは不要と判断した。薄い診断オーケストレーションを
 
 全体レビューはCritical 0・Important 0・Minor 1。Minorはこの学習記録冒頭がTask 1〜3完了・Task 4未着手とする古い状態だったため、Task 1〜4完了・統合後の理解確認待ちへ修正した。2026-11-07、本人の承認に基づいて `codex/quiescence-search-design` をmainへno-fast-forward統合し、merge commit `c9be5bb8a80684c08ada026d642a70da9d55c04f` を作成した。作業ブランチのTask 4成果 `71adbae2` と記録修正 `d6110c57` を含む。統合先で `.venv/bin/python3 scripts/run_tests_parallel.py` を実行し、1,152 tests/95 modulesが36.088秒で成功。`.venv/bin/ruff check .`、`.venv/bin/ruff format --check .`（160 files already formatted）、`git diff --check origin/main..HEAD` も成功した。
 
-`git push origin main` はmerge commit `c9be5bb8a80684c08ada026d642a70da9d55c04f` まで成功し、直後の `git ls-remote origin refs/heads/main` とローカルmainが一致した。その後、この統合記録を含む文書コミット `76d0cfd8adb887f8ca43f3beac59a1d2bf3d4665` もpushし、再照合でローカルmain・origin/main双方が同じハッシュを示した。最初のpush範囲には統合前にローカルmainだけにあった文書コミット2件も含まれた。既存の未追跡データは変更していない。最後の理解確認は未回答で、本人の回答後に学習記録へ追記する。
+`git push origin main` はmerge commit `c9be5bb8a80684c08ada026d642a70da9d55c04f` まで成功し、直後の `git ls-remote origin refs/heads/main` とローカルmainが一致した。その後、この統合記録を含む文書コミット `76d0cfd8adb887f8ca43f3beac59a1d2bf3d4665` もpushし、再照合でローカルmain・origin/main双方が同じハッシュを示した。最初のpush範囲には統合前にローカルmainだけにあった文書コミット2件も含まれた。既存の未追跡データは変更していない。最後の理解確認への本人回答と補足を上表に記録した。
