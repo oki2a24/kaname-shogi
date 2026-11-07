@@ -1,5 +1,7 @@
 """既存の将棋ルールと、局面非依存の探索を接続する。"""
 
+from dataclasses import replace
+
 from ..evaluation import material_balance
 from ..model import Position, Side
 from ..move import Move
@@ -19,7 +21,9 @@ from .contracts import (
     PreparedRoot,
     SearchOperations,
 )
-from .result import Score, SearchInterrupted
+from .diagnostics import SearchCounters
+from .quiescence import search as quiescence_search
+from .result import QuiescenceLimit, Score, SearchInterrupted
 
 
 def make_operations(perspective: Side) -> SearchOperations[Position, Move]:
@@ -72,13 +76,25 @@ def _interrupted(control: SearchControl) -> SearchInterrupted:
 
 def make_controlled_operations(
     perspective: Side,
+    *,
+    counters: SearchCounters | None = None,
 ) -> ControlledSearchOperations[Position, Move]:
     """開始側視点の将棋用制御付き操作セットを作る操作。
 
-    perspectiveは評価の開始側。各操作は同じSearchControlを明示して受ける。
-    初回準備だけ通常停止を保護し、調査・遷移では目標を適用しない。
-    元盤面・持駒を変更せず、既存規則の完了／中断を別型へ変換する。
-    時計原点や予算を作らず、故障はそのまま伝播する。
+    引数:
+        perspective: 静的評価を固定する開始側。
+        counters: 通常のinspect入口を数える任意データ。Noneなら記録しない。
+
+    戻り値:
+        同じSearchControlで準備・合法手調査・遷移を行う操作セット。
+
+    副作用:
+        操作セットの構築ではなし。使用時は任意計数だけを更新し、局面は変更しない。
+    前提条件・設計理由:
+        初回準備だけ通常停止を保護し、調査・遷移では目標を適用しない。
+        予備手準備と合法手生成内部の試し局面は通常ノードとして数えず、
+        実際にinspect操作へ入った回数だけを記録する。時計原点や予算を作らず、
+        既存規則の完了／中断を別型へ変換し、故障はそのまま伝播する。
     """
 
     def prepare(
@@ -94,6 +110,8 @@ def make_controlled_operations(
     def inspect(
         position: Position, control: SearchControl
     ) -> NodeInspection[Move] | SearchInterrupted:
+        if counters is not None:
+            counters.normal_nodes += 1
         result = legal_moves_controlled(
             position, control=control, include_target=False, protect_first_legal=False
         )
@@ -115,3 +133,53 @@ def make_controlled_operations(
         advance,
         lambda position: _evaluate(position, perspective),
     )
+
+
+def make_quiescence_operations(
+    perspective: Side,
+    additional_depth: int,
+    *,
+    counters: SearchCounters | None = None,
+) -> ControlledSearchOperations[Position, Move]:
+    """指定深さの静止探索を通常探索の末端へ接続した操作セットを返す。
+
+    引数:
+        perspective: 評価の開始側。通常探索と末端探索で視点を固定する。
+        additional_depth: 末端から追加する手数。boolを除く0以上の整数。
+        counters: 通常調査と静止探索呼出しを分けて記録する任意データ。
+
+    戻り値:
+        既存の合法手・遷移・駒得評価へ委譲し、深さ0で静止探索を行う操作セット。
+
+    副作用:
+        操作セットの構築では局面・制御・時計を変更しない。実行時は渡された
+        SearchControlに従い、入力局面を直接変更しない。
+    前提条件:
+        追加深さ0は境界ケースとして許可する。王手なしは静的評価を返し、王手中は
+        合法回避を一手として数える。対局・時計予算は呼出し元が用意する。
+    """
+    if type(additional_depth) is not int or additional_depth < 0:
+        raise ValueError("追加深さは0以上の整数で指定してください")
+
+    operations = make_controlled_operations(perspective, counters=counters)
+    quiescence_operations = make_controlled_operations(perspective)
+
+    def search_leaf(
+        position: Position,
+        inspected: NodeInspection[Move],
+        lower: Score | None,
+        upper: Score | None,
+        control: SearchControl,
+    ) -> Score | SearchInterrupted | QuiescenceLimit:
+        return quiescence_search(
+            position,
+            inspected,
+            additional_depth,
+            lower,
+            upper,
+            control,
+            quiescence_operations,
+            counters=counters,
+        )
+
+    return replace(operations, search_leaf=search_leaf)
